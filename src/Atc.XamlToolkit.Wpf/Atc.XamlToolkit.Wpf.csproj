@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Title>Atc.XamlToolkit.Wpf</Title>
+    <PackageId>Atc.XamlToolkit.Wpf</PackageId>
+    <PackageTags>wpf;mvvm,relaycommand</PackageTags>
+    <Description>A base library for building XAML/WPF applications with the MVVM design pattern.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RootNamespace>Atc.XamlToolkit</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Atc" Version="2.0.552" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Atc.XamlToolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Atc.XamlToolkit.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Remove="_._" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
+  </ItemGroup>
+
+</Project>

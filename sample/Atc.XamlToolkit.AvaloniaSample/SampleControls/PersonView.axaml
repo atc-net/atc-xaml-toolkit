@@ -1,0 +1,68 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.PersonView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sampleControls="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="sampleControls:PersonViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <sampleControls:PersonViewModel />
+    </UserControl.DataContext>
+
+    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+
+        <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
+        <TextBox
+            Grid.Row="0"
+            Grid.Column="2"
+            Text="{Binding Path=FirstName}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0">Last name</TextBlock>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="2"
+            Text="{Binding Path=LastName}" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0">Age</TextBlock>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="2"
+            Text="{Binding Path=Age}" />
+
+        <TextBlock Grid.Row="3" Grid.Column="0">Email</TextBlock>
+        <TextBox
+            Grid.Row="3"
+            Grid.Column="2"
+            Text="{Binding Path=Email}" />
+
+        <TextBlock Grid.Row="4" Grid.Column="0">TheProperty</TextBlock>
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="2"
+            Text="{Binding Path=TheProperty}" />
+
+        <TextBlock Grid.Row="5" Grid.Column="0">Full name</TextBlock>
+        <TextBlock
+            Grid.Row="5"
+            Grid.Column="2"
+            Text="{Binding Path=FullName}" />
+
+        <Button
+            Grid.Row="6"
+            Grid.Column="0"
+            Command="{Binding Path=ShowDataCommand}"
+            Content="Show data" />
+        <Button
+            Grid.Row="6"
+            Grid.Column="2"
+            Command="{Binding Path=SaveCommand}"
+            Content="Save data" />
+
+    </Grid>
+
+</UserControl>
