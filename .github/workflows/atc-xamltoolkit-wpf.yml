@@ -29,6 +29,9 @@ jobs:
       - name: 🔁 Restore packages
         run: dotnet restore src/Atc.XamlToolkit.Wpf/Atc.XamlToolkit.Wpf.csproj
 
+      - name: 🛠️ Build SourceGenerators
+        run: dotnet build src/Atc.XamlToolkit.SourceGenerators/Atc.XamlToolkit.SourceGenerators.csproj -c Release --no-restore
+
       - name: 🛠️ Build library in release mode
         run: dotnet build src/Atc.XamlToolkit.Wpf/Atc.XamlToolkit.Wpf.csproj -c Release --no-restore /p:UseSourceLink=true
 
