@@ -7,6 +7,13 @@
 
 * update PackageTags ([c764484](https://github.com/atc-net/atc-xaml-toolkit/commit/c764484424a26c28390e5b1cd0276a3cbe904e1b))
 
+## [1.3.1](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.3.0...Atc.XamlToolkit@v1.3.1) (2025-03-26)
+
+
+### Bug fixes
+
+* update PackageTags ([c764484](https://github.com/atc-net/atc-xaml-toolkit/commit/c764484424a26c28390e5b1cd0276a3cbe904e1b))
+
 ## [1.3.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.2.0...Atc.XamlToolkit@v1.3.0) (2025-03-26)
 
 
