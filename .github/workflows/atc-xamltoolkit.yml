@@ -39,5 +39,9 @@ jobs:
         run: dotnet pack src/Atc.XamlToolkit/Atc.XamlToolkit.csproj -c Release --no-restore -o packages /p:PublicRelease=true
 
       - name: 📦 Push package to NuGet
+        shell: pwsh
         run: |
-          dotnet nuget push packages/Atc.XamlToolkit*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          $packages = Get-ChildItem -Path packages -Filter 'Atc.XamlToolkit*.nupkg'
+          foreach ($pkg in $packages) {
+            dotnet nuget push $pkg.FullName -k $env:NUGET_KEY -s "https://api.nuget.org/v3/index.json" --skip-duplicate --no-symbols
+          }
