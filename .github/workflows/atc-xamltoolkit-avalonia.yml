@@ -36,13 +36,10 @@ jobs:
         run: dotnet build src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj -c Release --no-restore /p:UseSourceLink=true
 
       - name: 🗳️ Pack library for release
-        run: dotnet pack src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj -c Release --no-restore -o packages /p:PublicRelease=true
+        run: dotnet pack src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj -c Release --no-restore -o ${GITHUB_WORKSPACE}/packages /p:PublicRelease=true
 
       - name: 📦 Push package to NuGet
         shell: pwsh
         run: |
-          $packages = Get-ChildItem -Path "./packages" -Filter 'Atc.XamlToolkit.Avalonia*.nupkg'
-          foreach ($pkg in $packages) {
-            Write-Output "Pushing package: $($pkg.FullName)"
-            dotnet nuget push $pkg.FullName --api-key $env:NUGET_KEY --source "https://api.nuget.org/v3/index.json" --skip-duplicate --no-symbols
-          }
+          cd ${GITHUB_WORKSPACE}/packages
+          dotnet nuget push Atc.XamlToolkit.Avalonia*.nupkg -k ${{ secrets.NUGET_KEY }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate --no-symbols
