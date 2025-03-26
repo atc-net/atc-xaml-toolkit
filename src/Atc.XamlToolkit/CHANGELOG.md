@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.7.0...Atc.XamlToolkit@v1.8.0) (2025-03-26)
+
+
+### New features
+
+* ci trigger ([3d2d438](https://github.com/atc-net/atc-xaml-toolkit/commit/3d2d4388ad538fed0ab2fb6f5ad1cebe24d710aa))
+
 ## [1.7.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.6.0...Atc.XamlToolkit@v1.7.0) (2025-03-26)
 
 
