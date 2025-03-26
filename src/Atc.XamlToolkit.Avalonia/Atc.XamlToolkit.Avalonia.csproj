@@ -4,11 +4,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <Title>Atc.XamlToolkit.Avalonia</Title>
     <PackageId>Atc.XamlToolkit.Avalonia</PackageId>
-    <PackageTags>mvvm,relaycommand</PackageTags>
-    <Description>A base library for building Avalonia applications with the MVVM design pattern.</Description>
+    <PackageTags>avalonia;xaml;mvvm;relaycommand</PackageTags>
+    <Description>A base library for building Avalonia applications using the MVVM design pattern.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Atc.XamlToolkit</RootNamespace>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Link="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Atc" Version="2.0.552" />
