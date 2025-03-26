@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
     <Title>Atc.XamlToolkit.Wpf</Title>
     <PackageId>Atc.XamlToolkit.Wpf</PackageId>
-    <PackageTags>wpf;xaml;mvvm;relaycommand;toolkit</PackageTags>
+    <PackageTags>wpf;xaml;mvvm;relaycommand;toolkit;ui</PackageTags>
     <Description>Atc.XamlToolkit.Wpf is a library for building WPF applications using the MVVM design pattern.</Description>
     <RootNamespace>Atc.XamlToolkit</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
