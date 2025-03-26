@@ -6,7 +6,6 @@
     <PackageId>Atc.XamlToolkit</PackageId>
     <PackageTags>xaml;mvvm;toolkit;relaycommand</PackageTags>
     <Description>Atc.XamlToolkit is a library for building XAML applications using the MVVM design pattern.</Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

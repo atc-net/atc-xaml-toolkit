@@ -6,7 +6,6 @@
     <PackageId>Atc.XamlToolkit.Avalonia</PackageId>
     <PackageTags>avalonia;xaml;mvvm;toolkit;relaycommand</PackageTags>
     <Description>Atc.XamlToolkit.Avalonia is a library for building Avalonia applications using the MVVM design pattern.</Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Atc.XamlToolkit</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
