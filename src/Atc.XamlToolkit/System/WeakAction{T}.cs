@@ -61,7 +61,7 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
 
             if (type.Name.StartsWith("<>", StringComparison.Ordinal) && type.Name.Contains("DisplayClass", StringComparison.Ordinal))
             {
-                Debug.WriteLine("You are attempting to register a lambda with a closure without using keepTargetAlive. Are you sure?");
+                Diagnostics.Debug.WriteLine("You are attempting to register a lambda with a closure without using keepTargetAlive. Are you sure?");
             }
         }
 #endif
