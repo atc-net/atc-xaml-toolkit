@@ -46,7 +46,6 @@ jobs:
         run: dotnet pack src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj -c Release --no-restore -o ${GITHUB_WORKSPACE}/packages /p:PublicRelease=true
 
       - name: 📦 Push package to NuGet
-        shell: pwsh
         run: |
           cd ${GITHUB_WORKSPACE}/packages
           dotnet nuget push Atc.XamlToolkit.Avalonia*.nupkg -k ${{ secrets.NUGET_KEY }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate --no-symbols
