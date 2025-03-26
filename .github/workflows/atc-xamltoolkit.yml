@@ -40,4 +40,4 @@ jobs:
 
       - name: 📦 Push package to NuGet
         run: |
-          dotnet nuget push ${GITHUB_WORKSPACE}/packages/Atc.XamlToolkit.[0-9]*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ${GITHUB_WORKSPACE}/packages/Atc.XamlToolkit.*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
