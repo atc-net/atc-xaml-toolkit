@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.3.0...Atc.XamlToolkit@v1.4.0) (2025-03-26)
+
+
+### New features
+
+* update package-description ([e875c19](https://github.com/atc-net/atc-xaml-toolkit/commit/e875c19ed82b5edb846a50b1e36725226f600105))
+
 ## [1.3.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.2.1...Atc.XamlToolkit@v1.3.0) (2025-03-26)
 
 
