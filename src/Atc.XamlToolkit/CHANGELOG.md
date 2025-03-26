@@ -7,6 +7,13 @@
 
 * trigger ([cf8ac6e](https://github.com/atc-net/atc-xaml-toolkit/commit/cf8ac6e28bbe361c9abd57b94ecfa75210ea2990))
 
+## [1.11.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.10.0...Atc.XamlToolkit@v1.11.0) (2025-03-26)
+
+
+### New features
+
+* trigger ([cf8ac6e](https://github.com/atc-net/atc-xaml-toolkit/commit/cf8ac6e28bbe361c9abd57b94ecfa75210ea2990))
+
 ## [1.10.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.9.0...Atc.XamlToolkit@v1.10.0) (2025-03-26)
 
 
