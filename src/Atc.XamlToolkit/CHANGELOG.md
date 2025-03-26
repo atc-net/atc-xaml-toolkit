@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.4.0...Atc.XamlToolkit@v1.5.0) (2025-03-26)
+
+
+### New features
+
+* remove GeneratePackageOnBuild from csproj - is set in build.props ([a4e0772](https://github.com/atc-net/atc-xaml-toolkit/commit/a4e0772b0920a7f5eacff7e0d543e29b00ebc69b))
+
 ## [1.4.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.3.0...Atc.XamlToolkit@v1.4.0) (2025-03-26)
 
 
