@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit.Avalonia@v1.2.0...Atc.XamlToolkit.Avalonia@v1.2.1) (2025-03-26)
+
+
+### Bug fixes
+
+* update PackageTags ([c764484](https://github.com/atc-net/atc-xaml-toolkit/commit/c764484424a26c28390e5b1cd0276a3cbe904e1b))
+* update PackageTags ([258ef88](https://github.com/atc-net/atc-xaml-toolkit/commit/258ef8830ae333ece373f82e5a8de0fbcf0785e4))
+
 ## [1.2.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit.Avalonia@v1.1.1...Atc.XamlToolkit.Avalonia@v1.2.0) (2025-03-26)
 
 
