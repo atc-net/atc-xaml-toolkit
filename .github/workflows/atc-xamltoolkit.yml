@@ -2,7 +2,7 @@ name: Build & Publish Atc.XamlToolkit
 
 on:
   push:
-    tags: [ 'Atc.XamlToolkit@v*.*.*' ]
+    tags: ["Atc.XamlToolkit@v*.*.*"]
 
 jobs:
   build-and-publish:
@@ -21,7 +21,7 @@ jobs:
       - name: ⚙️ Setup dotnet 9.0.x
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: 🧹 Clean
         run: dotnet clean -c Release && dotnet nuget locals all --clear
@@ -40,4 +40,4 @@ jobs:
 
       - name: 📦 Push package to NuGet
         run: |
-          dotnet nuget push ${GITHUB_WORKSPACE}/packages/Atc.XamlToolkit.*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ${GITHUB_WORKSPACE}/packages/Atc.XamlToolkit*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
