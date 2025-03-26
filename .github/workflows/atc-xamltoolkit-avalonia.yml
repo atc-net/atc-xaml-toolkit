@@ -41,7 +41,8 @@ jobs:
       - name: 📦 Push package to NuGet
         shell: pwsh
         run: |
-          $packages = Get-ChildItem -Path packages -Filter 'Atc.XamlToolkit.Avalonia*.nupkg'
+          $packages = Get-ChildItem -Path "./packages" -Filter 'Atc.XamlToolkit.Avalonia*.nupkg'
           foreach ($pkg in $packages) {
-            dotnet nuget push $pkg.FullName -k $env:NUGET_KEY -s "https://api.nuget.org/v3/index.json" --skip-duplicate --no-symbols
+            Write-Host "Pushing package: $($pkg.FullName)"
+            dotnet nuget push "$($pkg.FullName)" --api-key $env:NUGET_KEY --source "https://api.nuget.org/v3/index.json" --skip-duplicate --no-symbols
           }
