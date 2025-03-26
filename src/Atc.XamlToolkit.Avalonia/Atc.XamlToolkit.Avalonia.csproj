@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Title>Atc.XamlToolkit.Avalonia</Title>
     <PackageId>Atc.XamlToolkit.Avalonia</PackageId>
-    <PackageTags>avalonia;xaml;mvvm;relaycommand</PackageTags>
+    <PackageTags>avalonia;xaml;mvvm;toolkit;relaycommand</PackageTags>
     <Description>A base library for building Avalonia applications using the MVVM design pattern.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Atc.XamlToolkit</RootNamespace>

@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Title>Atc.XamlToolkit</Title>
     <PackageId>Atc.XamlToolkit</PackageId>
-    <PackageTags>xaml;mvvm;relaycommand</PackageTags>
+    <PackageTags>xaml;mvvm;toolkit;relaycommand</PackageTags>
     <Description>A base library for building XAML applications using the MVVM design pattern.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
