@@ -1,5 +1,5 @@
 {
-  "src/Atc.XamlToolkit": "1.11.0",
-  "src/Atc.XamlToolkit.Avalonia": "1.1.1",
+  "src/Atc.XamlToolkit": "1.10.0",
+  "src/Atc.XamlToolkit.Avalonia": "1.2.0",
   "src/Atc.XamlToolkit.Wpf": "1.1.1"
 }
