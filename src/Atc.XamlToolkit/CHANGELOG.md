@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.6.0...Atc.XamlToolkit@v1.7.0) (2025-03-26)
+
+
+### New features
+
+* add ui to package-tags ([e8fc08e](https://github.com/atc-net/atc-xaml-toolkit/commit/e8fc08e65d46da623421e47e77f05bf882a1a08c))
+
 ## [1.6.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.5.0...Atc.XamlToolkit@v1.6.0) (2025-03-26)
 
 
