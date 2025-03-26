@@ -30,9 +30,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     /// </summary>
     /// <param name="messenger">The messenger.</param>
     protected ViewModelBase(IMessenger? messenger)
-    {
-        MessengerInstance = messenger ?? Messenger.Default;
-    }
+        => MessengerInstance = messenger ?? Messenger.Default;
 
     /// <inheritdoc />
     public bool IsEnable
