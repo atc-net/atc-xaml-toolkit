@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2C893B25-2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0FA723AA-8BA7-42AD-9C08-6491F364A258}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tool", "tool", "{4E909F95-FAC5-4A3F-AEC6-DEAB535BEC64}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{133AFD8A-A870-41D7-8A97-763A36D2502A}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
@@ -106,7 +104,7 @@ Global
 		{CDFAC0FB-1B8D-42B5-A7A5-6B97E0B45D9B} = {0FA723AA-8BA7-42AD-9C08-6491F364A258}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		RESX_Rules = {"EnabledRules":["StringFormat","WhiteSpaceLead","WhiteSpaceTail","PunctuationTail"]}
 		SolutionGuid = {7A92D7EC-F444-456B-A86C-D6683E016C35}
+		RESX_Rules = {"EnabledRules":["StringFormat","WhiteSpaceLead","WhiteSpaceTail","PunctuationTail"]}
 	EndGlobalSection
 EndGlobal
