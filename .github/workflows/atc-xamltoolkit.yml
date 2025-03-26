@@ -36,8 +36,8 @@ jobs:
         run: dotnet build src/Atc.XamlToolkit/Atc.XamlToolkit.csproj -c Release --no-restore /p:UseSourceLink=true
 
       - name: 🗳️ Pack library for release
-        run: dotnet pack src/Atc.XamlToolkit/Atc.XamlToolkit.csproj -c Release --no-restore -o ${GITHUB_WORKSPACE}/packages /p:PublicRelease=true
+        run: dotnet pack src/Atc.XamlToolkit/Atc.XamlToolkit.csproj -c Release --no-restore -o packages /p:PublicRelease=true
 
       - name: 📦 Push package to NuGet
         run: |
-          dotnet nuget push ${GITHUB_WORKSPACE}/packages/Atc.XamlToolkit*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push packages/Atc.XamlToolkit*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
