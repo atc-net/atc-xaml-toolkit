@@ -1,7 +1,10 @@
-name: Build and test
+name: CI for Atc.XamlToolkit Packages
 
 on:
   push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
