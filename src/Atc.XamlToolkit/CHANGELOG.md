@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.2.0...Atc.XamlToolkit@v1.2.1) (2025-03-26)
+
+
+### Bug fixes
+
+* **xamltoolkit:** use body expression ([e255b6d](https://github.com/atc-net/atc-xaml-toolkit/commit/e255b6dc76d629124bb20018bd3b4706f8201803))
+
 ## [1.2.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.1.1...Atc.XamlToolkit@v1.2.0) (2025-03-26)
 
 
