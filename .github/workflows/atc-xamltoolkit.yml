@@ -4,6 +4,9 @@ on:
   push:
     tags: [ 'Atc.XamlToolkit@v*.*.*' ]
 
+env:
+  NUGET_REPO_URL: "https://api.nuget.org/v3/index.json"
+
 jobs:
   build-and-publish:
     runs-on: windows-latest
@@ -23,6 +26,10 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: 📐 Ensure nuget.org added as package source on Windows
+        run: dotnet nuget add source ${{ env.NUGET_REPO_URL }} -n nuget.org --configfile $env:APPDATA\NuGet\NuGet.Config
+        continue-on-error: true
+
       - name: 🧹 Clean
         run: dotnet clean -c Release && dotnet nuget locals all --clear
 
@@ -37,7 +44,6 @@ jobs:
 
       - name: 🗳️ Pack library for release
         run: dotnet pack src/Atc.XamlToolkit/Atc.XamlToolkit.csproj -c Release --no-restore -o ${GITHUB_WORKSPACE}/packages /p:PublicRelease=true
-
       - name: 📦 Push package to NuGet
         shell: pwsh
         run: |
