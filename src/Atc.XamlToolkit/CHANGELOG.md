@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.3.1...Atc.XamlToolkit@v1.4.0) (2025-03-27)
+
+
+### New features
+
+* remove  cstor from ObservablePropertyAttribute with "params string[] dependentProperties" to avoid conflicts with propertyName and dependentProperties ([#41](https://github.com/atc-net/atc-xaml-toolkit/issues/41)) ([82ce65c](https://github.com/atc-net/atc-xaml-toolkit/commit/82ce65c167d0f78c999c0f5cb7b2b2309de82136))
+
 ## [1.3.1](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.3.0...Atc.XamlToolkit@v1.3.1) (2025-03-26)
 
 
