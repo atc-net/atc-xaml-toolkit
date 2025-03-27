@@ -1,4 +1,3 @@
-#pragma warning disable xUnit1042
 namespace Atc.XamlToolkit.SourceGenerators.Tests.Extensions;
 
 public sealed class StringExtensionsTests

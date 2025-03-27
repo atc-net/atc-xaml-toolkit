@@ -69,10 +69,6 @@ private string name;
 private string name;
 
 // Generates a property named "MyName" and notifies FullName and Age
-[ObservableProperty(nameof(MyName), nameof(FullName), nameof(Age))]
-private string name;
-
-// Generates a property named "MyName" and notifies FullName and Age
 [ObservableProperty(nameof(MyName), DependentProperties = [nameof(FullName), nameof(Age)])]
 private string name;
 

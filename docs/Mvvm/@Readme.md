@@ -38,6 +38,10 @@ Below is a simple example demonstrating how to create a ViewModel using `ViewMod
 ```csharp
 public class MyViewModel : ViewModelBase
 {
+    private IRelayCommandAsync? saveCommand;
+
+    public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(SaveCommandHandler, CanSaveCommandHandler);
+
     private string myProperty;
 
     public string MyProperty
@@ -53,6 +57,16 @@ public class MyViewModel : ViewModelBase
             myProperty = value;
             RaisePropertyChanged();
         }
+    }
+
+    private Task SaveCommandHandler()
+    {
+        return Task.CompletedTask;
+    }
+
+    public bool CanSaveCommandHandler()
+    {
+        return true;
     }
 }
 ```

@@ -49,6 +49,7 @@ internal static class AttributeDataExtensions
         return type;
     }
 
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static Dictionary<string, string?> RunTimeExtractConstructorArgumentValues(
         AttributeData attributeData)
     {
@@ -91,16 +92,23 @@ internal static class AttributeDataExtensions
                         continue;
                     }
 
-                    result.Add(
-                        arg.Key,
-                        $"nameof({typedConstant.Value})");
+                    if (result.ContainsKey(arg.Key))
+                    {
+                        result[arg.Key] += $", {typedConstant.Value.EnsureNameof()}";
+                    }
+                    else
+                    {
+                        result.Add(
+                            arg.Key,
+                            typedConstant.Value.EnsureNameof());
+                    }
                 }
             }
             else
             {
                 result.Add(
                     arg.Key,
-                    $"nameof({arg.Value.Value})");
+                    arg.Value.Value.EnsureNameof());
             }
         }
 

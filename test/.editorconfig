@@ -54,3 +54,5 @@ dotnet_diagnostic.SA1133.severity = none            # https://github.com/atc-net
 ##########################################
 # Custom - Code Analyzers Rules
 ##########################################
+
+dotnet_diagnostic.xUnit2013.severity = none         # https://xunit.net/xunit.analyzers/rules/xUnit1042

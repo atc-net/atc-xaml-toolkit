@@ -1,4 +1,3 @@
-#pragma warning disable CA1019
 // ReSharper disable RedundantAttributeUsageProperty
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.Mvvm;
@@ -25,19 +24,6 @@ public sealed class ObservablePropertyAttribute : Attribute
         string propertyName)
     {
         PropertyName = propertyName;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ObservablePropertyAttribute"/> class.
-    /// </summary>
-    /// <param name="propertyName">The name of the property to generate</param>
-    /// <param name="dependentProperties">The name of the dependent properties to generate</param>
-    public ObservablePropertyAttribute(
-        string propertyName,
-        params string[] dependentProperties)
-    {
-        PropertyName = propertyName;
-        DependentProperties = dependentProperties;
     }
 
     /// <summary>
