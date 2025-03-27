@@ -14,7 +14,8 @@ public sealed class NotifyPropertyChangedForAttribute : Attribute
     /// <param name="dependentProperties">
     /// The names of the dependent properties that should also raise a property change notification.
     /// </param>
-    public NotifyPropertyChangedForAttribute(params string[] dependentProperties)
+    public NotifyPropertyChangedForAttribute(
+        params string[] dependentProperties)
     {
         DependentProperties = dependentProperties;
     }

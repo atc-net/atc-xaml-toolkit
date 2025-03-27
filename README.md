@@ -1,10 +1,10 @@
-[![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.svg?logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/atc.xamltoolkit)
-
 # ATC.Net Avalonia and WPF
 
 This is a base libraries for building Avalonia or WPF application with the MVVM design pattern.
 
 ## Requirements
+
+[.NET >= 9.0.202 - SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
 [.NET 9 - Runtime for Avalonia](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
@@ -12,11 +12,11 @@ This is a base libraries for building Avalonia or WPF application with the MVVM 
 
 ## NuGet Packages Provided in this Repository
 
-| Nuget package               | Description                                         | Dependencies                           |
-|-----------------------------|-----------------------------------------------------|----------------------------------------|
-| 💟 Atc.XamlToolkit          | Base package with ViewModelBase, ObservableObject   | Atc & Atc.XamlToolkit.SourceGenerators |
-| 💟 Atc.XamlToolkit.Avalonia | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
-| 💟 Atc.XamlToolkit.Wpf      | RelayCommand, MainWindowViewModelBase for WPF       | Atc.XamlToolkit.SourceGenerators       |
+| Nuget package               | Description                                                                                                                                                              | Dependencies                           |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.svg?label=Atc.XamlToolkit&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit)                            | Base package with ViewModelBase, ObservableObject   | Atc & Atc.XamlToolkit.SourceGenerators |
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Avalonia.svg?label=Atc.XamlToolkit.Avalonia&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Avalonia) | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Wpf.svg?label=Atc.XamlToolkit.Wpf&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Wpf)                | RelayCommand, MainWindowViewModelBase for WPF       | Atc.XamlToolkit.SourceGenerators       |
 
 ## MVVM Easily Separate UI and Business Logic
 
@@ -25,8 +25,6 @@ With the `Atc.XamlToolkit.Avalonia` or `Atc.Wpf` package, it is very easy to get
 Please read more here:
 
 - [MVVM framework](docs/Mvvm/@Readme.md)
-  - [Observerble properties](docs/Mvvm/@Readme.md)
-  - [RelayCommands](docs/Mvvm/@Readme.md)
 
 # ⚙️ Source Generators
 

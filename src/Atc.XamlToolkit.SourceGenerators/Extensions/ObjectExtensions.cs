@@ -14,8 +14,7 @@ internal static class ObjectExtensions
 
         var strDefaultValue = defaultValue
             .ToString()?
-            .EnsureNoNameof()?
-            .ToString() ?? string.Empty;
+            .EnsureNoNameof() ?? string.Empty;
 
         if (!type.IsSimpleType())
         {
@@ -70,18 +69,30 @@ internal static class ObjectExtensions
         return strDefaultValue;
     }
 
-    public static object? EnsureNoNameof(
+    public static string? EnsureNoNameof(
         this object? value)
     {
         if (value is null ||
             !value.ToString().StartsWith("nameof", StringComparison.Ordinal))
         {
-            return value;
+            return value?.ToString();
         }
 
         return value
             .ToString()
             .Replace("nameof(", string.Empty)
             .Replace(")", string.Empty);
+    }
+
+    public static string? EnsureNameof(
+        this object? value)
+    {
+        if (value is null ||
+            value.ToString().Contains("nameof"))
+        {
+            return value?.ToString();
+        }
+
+        return $"nameof({value})";
     }
 }
