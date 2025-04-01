@@ -46,6 +46,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atc.XamlToolkit.Avalonia", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atc.XamlToolkit.Avalonia.Tests", "test\Atc.XamlToolkit.Avalonia.Tests\Atc.XamlToolkit.Avalonia.Tests.csproj", "{5054B148-21D0-4F01-BFED-992AE9E6543B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ValueConverters", "ValueConverters", "{DE0E1DE4-F053-4624-9316-E1390ED15A39}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ValueConverters\@Readme.md = docs\ValueConverters\@Readme.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,9 +114,10 @@ Global
 		{3B6E21B1-7749-4701-9016-77633FE5CDAC} = {2C893B25-2401-44B7-9FDA-7DC496C00D2B}
 		{CDFAC0FB-1B8D-42B5-A7A5-6B97E0B45D9B} = {0FA723AA-8BA7-42AD-9C08-6491F364A258}
 		{5054B148-21D0-4F01-BFED-992AE9E6543B} = {2C893B25-2401-44B7-9FDA-7DC496C00D2B}
+		{DE0E1DE4-F053-4624-9316-E1390ED15A39} = {133AFD8A-A870-41D7-8A97-763A36D2502A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		RESX_Rules = {"EnabledRules":["StringFormat","WhiteSpaceLead","WhiteSpaceTail","PunctuationTail"]}
 		SolutionGuid = {7A92D7EC-F444-456B-A86C-D6683E016C35}
+		RESX_Rules = {"EnabledRules":["StringFormat","WhiteSpaceLead","WhiteSpaceTail","PunctuationTail"]}
 	EndGlobalSection
 EndGlobal
