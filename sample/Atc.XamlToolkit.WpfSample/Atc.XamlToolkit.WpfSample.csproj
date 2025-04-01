@@ -8,6 +8,10 @@
     <!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>-->
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Atc" Version="2.0.552" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />

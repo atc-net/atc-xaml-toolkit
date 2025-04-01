@@ -2,6 +2,7 @@
     x:Class="Atc.XamlToolkit.AvaloniaSample.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:atcValueConverters="https://github.com/atc-net/atc-xaml-toolkit/tree/main/schemas/value-converters"
     xmlns:avaloniaSample="clr-namespace:Atc.XamlToolkit.AvaloniaSample"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -51,11 +52,23 @@
         </Style>
     </Window.Styles>
 
-    <StackPanel Margin="20" Orientation="Horizontal">
+    <StackPanel Margin="20" Orientation="Vertical">
 
-        <HeaderedContentControl Padding="10" Header="Settings">
-            <sampleControls:PersonView />
-        </HeaderedContentControl>
+        <CheckBox
+            x:Name="ShowPersonView"
+            Content="Show PersonView"
+            IsChecked="True" />
+
+        <StackPanel Margin="20" Orientation="Horizontal">
+
+            <HeaderedContentControl
+                Padding="10"
+                Header="PersonView"
+                IsVisible="{Binding #ShowPersonView.IsChecked, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                <sampleControls:PersonView />
+            </HeaderedContentControl>
+
+        </StackPanel>
 
     </StackPanel>
 
