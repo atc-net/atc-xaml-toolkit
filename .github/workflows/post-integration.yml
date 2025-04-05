@@ -69,11 +69,6 @@ jobs:
       #     dotnet build -c Release /p:UseSourceLink=true --no-restore
       #     dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      - name: Configure Git for push
-        run: |
-          git config --global url."https://$GITHUB_ACTOR:${{ secrets.PAT_WORKFLOWS }}@github.com/".insteadOf "https://github.com/"
-          git remote set-url origin https://$GITHUB_ACTOR:${{ secrets.PAT_WORKFLOWS }}@github.com/atc-net/atc-xaml-toolkit.git
-
       - name: ⏩ Merge to stable-branch
         run: |
           git config --local user.email ${{ env.ATC_EMAIL }}
