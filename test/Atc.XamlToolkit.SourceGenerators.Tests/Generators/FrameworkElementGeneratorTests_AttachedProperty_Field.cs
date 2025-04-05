@@ -4,15 +4,16 @@ namespace Atc.XamlToolkit.SourceGenerators.Tests.Generators;
 public sealed partial class FrameworkElementGeneratorTests
 {
     [Fact]
-    public void AttachedProperty_Bool_Name()
+    public void AttachedProperty_Field_Bool_Name()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable")]
             public static partial class DragBehavior
             {
+                [AttachedProperty]
+                private bool isDraggable
             }
             """;
 
@@ -47,15 +48,16 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_Bool_Name_DefaultValue()
+    public void AttachedProperty_Field_Bool_Name_DefaultValue()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable", DefaultValue = true)]
             public static partial class DragBehavior
             {
+                [AttachedProperty(DefaultValue = true)]
+                private bool isDraggable
             }
             """;
 
@@ -90,15 +92,16 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_Bool_Name_DefaultValue_Category()
+    public void AttachedProperty_Field_Bool_Name_DefaultValue_Category()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable", DefaultValue = true, Category = "Layout")]
             public static partial class DragBehavior
             {
+                [AttachedProperty(DefaultValue = true, Category = "Layout")]
+                private bool isDraggable
             }
             """;
 
@@ -135,15 +138,16 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_Bool_Name_DefaultValue_Description()
+    public void AttachedProperty_Field_Bool_Name_DefaultValue_Description()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable", DefaultValue = true, Description = "Long description")]
             public static partial class DragBehavior
             {
+                [AttachedProperty(DefaultValue = true, Description = "Long description")]
+                private bool isDraggable
             }
             """;
 
@@ -180,15 +184,16 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_Bool_Name_DefaultValue_Description_Category()
+    public void AttachedProperty_Field_Bool_Name_DefaultValue_Description_Category()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable", DefaultValue = true, Category = "Layout", Description = "Long description")]
             public static partial class DragBehavior
             {
+                [AttachedProperty(DefaultValue = true, Category = "Layout", Description = "Long description")]
+                private bool isDraggable
             }
             """;
 
@@ -227,15 +232,16 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_Bool_Name_PropertyChangedCallback()
+    public void AttachedProperty_Field_Bool_Name_PropertyChangedCallback()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<bool>("IsDraggable", PropertyChangedCallback = nameof(OnIsDraggableChanged))]
             public static partial class DragBehavior
             {
+                [AttachedProperty(PropertyChangedCallback = nameof(OnIsDraggableChanged))]
+                private bool isDraggable
             }
             """;
 
@@ -272,17 +278,22 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void AttachedProperty_WatermarkTextBoxBehavior()
+    public void AttachedProperty_Field_WatermarkTextBoxBehavior()
     {
         const string inputCode =
             """
             namespace TestNamespace;
 
-            [AttachedProperty<string>("Label")]
-            [AttachedProperty<Style>("LabelStyle")]
-            [AttachedProperty<bool>("EnableWatermark")]
             public static partial class WatermarkTextBoxBehavior
             {
+                [AttachedProperty]
+                private string label;
+
+                [AttachedProperty]
+                private Style labelStyle;
+            
+                [AttachedProperty]
+                private bool EnableWatermark;
             }
             """;
 

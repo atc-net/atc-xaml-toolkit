@@ -28,11 +28,11 @@ Please read more here:
 
 # ⚙️ Source Generators
 
-Our source generators streamline development by automatically generating boilerplate code for 
+Our source generators streamline development by automatically generating boilerplate code for
 both `Avalonia` and `WPF` projects.
 
-Using custom attributes, they simplify the creation of common 
-patterns such as attached properties, dependency properties, and viewmodels — reducing manual 
+Using custom attributes, they simplify the creation of common
+patterns such as attached properties, dependency properties, and viewmodels — reducing manual
 coding and potential errors.
 
 Learn more about each generator:

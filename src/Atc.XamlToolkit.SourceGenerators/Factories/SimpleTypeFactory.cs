@@ -6,7 +6,7 @@ public static class SimpleTypeFactory
         string type)
         => type switch
         {
-            "bool" => "false",
+            "bool" => "BooleanBoxes.FalseBox",
             "decimal" => "0m",
             "double" => "0d",
             "float" => "0f",

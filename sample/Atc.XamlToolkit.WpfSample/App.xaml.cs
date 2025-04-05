@@ -96,6 +96,8 @@ public partial class App
         object sender,
         StartupEventArgs e)
     {
+        Current.ThemeMode = ThemeMode.System;
+
         await host
             .StartAsync()
             .ConfigureAwait(false);
