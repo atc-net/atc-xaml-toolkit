@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 
 public sealed class BoolToInverseBoolValueConverterTests
 {
-    private readonly IValueConverter converter = new BoolToInverseBoolValueConverter();
+    private readonly IValueConverter converter = BoolToInverseBoolValueConverter.Instance;
 
     [Theory]
     [InlineData(false, true)]
