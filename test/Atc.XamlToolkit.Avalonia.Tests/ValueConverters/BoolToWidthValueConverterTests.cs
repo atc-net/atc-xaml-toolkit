@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
 
 public sealed class BoolToWidthValueConverterTests
 {
-    private readonly IValueConverter converter = new BoolToWidthValueConverter();
+    private readonly IValueConverter converter = BoolToWidthValueConverter.Instance;
 
     [Theory]
     [InlineData(0, false, null)]
@@ -12,13 +12,13 @@ public sealed class BoolToWidthValueConverterTests
     public void Convert(double expected, bool input, object? parameter)
         => Assert.Equal(
             expected,
-            converter.Convert(input, targetType: null, parameter, culture: null));
+            converter.Convert(input, targetType: null!, parameter, culture: null!));
 
     [Fact]
     public void ConvertBack_Should_Throw_Exception()
     {
         // Act
-        var exception = Record.Exception(() => converter.ConvertBack(value: null, targetType: null, parameter: null, culture: null));
+        var exception = Record.Exception(() => converter.ConvertBack(value: null, targetType: null!, parameter: null, culture: null!));
 
         // Assert
         Assert.IsType<NotSupportedException>(exception);

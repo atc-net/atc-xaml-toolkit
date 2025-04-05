@@ -2,7 +2,8 @@ namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
 
 public sealed class MultiBoolToBoolValueConverterTests
 {
-    private readonly IMultiValueConverter converter = new MultiBoolToBoolValueConverter();
+    private readonly IMultiValueConverter converter = MultiBoolToBoolValueConverter.Instance;
+
     private readonly object[] inputSet1 = [true, true, true];
     private readonly object[] inputSet2 = [true, false, true];
 
@@ -20,7 +21,7 @@ public sealed class MultiBoolToBoolValueConverterTests
         };
 
         // Atc
-        var actual = converter.Convert(input, targetType: null, parameter: null, culture: null);
+        var actual = converter.Convert(input, targetType: null!, parameter: null, culture: null!);
 
         // Arrange
         Assert.Equal(expected, actual);

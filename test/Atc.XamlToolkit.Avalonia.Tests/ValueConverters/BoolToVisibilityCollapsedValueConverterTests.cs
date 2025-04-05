@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
 
 public sealed class BoolToVisibilityCollapsedValueConverterTests
 {
-    private readonly IValueConverter converter = new BoolToVisibilityCollapsedValueConverter();
+    private readonly IValueConverter converter = BoolToVisibilityCollapsedValueConverter.Instance;
 
     [Theory]
     [InlineData(false, true)]
@@ -10,7 +10,7 @@ public sealed class BoolToVisibilityCollapsedValueConverterTests
     public void Convert(bool expected, bool input)
         => Assert.Equal(
             expected,
-            converter.Convert(input, targetType: null, parameter: null, culture: null));
+            converter.Convert(input, targetType: null!, parameter: null, culture: null!));
 
     [Theory]
     [InlineData(true, false)]
@@ -18,5 +18,5 @@ public sealed class BoolToVisibilityCollapsedValueConverterTests
     public void ConvertBack(bool expected, bool input)
         => Assert.Equal(
             expected,
-            converter.ConvertBack(input, targetType: null, parameter: null, culture: null));
+            converter.ConvertBack(input, targetType: null!, parameter: null, culture: null!));
 }

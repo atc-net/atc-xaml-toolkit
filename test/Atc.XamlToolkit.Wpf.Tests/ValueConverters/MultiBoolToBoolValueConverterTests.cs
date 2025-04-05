@@ -3,6 +3,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 public sealed class MultiBoolToBoolValueConverterTests
 {
     private readonly IMultiValueConverter converter = MultiBoolToBoolValueConverter.Instance;
+
     private readonly object[] inputSet1 = [true, true, true];
     private readonly object[] inputSet2 = [true, false, true];
 
