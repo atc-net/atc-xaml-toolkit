@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit.Wpf@v1.4.2...Atc.XamlToolkit.Wpf@v1.5.0) (2025-04-05)
+
+
+### New features
+
+* force to v1.4.4 ([5512f4f](https://github.com/atc-net/atc-xaml-toolkit/commit/5512f4fdb25621ac87356a037f8e6db29e794cf7))
+
 ## [1.4.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit.Wpf@v1.3.1...Atc.XamlToolkit.Wpf@v1.4.0) (2025-03-27)
 
 
