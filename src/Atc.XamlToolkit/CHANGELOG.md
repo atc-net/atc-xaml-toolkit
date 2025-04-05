@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.6.0...Atc.XamlToolkit@v1.7.0) (2025-04-05)
+
+
+### New features
+
+* add ui to package-tags ([e8fc08e](https://github.com/atc-net/atc-xaml-toolkit/commit/e8fc08e65d46da623421e47e77f05bf882a1a08c))
+* ci trigger ([3d2d438](https://github.com/atc-net/atc-xaml-toolkit/commit/3d2d4388ad538fed0ab2fb6f5ad1cebe24d710aa))
+* force to v1.4.4 ([5512f4f](https://github.com/atc-net/atc-xaml-toolkit/commit/5512f4fdb25621ac87356a037f8e6db29e794cf7))
+* remove  cstor from ObservablePropertyAttribute with "params string[] dependentProperties" to avoid conflicts with propertyName and dependentProperties ([#41](https://github.com/atc-net/atc-xaml-toolkit/issues/41)) ([82ce65c](https://github.com/atc-net/atc-xaml-toolkit/commit/82ce65c167d0f78c999c0f5cb7b2b2309de82136))
+* trigger ([cf8ac6e](https://github.com/atc-net/atc-xaml-toolkit/commit/cf8ac6e28bbe361c9abd57b94ecfa75210ea2990))
+* trigger ([8608f84](https://github.com/atc-net/atc-xaml-toolkit/commit/8608f8490369372eef020142a5594c3486e1cb31))
+* update PackageTags ([51876d5](https://github.com/atc-net/atc-xaml-toolkit/commit/51876d5caac3508cb1fea51efe2fb458843ad611))
+
+
+### Bug fixes
+
+* update PackageTags ([c764484](https://github.com/atc-net/atc-xaml-toolkit/commit/c764484424a26c28390e5b1cd0276a3cbe904e1b))
+* update PackageTags ([258ef88](https://github.com/atc-net/atc-xaml-toolkit/commit/258ef8830ae333ece373f82e5a8de0fbcf0785e4))
+
 ## [1.6.0](https://github.com/atc-net/atc-xaml-toolkit/compare/Atc.XamlToolkit@v1.5.0...Atc.XamlToolkit@v1.6.0) (2025-04-05)
 
 
