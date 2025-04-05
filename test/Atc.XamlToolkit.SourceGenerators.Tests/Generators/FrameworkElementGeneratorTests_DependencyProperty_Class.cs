@@ -4,7 +4,7 @@ namespace Atc.XamlToolkit.SourceGenerators.Tests.Generators;
 public sealed partial class FrameworkElementGeneratorTests
 {
     [Fact]
-    public void DependencyProperty_Bool_Name()
+    public void DependencyProperty_Class_Bool_Name()
     {
         const string inputCode =
             """
@@ -47,7 +47,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -90,7 +90,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_Category()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_Category()
     {
         const string inputCode =
             """
@@ -134,7 +134,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_Description()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_Description()
     {
         const string inputCode =
             """
@@ -178,7 +178,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_Category_Description()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_Category_Description()
     {
         const string inputCode =
             """
@@ -223,7 +223,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_PropertyChangedCallback()
+    public void DependencyProperty_Class_Bool_Name_PropertyChangedCallback()
     {
         const string inputCode =
             """
@@ -268,7 +268,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_CoerceValueCallback()
+    public void DependencyProperty_Class_Bool_Name_CoerceValueCallback()
     {
         const string inputCode =
             """
@@ -313,7 +313,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_PropertyChangedCallback_CoerceValueCallback()
+    public void DependencyProperty_Class_Bool_Name_PropertyChangedCallback_CoerceValueCallback()
     {
         const string inputCode =
             """
@@ -359,7 +359,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags()
     {
         const string inputCode =
             """
@@ -406,7 +406,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger()
     {
         const string inputCode =
             """
@@ -455,7 +455,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger_IsAnimationProhibited()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger_IsAnimationProhibited()
     {
         const string inputCode =
             """
@@ -505,7 +505,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger_IsAnimationProhibited_ValidateValueCallback()
+    public void DependencyProperty_Class_Bool_Name_DefaultValue_PropertyChangedCallback_CoerceValueCallback_Flags_DefaultUpdateSourceTrigger_IsAnimationProhibited_ValidateValueCallback()
     {
         const string inputCode =
             """
@@ -556,7 +556,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Decimal_Name()
+    public void DependencyProperty_Class_Decimal_Name()
     {
         const string inputCode =
             """
@@ -599,7 +599,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Decimal_Name_DefaultValue()
+    public void DependencyProperty_Class_Decimal_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -642,7 +642,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Double_Name()
+    public void DependencyProperty_Class_Double_Name()
     {
         const string inputCode =
             """
@@ -685,7 +685,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Double_Name_DefaultValue()
+    public void DependencyProperty_Class_Double_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -728,7 +728,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Float_Name()
+    public void DependencyProperty_Class_Float_Name()
     {
         const string inputCode =
             """
@@ -771,7 +771,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Float_Name_DefaultValue()
+    public void DependencyProperty_Class_Float_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -814,7 +814,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Int_Name()
+    public void DependencyProperty_Class_Int_Name()
     {
         const string inputCode =
             """
@@ -857,7 +857,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Int_Name_DefaultValue()
+    public void DependencyProperty_Class_Int_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -900,7 +900,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Int32_Name_DefaultValue()
+    public void DependencyProperty_Class_Int32_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -943,7 +943,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_LogItem_Name_DefaultValue()
+    public void DependencyProperty_Class_LogItem_Name_DefaultValue()
     {
         const string inputCode =
             """
@@ -985,7 +985,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_LogItem_Name_ValidateValueCallback()
+    public void DependencyProperty_Class_LogItem_Name_ValidateValueCallback()
     {
         const string inputCode =
             """
@@ -1028,7 +1028,7 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
-    public void DependencyProperty_Int_Name_ValidateValueCallback()
+    public void DependencyProperty_Class_Int_Name_ValidateValueCallback()
     {
         const string inputCode =
             """

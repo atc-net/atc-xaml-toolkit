@@ -8,7 +8,11 @@ In WPF, **attached properties** are a type of dependency property that allows pr
 
 ### ✨ Creating a Simple Attached Property
 
-Let's define an attached property using source generators.
+You can now define an attached property using one of two approaches: via a constructor-based attribute or by annotating a backing field.
+
+#### Defined by constructor
+
+In this approach, you pass the property name and type as parameters to the attribute. The source generator then creates the corresponding property registration and accessor methods.
 
 ```csharp
 [AttachedProperty<bool>("IsDraggable")]
@@ -17,9 +21,25 @@ public static partial class DragBehavior
 }
 ```
 
+#### Defined by Field-Level Attribute
+
+Alternatively, you can declare the attached property on a private field. Here, you only annotate the field with `[AttachedProperty]` and the source generator will infer the property name from the field name (e.g., `isDraggable` becomes `IsDraggable`) as well as its type.
+
+```csharp
+public static partial class DragBehavior
+{
+    [AttachedProperty]
+    private bool isDraggable;
+}
+```
+
+This method reduces redundancy by eliminating the need to specify the property name and type explicitly—streamlining your code even further.
+
 ### 🔍 What's Happening Here?
 
-- The `AttachedPropertyAttribute` automatically generates the `IsDraggable` property with `Get` and `Set` methods.
+- The `[AttachedProperty]` attribute triggers the source generator to automatically create:
+  - A static `DependencyProperty` field (e.g., `IsDraggableProperty`).
+  - Static `GetIsDraggable` and `SetIsDraggable` methods, which allow any UI element to use the property.
 
 ### 🖥️ XAML Example
 
@@ -38,7 +58,7 @@ This allows the `IsDraggable` property to be applied to any UI element dynamical
 
 ## 📌 Summary
 
-This example showcases `advanced metadata` for attached properties, allowing:
+This example demonstrates **advanced metadata** handling for attached properties with source generation, enabling:
 
 - ✔️ **Automatic property registration**
 - ✔️ **Flexible application to various UI elements**
@@ -57,17 +77,32 @@ This example showcases `advanced metadata` for attached properties, allowing:
 
 ### 📝 Human-Written Code - for simple example
 
+#### Constructor-Based Declaration
+
 ```csharp
-[AttachedProperty<bool>("IsDraggable"]
+[AttachedProperty<bool>("IsDraggable")]
 public static partial class DragBehavior
 {
 }
 ```
 
-In this example:
+#### Field-Level Declaration
 
-- The `[AttachedProperty<bool>("IsDraggable")]` attribute declares an attached property named `IsDraggable` of type `bool` for the `DragBehavior` class.
-- The source generator will automatically create the necessary methods and property registration.
+```csharp
+public static partial class DragBehavior
+{
+    [AttachedProperty]
+    private bool isDraggable
+}
+```
+
+**In this example:**
+
+- The attribute declares an attached property named `IsDraggable` of type `bool` for the `DragBehavior` class.
+
+- In the field-level declaration, the generator infers the property name (capitalizing the field name) and type from the field itself.
+
+- The source generator then creates the necessary registration code and accessor methods.
 
 ### ⚙️ Auto-Generated Code - for simple example
 

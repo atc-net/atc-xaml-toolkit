@@ -8,11 +8,15 @@ In WPF, **dependency properties** are a specialized type of property that extend
 
 ### ✨ Creating a Simple UserControl
 
-Let's start by defining a UserControl using source generators.
+You can now define dependency properties in two ways: via a constructor-based attribute or by annotating a backing field. Both approaches trigger the source generator to create the required registration code and property wrappers.
+
+#### Defined by Constructor
+
+In this approach you specify the property name and type in the attribute.
 
 ```csharp
 [DependencyProperty<bool>("IsRunning")]
-public partial class TestView
+public partial class TestView: UserControl
 {
     public TestView()
     {
@@ -21,9 +25,33 @@ public partial class TestView
 }
 ```
 
+#### Defined by Field-Level Attribute
+
+Alternatively, you can mark a private field with `[DependencyProperty]` and let the generator infer the property name (by capitalizing the field name) and type-
+
+```csharp
+public partial class TestView : UserControl
+{
+    public TestView()
+    {
+        InitializeComponent();
+    }
+
+    [DependencyProperty]
+    private bool isRunning;
+}
+```
+
+This field-level approach further reduces redundancy by eliminating the need to explicitly specify the property name and type.
+
 ### 🔍 What's Happening Here?
 
-- The `DependencyPropertyAttribute` automatically generates the `IsRunning` property, including `INotifyPropertyChanged` support.
+- The `constructor-based` declaration tells the generator to create a dependency property named `IsRunning` of type `bool`.
+- The field-level declaration allows the generator to infer the property details from the field itself (e.g., `isRunning` becomes `IsRunning`).
+- In both cases, the generator creates:
+  - A static `DependencyProperty` field (e.g., `IsRunningProperty`).
+  - A CLR property that wraps `GetValue`/`SetValue`.
+  - (Optionally) `INotifyPropertyChanged` support if configured.
 
 ### 🖥️ XAML Binding Example
 
@@ -50,7 +78,7 @@ This setup allows the UI to dynamically update when the IsRunning property chang
 
 ## 📌 Summary
 
-This example showcases **advanced metadata** for dependency properties, allowing:
+This example demonstrates how to use **advanced metadata** with dependency properties via source generators, allowing:
 
 - ✔️ **Automatic property change notifications**
 - ✔️ **Value coercion and validation**
@@ -68,6 +96,8 @@ This example showcases **advanced metadata** for dependency properties, allowing
 
 ### 📝 Human-Written Code - for simple example
 
+#### Constructor-Based Declaration
+
 ```csharp
 [DependencyProperty<bool>("IsRunning"]
 public partial class MyControl : UserControl
@@ -75,9 +105,20 @@ public partial class MyControl : UserControl
 }
 ```
 
-**In this example:**
+#### Field-Level Declaration
 
-- The `[DependencyProperty<bool>("IsRunning")]` attribute indicates that a dependency property named `IsRunning` of type `bool` should be generated for the `MyControl` class.
+```csharp
+public partial class MyControl : UserControl
+{
+    [DependencyProperty]
+    private bool isRunning;    
+}
+```
+
+**In these example:**
+
+- The attribute signals the source generator to create a dependency property named `IsRunning` (inferred from the attribute parameter or the field name).
+- The generator automatically creates the corresponding `DependencyProperty` field and CLR property wrapper.
 
 ### ⚙️ Auto-Generated Code - for simple example
 

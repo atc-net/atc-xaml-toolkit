@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 
 public sealed class BoolToWidthValueConverterTests
 {
-    private readonly IValueConverter converter = new BoolToWidthValueConverter();
+    private readonly IValueConverter converter = BoolToWidthValueConverter.Instance;
 
     [Theory]
     [InlineData(0, false, null)]

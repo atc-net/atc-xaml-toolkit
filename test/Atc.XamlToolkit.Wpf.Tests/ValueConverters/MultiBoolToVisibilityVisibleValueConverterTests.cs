@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 
 public sealed class MultiBoolToVisibilityVisibleValueConverterTests
 {
-    private readonly IMultiValueConverter converter = new MultiBoolToVisibilityVisibleValueConverter();
+    private readonly IMultiValueConverter converter = MultiBoolToVisibilityVisibleValueConverter.Instance;
 
     private readonly object[] inputSet1 = [true, true, true];
     private readonly object[] inputSet2 = [true, false, true];

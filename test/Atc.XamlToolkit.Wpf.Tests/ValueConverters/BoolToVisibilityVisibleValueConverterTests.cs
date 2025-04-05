@@ -2,7 +2,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 
 public sealed class BoolToVisibilityVisibleValueConverterTests
 {
-    private readonly IValueConverter converter = new BoolToVisibilityVisibleValueConverter();
+    private readonly IValueConverter converter = BoolToVisibilityVisibleValueConverter.Instance;
 
     [Theory]
     [InlineData(Visibility.Visible, true)]
