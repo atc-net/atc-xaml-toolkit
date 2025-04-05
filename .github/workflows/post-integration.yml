@@ -19,8 +19,10 @@ jobs:
       - name: 🛒 Checkout repository
         uses: actions/checkout@v4
         with:
+          repository: atc-net/atc-xaml-toolkit
           fetch-depth: 0
           token: ${{ secrets.PAT_WORKFLOWS }}
+          persist-credentials: true
 
       - name: ⚛️ Sets environment variables - branch-name
         uses: nelonoel/branch-name@v1.0.1
