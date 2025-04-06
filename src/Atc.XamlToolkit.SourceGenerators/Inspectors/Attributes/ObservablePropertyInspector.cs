@@ -17,14 +17,24 @@ internal static class ObservablePropertyInspector
                 continue;
             }
 
+            if (fieldSymbol.DeclaredAccessibility != Accessibility.Private)
+            {
+                continue;
+            }
+
+            if (char.IsUpper(fieldSymbol.Name[0]))
+            {
+                continue;
+            }
+
             var fieldSymbolAttributes = fieldSymbol.GetAttributes();
 
-            var observablePropertyAttribute = fieldSymbolAttributes
+            var fieldPropertyAttribute = fieldSymbolAttributes
                 .FirstOrDefault(x => x.AttributeClass?.Name
                     is NameConstants.ObservablePropertyAttribute
                     or NameConstants.ObservableProperty);
 
-            if (observablePropertyAttribute is null)
+            if (fieldPropertyAttribute is null)
             {
                 continue;
             }
@@ -32,7 +42,7 @@ internal static class ObservablePropertyInspector
             AppendPropertiesToGenerate(
                 fieldSymbol,
                 fieldSymbolAttributes,
-                observablePropertyAttribute,
+                fieldPropertyAttribute,
                 result);
         }
 
@@ -43,20 +53,24 @@ internal static class ObservablePropertyInspector
     private static void AppendPropertiesToGenerate(
         IFieldSymbol fieldSymbol,
         ImmutableArray<AttributeData> fieldSymbolAttributes,
-        AttributeData observablePropertyAttribute,
+        AttributeData fieldPropertyAttribute,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
         var backingFieldName = fieldSymbol.Name;
         var propertyType = fieldSymbol.Type.ToString();
 
-        var observableArgumentValues = observablePropertyAttribute.ExtractConstructorArgumentValues();
+        var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();
 
-        var propertyName = observableArgumentValues.TryGetValue(NameConstants.Name, out var nameValue)
-            ? nameValue!.EnsureFirstCharacterToUpper()
-            : backingFieldName.StripPrefixFromField().EnsureFirstCharacterToUpper();
+        var propertyName = fieldArgumentValues.TryGetValue(NameConstants.Name, out var nameValue)
+            ? nameValue!
+                .StripPrefixFromField()
+                .EnsureFirstCharacterToUpper()
+            : backingFieldName
+                .StripPrefixFromField()
+                .EnsureFirstCharacterToUpper();
 
         List<string>? propertyNamesToInvalidate = null;
-        if (observableArgumentValues.TryGetValue(NameConstants.DependentProperties, out var dependentPropertiesValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.DependentProperties, out var dependentPropertiesValue))
         {
             propertyNamesToInvalidate = [];
 
@@ -67,7 +81,7 @@ internal static class ObservablePropertyInspector
         }
         else
         {
-            foreach (var argumentValue in observableArgumentValues)
+            foreach (var argumentValue in fieldArgumentValues)
             {
                 if (argumentValue.Key
                     is NameConstants.Name
@@ -85,7 +99,7 @@ internal static class ObservablePropertyInspector
         }
 
         string[]? commandNamesToInvalidate = null;
-        if (observableArgumentValues.TryGetValue(NameConstants.DependentCommands, out var dependentCommandsValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.DependentCommands, out var dependentCommandsValue))
         {
             commandNamesToInvalidate = dependentCommandsValue?
                 .Split(',')
@@ -94,18 +108,18 @@ internal static class ObservablePropertyInspector
         }
 
         string? beforeChangedCallback = null;
-        if (observableArgumentValues.TryGetValue(NameConstants.BeforeChangedCallback, out var beforeChangedCallbackValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.BeforeChangedCallback, out var beforeChangedCallbackValue))
         {
             beforeChangedCallback = beforeChangedCallbackValue;
         }
 
         string? afterChangedCallback = null;
-        if (observableArgumentValues.TryGetValue(NameConstants.AfterChangedCallback, out var afterChangedCallbackValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.AfterChangedCallback, out var afterChangedCallbackValue))
         {
             afterChangedCallback = afterChangedCallbackValue;
         }
 
-        var broadcastOnChange = observableArgumentValues.TryGetValue(NameConstants.BroadcastOnChange, out var broadcastOnChangeValue) &&
+        var broadcastOnChange = fieldArgumentValues.TryGetValue(NameConstants.BroadcastOnChange, out var broadcastOnChangeValue) &&
                                 "true".Equals(broadcastOnChangeValue, StringComparison.OrdinalIgnoreCase);
 
         var notifyPropertyChangedForAttributes = fieldSymbolAttributes

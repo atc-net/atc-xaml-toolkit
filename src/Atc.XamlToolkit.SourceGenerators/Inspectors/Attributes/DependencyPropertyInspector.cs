@@ -62,6 +62,16 @@ internal static class DependencyPropertyInspector<T>
                 continue;
             }
 
+            if (fieldSymbol.DeclaredAccessibility != Accessibility.Private)
+            {
+                continue;
+            }
+
+            if (char.IsUpper(fieldSymbol.Name[0]))
+            {
+                continue;
+            }
+
             var fieldAttributes = fieldSymbol.GetAttributes();
             var fieldPropertyAttribute = fieldAttributes
                 .FirstOrDefault(x =>
