@@ -19,7 +19,9 @@ internal static class FrameworkElementInspectorHelper
             string? propertyName = null;
             if (argumentValues.TryGetValue(NameConstants.Name, out var nameValue))
             {
-                propertyName = nameValue!.EnsureFirstCharacterToUpper();
+                propertyName = nameValue!
+                    .StripPrefixFromField()
+                    .EnsureFirstCharacterToUpper();
             }
 
             if (propertyName is null)
@@ -72,7 +74,16 @@ internal static class FrameworkElementInspectorHelper
         var argumentValues = propertyAttribute.ExtractConstructorArgumentValues();
 
         var ownerType = classSymbol.Name;
-        var propertyName = fieldSymbol.Name.EnsureFirstCharacterToUpper();
+
+        var propertyName = fieldSymbol.Name;
+
+        if (propertyName.StartsWith("_", StringComparison.Ordinal))
+        {
+            propertyName = propertyName.Substring(1);
+        }
+
+        propertyName = propertyName.EnsureFirstCharacterToUpper();
+
         var type = fieldSymbol.Type.ToString().EnsureCSharpAliasIfNeeded();
 
         object? defaultValue = null;
