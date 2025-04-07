@@ -44,6 +44,9 @@ internal static class NameConstants
     public const string RelayCommand = nameof(RelayCommand);
     public const string RelayCommandAsync = nameof(RelayCommandAsync);
     public const string RelayCommandAttribute = nameof(RelayCommandAttribute);
+    public const string RoutedEvent = nameof(RoutedEvent);
+    public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
+    public const string RoutingStrategy = nameof(RoutingStrategy);
     public const string Task = nameof(Task);
     public const string UserControl = nameof(UserControl);
     public const string ValidateValueCallback = nameof(ValidateValueCallback);

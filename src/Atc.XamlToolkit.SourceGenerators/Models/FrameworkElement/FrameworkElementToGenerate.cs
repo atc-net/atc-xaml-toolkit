@@ -16,8 +16,10 @@ internal sealed class FrameworkElementToGenerate(
 
     public IList<DependencyPropertyToGenerate>? DependencyPropertiesToGenerate { get; set; }
 
+    public IList<RoutedEventToGenerate>? RoutedEventsToGenerate { get; set; }
+
     public IList<RelayCommandToGenerate>? RelayCommandsToGenerate { get; set; }
 
     public override string ToString()
-        => $"{base.ToString()}, {nameof(AttachedPropertiesToGenerate)}.Count: {AttachedPropertiesToGenerate?.Count}, {nameof(DependencyPropertiesToGenerate)}.Count: {DependencyPropertiesToGenerate?.Count}, {nameof(RelayCommandsToGenerate)}.Count: {RelayCommandsToGenerate?.Count}";
+        => $"{base.ToString()}, {nameof(AttachedPropertiesToGenerate)}.Count: {AttachedPropertiesToGenerate?.Count}, {nameof(DependencyPropertiesToGenerate)}.Count: {DependencyPropertiesToGenerate?.Count}, {nameof(RoutedEventsToGenerate)}.Count: {RoutedEventsToGenerate?.Count}, {nameof(RelayCommandsToGenerate)}.Count: {RelayCommandsToGenerate?.Count}";
 }

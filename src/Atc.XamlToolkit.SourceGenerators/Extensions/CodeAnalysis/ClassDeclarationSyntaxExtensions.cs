@@ -28,14 +28,15 @@ internal static class ClassDeclarationSyntaxExtensions
         this IEnumerable<ClassDeclarationSyntax> partialDeclarations,
         GeneratorSyntaxContext context,
         params string[] baseClassNames)
-        => partialDeclarations.Any(declaration =>
-        {
-            var semanticModel = context.SemanticModel.Compilation.GetSemanticModel(declaration.SyntaxTree);
-            var symbol = semanticModel.GetDeclaredSymbol(declaration);
-            return symbol?.InheritsFrom(baseClassNames) == true;
-        });
+        => partialDeclarations.Any(
+            declaration =>
+            {
+                var semanticModel = context.SemanticModel.Compilation.GetSemanticModel(declaration.SyntaxTree);
+                var symbol = semanticModel.GetDeclaredSymbol(declaration);
+                return symbol?.InheritsFrom(baseClassNames) == true;
+            });
 
-    public static bool HasBaseClassFromFrameworkElementOrEndsOnAttachOrBehavior(
+    public static bool HasAnythingAroundFrameworkElement(
         this IEnumerable<ClassDeclarationSyntax> declarations,
         GeneratorSyntaxContext context)
         => declarations.Any(declaration =>
@@ -43,11 +44,22 @@ internal static class ClassDeclarationSyntaxExtensions
             var semanticModel = context.SemanticModel.Compilation.GetSemanticModel(declaration.SyntaxTree);
             var symbol = semanticModel.GetDeclaredSymbol(declaration);
 
-            return symbol?.InheritsFrom(
-                       NameConstants.UserControl,
-                       NameConstants.DependencyObject,
-                       NameConstants.FrameworkElement) == true ||
-                   symbol?.Name.EndsWith(NameConstants.Attach, StringComparison.Ordinal) == true ||
-                   symbol?.Name.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) == true;
+            if (symbol?.InheritsFrom(
+                    NameConstants.UserControl,
+                    NameConstants.DependencyObject,
+                    NameConstants.FrameworkElement) == true)
+            {
+                return true;
+            }
+
+            if (symbol?.Name.EndsWith(NameConstants.Attach, StringComparison.Ordinal) == true ||
+                symbol?.Name.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) == true)
+            {
+                return true;
+            }
+
+            var code = semanticModel.SyntaxTree.ToString();
+
+            return code.Contains($"[{NameConstants.RoutedEvent}");
         });
 }

@@ -39,7 +39,7 @@ internal static class ObservablePropertyInspector
                 continue;
             }
 
-            AppendPropertiesToGenerate(
+            AppendPropertyToGenerate(
                 fieldSymbol,
                 fieldSymbolAttributes,
                 fieldPropertyAttribute,
@@ -50,7 +50,7 @@ internal static class ObservablePropertyInspector
     }
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
-    private static void AppendPropertiesToGenerate(
+    private static void AppendPropertyToGenerate(
         IFieldSymbol fieldSymbol,
         ImmutableArray<AttributeData> fieldSymbolAttributes,
         AttributeData fieldPropertyAttribute,

@@ -60,6 +60,21 @@ internal static class FrameworkElementBuilderExtensions
         }
     }
 
+    public static void GenerateRoutedEvents(
+        this FrameworkElementBuilder builder,
+        IEnumerable<RoutedEventToGenerate>? routedEventToGenerates)
+    {
+        if (routedEventToGenerates is null)
+        {
+            return;
+        }
+
+        foreach (var routedEventToGenerate in routedEventToGenerates)
+        {
+            GenerateRoutedEvent(builder, routedEventToGenerate);
+        }
+    }
+
     private static void GenerateAttachedProperty(
         FrameworkElementBuilder builder,
         AttachedPropertyToGenerate p)
@@ -317,5 +332,28 @@ internal static class FrameworkElementBuilderExtensions
         builder.IncreaseIndent();
         builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
         builder.DecreaseIndent();
+    }
+
+    private static void GenerateRoutedEvent(
+        FrameworkElementBuilder builder,
+        RoutedEventToGenerate re)
+    {
+        builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
+        builder.IncreaseIndent();
+        builder.AppendLine($"name: \"{re.Name}\",");
+        builder.AppendLine(string.IsNullOrEmpty(re.RoutingStrategy)
+            ? $"routingStrategy: RoutingStrategy.Bubble,"
+            : $"routingStrategy: RoutingStrategy.{re.RoutingStrategy},");
+        builder.AppendLine("handlerType: typeof(RoutedEventHandler),");
+        builder.AppendLine($"ownerType: typeof({re.OwnerType}));");
+        builder.DecreaseIndent();
+        builder.AppendLine();
+        builder.AppendLine($"public event RoutedEventHandler {re.Name}");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine($"add => AddHandler({re.Name}Event, value);");
+        builder.AppendLine($"remove => RemoveHandler({re.Name}Event, value);");
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
     }
 }
