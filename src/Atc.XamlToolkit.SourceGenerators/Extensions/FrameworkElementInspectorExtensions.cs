@@ -2,10 +2,11 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions;
 
 internal static class FrameworkElementInspectorExtensions
 {
-    public static void ApplyCommandsAndProperties(
+    public static void ApplyCommandsAndPropertiesAndEvents(
         this FrameworkElementInspectorResult result,
         List<AttachedPropertyToGenerate> allAttachedProperties,
         List<DependencyPropertyToGenerate> allDependencyProperties,
+        List<RoutedEventToGenerate> allRoutedEvents,
         List<RelayCommandToGenerate> allRelayCommands)
     {
         if (allAttachedProperties.Count == 0)
@@ -31,6 +32,19 @@ internal static class FrameworkElementInspectorExtensions
                          .Where(p => allDependencyProperties.Find(x => x.Name == p.Name) is null))
             {
                 allDependencyProperties.Add(propertyToGenerate);
+            }
+        }
+
+        if (allRoutedEvents.Count == 0)
+        {
+            allRoutedEvents.AddRange(result.RoutedEventsToGenerate);
+        }
+        else
+        {
+            foreach (var eventToGenerate in result.RoutedEventsToGenerate
+                         .Where(p => allRoutedEvents.Find(x => x.Name == p.Name) is null))
+            {
+                allRoutedEvents.Add(eventToGenerate);
             }
         }
 

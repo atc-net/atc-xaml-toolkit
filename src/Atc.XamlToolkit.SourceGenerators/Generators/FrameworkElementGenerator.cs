@@ -92,13 +92,14 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             .Compilation
             .GetAllPartialClassDeclarations(frameworkElementClassSymbol);
 
-        if (!allPartialDeclarations.HasBaseClassFromFrameworkElementOrEndsOnAttachOrBehavior(context))
+        if (!allPartialDeclarations.HasAnythingAroundFrameworkElement(context))
         {
             return null;
         }
 
         var allAttachedProperties = new List<AttachedPropertyToGenerate>();
         var allDependencyProperties = new List<DependencyPropertyToGenerate>();
+        var allRoutedEvents = new List<RoutedEventToGenerate>();
         var allRelayCommands = new List<RelayCommandToGenerate>();
         var isStatic = false;
 
@@ -118,9 +119,10 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
                 continue;
             }
 
-            result.ApplyCommandsAndProperties(
+            result.ApplyCommandsAndPropertiesAndEvents(
                 allAttachedProperties,
                 allDependencyProperties,
+                allRoutedEvents,
                 allRelayCommands);
 
             if (!isStatic)
@@ -129,9 +131,10 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             }
         }
 
-        if (!allAttachedProperties.Any() &&
-            !allDependencyProperties.Any() &&
-            !allRelayCommands.Any())
+        if (allAttachedProperties.Count == 0 &&
+            allDependencyProperties.Count == 0 &&
+            allRoutedEvents.Count == 0 &&
+            allRelayCommands.Count == 0)
         {
             return null;
         }
@@ -144,6 +147,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         {
             AttachedPropertiesToGenerate = allAttachedProperties,
             DependencyPropertiesToGenerate = allDependencyProperties,
+            RoutedEventsToGenerate = allRoutedEvents,
             RelayCommandsToGenerate = allRelayCommands,
         };
 
@@ -176,6 +180,11 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         if (frameworkElementToGenerate.DependencyPropertiesToGenerate?.Count > 0)
         {
             frameworkElementBuilder.GenerateDependencyProperties(frameworkElementToGenerate.DependencyPropertiesToGenerate);
+        }
+
+        if (frameworkElementToGenerate.RoutedEventsToGenerate?.Count > 0)
+        {
+            frameworkElementBuilder.GenerateRoutedEvents(frameworkElementToGenerate.RoutedEventsToGenerate);
         }
 
         if (frameworkElementToGenerate.RelayCommandsToGenerate?.Count > 0)

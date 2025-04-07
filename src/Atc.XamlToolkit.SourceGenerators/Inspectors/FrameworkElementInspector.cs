@@ -15,12 +15,15 @@ internal static class FrameworkElementInspector
             NameConstants.DependencyPropertyAttribute,
             NameConstants.DependencyProperty);
 
+        var routedEventsToGenerate = RoutedEventInspector.Inspect(classSymbol);
+
         var relayCommandsToGenerate = RelayCommandInspector.Inspect(classSymbol);
 
         return new FrameworkElementInspectorResult(
             classSymbol.IsStatic,
             attachedPropertiesToGenerate,
             dependencyPropertiesToGenerate,
+            routedEventsToGenerate,
             relayCommandsToGenerate);
     }
 }
