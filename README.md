@@ -26,7 +26,7 @@ Please read more here:
 
 - [MVVM framework](docs/Mvvm/@Readme.md)
 
-# ⚙️ Source Generators
+## ⚙️ Source Generators
 
 Our source generators streamline development by automatically generating boilerplate code for
 both `Avalonia` and `WPF` projects.
@@ -39,6 +39,7 @@ Learn more about each generator:
 
 - [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
 - [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
+- [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
 - [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)
 
 Example for ViewModel classes
@@ -47,7 +48,7 @@ Example for ViewModel classes
 
 For more details, see the [MVVM](docs/Mvvm/@Readme.md) section.
 
-# How to contribute
+## How to contribute
 
 [Contribution Guidelines](https://atc-net.github.io/introduction/about-atc#how-to-contribute)
 

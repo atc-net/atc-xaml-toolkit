@@ -1,5 +1,7 @@
 # ⚙️ DependencyProperties with SourceGeneration
 
+> ❗ This feature is only supported in `WPF` for now ❗
+
 In WPF, **dependency properties** are a specialized type of property that extends the functionality of standard CLR properties. They support features such as data binding, animation, and property value inheritance, which are integral to the WPF property system. However, defining dependency properties traditionally involves verbose boilerplate code. To streamline this process, source generators can automatically generate the necessary code, reducing errors and improving maintainability.
 
 ---
@@ -81,14 +83,24 @@ This setup allows the UI to dynamically update when the IsRunning property chang
 This example demonstrates how to use **advanced metadata** with dependency properties via source generators, allowing:
 
 - ✔️ **Automatic property change notifications**
+
 - ✔️ **Value coercion and validation**
+
 - ✔️ **Optimized UI performance with layout invalidation**
+
 - ✔️ **Flexible data binding behavior**
+
 - ✔️ **Control over animation support**
 
-### 🚀 Why Use Atc.Wpf Source Generators?
+### 🚀 Why Use Atc.XamlToolkit’s Source Generators?
 
 - ✅ **Eliminates boilerplate** – Just declare the property, and the generator handles the rest.
+
+- ✅ **Ensures consistency** – Less room for human error.
+
+- ✅ **Improves Maintainability:** Reduces the likelihood of errors with auto-generated boilerplate.
+
+- ✅ **Streamlines Development:** Focus more on business logic rather than repetitive code patterns.
 
 ---
 
@@ -99,7 +111,7 @@ This example demonstrates how to use **advanced metadata** with dependency prope
 #### Constructor-Based Declaration
 
 ```csharp
-[DependencyProperty<bool>("IsRunning"]
+[DependencyProperty<bool>("IsRunning")]
 public partial class MyControl : UserControl
 {
 }
@@ -111,7 +123,7 @@ public partial class MyControl : UserControl
 public partial class MyControl : UserControl
 {
     [DependencyProperty]
-    private bool isRunning;    
+    private bool isRunning;
 }
 ```
 
