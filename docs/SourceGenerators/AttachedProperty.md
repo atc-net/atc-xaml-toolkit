@@ -1,5 +1,7 @@
 # ⚙️ AttachedProperty with SourceGeneration
 
+> ❗ This feature is only supported in `WPF` for now ❗
+
 In WPF, **attached properties** are a type of dependency property that allows properties to be defined in one class but used in another. They are widely used in scenarios like behaviors, layout configurations, and interactions where a property needs to be applied to multiple elements without modifying their class definitions. Traditionally, defining attached properties requires boilerplate code, but source generators can automate this process, reducing errors and improving maintainability.
 
 ---
@@ -61,15 +63,24 @@ This allows the `IsDraggable` property to be applied to any UI element dynamical
 This example demonstrates **advanced metadata** handling for attached properties with source generation, enabling:
 
 - ✔️ **Automatic property registration**
+
 - ✔️ **Flexible application to various UI elements**
+
 - ✔️ **Custom property value coercion and validation**
+
 - ✔️ **Efficient UI updates**
+
 - ✔️ **Simplified code structure**
 
-### 🚀 Why Use Atc.Wpf Source Generators?
+### 🚀 Why Use Atc.XamlToolkit’s Source Generators?
 
 - ✅ **Eliminates boilerplate** – Just declare the property, and the generator handles the rest.
+
 - ✅ **Ensures consistency** – Less room for human error.
+
+- ✅ **Improves Maintainability:** Reduces the likelihood of errors with auto-generated boilerplate.
+
+- ✅ **Streamlines Development:** Focus more on business logic rather than repetitive code patterns.
 
 ---
 
