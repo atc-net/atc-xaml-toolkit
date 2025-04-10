@@ -3,7 +3,6 @@ namespace Atc.XamlToolkit.WpfSample.SampleControls;
 [SuppressMessage("", "CS0169:The field is never used", Justification = "OK - SourceGenerator declaration field")]
 [SuppressMessage("", "CS8618:Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.", Justification = "OK - SourceGenerator declaration field")]
 [SuppressMessage("", "CA1823:Avoid unused private fields", Justification = "OK - SourceGenerator declaration field")]
-
 public partial class TestFieldsDependencyPropertiesView
 {
     public TestFieldsDependencyPropertiesView()
