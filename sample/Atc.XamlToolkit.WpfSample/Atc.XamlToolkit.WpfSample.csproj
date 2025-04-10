@@ -9,15 +9,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+    <NoWarn>$(NoWarn);WPF0001;CS0169;CS8618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Atc" Version="2.0.552" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
