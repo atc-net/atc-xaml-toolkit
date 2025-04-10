@@ -94,21 +94,45 @@ internal static class AttributeDataExtensions
 
                     if (result.ContainsKey(arg.Key))
                     {
-                        result[arg.Key] += $", {typedConstant.Value.EnsureNameof()}";
+                        result[arg.Key] += $", {typedConstant.Value}";
                     }
                     else
                     {
                         result.Add(
                             arg.Key,
-                            typedConstant.Value.EnsureNameof());
+                            typedConstant.Value.ToString());
                     }
                 }
             }
             else
             {
-                result.Add(
-                    arg.Key,
-                    arg.Value.Value.EnsureNameof());
+                if (arg.Value.Kind == TypedConstantKind.Enum)
+                {
+                    // Syntax check for enum - since arg.Value.Value will be an integer
+                    if (attributeData.ApplicationSyntaxReference is null)
+                    {
+                        continue;
+                    }
+
+                    var dictionary = attributeData
+                        .ApplicationSyntaxReference
+                        .GetSyntax()
+                        .ToFullString()
+                        .ExtractAttributeConstructorParameters();
+
+                    if (dictionary.TryGetValue(arg.Key, out var value))
+                    {
+                        result.Add(
+                            arg.Key,
+                            value);
+                    }
+                }
+                else
+                {
+                    result.Add(
+                        arg.Key,
+                        arg.Value.Value?.ToString());
+                }
             }
         }
 
