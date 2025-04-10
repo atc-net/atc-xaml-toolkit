@@ -63,10 +63,10 @@ internal static class ObservablePropertyInspector
 
         var propertyName = fieldArgumentValues.TryGetValue(NameConstants.Name, out var nameValue)
             ? nameValue!
-                .StripPrefixFromField()
+                .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper()
             : backingFieldName
-                .StripPrefixFromField()
+                .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper();
 
         List<string>? propertyNamesToInvalidate = null;

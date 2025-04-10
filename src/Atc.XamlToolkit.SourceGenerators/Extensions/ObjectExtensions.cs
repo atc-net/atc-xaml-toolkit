@@ -16,7 +16,8 @@ internal static class ObjectExtensions
             .ToString()?
             .EnsureNoNameof() ?? string.Empty;
 
-        if (!type.IsSimpleType() && !type.IsSimpleUiType())
+        if (!type.IsSimpleType() &&
+            !type.IsSimpleUiType())
         {
             return strDefaultValue;
         }
@@ -32,7 +33,7 @@ internal static class ObjectExtensions
         }
 
         var parts = type.Split('.');
-        var lastPart = parts[parts.Length - 1];
+        var lastPart = parts[parts.Length - 1].RemoveNullableSuffix();
 
         switch (lastPart)
         {

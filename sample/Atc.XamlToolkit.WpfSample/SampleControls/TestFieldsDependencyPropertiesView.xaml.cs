@@ -36,6 +36,9 @@ public partial class TestFieldsDependencyPropertiesView
     [DependencyProperty(DefaultValue = "error;err:")]
     private IList<string> errorTerms;
 
+    [DependencyProperty]
+    private IList<string>? otherTerms;
+
     [DependencyProperty(DefaultValue = "Red")]
     private Color errorTextColor;
 
