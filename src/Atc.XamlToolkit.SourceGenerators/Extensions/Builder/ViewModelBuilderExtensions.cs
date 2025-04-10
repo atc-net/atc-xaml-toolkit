@@ -116,30 +116,33 @@ internal static class ViewModelBuilderExtensions
             value.EndsWith(")", StringComparison.Ordinal))
         {
             var valueContent = value.ExtractInnerContent();
-            var sa = valueContent.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-            foreach (var s in sa)
-            {
-                var line = s.Trim();
-                if (line.EndsWith(");", StringComparison.Ordinal))
-                {
-                    builder.AppendLine(line);
-                }
-                else if (line.EndsWith(")", StringComparison.Ordinal))
-                {
-                    builder.AppendLine(line + ";");
-                }
-                else
-                {
-                    builder.AppendLine(line + "();");
-                }
-            }
+            GenerateCallbackInlineCodeHelper(builder, valueContent);
         }
         else
         {
-            var sa = value.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-            foreach (var s in sa)
+            GenerateCallbackInlineCodeHelper(builder, value);
+        }
+    }
+
+    private static void GenerateCallbackInlineCodeHelper(
+        ViewModelBuilder builder,
+        string valueContent)
+    {
+        var sa = valueContent.Split([';'], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var s in sa)
+        {
+            var line = s.Trim();
+            if (line.EndsWith(");", StringComparison.Ordinal))
             {
-                builder.AppendLine(s.Trim() + ";");
+                builder.AppendLine(line);
+            }
+            else if (line.EndsWith(")", StringComparison.Ordinal))
+            {
+                builder.AppendLine(line + ";");
+            }
+            else
+            {
+                builder.AppendLine(line + "();");
             }
         }
     }
