@@ -150,13 +150,44 @@ public static class StringExtensions
 
     public static string EnsureCSharpAliasIfNeeded(
         this string typeName)
-        => TypeAliases.TryGetValue(typeName, out var alias)
-            ? alias
-            : typeName;
+    {
+        if (string.IsNullOrEmpty(typeName))
+        {
+            return typeName;
+        }
+
+        var resolvedTypeName = typeName switch
+        {
+            _ => TypeAliases.TryGetValue(typeName, out var alias)
+                ? alias
+                : typeName,
+        };
+
+        if (!resolvedTypeName.Contains("."))
+        {
+            return resolvedTypeName;
+        }
+
+        var parts = resolvedTypeName.Split('.');
+        return parts[parts.Length - 1];
+    }
 
     public static bool IsSimpleType(
         this string value)
-        => value
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        if (value.Contains("<"))
+        {
+            value = value
+                .Substring(value.IndexOf('<') + 1)
+                .Replace(">", string.Empty);
+        }
+
+        return value
             is "bool"
             or "decimal"
             or "double"
@@ -164,6 +195,24 @@ public static class StringExtensions
             or "int"
             or "long"
             or "string";
+    }
+
+    public static bool IsSimpleUiType(
+        this string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        var parts = value.Split('.');
+        var lastPart = parts[parts.Length - 1];
+
+        return lastPart
+            is "Brush"
+            or "Color"
+            or "FontFamily";
+    }
 
     private static string RemoveOuterBrackets(
         string value)

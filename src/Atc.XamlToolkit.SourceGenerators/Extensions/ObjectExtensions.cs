@@ -16,12 +16,25 @@ internal static class ObjectExtensions
             .ToString()?
             .EnsureNoNameof() ?? string.Empty;
 
-        if (!type.IsSimpleType())
+        if (!type.IsSimpleType() && !type.IsSimpleUiType())
         {
             return strDefaultValue;
         }
 
-        switch (type)
+        if (type.Contains("<"))
+        {
+            var sa = strDefaultValue.Split(';');
+            if (type.Contains("List"))
+            {
+                var listElements = string.Join(", ", sa.Select(x => $"\"{x.Trim()}\""));
+                return $"new List<string> {{ {listElements} }}";
+            }
+        }
+
+        var parts = type.Split('.');
+        var lastPart = parts[parts.Length - 1];
+
+        switch (lastPart)
         {
             case "bool":
                 strDefaultValue = strDefaultValue switch
@@ -57,11 +70,33 @@ internal static class ObjectExtensions
                 break;
             case "string":
             {
-                if (strDefaultValue.Length == 0)
-                {
-                    strDefaultValue = "string.Empty";
-                }
+                strDefaultValue = strDefaultValue.Length == 0
+                    ? "string.Empty"
+                    : $"\"{strDefaultValue}\"";
+                break;
+            }
 
+            case "Color":
+            {
+                strDefaultValue = strDefaultValue.Length == 0
+                    ? "Colors.DeepPink"
+                    : $"Colors.{strDefaultValue}";
+                break;
+            }
+
+            case "Brush":
+            {
+                strDefaultValue = strDefaultValue.Length == 0
+                    ? "Brushes.DeepPink"
+                    : $"Brushes.{strDefaultValue}";
+                break;
+            }
+
+            case "FontFamily":
+            {
+                strDefaultValue = strDefaultValue.Length == 0
+                    ? "new FontFamily(\"Arial\")"
+                    : $"new FontFamily(\"{strDefaultValue}\")";
                 break;
             }
         }
