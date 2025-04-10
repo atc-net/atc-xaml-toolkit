@@ -3,6 +3,17 @@ namespace Atc.XamlToolkit.SourceGenerators.Tests.Extensions;
 public sealed class StringExtensionsTests
 {
     [Theory]
+    [InlineData("string", "string")]
+    [InlineData("string?", "string")]
+    [InlineData("IList<string>", "IList<string>")]
+    [InlineData("IList<string>?", "IList<string>")]
+    public void RemoveNullableSuffix(string input, string expected)
+    {
+        var result = input.RemoveNullableSuffix();
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
     [InlineData("m_fieldName", "fieldName")]
     [InlineData("_fieldName", "fieldName")]
     [InlineData("fieldName", "fieldName")]
@@ -10,7 +21,7 @@ public sealed class StringExtensionsTests
     [InlineData("_", "")]
     public void StripPrefixFromField_WorksCorrectly(string input, string expected)
     {
-        var result = input.StripPrefixFromField();
+        var result = input.RemovePrefixFromField();
         Assert.Equal(expected, result);
     }
 

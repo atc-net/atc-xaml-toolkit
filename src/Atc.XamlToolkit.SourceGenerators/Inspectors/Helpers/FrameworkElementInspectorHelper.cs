@@ -20,7 +20,7 @@ internal static class FrameworkElementInspectorHelper
             if (argumentValues.TryGetValue(NameConstants.Name, out var nameValue))
             {
                 propertyName = nameValue!
-                    .StripPrefixFromField()
+                    .RemovePrefixFromField()
                     .EnsureFirstCharacterToUpper();
             }
 

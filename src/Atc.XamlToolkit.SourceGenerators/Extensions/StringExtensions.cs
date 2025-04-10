@@ -128,7 +128,19 @@ public static class StringExtensions
         return result;
     }
 
-    public static string StripPrefixFromField(
+    public static string RemoveNullableSuffix(
+        this string value)
+    {
+        if (string.IsNullOrEmpty(value) ||
+            !value.EndsWith("?", StringComparison.Ordinal))
+        {
+            return value;
+        }
+
+        return value.Substring(0, value.Length - 1);
+    }
+
+    public static string RemovePrefixFromField(
         this string fieldName)
     {
         if (fieldName is null)
@@ -187,7 +199,7 @@ public static class StringExtensions
                 .Replace(">", string.Empty);
         }
 
-        return value
+        return value.RemoveNullableSuffix()
             is "bool"
             or "decimal"
             or "double"
@@ -208,7 +220,7 @@ public static class StringExtensions
         var parts = value.Split('.');
         var lastPart = parts[parts.Length - 1];
 
-        return lastPart
+        return lastPart.RemoveNullableSuffix()
             is "Brush"
             or "Color"
             or "FontFamily";

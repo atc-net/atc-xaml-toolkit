@@ -4,7 +4,7 @@ internal static class VariableDeclaratorSyntaxExtensions
 {
     public static string GetFieldName(
         this VariableDeclaratorSyntax variableDeclaratorSyntax)
-        => variableDeclaratorSyntax.Identifier.Text.StripPrefixFromField();
+        => variableDeclaratorSyntax.Identifier.Text.RemovePrefixFromField();
 
     public static bool HasValidBackingFieldName(
         this VariableDeclaratorSyntax variableDeclaratorSyntax)

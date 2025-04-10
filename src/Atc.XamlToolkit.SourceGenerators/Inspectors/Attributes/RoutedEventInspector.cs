@@ -66,7 +66,7 @@ internal static class RoutedEventInspector
     {
         var propertyName = fieldSymbol
             .Name
-            .StripPrefixFromField()
+            .RemovePrefixFromField()
             .EnsureFirstCharacterToUpper();
 
         var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();

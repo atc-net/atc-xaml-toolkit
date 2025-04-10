@@ -107,7 +107,7 @@ internal static class FrameworkElementBuilderExtensions
         builder.IncreaseIndent();
 
         builder.AppendLine(isAttached ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
-        builder.AppendLine($"typeof({p.Type}),");
+        builder.AppendLine($"typeof({p.Type.RemoveNullableSuffix()}),");
     }
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
@@ -117,9 +117,10 @@ internal static class FrameworkElementBuilderExtensions
     {
         if (p.HasAnyMetadata)
         {
-            builder.AppendLine($"typeof({p.OwnerType}),");
+            builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
 
-            if (string.IsNullOrEmpty(p.PropertyChangedCallback) && string.IsNullOrEmpty(p.CoerceValueCallback))
+            if (string.IsNullOrEmpty(p.PropertyChangedCallback) &&
+                string.IsNullOrEmpty(p.CoerceValueCallback))
             {
                 if (p.HasAnyValidateValueCallback)
                 {
@@ -173,13 +174,13 @@ internal static class FrameworkElementBuilderExtensions
         {
             if (p.HasAnyValidateValueCallback)
             {
-                builder.AppendLine($"typeof({p.OwnerType}),");
+                builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
                 builder.DecreaseIndent();
                 builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
             }
             else
             {
-                builder.AppendLine($"typeof({p.OwnerType}));");
+                builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}));");
                 builder.DecreaseIndent();
             }
         }
