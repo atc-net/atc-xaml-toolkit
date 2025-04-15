@@ -147,7 +147,8 @@ internal static class ObservablePropertyInspector
             new ObservablePropertyToGenerate(
                 propertyName,
                 propertyType,
-                backingFieldName)
+                backingFieldName,
+                fieldSymbol.IsReadOnly)
             {
                 PropertyNamesToInvalidate = propertyNamesToInvalidate,
                 CommandNamesToInvalidate = commandNamesToInvalidate,

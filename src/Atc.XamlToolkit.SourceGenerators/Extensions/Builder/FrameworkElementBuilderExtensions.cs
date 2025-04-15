@@ -1,6 +1,7 @@
 namespace Atc.XamlToolkit.SourceGenerators.Extensions.Builder;
 
 [SuppressMessage("Design", "CA1308:Teplace the call to 'ToLowerInvariant' with 'ToUpperInvariant'", Justification = "OK.")]
+[SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
 internal static class FrameworkElementBuilderExtensions
 {
     public static void GenerateStart(
@@ -106,11 +107,18 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendLine($"public static readonly DependencyProperty {p.Name}Property = DependencyProperty.{registerMethod}(");
         builder.IncreaseIndent();
 
-        builder.AppendLine(isAttached ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
+        if (isAttached || p.IsOwnerTypeStatic)
+        {
+            builder.AppendLine($"\"{p.Name}\",");
+        }
+        else
+        {
+            builder.AppendLine($"{p.Name.EnsureNameofContent()},");
+        }
+
         builder.AppendLine($"typeof({p.Type.RemoveNullableSuffix()}),");
     }
 
-    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void GenerateDependencyPropertyBody(
         FrameworkElementBuilder builder,
         BaseFrameworkElementPropertyToGenerate p)
@@ -277,23 +285,64 @@ internal static class FrameworkElementBuilderExtensions
     {
         builder.AppendLine();
 
-        if (!string.IsNullOrEmpty(p.Category))
+        if (p.IsOwnerTypeStatic)
         {
-            builder.AppendLine($"[Category(\"{p.Category}\")]");
-        }
+            if (!string.IsNullOrEmpty(p.Category))
+            {
+                builder.AppendLine($"[Category(\"{p.Category}\")]");
+            }
 
-        if (!string.IsNullOrEmpty(p.Description))
+            if (!string.IsNullOrEmpty(p.Description))
+            {
+                builder.AppendLine($"[Description(\"Get: {p.Description}\")]");
+            }
+
+            builder.AppendLine($"public static {p.Type} Get{p.Name}(UIElement element)");
+            builder.IncreaseIndent();
+            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
+            builder.DecreaseIndent();
+
+            builder.AppendLine();
+
+            if (!string.IsNullOrEmpty(p.Category))
+            {
+                builder.AppendLine($"[Category(\"{p.Category}\")]");
+            }
+
+            if (!string.IsNullOrEmpty(p.Description))
+            {
+                builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
+            }
+
+            builder.AppendLine($"public static void Set{p.Name}(UIElement element, {p.Type} value)");
+            builder.IncreaseIndent();
+            builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
+            builder.DecreaseIndent();
+        }
+        else
         {
-            builder.AppendLine($"[Description(\"{p.Description}\")]");
-        }
+            if (!string.IsNullOrEmpty(p.Category))
+            {
+                builder.AppendLine($"[Category(\"{p.Category}\")]");
+            }
 
-        builder.AppendLine($"public {p.Type} {p.Name}");
-        builder.AppendLine("{");
-        builder.IncreaseIndent();
-        builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
-        builder.AppendLine($"set => SetValue({p.Name}Property, value);");
-        builder.DecreaseIndent();
-        builder.AppendLine("}");
+            if (!string.IsNullOrEmpty(p.Description))
+            {
+                builder.AppendLine($"[Description(\"{p.Description}\")]");
+            }
+
+            builder.AppendLine($"public {p.Type} {p.Name}");
+            builder.AppendLine("{");
+            builder.IncreaseIndent();
+            builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
+            if (!p.IsReadOnly)
+            {
+                builder.AppendLine($"set => SetValue({p.Name}Property, value);");
+            }
+
+            builder.DecreaseIndent();
+            builder.AppendLine("}");
+        }
     }
 
     private static void GenerateClrAttachedMethods(
@@ -315,23 +364,27 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendLine($"public static {p.Type} Get{p.Name}(UIElement element)");
         builder.IncreaseIndent();
         builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
-        builder.DecreaseIndent();
-
-        builder.AppendLine();
-
-        if (!string.IsNullOrEmpty(p.Category))
+        if (!p.IsReadOnly)
         {
-            builder.AppendLine($"[Category(\"{p.Category}\")]");
+            builder.DecreaseIndent();
+
+            builder.AppendLine();
+
+            if (!string.IsNullOrEmpty(p.Category))
+            {
+                builder.AppendLine($"[Category(\"{p.Category}\")]");
+            }
+
+            if (!string.IsNullOrEmpty(p.Description))
+            {
+                builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
+            }
+
+            builder.AppendLine($"public static void Set{p.Name}(UIElement element, {p.Type} value)");
+            builder.IncreaseIndent();
+            builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
         }
 
-        if (!string.IsNullOrEmpty(p.Description))
-        {
-            builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
-        }
-
-        builder.AppendLine($"public static void Set{p.Name}(UIElement element, {p.Type} value)");
-        builder.IncreaseIndent();
-        builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
         builder.DecreaseIndent();
     }
 

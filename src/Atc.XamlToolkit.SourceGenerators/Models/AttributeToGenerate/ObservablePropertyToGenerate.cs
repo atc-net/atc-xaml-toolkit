@@ -4,13 +4,16 @@ namespace Atc.XamlToolkit.SourceGenerators.Models.ToGenerate;
 internal sealed class ObservablePropertyToGenerate(
     string name,
     string type,
-    string backingFieldName)
+    string backingFieldName,
+    bool isReadOnly)
 {
     public string Name { get; } = name;
 
     public string Type { get; } = type;
 
     public string BackingFieldName { get; } = backingFieldName;
+
+    public bool IsReadOnly { get; } = isReadOnly;
 
     public ICollection<string>? PropertyNamesToInvalidate { get; set; }
 

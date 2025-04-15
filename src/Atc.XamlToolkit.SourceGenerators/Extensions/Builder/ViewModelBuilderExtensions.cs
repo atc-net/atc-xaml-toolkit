@@ -46,6 +46,13 @@ internal static class ViewModelBuilderExtensions
         builder.AppendLine("{");
         builder.IncreaseIndent();
         builder.AppendLine($"get => {p.BackingFieldName};");
+        if (p.IsReadOnly)
+        {
+            builder.DecreaseIndent();
+            builder.AppendLine("}");
+            return;
+        }
+
         builder.AppendLine("set");
         builder.AppendLine("{");
         builder.IncreaseIndent();
