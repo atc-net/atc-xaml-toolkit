@@ -9,7 +9,8 @@ internal sealed class RelayCommandToGenerate(
     string? canExecuteName,
     bool invertCanExecute,
     bool usePropertyForCanExecute,
-    bool isAsync)
+    bool isAsync,
+    bool executeOnBackgroundThread)
 {
     public string CommandName { get; } = commandName;
 
@@ -27,6 +28,8 @@ internal sealed class RelayCommandToGenerate(
 
     public bool IsAsync { get; } = isAsync;
 
+    public bool ExecuteOnBackgroundThread { get; } = executeOnBackgroundThread;
+
     public override string ToString()
-        => $"{nameof(CommandName)}: {CommandName}, {nameof(MethodName)}: {MethodName}, {nameof(ParameterTypes)}.Count: {ParameterTypes?.Length}, {nameof(ParameterValues)}.Count: {ParameterValues?.Length}, {nameof(CanExecuteName)}: {CanExecuteName}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(UsePropertyForCanExecute)}: {UsePropertyForCanExecute}, {nameof(IsAsync)}: {IsAsync}";
+        => $"{nameof(CommandName)}: {CommandName}, {nameof(MethodName)}: {MethodName}, {nameof(ParameterTypes)}.Count: {ParameterTypes?.Length}, {nameof(ParameterValues)}.Count: {ParameterValues?.Length}, {nameof(CanExecuteName)}: {CanExecuteName}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(UsePropertyForCanExecute)}: {UsePropertyForCanExecute}, {nameof(IsAsync)}: {IsAsync}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}";
 }

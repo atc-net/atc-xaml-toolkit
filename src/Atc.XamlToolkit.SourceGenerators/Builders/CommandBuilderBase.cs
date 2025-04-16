@@ -23,17 +23,13 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         foreach (var relayCommandToGenerate in relayCommandsToGenerateAsArray)
         {
-            var interfaceType = relayCommandToGenerate.IsAsync
-                ? NameConstants.IRelayCommandAsync
-                : NameConstants.IRelayCommand;
-
             if (relayCommandToGenerate.ParameterValues is null)
             {
-                GenerateRelayCommandBackingFieldWithOutParameterValues(builder, relayCommandToGenerate, interfaceType);
+                GenerateRelayCommandBackingFieldWithOutParameterValues(builder, relayCommandToGenerate);
             }
             else
             {
-                GenerateRelayCommandBackingFieldWithParameterValues(builder, relayCommandToGenerate, interfaceType);
+                GenerateRelayCommandBackingFieldWithParameterValues(builder, relayCommandToGenerate);
             }
         }
 
@@ -41,30 +37,25 @@ internal abstract class CommandBuilderBase : BuilderBase
         {
             builder.AppendLineBeforeMember();
 
-            var interfaceType = relayCommandToGenerate.IsAsync
-                ? NameConstants.IRelayCommandAsync
-                : NameConstants.IRelayCommand;
-
-            var implementationType = relayCommandToGenerate.IsAsync
-                ? NameConstants.RelayCommandAsync
-                : NameConstants.RelayCommand;
-
             if (relayCommandToGenerate.ParameterValues is null)
             {
-                GenerateRelayCommandWithOutParameterValues(builder, relayCommandToGenerate, interfaceType, implementationType);
+                GenerateRelayCommandWithOutParameterValues(builder, relayCommandToGenerate);
             }
             else
             {
-                GenerateRelayCommandWithParameterValues(builder, relayCommandToGenerate, interfaceType, implementationType);
+                GenerateRelayCommandWithParameterValues(builder, relayCommandToGenerate);
             }
         }
     }
 
     private static void GenerateRelayCommandBackingFieldWithOutParameterValues(
         CommandBuilderBase builder,
-        RelayCommandToGenerate rc,
-        string interfaceType)
+        RelayCommandToGenerate rc)
     {
+        var interfaceType = rc.IsAsync
+            ? NameConstants.IRelayCommandAsync
+            : NameConstants.IRelayCommand;
+
         if (rc.ParameterTypes is null || rc.ParameterTypes.Length == 0)
         {
             GenerateCommandBackingFieldLine(
@@ -95,6 +86,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         else
         {
             var (tupleGeneric, _, _) = GetConstructorParametersWithParameterTypes(rc);
+
             GenerateCommandBackingFieldLine(
                 builder,
                 $"{interfaceType}{tupleGeneric}",
@@ -104,21 +96,38 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void GenerateRelayCommandBackingFieldWithParameterValues(
         CommandBuilderBase builder,
-        RelayCommandToGenerate rc,
-        string interfaceType)
+        RelayCommandToGenerate rc)
     {
+        var interfaceType = rc.IsAsync
+            ? NameConstants.IRelayCommandAsync
+            : NameConstants.IRelayCommand;
+
         GenerateCommandBackingFieldLine(
             builder,
             interfaceType,
             rc.CommandName);
     }
 
+    private static void GenerateCommandBackingFieldLine(
+        CommandBuilderBase builder,
+        string interfaceType,
+        string commandName)
+    {
+        builder.AppendLine($"private {interfaceType}? {commandName.EnsureFirstCharacterToLower()};");
+    }
+
     private static void GenerateRelayCommandWithOutParameterValues(
         CommandBuilderBase builder,
-        RelayCommandToGenerate rc,
-        string interfaceType,
-        string implementationType)
+        RelayCommandToGenerate rc)
     {
+        var interfaceType = rc.IsAsync
+            ? NameConstants.IRelayCommandAsync
+            : NameConstants.IRelayCommand;
+
+        var implementationType = rc.IsAsync
+            ? NameConstants.RelayCommandAsync
+            : NameConstants.RelayCommand;
+
         if (rc.ParameterTypes is null || rc.ParameterTypes.Length == 0)
         {
             GenerateCommandLine(
@@ -127,9 +136,11 @@ internal abstract class CommandBuilderBase : BuilderBase
                 implementationType,
                 rc.CommandName,
                 rc.MethodName,
-                rc.CanExecuteName,
-                rc.InvertCanExecute,
-                rc.UsePropertyForCanExecute);
+                canExecuteName: rc.CanExecuteName,
+                invertCanExecute: rc.InvertCanExecute,
+                usePropertyForCanExecute: rc.UsePropertyForCanExecute,
+                useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread,
+                isLambda: false);
         }
         else if (rc.ParameterTypes.Length == 1)
         {
@@ -142,9 +153,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                     interfaceType,
                     implementationType,
                     rc.CommandName,
-                    $"{rc.MethodName}(CancellationToken.None)",
-                    rc.CanExecuteName,
-                    rc.InvertCanExecute,
+                    constructorParameters: $"{rc.MethodName}(CancellationToken.None)",
+                    canExecuteName: rc.CanExecuteName,
+                    invertCanExecute: rc.InvertCanExecute,
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread,
                     isLambda: true);
             }
             else
@@ -155,15 +167,18 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{interfaceType}{generic}",
                     $"{implementationType}{generic}",
                     rc.CommandName,
-                    rc.MethodName,
-                    rc.CanExecuteName,
-                    rc.InvertCanExecute,
-                    rc.UsePropertyForCanExecute);
+                    constructorParameters: rc.MethodName,
+                    canExecuteName: rc.CanExecuteName,
+                    invertCanExecute: rc.InvertCanExecute,
+                    usePropertyForCanExecute: rc.UsePropertyForCanExecute,
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread,
+                    isLambda: false);
             }
         }
         else
         {
             var (tupleGeneric, constructorParametersMulti, filteredConstructorParameters) = GetConstructorParametersWithParameterTypes(rc);
+
             if (rc.UsePropertyForCanExecute)
             {
                 GenerateCommandLine(
@@ -171,8 +186,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{interfaceType}{tupleGeneric}",
                     $"{implementationType}{tupleGeneric}",
                     rc.CommandName,
-                    $"x => {rc.MethodName}({constructorParametersMulti})",
-                    rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}" : $"x => {rc.CanExecuteName}");
+                    constructorParameters: $"x => {rc.MethodName}({constructorParametersMulti})",
+                    canExecuteName: rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}" : $"x => {rc.CanExecuteName}",
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread,
+                    isLambda: false);
             }
             else
             {
@@ -181,18 +198,26 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{interfaceType}{tupleGeneric}",
                     $"{implementationType}{tupleGeneric}",
                     rc.CommandName,
-                    $"x => {rc.MethodName}({constructorParametersMulti})",
-                    rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}({filteredConstructorParameters})" : $"x => {rc.CanExecuteName}({filteredConstructorParameters})");
+                    constructorParameters: $"x => {rc.MethodName}({constructorParametersMulti})",
+                    canExecuteName: rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}({filteredConstructorParameters})" : $"x => {rc.CanExecuteName}({filteredConstructorParameters})",
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread,
+                    isLambda: false);
             }
         }
     }
 
     private static void GenerateRelayCommandWithParameterValues(
         CommandBuilderBase builder,
-        RelayCommandToGenerate rc,
-        string interfaceType,
-        string implementationType)
+        RelayCommandToGenerate rc)
     {
+        var interfaceType = rc.IsAsync
+            ? NameConstants.IRelayCommandAsync
+            : NameConstants.IRelayCommand;
+
+        var implementationType = rc.IsAsync
+            ? NameConstants.RelayCommandAsync
+            : NameConstants.RelayCommand;
+
         if (rc.ParameterValues!.Length == 1)
         {
             GenerateCommandLine(
@@ -247,8 +272,13 @@ internal abstract class CommandBuilderBase : BuilderBase
         string FilteredConstructorParameters) GetConstructorParametersWithParameterTypes(
         RelayCommandToGenerate rc)
     {
-        var filteredParameterTypes = rc.ParameterTypes!.Where(x => !x.EndsWith(nameof(CancellationToken), StringComparison.Ordinal));
-        var generic = $"<({string.Join(", ", filteredParameterTypes)})>";
+        var filteredParameterTypes = rc.ParameterTypes!
+            .Where(x => !x.EndsWith(nameof(CancellationToken), StringComparison.Ordinal))
+            .ToList();
+
+        var generic = filteredParameterTypes.Count > 1
+            ? $"<({string.Join(", ", filteredParameterTypes)})>"
+            : $"<{filteredParameterTypes[0]}>";
 
         var constructorParametersList = new List<string>();
         var tupleItemNumber = 0;
@@ -272,14 +302,6 @@ internal abstract class CommandBuilderBase : BuilderBase
         return (generic, constructorParameters, filteredConstructorParameters);
     }
 
-    private static void GenerateCommandBackingFieldLine(
-        CommandBuilderBase builder,
-        string interfaceType,
-        string commandName)
-    {
-        builder.AppendLine($"private {interfaceType}? {commandName.EnsureFirstCharacterToLower()};");
-    }
-
     private static void GenerateCommandLine(
         CommandBuilderBase builder,
         string interfaceType,
@@ -289,38 +311,136 @@ internal abstract class CommandBuilderBase : BuilderBase
         string? canExecuteName = null,
         bool invertCanExecute = false,
         bool usePropertyForCanExecute = false,
-        bool isLambda = false)
+        bool isLambda = false,
+        bool useExecuteOnBackgroundThread = false)
     {
-        var lambdaPrefix = isLambda ? "() => " : string.Empty;
-        var commandInstance = $"new {implementationType}({lambdaPrefix}{constructorParameters}";
+        builder.Append($"public {interfaceType} {commandName} => {commandName.EnsureFirstCharacterToLower()} ??= new {implementationType}(");
 
-        if (canExecuteName is not null)
+        if (useExecuteOnBackgroundThread)
         {
-            if (usePropertyForCanExecute)
+            builder.AppendLine();
+            builder.IncreaseIndent();
+            if (constructorParameters.StartsWith("x =>", StringComparison.Ordinal) &&
+                !implementationType.Contains("<("))
             {
-                if (interfaceType.Contains('<'))
-                {
-                    commandInstance += invertCanExecute
-                        ? $", _ => !{canExecuteName}"
-                        : $", _ => {canExecuteName}";
-                }
-                else
-                {
-                    commandInstance += invertCanExecute
-                        ? $", () => !{canExecuteName}"
-                        : $", () => {canExecuteName}";
-                }
+                builder.Append("x => ");
+                constructorParameters = constructorParameters
+                    .Replace("x => ", string.Empty)
+                    .Replace("x.Item1", "x");
+
+                canExecuteName = canExecuteName?
+                    .Replace("x => ", string.Empty)
+                    .Replace("(x.Item1)", string.Empty);
+            }
+            else if (implementationType.Contains("<"))
+            {
+                builder.Append("x => ");
+                constructorParameters += "(x)";
             }
             else
             {
-                commandInstance += invertCanExecute
-                    ? $", !{canExecuteName}"
-                    : $", {canExecuteName}";
+                builder.Append("() => ");
+            }
+
+            builder.Append("Task.Run(");
+            if (constructorParameters.Contains("("))
+            {
+                builder.Append("() => ");
+            }
+
+            builder.Append($"{constructorParameters})");
+            if (canExecuteName is null)
+            {
+                builder.AppendLine(");");
+            }
+            else
+            {
+                builder.AppendLine(",");
+
+                AppendCanExecute(builder, useExecuteOnBackgroundThread, implementationType, interfaceType, canExecuteName, invertCanExecute, usePropertyForCanExecute);
+
+                builder.AppendLine(");");
+                builder.DecreaseIndent();
             }
         }
+        else
+        {
+            var commandInstance = isLambda
+                ? $"() => {constructorParameters}"
+                : constructorParameters;
 
-        commandInstance += ");";
+            if (constructorParameters.StartsWith("x =>", StringComparison.Ordinal) &&
+                !implementationType.Contains("<("))
+            {
+                commandInstance = commandInstance
+                    .Replace("x.Item1", "x");
 
-        builder.AppendLine($"public {interfaceType} {commandName} => {commandName.EnsureFirstCharacterToLower()} ??= {commandInstance}");
+                canExecuteName = canExecuteName?
+                    .Replace("x => ", string.Empty)
+                    .Replace("(x.Item1)", string.Empty);
+            }
+
+            if (canExecuteName is null)
+            {
+                builder.Append(commandInstance);
+                builder.AppendLine(");");
+            }
+            else
+            {
+                builder.AppendLine();
+                builder.IncreaseIndent();
+                builder.Append(commandInstance);
+                builder.AppendLine(",");
+
+                AppendCanExecute(builder, useExecuteOnBackgroundThread, implementationType, interfaceType, canExecuteName, invertCanExecute, usePropertyForCanExecute);
+
+                builder.AppendLine(");");
+                builder.DecreaseIndent();
+            }
+        }
+    }
+
+    private static void AppendCanExecute(
+        CommandBuilderBase builder,
+        bool useExecuteOnBackgroundThread,
+        string implementationType,
+        string interfaceType,
+        string canExecuteName,
+        bool invertCanExecute,
+        bool usePropertyForCanExecute)
+    {
+        const string RelayGenericPrefix = NameConstants.RelayCommand + "<";
+        const string RelayAsyncGenericPrefix = NameConstants.RelayCommandAsync + "<";
+
+        var noLambda = !usePropertyForCanExecute &&
+                       (
+                           !useExecuteOnBackgroundThread ||
+                           implementationType.StartsWith(RelayGenericPrefix, StringComparison.Ordinal)
+                       );
+
+        if (!noLambda)
+        {
+            noLambda = !usePropertyForCanExecute &&
+                       useExecuteOnBackgroundThread &&
+                       implementationType.StartsWith(RelayAsyncGenericPrefix, StringComparison.Ordinal);
+        }
+
+        var core = invertCanExecute
+            ? $"!{canExecuteName}"
+            : canExecuteName;
+
+        if (noLambda)
+        {
+            builder.Append(core);
+        }
+        else
+        {
+            var param = usePropertyForCanExecute &&
+                        interfaceType.Contains("<")
+                ? "_"
+                : "()";
+
+            builder.Append($"{param} => {core}");
+        }
     }
 }
