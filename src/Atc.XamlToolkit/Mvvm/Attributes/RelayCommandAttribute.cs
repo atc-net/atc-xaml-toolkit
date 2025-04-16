@@ -60,4 +60,12 @@ public sealed class RelayCommandAttribute : Attribute
     /// Gets or sets the parameter values.
     /// </summary>
     public object[]? ParameterValues { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value that indicates whether the associated command should be executed on a background thread.
+    /// When <c>true</c>, the command will be dispatched to a background thread (using <c>Task.Run</c> or similar),
+    /// ensuring that long-running operations do not block the UI thread.
+    /// When <c>false</c>, the command executes on the current thread.
+    /// </summary>
+    public bool ExecuteOnBackgroundThread { get; set; }
 }

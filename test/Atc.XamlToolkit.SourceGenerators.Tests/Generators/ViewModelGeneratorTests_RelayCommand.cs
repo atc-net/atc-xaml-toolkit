@@ -348,7 +348,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand? saveCommand;
 
-                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(Save, CanSave);
+                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
+                    Save,
+                    CanSave);
             }
 
             #nullable disable
@@ -392,7 +394,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand<string>? saveCommand;
 
-                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(Save, CanSave);
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    Save,
+                    CanSave);
             }
 
             #nullable disable
@@ -436,7 +440,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand<int>? saveCommand;
 
-                public IRelayCommand<int> SaveCommand => saveCommand ??= new RelayCommand<int>(Save, CanSave);
+                public IRelayCommand<int> SaveCommand => saveCommand ??= new RelayCommand<int>(
+                    Save,
+                    CanSave);
             }
 
             #nullable disable
@@ -653,13 +659,21 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand? myTestRightCommand;
                 private IRelayCommand? myTestBottomCommand;
 
-                public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(() => TurnDirectionSingle(LeftTopRightBottomType.Left, 1), CanTurnDirectionSingle(LeftTopRightBottomType.Left, 1));
+                public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
+                    () => TurnDirectionSingle(LeftTopRightBottomType.Left, 1),
+                    CanTurnDirectionSingle(LeftTopRightBottomType.Left, 1));
 
-                public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(() => TurnDirectionSingle(LeftTopRightBottomType.Top, 1), CanTurnDirectionSingle(LeftTopRightBottomType.Top, 1));
+                public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
+                    () => TurnDirectionSingle(LeftTopRightBottomType.Top, 1),
+                    CanTurnDirectionSingle(LeftTopRightBottomType.Top, 1));
 
-                public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(() => TurnDirectionSingle(LeftTopRightBottomType.Right, 1), CanTurnDirectionSingle(LeftTopRightBottomType.Right, 1));
+                public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
+                    () => TurnDirectionSingle(LeftTopRightBottomType.Right, 1),
+                    CanTurnDirectionSingle(LeftTopRightBottomType.Right, 1));
 
-                public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(() => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1), CanTurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
+                public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
+                    () => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1),
+                    CanTurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
             }
 
             #nullable disable
@@ -700,7 +714,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand? saveCommand;
 
-                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(Save, () => CanSave);
+                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
+                    Save,
+                    () => CanSave);
             }
 
             #nullable disable
@@ -741,7 +757,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand<string>? saveCommand;
 
-                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(Save, _ => CanSave);
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    Save,
+                    _ => CanSave);
             }
 
             #nullable disable
@@ -782,7 +800,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand<string>? saveCommand;
 
-                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(Save, _ => CanSave);
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    Save,
+                    _ => CanSave);
 
                 public bool CanSave
                 {
@@ -838,7 +858,9 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand<string>? saveCommand;
 
-                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(Save, _ => MyCanSave);
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    Save,
+                    _ => MyCanSave);
 
                 public bool MyCanSave
                 {
@@ -897,7 +919,171 @@ public sealed partial class ViewModelGeneratorTests
             {
                 private IRelayCommand? saveCommand;
 
-                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(Save, !CanSave);
+                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
+                    Save,
+                    !CanSave);
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void RelayCommand_ExecuteOnBackgroundThread_NoParameter()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(ExecuteOnBackgroundThread = true)]
+                public void Save()
+                {
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommand? saveCommand;
+            
+                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
+                    () => Task.Run(Save));
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void RelayCommand_ExecuteOnBackgroundThread_NoParameter_CanExecute()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true)]
+                public void Save()
+                {
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommand? saveCommand;
+            
+                public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
+                    () => Task.Run(Save),
+                    CanSave);
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void RelayCommand_ExecuteOnBackgroundThread_ParameterString()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(ExecuteOnBackgroundThread = true)]
+                public void Save(string val)
+                {
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommand<string>? saveCommand;
+            
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    x => Task.Run(() => Save(x)));
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void RelayCommand_ExecuteOnBackgroundThread_ParameterString_CanExecute()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true)]
+                public void Save(string val)
+                {
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommand<string>? saveCommand;
+            
+                public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
+                    x => Task.Run(() => Save(x)),
+                    CanSave);
             }
 
             #nullable disable

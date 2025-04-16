@@ -127,9 +127,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                 implementationType,
                 rc.CommandName,
                 rc.MethodName,
-                rc.CanExecuteName,
-                rc.InvertCanExecute,
-                rc.UsePropertyForCanExecute);
+                canExecuteName: rc.CanExecuteName,
+                invertCanExecute: rc.InvertCanExecute,
+                usePropertyForCanExecute: rc.UsePropertyForCanExecute,
+                useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread);
         }
         else if (rc.ParameterTypes.Length == 1)
         {
@@ -143,9 +144,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                     implementationType,
                     rc.CommandName,
                     $"{rc.MethodName}(CancellationToken.None)",
-                    rc.CanExecuteName,
-                    rc.InvertCanExecute,
-                    isLambda: true);
+                    canExecuteName: rc.CanExecuteName,
+                    invertCanExecute: rc.InvertCanExecute,
+                    isLambda: true,
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread);
             }
             else
             {
@@ -156,9 +158,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{implementationType}{generic}",
                     rc.CommandName,
                     rc.MethodName,
-                    rc.CanExecuteName,
-                    rc.InvertCanExecute,
-                    rc.UsePropertyForCanExecute);
+                    canExecuteName: rc.CanExecuteName,
+                    invertCanExecute: rc.InvertCanExecute,
+                    usePropertyForCanExecute: rc.UsePropertyForCanExecute,
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread);
             }
         }
         else
@@ -172,7 +175,8 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{implementationType}{tupleGeneric}",
                     rc.CommandName,
                     $"x => {rc.MethodName}({constructorParametersMulti})",
-                    rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}" : $"x => {rc.CanExecuteName}");
+                    canExecuteName: rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}" : $"x => {rc.CanExecuteName}",
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread);
             }
             else
             {
@@ -182,7 +186,8 @@ internal abstract class CommandBuilderBase : BuilderBase
                     $"{implementationType}{tupleGeneric}",
                     rc.CommandName,
                     $"x => {rc.MethodName}({constructorParametersMulti})",
-                    rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}({filteredConstructorParameters})" : $"x => {rc.CanExecuteName}({filteredConstructorParameters})");
+                    canExecuteName: rc.CanExecuteName is null ? null : rc.InvertCanExecute ? $"x => !{rc.CanExecuteName}({filteredConstructorParameters})" : $"x => {rc.CanExecuteName}({filteredConstructorParameters})",
+                    useExecuteOnBackgroundThread: rc.ExecuteOnBackgroundThread);
             }
         }
     }
@@ -247,8 +252,13 @@ internal abstract class CommandBuilderBase : BuilderBase
         string FilteredConstructorParameters) GetConstructorParametersWithParameterTypes(
         RelayCommandToGenerate rc)
     {
-        var filteredParameterTypes = rc.ParameterTypes!.Where(x => !x.EndsWith(nameof(CancellationToken), StringComparison.Ordinal));
-        var generic = $"<({string.Join(", ", filteredParameterTypes)})>";
+        var filteredParameterTypes = rc.ParameterTypes!
+            .Where(x => !x.EndsWith(nameof(CancellationToken), StringComparison.Ordinal))
+            .ToList();
+
+        var generic = filteredParameterTypes.Count > 1
+            ? $"<({string.Join(", ", filteredParameterTypes)})>"
+            : $"<{filteredParameterTypes[0]}>";
 
         var constructorParametersList = new List<string>();
         var tupleItemNumber = 0;
@@ -289,38 +299,115 @@ internal abstract class CommandBuilderBase : BuilderBase
         string? canExecuteName = null,
         bool invertCanExecute = false,
         bool usePropertyForCanExecute = false,
-        bool isLambda = false)
+        bool isLambda = false,
+        bool useExecuteOnBackgroundThread = false)
     {
-        var lambdaPrefix = isLambda ? "() => " : string.Empty;
-        var commandInstance = $"new {implementationType}({lambdaPrefix}{constructorParameters}";
+        builder.Append($"public {interfaceType} {commandName} => {commandName.EnsureFirstCharacterToLower()} ??= new {implementationType}(");
 
-        if (canExecuteName is not null)
+        if (useExecuteOnBackgroundThread)
         {
-            if (usePropertyForCanExecute)
+            builder.AppendLine();
+            builder.IncreaseIndent();
+            if (constructorParameters.StartsWith("x =>", StringComparison.Ordinal) &&
+                !implementationType.Contains("<("))
             {
-                if (interfaceType.Contains('<'))
-                {
-                    commandInstance += invertCanExecute
-                        ? $", _ => !{canExecuteName}"
-                        : $", _ => {canExecuteName}";
-                }
-                else
-                {
-                    commandInstance += invertCanExecute
-                        ? $", () => !{canExecuteName}"
-                        : $", () => {canExecuteName}";
-                }
+                builder.Append("x => ");
+                constructorParameters = constructorParameters
+                    .Replace("x => ", string.Empty)
+                    .Replace("x.Item1", "x");
+
+                canExecuteName = canExecuteName?
+                    .Replace("x => ", string.Empty)
+                    .Replace("(x.Item1)", string.Empty);
+            }
+            else if (implementationType.Contains("<"))
+            {
+                builder.Append("x => ");
+                constructorParameters += "(x)";
             }
             else
             {
-                commandInstance += invertCanExecute
-                    ? $", !{canExecuteName}"
-                    : $", {canExecuteName}";
+                builder.Append("() => ");
+            }
+
+            builder.Append("Task.Run(");
+            if (constructorParameters.Contains("("))
+            {
+                builder.Append("() => ");
+            }
+
+            if (canExecuteName is null)
+            {
+                builder.AppendLine($"{constructorParameters}));");
+            }
+            else
+            {
+                builder.AppendLine($"{constructorParameters}),");
+                builder.Append(canExecuteName);
+                builder.AppendLine(");");
+            }
+
+            builder.DecreaseIndent();
+        }
+        else
+        {
+            var commandInstance = isLambda
+                ? $"() => {constructorParameters}"
+                : constructorParameters;
+
+            if (constructorParameters.StartsWith("x =>", StringComparison.Ordinal) &&
+                !implementationType.Contains("<("))
+            {
+                commandInstance = commandInstance
+                    .Replace("x.Item1", "x");
+
+                canExecuteName = canExecuteName?
+                    .Replace("x => ", string.Empty)
+                    .Replace("(x.Item1)", string.Empty);
+            }
+
+            if (canExecuteName is null)
+            {
+                builder.Append(commandInstance);
+                builder.AppendLine(");");
+            }
+            else
+            {
+                builder.AppendLine();
+                builder.IncreaseIndent();
+                builder.Append(commandInstance);
+
+                if (usePropertyForCanExecute)
+                {
+                    if (interfaceType.Contains('<'))
+                    {
+                        builder.AppendLine(",");
+                        builder.Append(
+                            invertCanExecute
+                                ? $"_ => !{canExecuteName}"
+                                : $"_ => {canExecuteName}");
+                    }
+                    else
+                    {
+                        builder.AppendLine(",");
+                        builder.Append(
+                            invertCanExecute
+                                ? $"() => !{canExecuteName}"
+                                : $"() => {canExecuteName}");
+                    }
+                }
+                else
+                {
+                    builder.AppendLine(",");
+                    builder.Append(
+                        invertCanExecute
+                            ? $"!{canExecuteName}"
+                            : canExecuteName);
+                }
+
+                builder.AppendLine(");");
+                builder.DecreaseIndent();
             }
         }
-
-        commandInstance += ");";
-
-        builder.AppendLine($"public {interfaceType} {commandName} => {commandName.EnsureFirstCharacterToLower()} ??= {commandInstance}");
     }
 }
