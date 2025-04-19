@@ -21,12 +21,6 @@ public partial class PersonViewModel
         MessageBox.Show(sb.ToString(), "Show-Data");
     }
 
-    [RelayCommand(CanExecute = nameof(CanSaveHandler))]
-    public void SaveHandler()
-    {
-        MessageBox.Show("Hello from SaveHandler method", "Save-Data");
-    }
-
     public bool CanSaveHandler()
     {
         if (string.IsNullOrWhiteSpace(FirstName))
@@ -50,5 +44,11 @@ public partial class PersonViewModel
         }
 
         return true;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveHandler))]
+    public void SaveHandler()
+    {
+        MessageBox.Show("Hello from SaveHandler method", "Save-Data");
     }
 }
