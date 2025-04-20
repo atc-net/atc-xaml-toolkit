@@ -204,15 +204,21 @@ internal abstract class CommandBuilderBase : BuilderBase
         {
             if (paramCount == 0 || isCancellationOnly)
             {
-                expr = $"() => {cmd.CanExecuteName}";
+                expr = cmd.InvertCanExecute
+                    ? $"() => !{cmd.CanExecuteName}"
+                    : $"() => {cmd.CanExecuteName}";
             }
             else if (paramCount == 1)
             {
-                expr = "_ => " + cmd.CanExecuteName;
+                expr = cmd.InvertCanExecute
+                    ? $"_ => !{cmd.CanExecuteName}"
+                    : $"_ => {cmd.CanExecuteName}";
             }
             else
             {
-                expr = $"x => {cmd.CanExecuteName}";
+                expr = cmd.InvertCanExecute
+                    ? $"x => !{cmd.CanExecuteName}"
+                    : $"x => {cmd.CanExecuteName}";
             }
         }
         else
@@ -220,24 +226,25 @@ internal abstract class CommandBuilderBase : BuilderBase
             switch (realTypes.Length)
             {
                 case 1:
-                    expr = cmd.CanExecuteName;
+                    expr = cmd.InvertCanExecute
+                        ? $"!{cmd.CanExecuteName}"
+                        : cmd.CanExecuteName;
                     break;
                 case > 1:
                 {
                     var args = string.Join(", ", realTypes.Select((_, i) => $"x.Item{i + 1}"));
-                    expr = $"x => {cmd.CanExecuteName}({args})";
+                    expr = cmd.InvertCanExecute
+                        ? $"x => !{cmd.CanExecuteName}({args})"
+                        : $"x => {cmd.CanExecuteName}({args})";
                     break;
                 }
 
                 default:
-                    expr = cmd.CanExecuteName;
+                    expr = cmd.InvertCanExecute
+                        ? $"!{cmd.CanExecuteName}"
+                        : cmd.CanExecuteName;
                     break;
             }
-        }
-
-        if (cmd.InvertCanExecute)
-        {
-            expr = "!" + expr;
         }
 
         return expr;
