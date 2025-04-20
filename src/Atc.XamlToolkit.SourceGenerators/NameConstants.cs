@@ -9,6 +9,8 @@ internal static class NameConstants
     public const string BeforeChangedCallback = nameof(BeforeChangedCallback);
     public const string Behavior = nameof(Behavior);
     public const string BroadcastOnChange = nameof(BroadcastOnChange);
+    public const string CancellationToken = nameof(CancellationToken);
+    public const string CancellationTokenNone = nameof(CancellationToken) + ".None";
     public const string CanExecute = nameof(CanExecute);
     public const string Category = nameof(Category);
     public const string Command = nameof(Command);
@@ -22,6 +24,7 @@ internal static class NameConstants
     public const string DependentCommands = nameof(DependentCommands);
     public const string DependentProperties = nameof(DependentProperties);
     public const string Description = nameof(Description);
+    public const string ExecuteOnBackgroundThread = nameof(ExecuteOnBackgroundThread);
     public const string Flags = nameof(Flags);
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string Handler = nameof(Handler);

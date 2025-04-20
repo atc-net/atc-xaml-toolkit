@@ -1,9 +1,11 @@
 namespace Atc.XamlToolkit.SourceGenerators.Models.AttributeToGenerate;
 
 internal abstract class BaseFrameworkElementPropertyToGenerate(
+    bool isOwnerTypeStatic,
     string ownerType,
     string name,
     string type,
+    bool isReadOnly,
     object? defaultValue,
     string? propertyChangedCallback,
     string? coerceValueCallback,
@@ -14,11 +16,15 @@ internal abstract class BaseFrameworkElementPropertyToGenerate(
     string? category,
     string? description)
 {
+    public bool IsOwnerTypeStatic { get; } = isOwnerTypeStatic;
+
     public string OwnerType { get; } = ownerType;
 
     public string Name { get; } = name;
 
     public string Type { get; } = type;
+
+    public bool IsReadOnly { get; } = isReadOnly;
 
     public object? DefaultValue { get; } = defaultValue;
 

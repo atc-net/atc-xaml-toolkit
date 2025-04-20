@@ -107,6 +107,13 @@ internal static class RelayCommandInspector
             is NameConstants.Task
             or NameConstants.ValueTask;
 
+        var executeOnBackgroundThread = false;
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.ExecuteOnBackgroundThread, out var executeOnBackgroundThreadValue) &&
+            bool.TryParse(executeOnBackgroundThreadValue, out var executeOnBackgroundThreadValueAsBool))
+        {
+            executeOnBackgroundThread = executeOnBackgroundThreadValueAsBool;
+        }
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
@@ -116,6 +123,7 @@ internal static class RelayCommandInspector
                 canExecuteName,
                 invertCanExecute,
                 usePropertyForCanExecute,
-                isAsync));
+                isAsync,
+                executeOnBackgroundThread));
     }
 }

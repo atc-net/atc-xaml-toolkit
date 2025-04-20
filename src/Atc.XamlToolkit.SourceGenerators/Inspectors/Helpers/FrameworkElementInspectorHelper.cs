@@ -31,6 +31,7 @@ internal static class FrameworkElementInspectorHelper
 
             object? defaultValue = null;
             var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue);
+            const bool isReadOnly = false;
 
             Extract(
                 argumentValues,
@@ -48,9 +49,11 @@ internal static class FrameworkElementInspectorHelper
             propertiesToGenerate.Add(
                 (T)Activator.CreateInstance(
                     typeof(T),
+                    classSymbol.IsStatic,
                     ownerType,
                     propertyName,
                     type,
+                    isReadOnly,
                     defaultValue,
                     propertyChangedCallback,
                     coerceValueCallback,
@@ -103,9 +106,11 @@ internal static class FrameworkElementInspectorHelper
 
         var propertyToGenerate = (T)Activator.CreateInstance(
                 typeof(T),
+                classSymbol.IsStatic,
                 ownerType,
                 propertyName,
                 type,
+                fieldSymbol.IsReadOnly,
                 defaultValue,
                 propertyChangedCallback,
                 coerceValueCallback,

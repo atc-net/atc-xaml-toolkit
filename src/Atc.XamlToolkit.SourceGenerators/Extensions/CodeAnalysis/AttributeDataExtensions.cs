@@ -1,8 +1,8 @@
+// ReSharper disable ConvertIfStatementToSwitchStatement
 namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 
 internal static class AttributeDataExtensions
 {
-    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public static IDictionary<string, string?> ExtractConstructorArgumentValues(
         this AttributeData attributeData)
     {
