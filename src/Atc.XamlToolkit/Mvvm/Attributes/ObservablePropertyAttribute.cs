@@ -98,4 +98,8 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// </para>
     /// </summary>
     public bool BroadcastOnChange { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString()
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentProperties)}: {DependentProperties}, {nameof(DependentCommands)}: {DependentCommands}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}";
 }

@@ -191,7 +191,7 @@ public Task Save();
 public async Task Save();
 ```
 
-### 🔁 Multi-Parameter Commands
+### 🔁 Commands with Multi-Parameter
 
 ```csharp
 // Generates multi asynchronous RelayCommand with async keyword with multiple parameters
@@ -209,7 +209,7 @@ public Task TestDirection(LeftTopRightBottomType leftTopRightBottomType, int ste
 public Task TestDirection(LeftTopRightBottomType leftTopRightBottomType, int steps)
 ```
 
-### 🔀 Background-thread Commands
+### 🔀 Commands executed on a background thread
 
 ```csharp
 // Generates an RelayCommand with and CanExecute function and will be executed on a background thread
@@ -220,6 +220,27 @@ public void Save();
 [RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true)]
 public async Task Save();
 ```
+
+### ♿ Commands with auto set on IsBusy
+
+```csharp
+// Generates an RelayCommand and toggles IsBusy around a synchronous command execution
+[RelayCommand(CanExecute = nameof(CanSave), AutoSetIsBusy = true)]
+public void Save();
+
+// Generates an RelayCommand and toggles IsBusy around a synchronous, background‑thread command execution
+[RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
+public void Save();
+
+// Generates an asynchronous RelayCommand and toggles IsBusy around an asynchronous command execution
+[RelayCommand(CanExecute = nameof(CanSave), AutoSetIsBusy = true)]
+public async Task Save();
+
+// Generates an asynchronous RelayCommand and toggles IsBusy around an asynchronous, background‑thread command execution
+[RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
+public async Task Save();
+```
+
 
 ---
 

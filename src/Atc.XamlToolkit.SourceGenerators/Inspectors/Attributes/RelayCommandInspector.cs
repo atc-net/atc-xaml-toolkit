@@ -103,7 +103,7 @@ internal static class RelayCommandInspector
                 .ToList();
         }
 
-        var isAsync = methodSymbol.ReturnType.Name
+        var useTask = methodSymbol.ReturnType.Name
             is NameConstants.Task
             or NameConstants.ValueTask;
 
@@ -112,6 +112,13 @@ internal static class RelayCommandInspector
             bool.TryParse(executeOnBackgroundThreadValue, out var executeOnBackgroundThreadValueAsBool))
         {
             executeOnBackgroundThread = executeOnBackgroundThreadValueAsBool;
+        }
+
+        var autoSetIsBusy = false;
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.AutoSetIsBusy, out var autoSetIsBusyValue) &&
+            bool.TryParse(autoSetIsBusyValue, out var autoSetIsBusyValueAsBool))
+        {
+            autoSetIsBusy = autoSetIsBusyValueAsBool;
         }
 
         relayCommandsToGenerate.Add(
@@ -123,7 +130,9 @@ internal static class RelayCommandInspector
                 canExecuteName,
                 invertCanExecute,
                 usePropertyForCanExecute,
-                isAsync,
-                executeOnBackgroundThread));
+                methodSymbol.IsAsync,
+                useTask,
+                executeOnBackgroundThread,
+                autoSetIsBusy));
     }
 }

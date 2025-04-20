@@ -24,4 +24,8 @@ public sealed class NotifyPropertyChangedForAttribute : Attribute
     /// Gets the dependent property names.
     /// </summary>
     public string[] DependentProperties { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+        => $"{nameof(DependentProperties)}: {DependentProperties}";
 }

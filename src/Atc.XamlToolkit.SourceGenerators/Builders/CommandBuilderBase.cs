@@ -2,6 +2,7 @@
 namespace Atc.XamlToolkit.SourceGenerators.Builders;
 
 [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
+[SuppressMessage("Design", "MA0076:Do not use implicit culture-sensitive ToString in interpolated strings", Justification = "OK.")]
 internal abstract class CommandBuilderBase : BuilderBase
 {
     public virtual void GenerateRelayCommands(
@@ -34,7 +35,7 @@ internal abstract class CommandBuilderBase : BuilderBase
     {
         foreach (var cmd in commands)
         {
-            var interfaceType = cmd.IsAsync
+            var interfaceType = cmd.UseTask
                 ? NameConstants.IRelayCommandAsync
                 : NameConstants.IRelayCommand;
             var generic = GetGenericArg(cmd);
@@ -50,10 +51,10 @@ internal abstract class CommandBuilderBase : BuilderBase
         for (var i = 0; i < commands.Length; i++)
         {
             var cmd = commands[i];
-            var interfaceType = cmd.IsAsync
+            var interfaceType = cmd.UseTask
                 ? NameConstants.IRelayCommandAsync
                 : NameConstants.IRelayCommand;
-            var implementationType = cmd.IsAsync
+            var implementationType = cmd.UseTask
                 ? NameConstants.RelayCommandAsync
                 : NameConstants.RelayCommand;
             var generic = GetGenericArg(cmd);
@@ -61,29 +62,39 @@ internal abstract class CommandBuilderBase : BuilderBase
             var fieldName = ToFieldName(propName);
             var execExpr = BuildExecuteExpression(cmd);
             var canExecExpr = BuildCanExecuteExpression(cmd);
-            var hasCan = canExecExpr != null;
+            var hasCan = canExecExpr is not null;
+            var appendAsMultiLine = hasCan ||
+                                    cmd.ExecuteOnBackgroundThread ||
+                                    cmd.AutoSetIsBusy;
 
-            if (hasCan || cmd.ExecuteOnBackgroundThread)
+            if (appendAsMultiLine)
             {
-                // Multi-line
                 builder.AppendLine($"public {interfaceType}{generic} {propName} => {fieldName} ??= new {implementationType}{generic}(");
                 builder.IncreaseIndent();
 
-                if (hasCan)
+                if (cmd.AutoSetIsBusy)
                 {
-                    builder.AppendLine($"{execExpr},");
-                    builder.AppendLine($"{canExecExpr});");
+                    AppendAutoSetIsBusyBlock(
+                        builder,
+                        cmd,
+                        execExpr,
+                        hasCan);
                 }
                 else
                 {
-                    builder.AppendLine($"{execExpr});");
+                    var suffix = hasCan ? "," : ");";
+                    builder.AppendLine($"{execExpr}{suffix}");
+                }
+
+                if (hasCan)
+                {
+                    builder.AppendLine($"{canExecExpr});");
                 }
 
                 builder.DecreaseIndent();
             }
             else
             {
-                // Single-line no-can
                 builder.AppendLine($"public {interfaceType}{generic} {propName} => {fieldName} ??= new {implementationType}{generic}({execExpr});");
             }
 
@@ -92,6 +103,107 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.AppendLine();
             }
         }
+    }
+
+    private static void AppendAutoSetIsBusyBlock(
+        CommandBuilderBase builder,
+        RelayCommandToGenerate cmd,
+        string execExpr,
+        bool hasCan)
+    {
+        var hasExecExprCancellationTokenNone = execExpr.Contains(NameConstants.CancellationTokenNone);
+
+        var realTypes = cmd.ParameterTypes?
+            .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
+            .ToArray();
+        var useAsyncLambda = hasExecExprCancellationTokenNone ||
+                             realTypes?.Length > 0 ||
+                             execExpr.StartsWith("Task.Run(", StringComparison.Ordinal);
+
+        var execExprContainParameters = execExpr.Contains("(x)") ||
+                                        execExpr.Contains("(x, ") ||
+                                        execExpr.Contains("(x.");
+
+        var useAwait = false;
+        switch (cmd.UseTask)
+        {
+            case false:
+                builder.AppendLine(execExprContainParameters
+                    ? "x =>"
+                    : "() =>");
+                break;
+            case true when execExprContainParameters:
+                builder.AppendLine("async x =>");
+                useAwait = true;
+                break;
+            default:
+            {
+                if (cmd is { IsAsync: false, UseTask: true, } &&
+                    useAsyncLambda)
+                {
+                    builder.AppendLine("async () =>");
+                    useAwait = true;
+                }
+
+                break;
+            }
+        }
+
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine("IsBusy = true;");
+        builder.AppendLine("try");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+
+        if (cmd.UseTask)
+        {
+            if (useAwait &&
+                !execExpr.StartsWith("Task.Run(", StringComparison.Ordinal) &&
+                !execExpr.StartsWith("() => ", StringComparison.Ordinal))
+            {
+                if (execExpr.StartsWith("x => ", StringComparison.Ordinal))
+                {
+                    execExpr = execExpr.Replace("x => ", string.Empty);
+                }
+
+                builder.AppendLine($"await {execExpr}.ConfigureAwait(false);");
+            }
+            else
+            {
+                builder.AppendLine("await Task");
+                builder.IncreaseIndent();
+                builder.AppendLine($".Run({execExpr.RemoveTaskDotRun()})");
+                builder.AppendLine(".ConfigureAwait(false);");
+                builder.DecreaseIndent();
+            }
+        }
+        else
+        {
+            if (execExpr.StartsWith("Task.Run(", StringComparison.Ordinal))
+            {
+                builder.AppendLine("_ = Task");
+                builder.IncreaseIndent();
+                builder.AppendLine($".Run({execExpr.RemoveTaskDotRun()})");
+                builder.AppendLine(".ConfigureAwait(false);");
+                builder.DecreaseIndent();
+            }
+            else
+            {
+                builder.AppendLine($"{execExpr};");
+            }
+        }
+
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+        builder.AppendLine("finally");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine("IsBusy = false;");
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+        builder.DecreaseIndent();
+        builder.AppendLine(hasCan ? "}," : "});");
     }
 
     private static string ToFieldName(
@@ -128,10 +240,20 @@ internal abstract class CommandBuilderBase : BuilderBase
             .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
             .ToArray();
 
+        return cmd.AutoSetIsBusy
+            ? BuildExecuteExpressionForAutoSetIsBusy(cmd, realTypes, hasCt)
+            : BuildExecuteExpressionForNoAutoSetIsBusy(cmd, realTypes, hasCt);
+    }
+
+    private static string BuildExecuteExpressionForNoAutoSetIsBusy(
+        RelayCommandToGenerate cmd,
+        string[] realTypes,
+        bool hasCt)
+    {
         if (cmd.ParameterValues?.Length > 0)
         {
             var parameterValues = string.Join(", ", cmd.ParameterValues);
-            return cmd is { ExecuteOnBackgroundThread: true, IsAsync: true }
+            return cmd is { ExecuteOnBackgroundThread: true, UseTask: true }
                 ? $"() => Task.Run(() => {cmd.MethodName}({parameterValues}))"
                 : $"() => {cmd.MethodName}({parameterValues})";
         }
@@ -161,7 +283,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 : $"({args})";
 
             return cmd.ExecuteOnBackgroundThread
-                ? $"x => Task.Run(() => {cmd.MethodName}{call})"
+                ? $"Task.Run(() => {cmd.MethodName}{call})"
                 : $"x => {cmd.MethodName}{call}";
         }
 
@@ -172,9 +294,72 @@ internal abstract class CommandBuilderBase : BuilderBase
                 : $"() => Task.Run({cmd.MethodName})";
         }
 
-        return hasCt ?
-            $"() => {cmd.MethodName}({NameConstants.CancellationTokenNone})"
+        return hasCt
+            ? $"() => {cmd.MethodName}({NameConstants.CancellationTokenNone})"
             : cmd.MethodName;
+    }
+
+    private static string BuildExecuteExpressionForAutoSetIsBusy(
+        RelayCommandToGenerate cmd,
+        string[] realTypes,
+        bool hasCt)
+    {
+        if (cmd.ParameterValues?.Length > 0)
+        {
+            var parameterValues = string.Join(", ", cmd.ParameterValues);
+            return cmd is { ExecuteOnBackgroundThread: true }
+                ? $"Task.Run(() => {cmd.MethodName}({parameterValues}))"
+                : $"{cmd.MethodName}({parameterValues})";
+        }
+
+        if (realTypes.Length > 0)
+        {
+            if (realTypes.Length == 1)
+            {
+                if (cmd.ExecuteOnBackgroundThread)
+                {
+                    var paramCall = hasCt
+                        ? $"(x, {NameConstants.CancellationTokenNone})"
+                        : "(x)";
+
+                    return cmd.UseTask
+                        ? $"() => {cmd.MethodName}{paramCall}"
+                        : $"Task.Run(() => {cmd.MethodName}{paramCall})";
+                }
+
+                return hasCt
+                    ? $"{cmd.MethodName}(x, {NameConstants.CancellationTokenNone})"
+                    : $"{cmd.MethodName}(x)";
+            }
+
+            var args = string.Join(", ", realTypes.Select((_, i) => $"x.Item{i + 1}"));
+
+            var call = hasCt
+                ? $"({args}, {NameConstants.CancellationTokenNone})"
+                : $"({args})";
+
+            return cmd.ExecuteOnBackgroundThread
+                ? $"Task.Run(() => {cmd.MethodName}{call})"
+                : $"x => {cmd.MethodName}{call}";
+        }
+
+        if (cmd.ExecuteOnBackgroundThread)
+        {
+            return hasCt
+                ? $"Task.Run(() => {cmd.MethodName}({NameConstants.CancellationTokenNone}))"
+                : $"Task.Run({cmd.MethodName})";
+        }
+
+        if (cmd.UseTask)
+        {
+            return hasCt
+                ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
+                : cmd.MethodName;
+        }
+
+        return hasCt
+            ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
+            : $"{cmd.MethodName}()";
     }
 
     private static string? BuildCanExecuteExpression(
