@@ -63,9 +63,20 @@ public sealed class RelayCommandAttribute : Attribute
 
     /// <summary>
     /// Gets or sets a value that indicates whether the associated command should be executed on a background thread.
-    /// When <c>true</c>, the command will be dispatched to a background thread (using <c>Task.Run</c> or similar),
+    /// When <see langword="true" />, the command will be dispatched to a background thread (using <c>Task.Run</c> or similar),
     /// ensuring that long-running operations do not block the UI thread.
-    /// When <c>false</c>, the command executes on the current thread.
+    /// When <see langword="false" />, the command executes on the current thread.
     /// </summary>
     public bool ExecuteOnBackgroundThread { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the generated command will automatically set
+    /// the ViewModel's <c>IsBusy</c> property to <see langword="true" /> when execution starts,
+    /// and back to <see langword="false" /> when execution completes (even on exceptions).
+    /// </summary>
+    public bool AutoSetIsBusy { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString()
+        => $"{nameof(CommandName)}: {CommandName}, {nameof(CanExecute)}: {CanExecute}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(ParameterValue)}: {ParameterValue}, {nameof(ParameterValues)}: {ParameterValues}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}";
 }

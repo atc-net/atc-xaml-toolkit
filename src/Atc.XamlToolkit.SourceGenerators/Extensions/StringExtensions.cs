@@ -128,6 +128,20 @@ public static class StringExtensions
         return result;
     }
 
+    public static string RemoveTaskDotRun(
+        this string value)
+    {
+        if (string.IsNullOrEmpty(value) ||
+            !value.StartsWith("Task.Run(", StringComparison.Ordinal))
+        {
+            return value;
+        }
+
+        value = value.Replace("Task.Run(", string.Empty);
+        value = value.Substring(0, value.Length - 1);
+        return value;
+    }
+
     public static string RemoveNullableSuffix(
         this string value)
     {

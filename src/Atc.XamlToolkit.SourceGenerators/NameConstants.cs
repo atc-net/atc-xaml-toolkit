@@ -6,6 +6,7 @@ internal static class NameConstants
     public const string Attach = nameof(Attach);
     public const string AttachedProperty = nameof(AttachedProperty);
     public const string AttachedPropertyAttribute = nameof(AttachedPropertyAttribute);
+    public const string AutoSetIsBusy = nameof(AutoSetIsBusy);
     public const string BeforeChangedCallback = nameof(BeforeChangedCallback);
     public const string Behavior = nameof(Behavior);
     public const string BroadcastOnChange = nameof(BroadcastOnChange);
