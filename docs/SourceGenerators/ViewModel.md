@@ -209,6 +209,18 @@ public Task TestDirection(LeftTopRightBottomType leftTopRightBottomType, int ste
 public Task TestDirection(LeftTopRightBottomType leftTopRightBottomType, int steps)
 ```
 
+### 🔀 Background-thread Commands
+
+```csharp
+// Generates an RelayCommand with and CanExecute function and will be executed on a background thread
+[RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true)]
+public void Save();
+
+// Generates an asynchronous RelayCommand with async keyword and CanExecute function and will be executed on a background thread
+[RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true)]
+public async Task Save();
+```
+
 ---
 
 ## 🎯 Real-World Use Cases
