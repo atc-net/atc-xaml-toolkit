@@ -723,6 +723,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(bool),
                     typeof(MyControl),
                     new FrameworkPropertyMetadata(
+                        defaultValue: null,
                         flags: FrameworkPropertyMetadataOptions.AffectsMeasure));
 
                 public bool? IsRunning
@@ -768,6 +769,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(bool),
                     typeof(MyControl),
                     new FrameworkPropertyMetadata(
+                        defaultValue: null,
                         flags: FrameworkPropertyMetadataOptions.AffectsMeasure));
 
                 public bool? IsRunning

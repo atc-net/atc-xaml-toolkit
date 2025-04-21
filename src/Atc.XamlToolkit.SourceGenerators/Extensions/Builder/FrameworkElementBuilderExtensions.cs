@@ -139,7 +139,7 @@ internal static class FrameworkElementBuilderExtensions
                     }
                     else
                     {
-                        builder.AppendLine("new PropertyMetadata(),");
+                        builder.AppendLine("new PropertyMetadata(defaultValue: null),");
                     }
 
                     builder.DecreaseIndent();
@@ -153,7 +153,7 @@ internal static class FrameworkElementBuilderExtensions
                     }
                     else
                     {
-                        builder.AppendLine("new PropertyMetadata());");
+                        builder.AppendLine("new PropertyMetadata(defaultValue: null));");
                     }
 
                     builder.DecreaseIndent();
@@ -222,6 +222,10 @@ internal static class FrameworkElementBuilderExtensions
         {
             builder.AppendLine($"defaultValue: {p.DefaultValue},");
         }
+        else
+        {
+            builder.AppendLine("defaultValue: null,");
+        }
 
         if (string.IsNullOrEmpty(p.PropertyChangedCallback))
         {
@@ -257,6 +261,10 @@ internal static class FrameworkElementBuilderExtensions
         if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
         {
             builder.AppendLine($"defaultValue: {p.DefaultValue},");
+        }
+        else
+        {
+            builder.AppendLine("defaultValue: null,");
         }
 
         if (!string.IsNullOrEmpty(p.PropertyChangedCallback))
