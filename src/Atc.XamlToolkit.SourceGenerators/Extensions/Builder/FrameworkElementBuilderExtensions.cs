@@ -127,18 +127,35 @@ internal static class FrameworkElementBuilderExtensions
         {
             builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
 
-            if (string.IsNullOrEmpty(p.PropertyChangedCallback) &&
+            if (string.IsNullOrEmpty(p.Flags) &&
+                string.IsNullOrEmpty(p.PropertyChangedCallback) &&
                 string.IsNullOrEmpty(p.CoerceValueCallback))
             {
                 if (p.HasAnyValidateValueCallback)
                 {
-                    builder.AppendLine($"new PropertyMetadata(defaultValue: {p.DefaultValue}),");
+                    if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
+                    {
+                        builder.AppendLine($"new PropertyMetadata(defaultValue: {p.DefaultValue}),");
+                    }
+                    else
+                    {
+                        builder.AppendLine("new PropertyMetadata(),");
+                    }
+
                     builder.DecreaseIndent();
                     builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
                 }
                 else
                 {
-                    builder.AppendLine($"new PropertyMetadata(defaultValue: {p.DefaultValue}));");
+                    if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
+                    {
+                        builder.AppendLine($"new PropertyMetadata(defaultValue: {p.DefaultValue}));");
+                    }
+                    else
+                    {
+                        builder.AppendLine("new PropertyMetadata());");
+                    }
+
                     builder.DecreaseIndent();
                 }
             }
@@ -201,7 +218,10 @@ internal static class FrameworkElementBuilderExtensions
     {
         builder.AppendLine("new PropertyMetadata(");
         builder.IncreaseIndent();
-        builder.AppendLine($"defaultValue: {p.DefaultValue},");
+        if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
+        {
+            builder.AppendLine($"defaultValue: {p.DefaultValue},");
+        }
 
         if (string.IsNullOrEmpty(p.PropertyChangedCallback))
         {
@@ -234,7 +254,10 @@ internal static class FrameworkElementBuilderExtensions
     {
         builder.AppendLine("new FrameworkPropertyMetadata(");
         builder.IncreaseIndent();
-        builder.AppendLine($"defaultValue: {p.DefaultValue},");
+        if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
+        {
+            builder.AppendLine($"defaultValue: {p.DefaultValue},");
+        }
 
         if (!string.IsNullOrEmpty(p.PropertyChangedCallback))
         {
