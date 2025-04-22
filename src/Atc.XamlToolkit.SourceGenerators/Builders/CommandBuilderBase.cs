@@ -2,7 +2,6 @@
 namespace Atc.XamlToolkit.SourceGenerators.Builders;
 
 [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
-[SuppressMessage("Design", "MA0076:Do not use implicit culture-sensitive ToString in interpolated strings", Justification = "OK.")]
 internal abstract class CommandBuilderBase : BuilderBase
 {
     public virtual void GenerateRelayCommands(
@@ -35,11 +34,10 @@ internal abstract class CommandBuilderBase : BuilderBase
     {
         foreach (var cmd in commands)
         {
-            var interfaceType = cmd.UseTask
-                ? NameConstants.IRelayCommandAsync
-                : NameConstants.IRelayCommand;
-            var generic = GetGenericArg(cmd);
-            var fieldName = ToFieldName(cmd.CommandName);
+            var interfaceType = cmd.GetInterfaceType();
+            var generic = cmd.GetGenericArgAsString();
+            var fieldName = cmd.GetCommandAsFieldName();
+
             builder.AppendLine($"private {interfaceType}{generic}? {fieldName};");
         }
     }
@@ -51,15 +49,11 @@ internal abstract class CommandBuilderBase : BuilderBase
         for (var i = 0; i < commands.Length; i++)
         {
             var cmd = commands[i];
-            var interfaceType = cmd.UseTask
-                ? NameConstants.IRelayCommandAsync
-                : NameConstants.IRelayCommand;
-            var implementationType = cmd.UseTask
-                ? NameConstants.RelayCommandAsync
-                : NameConstants.RelayCommand;
-            var generic = GetGenericArg(cmd);
-            var propName = cmd.CommandName;
-            var fieldName = ToFieldName(propName);
+            var interfaceType = cmd.GetInterfaceType();
+            var implementationType = cmd.GetImplementationType();
+            var generic = cmd.GetGenericArgAsString();
+            var propName = cmd.GetCommandAsPropertyName();
+            var fieldName = cmd.GetCommandAsFieldName();
             var execExpr = BuildExecuteExpression(cmd);
             var canExecExpr = BuildCanExecuteExpression(cmd);
             var hasCan = canExecExpr is not null;
@@ -113,11 +107,8 @@ internal abstract class CommandBuilderBase : BuilderBase
     {
         var hasExecExprCancellationTokenNone = execExpr.Contains(NameConstants.CancellationTokenNone);
 
-        var realTypes = cmd.ParameterTypes?
-            .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
-            .ToArray();
         var useAsyncLambda = hasExecExprCancellationTokenNone ||
-                             realTypes?.Length > 0 ||
+                             cmd.GetParameterTypesWithoutCancellationToken().Length > 0 ||
                              execExpr.StartsWith("Task.Run(", StringComparison.Ordinal);
 
         var execExprContainParameters = execExpr.Contains("(x)") ||
@@ -128,25 +119,19 @@ internal abstract class CommandBuilderBase : BuilderBase
         switch (cmd.UseTask)
         {
             case false:
-                builder.AppendLine(execExprContainParameters
-                    ? "x =>"
-                    : "() =>");
+                builder.AppendLine(
+                    execExprContainParameters
+                        ? "x =>"
+                        : "() =>");
                 break;
             case true when execExprContainParameters:
                 builder.AppendLine("async x =>");
                 useAwait = true;
                 break;
-            default:
-            {
-                if (cmd is { IsAsync: false, UseTask: true, } &&
-                    useAsyncLambda)
-                {
-                    builder.AppendLine("async () =>");
-                    useAwait = true;
-                }
-
+            case true when useAsyncLambda:
+                builder.AppendLine("async () =>");
+                useAwait = true;
                 break;
-            }
         }
 
         builder.AppendLine("{");
@@ -206,61 +191,31 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine(hasCan ? "}," : "});");
     }
 
-    private static string ToFieldName(
-        string commandName)
-        => char.ToLowerInvariant(commandName[0]) + commandName.Substring(1);
-
-    private static string GetGenericArg(
-        RelayCommandToGenerate cmd)
-    {
-        if (cmd.ParameterValues?.Length > 0)
-        {
-            return string.Empty;
-        }
-
-        var types = cmd.ParameterTypes ?? [];
-        var real = types
-            .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
-            .ToArray();
-
-        return real.Length switch
-        {
-            0 => string.Empty,
-            1 => $"<{real[0]}>",
-            _ => $"<({string.Join(", ", real)})>",
-        };
-    }
-
     private static string BuildExecuteExpression(
         RelayCommandToGenerate cmd)
     {
-        var types = cmd.ParameterTypes ?? [];
-        var hasCt = types.Any(t => t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal));
-        var realTypes = types
-            .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
-            .ToArray();
-
         return cmd.AutoSetIsBusy
-            ? BuildExecuteExpressionForAutoSetIsBusy(cmd, realTypes, hasCt)
-            : BuildExecuteExpressionForNoAutoSetIsBusy(cmd, realTypes, hasCt);
+            ? BuildExecuteExpressionForAutoSetIsBusy(cmd)
+            : BuildExecuteExpressionForNoAutoSetIsBusy(cmd);
     }
 
     private static string BuildExecuteExpressionForNoAutoSetIsBusy(
-        RelayCommandToGenerate cmd,
-        string[] realTypes,
-        bool hasCt)
+        RelayCommandToGenerate cmd)
     {
         if (cmd.ParameterValues?.Length > 0)
         {
-            var parameterValues = string.Join(", ", cmd.ParameterValues);
+            var parameterValuesAsCommaSeparated = cmd.GetParameterValuesAsCommaSeparated();
             return cmd is { ExecuteOnBackgroundThread: true, UseTask: true }
-                ? $"() => Task.Run(() => {cmd.MethodName}({parameterValues}))"
-                : $"() => {cmd.MethodName}({parameterValues})";
+                ? $"() => Task.Run(() => {cmd.MethodName}({parameterValuesAsCommaSeparated}))"
+                : $"() => {cmd.MethodName}({parameterValuesAsCommaSeparated})";
         }
 
-        if (realTypes.Length > 0)
+        var filteredParameterTypes = cmd.GetParameterTypesWithoutCancellationToken();
+        var hasCt = cmd.HasParameterTypesOfCancellationToken();
+
+        if (filteredParameterTypes.Length > 0)
         {
-            if (realTypes.Length == 1)
+            if (filteredParameterTypes.Length == 1)
             {
                 if (cmd.ExecuteOnBackgroundThread)
                 {
@@ -276,7 +231,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                     : cmd.MethodName;
             }
 
-            var args = string.Join(", ", realTypes.Select((_, i) => $"x.Item{i + 1}"));
+            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
 
             var call = hasCt
                 ? $"({args}, {NameConstants.CancellationTokenNone})"
@@ -300,21 +255,22 @@ internal abstract class CommandBuilderBase : BuilderBase
     }
 
     private static string BuildExecuteExpressionForAutoSetIsBusy(
-        RelayCommandToGenerate cmd,
-        string[] realTypes,
-        bool hasCt)
+        RelayCommandToGenerate cmd)
     {
         if (cmd.ParameterValues?.Length > 0)
         {
-            var parameterValues = string.Join(", ", cmd.ParameterValues);
+            var parameterValues = cmd.GetParameterValuesAsCommaSeparated();
             return cmd is { ExecuteOnBackgroundThread: true }
                 ? $"Task.Run(() => {cmd.MethodName}({parameterValues}))"
                 : $"{cmd.MethodName}({parameterValues})";
         }
 
-        if (realTypes.Length > 0)
+        var filteredParameterTypes = cmd.GetParameterTypesWithoutCancellationToken();
+        var hasCt = cmd.HasParameterTypesOfCancellationToken();
+
+        if (filteredParameterTypes.Length > 0)
         {
-            if (realTypes.Length == 1)
+            if (filteredParameterTypes.Length == 1)
             {
                 if (cmd.ExecuteOnBackgroundThread)
                 {
@@ -332,7 +288,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                     : $"{cmd.MethodName}(x)";
             }
 
-            var args = string.Join(", ", realTypes.Select((_, i) => $"x.Item{i + 1}"));
+            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
 
             var call = hasCt
                 ? $"({args}, {NameConstants.CancellationTokenNone})"
@@ -372,17 +328,15 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         if (cmd.ParameterValues?.Length > 0)
         {
-            var parameterValues = string.Join(", ", cmd.ParameterValues);
-            return $"{cmd.CanExecuteName}({parameterValues})";
+            return $"{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
         }
 
         var types = cmd.ParameterTypes ?? [];
         var paramCount = types.Length;
         var isCancellationOnly = paramCount == 1 &&
                                  types[0].EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal);
-        var realTypes = types
-            .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
-            .ToArray();
+
+        var filteredParameterTypes = cmd.GetParameterTypesWithoutCancellationToken();
 
         string? expr;
         if (cmd.UsePropertyForCanExecute)
@@ -408,7 +362,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
         else
         {
-            switch (realTypes.Length)
+            switch (filteredParameterTypes.Length)
             {
                 case 1:
                     expr = cmd.InvertCanExecute
@@ -417,7 +371,8 @@ internal abstract class CommandBuilderBase : BuilderBase
                     break;
                 case > 1:
                 {
-                    var args = string.Join(", ", realTypes.Select((_, i) => $"x.Item{i + 1}"));
+                    var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
+
                     expr = cmd.InvertCanExecute
                         ? $"x => !{cmd.CanExecuteName}({args})"
                         : $"x => {cmd.CanExecuteName}({args})";
