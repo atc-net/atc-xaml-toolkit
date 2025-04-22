@@ -116,7 +116,9 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"{p.Name.EnsureNameofContent()},");
         }
 
-        builder.AppendLine($"typeof({p.Type.RemoveNullableSuffix()}),");
+        builder.AppendLine(p.Type.Contains("<")
+            ? $"typeof({p.Type.RemoveNullableSuffix()}),"
+            : $"typeof({p.Type}),");
     }
 
     private static void GenerateDependencyPropertyBody(
@@ -153,7 +155,7 @@ internal static class FrameworkElementBuilderExtensions
                     }
                     else
                     {
-                        builder.AppendLine("new PropertyMetadata(defaultValue: null));");
+                        builder.AppendLine("new PropertyMetadata());");
                     }
 
                     builder.DecreaseIndent();

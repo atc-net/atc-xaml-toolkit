@@ -720,7 +720,7 @@ public sealed partial class FrameworkElementGeneratorTests
             {
                 public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
                     nameof(IsRunning),
-                    typeof(bool),
+                    typeof(bool?),
                     typeof(MyControl),
                     new FrameworkPropertyMetadata(
                         defaultValue: null,
@@ -766,7 +766,7 @@ public sealed partial class FrameworkElementGeneratorTests
             {
                 public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
                     nameof(IsRunning),
-                    typeof(bool),
+                    typeof(bool?),
                     typeof(MyControl),
                     new FrameworkPropertyMetadata(
                         defaultValue: null,
