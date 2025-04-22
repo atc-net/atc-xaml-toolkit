@@ -129,6 +129,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 useAwait = true;
                 break;
             case true when useAsyncLambda:
+            case true when cmd.IsAsync:
                 builder.AppendLine("async () =>");
                 useAwait = true;
                 break;
@@ -152,7 +153,10 @@ internal abstract class CommandBuilderBase : BuilderBase
                     execExpr = execExpr.Replace("x => ", string.Empty);
                 }
 
-                builder.AppendLine($"await {execExpr}.ConfigureAwait(false);");
+                builder.AppendLine(
+                    execExpr.EndsWith(")", StringComparison.Ordinal)
+                        ? $"await {execExpr}.ConfigureAwait(false);"
+                        : $"await {execExpr}().ConfigureAwait(false);");
             }
             else
             {
