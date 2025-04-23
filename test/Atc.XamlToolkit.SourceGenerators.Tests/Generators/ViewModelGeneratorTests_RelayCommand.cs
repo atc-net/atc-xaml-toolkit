@@ -1337,14 +1337,15 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             Save();
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1388,14 +1389,15 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             Save(CancellationToken.None);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1439,14 +1441,15 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             Save(x);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1490,14 +1493,15 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<int> SaveCommand => saveCommand ??= new RelayCommand<int>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             Save(x);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1541,14 +1545,15 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<int> SaveCommand => saveCommand ??= new RelayCommand<int>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             Save(x, CancellationToken.None);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1598,56 +1603,60 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             TurnDirectionSingle(LeftTopRightBottomType.Left);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             TurnDirectionSingle(LeftTopRightBottomType.Top);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             TurnDirectionSingle(LeftTopRightBottomType.Right);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             TurnDirectionSingle(LeftTopRightBottomType.Bottom);
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1691,7 +1700,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1700,7 +1710,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1744,7 +1754,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1753,7 +1764,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     },
                     CanSave);
@@ -1798,7 +1809,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1807,7 +1819,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1851,7 +1863,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1860,7 +1873,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -1910,7 +1923,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1919,14 +1933,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1935,14 +1950,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1951,14 +1967,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
 
                 public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -1967,7 +1984,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -2017,7 +2034,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -2026,14 +2044,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             
                 public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -2042,14 +2061,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             
                 public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -2058,14 +2078,15 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             
                 public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
                     () =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -2074,7 +2095,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     });
             }
@@ -2133,7 +2154,8 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommand<(string, int, bool, Atc.Data.Models.LogItem)> SaveCommand => saveCommand ??= new RelayCommand<(string, int, bool, Atc.Data.Models.LogItem)>(
                     x =>
                     {
-                        IsBusy = true;
+                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+
                         try
                         {
                             _ = Task
@@ -2142,7 +2164,7 @@ public sealed partial class ViewModelGeneratorTests
                         }
                         finally
                         {
-                            IsBusy = false;
+                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
                         }
                     },
                     x => CanSave(x.Item1, x.Item2, x.Item3, x.Item4));
