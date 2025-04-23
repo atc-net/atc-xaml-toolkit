@@ -116,6 +116,8 @@ internal abstract class CommandBuilderBase : BuilderBase
                                         execExpr.Contains("(x.");
 
         var useAwait = false;
+        var useDispatcherInvokeAsync = false;
+        var useDispatcherInvoke = false;
         switch (cmd.UseTask)
         {
             case false:
@@ -123,21 +125,47 @@ internal abstract class CommandBuilderBase : BuilderBase
                     execExprContainParameters
                         ? "x =>"
                         : "() =>");
+                useDispatcherInvoke = true;
                 break;
             case true when execExprContainParameters:
                 builder.AppendLine("async x =>");
                 useAwait = true;
+                useDispatcherInvokeAsync = true;
                 break;
             case true when useAsyncLambda:
             case true when cmd.IsAsync:
                 builder.AppendLine("async () =>");
                 useAwait = true;
+                useDispatcherInvokeAsync = true;
+                break;
+            case true when !execExprContainParameters ||
+                           !execExpr.StartsWith("Task.Run(", StringComparison.Ordinal) ||
+                           !execExpr.StartsWith("() => ", StringComparison.Ordinal):
+                builder.AppendLine("async () =>");
+                useDispatcherInvokeAsync = true;
                 break;
         }
 
         builder.AppendLine("{");
         builder.IncreaseIndent();
-        builder.AppendLine("IsBusy = true;");
+        if (useDispatcherInvokeAsync)
+        {
+            builder.AppendLine("await Application.Current.Dispatcher");
+            builder.IncreaseIndent();
+            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = true)");
+            builder.AppendLine(".ConfigureAwait(false);");
+            builder.DecreaseIndent();
+        }
+        else if (useDispatcherInvoke)
+        {
+            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);");
+        }
+        else
+        {
+            builder.AppendLine("IsBusy = true;");
+        }
+
+        builder.AppendLine();
         builder.AppendLine("try");
         builder.AppendLine("{");
         builder.IncreaseIndent();
@@ -188,7 +216,23 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine("finally");
         builder.AppendLine("{");
         builder.IncreaseIndent();
-        builder.AppendLine("IsBusy = false;");
+        if (useDispatcherInvokeAsync)
+        {
+            builder.AppendLine("await Application.Current.Dispatcher");
+            builder.IncreaseIndent();
+            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = false)");
+            builder.AppendLine(".ConfigureAwait(false);");
+            builder.DecreaseIndent();
+        }
+        else if (useDispatcherInvoke)
+        {
+            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);");
+        }
+        else
+        {
+            builder.AppendLine("IsBusy = false;");
+        }
+
         builder.DecreaseIndent();
         builder.AppendLine("}");
         builder.DecreaseIndent();
