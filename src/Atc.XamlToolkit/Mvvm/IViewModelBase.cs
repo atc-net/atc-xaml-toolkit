@@ -61,6 +61,48 @@ public interface IViewModelBase : IObservableObject, ICleanup
         ushort delayInMs = 1);
 
     /// <summary>
+    /// Asynchronously waits until <see cref="IsBusy"/> becomes
+    /// <see langword="false"/> or a default timeout of <c>30 seconds</c> elapses.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> if the view-model became idle within the default
+    /// timeout; otherwise <see langword="false"/> if the wait timed out.
+    /// </returns>
+    /// <remarks>
+    /// Internally this overload delegates to
+    /// <see cref="WaitUntilNotBusy(TimeSpan, ushort)"/> using a timeout of
+    /// <c>TimeSpan.FromSeconds(30)</c> and a polling interval of
+    /// <c>100 ms</c>.
+    /// Call that overload if you need a different timeout or polling cadence.
+    /// </remarks>
+    Task<bool> WaitUntilNotBusy();
+
+    /// <summary>
+    /// Repeatedly polls <see cref="IsBusy"/> until it becomes
+    /// <see langword="false"/> or the specified <paramref name="timeout"/> expires.
+    /// </summary>
+    /// <param name="timeout">The maximum amount of time to wait before giving up.</param>
+    /// <param name="pollInMs">
+    /// The polling interval, in milliseconds.
+    /// Defaults to <c>100 ms</c>; keep it small enough for a responsive
+    /// UI but large enough to avoid wasting CPU.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the view-model became idle within the
+    /// timeout; <see langword="false"/> if the wait timed out.
+    /// </returns>
+    /// <remarks>
+    /// Typical usage:
+    /// <code>
+    /// if (!await WaitUntilNotBusy(TimeSpan.FromSeconds(30)))
+    ///     logger.Warn("Timed out waiting for 'something' to become idle.");
+    /// </code>
+    /// </remarks>
+    Task<bool> WaitUntilNotBusy(
+        TimeSpan timeout,
+        ushort pollInMs = 100);
+
+    /// <summary>
     /// Broadcasts a change for the specified property from the old value to the new value.
     /// </summary>
     /// <typeparam name="T">The type of the property values.</typeparam>

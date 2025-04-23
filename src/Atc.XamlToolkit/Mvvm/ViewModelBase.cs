@@ -130,6 +130,32 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     }
 
     /// <inheritdoc />
+    public Task<bool> WaitUntilNotBusy()
+        => WaitUntilNotBusy(TimeSpan.FromSeconds(30));
+
+    /// <inheritdoc />
+    public async Task<bool> WaitUntilNotBusy(
+        TimeSpan timeout,
+        ushort pollInMs = 100)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+
+        try
+        {
+            while (IsBusy)
+            {
+                await Task.Delay(pollInMs, cts.Token).ConfigureAwait(false);
+            }
+
+            return true;
+        }
+        catch (TaskCanceledException)
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public virtual void Cleanup()
     {
         MessengerInstance.UnRegister(this);
