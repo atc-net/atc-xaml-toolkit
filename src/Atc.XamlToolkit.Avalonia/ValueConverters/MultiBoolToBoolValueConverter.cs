@@ -1,3 +1,4 @@
+// ReSharper disable SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
 namespace Atc.XamlToolkit.ValueConverters;
 
 public sealed class MultiBoolToBoolValueConverter :
@@ -6,11 +7,22 @@ public sealed class MultiBoolToBoolValueConverter :
 {
     public static readonly MultiBoolToBoolValueConverter Instance = new();
 
+    public BooleanOperatorType DefaultOperator { get; set; } = BooleanOperatorType.AND;
+
     public override bool Convert(
         bool[] values,
         object? parameter,
         CultureInfo culture)
-        => values.All(b => b);
+    {
+        var operatorType = ResolveOperator(parameter);
+
+        return operatorType switch
+        {
+            BooleanOperatorType.AND => values.All(b => b),
+            BooleanOperatorType.OR => values.Any(b => b),
+            _ => throw new SwitchCaseDefaultException(nameof(operatorType)),
+        };
+    }
 
     public object? Convert(
         IList<object?> values,
@@ -28,4 +40,23 @@ public sealed class MultiBoolToBoolValueConverter :
         object? parameter,
         CultureInfo culture)
         => throw new NotSupportedException("This is a OneWay converter.");
+
+    private BooleanOperatorType ResolveOperator(
+        object? parameter)
+    {
+        if (parameter is null)
+        {
+            return DefaultOperator;
+        }
+
+        return parameter switch
+        {
+            BooleanOperatorType operatorType => operatorType is BooleanOperatorType.AND or BooleanOperatorType.OR
+                ? operatorType
+                : DefaultOperator,
+            string s when Enum.TryParse<BooleanOperatorType>(s, ignoreCase: true, out var parsedOperatorType) &&
+                          parsedOperatorType is BooleanOperatorType.AND or BooleanOperatorType.OR => parsedOperatorType,
+            _ => DefaultOperator,
+        };
+    }
 }
