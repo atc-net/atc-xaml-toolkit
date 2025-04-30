@@ -38,13 +38,13 @@ To use a converter in WPF or Avalonia Window control:
 
 ## #️⃣ ValueConverters - Bool to X
 
-| Category            | Type                                         | WPF From → To              | WPF Convert Example               | Avalonia From → To       | Avalonia Convert Example    |
-|---------------------|----------------------------------------------|----------------------------|-----------------------------------|--------------------------|-----------------------------|
-| Bool → Bool         | `BoolToInverseBoolValueConverter`            | bool → bool                | True → False, False → True        | bool → bool              | True → False, False → True  |
-| Bool → Visibility   | `BoolToVisibilityCollapsedValueConverter`    | bool → Visibility          | True → Collapsed, False → Visible | ❌                      | ❌                          |
-| Bool → Visibility   | `BoolToVisibilityVisibleValueConverter`      | bool → Visibility          | True → Visible, False → Collapsed | bool → bool (IsVisible) | true → true, False → false  |
-| Bool → Width        | `BoolToWidthValueConverter`                  | bool + param → double/Auto | true, 10 → 10, true, Auto → Auto  | ❌                      | ❌                         |
-| Bool[] → Bool       | `MultiBoolToBoolValueConverter`              | bool[] → bool              | All True → True                   | ❌                      | ❌                         |
-| Bool[] → Visibility | `MultiBoolToVisibilityVisibleValueConverter` | bool[] → Visibility        | All True → Visible                | ❌                      | ❌                         |
+| Category            | Type                                         | WPF From → To              | WPF Convert Example                    | Avalonia From → To       | Avalonia Convert Example    |
+|---------------------|----------------------------------------------|----------------------------|----------------------------------------|--------------------------|-----------------------------|
+| Bool → Bool         | `BoolToInverseBoolValueConverter`            | bool → bool                | True → False, False → True             | bool → bool              | True → False, False → True  |
+| Bool → Visibility   | `BoolToVisibilityCollapsedValueConverter`    | bool → Visibility          | True → Collapsed, False → Visible      | ❌                      | ❌                          |
+| Bool → Visibility   | `BoolToVisibilityVisibleValueConverter`      | bool → Visibility          | True → Visible, False → Collapsed      | bool → bool (IsVisible) | true → true, False → false   |
+| Bool → Width        | `BoolToWidthValueConverter`                  | bool + param → double/Auto | true, 10 → 10, true, Auto → Auto       | ❌                      | ❌                          |
+| Bool[] → Bool       | `MultiBoolToBoolValueConverter`              | bool[] → bool              | All True → True (with operator AND)    | ❌                      | ❌                          |
+| Bool[] → Visibility | `MultiBoolToVisibilityVisibleValueConverter` | bool[] → Visibility        | All True → Visible (with operator AND) | ❌                      | ❌                          |
 
 ---
