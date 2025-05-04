@@ -48,22 +48,36 @@ internal static class ObjectExtensions
                 };
                 break;
             case "decimal":
-                strDefaultValue = strDefaultValue.Length == 0
-                    ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                    : strDefaultValue.Replace(',', '.') + "m";
+                if (!strDefaultValue.StartsWith("decimal", StringComparison.Ordinal))
+                {
+                    strDefaultValue = strDefaultValue.Length == 0
+                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                        : strDefaultValue.Replace(',', '.') + "m";
+                }
+
                 break;
             case "double":
-                strDefaultValue = strDefaultValue.Length == 0
-                    ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                    : strDefaultValue.Replace(',', '.') + "d";
+                if (!strDefaultValue.StartsWith("double", StringComparison.Ordinal))
+                {
+                    strDefaultValue = strDefaultValue.Length == 0
+                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                        : strDefaultValue.Replace(',', '.') + "d";
+                }
+
                 break;
             case "float":
-                strDefaultValue = strDefaultValue.Length == 0
-                    ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                    : strDefaultValue.Replace(',', '.') + "f";
+                if (!strDefaultValue.StartsWith("float", StringComparison.Ordinal))
+                {
+                    strDefaultValue = strDefaultValue.Length == 0
+                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                        : strDefaultValue.Replace(',', '.') + "f";
+                }
+
                 break;
             case "int" or "long":
-                if (strDefaultValue.Length == 0)
+                if (!strDefaultValue.StartsWith("int", StringComparison.Ordinal) &&
+                    !strDefaultValue.StartsWith("long", StringComparison.Ordinal) &&
+                    strDefaultValue.Length == 0)
                 {
                     strDefaultValue = "0";
                 }
@@ -79,17 +93,25 @@ internal static class ObjectExtensions
 
             case "Color":
             {
-                strDefaultValue = strDefaultValue.Length == 0
-                    ? "Colors.DeepPink"
-                    : $"Colors.{strDefaultValue}";
+                if (!strDefaultValue.StartsWith("Colors.", StringComparison.Ordinal))
+                {
+                    strDefaultValue = strDefaultValue.Length == 0
+                        ? "Colors.DeepPink"
+                        : $"Colors.{strDefaultValue}";
+                }
+
                 break;
             }
 
             case "Brush":
             {
-                strDefaultValue = strDefaultValue.Length == 0
-                    ? "Brushes.DeepPink"
-                    : $"Brushes.{strDefaultValue}";
+                if (!strDefaultValue.StartsWith("Brushes.", StringComparison.Ordinal))
+                {
+                    strDefaultValue = strDefaultValue.Length == 0
+                        ? "Brushes.DeepPink"
+                        : $"Brushes.{strDefaultValue}";
+                }
+
                 break;
             }
 
