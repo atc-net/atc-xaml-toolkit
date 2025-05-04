@@ -26,20 +26,20 @@ For Avalonia:
 For WPF:
 
 ```xml
-xmlns:atcValueConverters="https://github.com/atc-net/atc-xaml-toolkit/tree/main/schemas/value-converters"
+xmlns:atcToolkitValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
 ```
 
 For Avalonia:
 
 ```xml
-xmlns:atcValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Avalonia"
+xmlns:atcToolkitValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Avalonia"
 ```
 
 ---
 
 ## 🧹 Usage
 
-To use a converter in WPF or Avalonia Window control my key:
+To use a converter in WPF or Avalonia by ResourceDictionary and and key:
 
 ```xml
 <UserControl.Resources>
@@ -51,10 +51,10 @@ To use a converter in WPF or Avalonia Window control my key:
 <StackPanel Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityVisibleValueConverter}}" />
 ```
 
-Or by in ValueConverter Instance:
+Or by the ValueConverter's Instance:
 
 ```xml
-<StackPanel Visibility="{Binding IsVisible, Converter={x:Static valueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+<StackPanel Visibility="{Binding IsVisible, Converter={x:Static atcToolkitValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
 ```
 
 ---
