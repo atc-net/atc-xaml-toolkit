@@ -6,7 +6,22 @@ These converters are organized by their **input/output types**, making it easy t
 
 ---
 
+## 🚀 Quick Start
+
+For WPF:
+
+```powershell
+dotnet add package Atc.XamlToolkit.Wpf
+```
+
+For Avalonia:
+
+```powershell
+ dotnet add package Atc.XamlToolkit.Avalonia
+```
+
 ## 📜 XML Namespace Mapping
+
 
 For WPF:
 
@@ -24,27 +39,35 @@ xmlns:atcValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly
 
 ## 🧹 Usage
 
-To use a converter in WPF or Avalonia Window control:
+To use a converter in WPF or Avalonia Window control my key:
 
 ```xml
-<Window.Resources>
-    <atcValueConverters:BoolToVisibilityVisibleValueConverter x:Key="BoolToVisibilityVisibleValueConverter" />
-</Window.Resources>
+<UserControl.Resources>
+    <ResourceDictionary>
+        <atcValueConverters:BoolToVisibilityVisibleValueConverter x:Key="BoolToVisibilityVisibleValueConverter" />
+    </ResourceDictionary>
+</UserControl.Resources>
 
 <StackPanel Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityVisibleValueConverter}}" />
 ```
 
+Or by in ValueConverter Instance:
+
+```xml
+<StackPanel Visibility="{Binding IsVisible, Converter={x:Static valueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+```
+
 ---
 
-## #️⃣ ValueConverters - Bool to X
+## #️⃣ ValueConverters - Bool to [...]
 
-| Category            | Type                                         | WPF From → To              | WPF Convert Example                    | Avalonia From → To       | Avalonia Convert Example    |
-|---------------------|----------------------------------------------|----------------------------|----------------------------------------|--------------------------|-----------------------------|
-| Bool → Bool         | `BoolToInverseBoolValueConverter`            | bool → bool                | True → False, False → True             | bool → bool              | True → False, False → True  |
-| Bool → Visibility   | `BoolToVisibilityCollapsedValueConverter`    | bool → Visibility          | True → Collapsed, False → Visible      | ❌                      | ❌                          |
-| Bool → Visibility   | `BoolToVisibilityVisibleValueConverter`      | bool → Visibility          | True → Visible, False → Collapsed      | bool → bool (IsVisible) | true → true, False → false   |
-| Bool → Width        | `BoolToWidthValueConverter`                  | bool + param → double/Auto | true, 10 → 10, true, Auto → Auto       | ❌                      | ❌                          |
-| Bool[] → Bool       | `MultiBoolToBoolValueConverter`              | bool[] → bool              | All True → True (with operator AND)    | ❌                      | ❌                          |
-| Bool[] → Visibility | `MultiBoolToVisibilityVisibleValueConverter` | bool[] → Visibility        | All True → Visible (with operator AND) | ❌                      | ❌                          |
+| Category                  | Type                                                    | Source → Target                    | WPF Convert Example                                   | Avalonia Convert Example        | ConvertBack   |
+|---------------------------|---------------------------------------------------------|------------------------------------|-------------------------------------------------------|---------------------------------|---------------|
+| Bool → Bool               | `BoolToInverseBoolValueConverter`                       | bool → bool                        | True → False<br/>False → True                         | True → False<br/>False → True   |               |
+| Bool → Visibility         | `BoolToVisibilityCollapsedValueConverter`               | bool → Visibility                  | True → Collapsed<br/>False → Visible                  | —                               |               |
+| Bool → Visibility         | `BoolToVisibilityVisibleValueConverter`                 | bool → Visibility                  | True → Visible<br/>False → Collapsed                  | True → True<br/>False → False   |               |
+| Bool → Width              | `BoolToWidthValueConverter`                             | bool + param → double/Auto         | True<br/>10 → 10<br/>True<br/>Auto → Auto             | —                               | Not supported |
+| Bool[] → Bool             | `MultiBoolToBoolValueConverter`                         | bool[] → bool                      | All True → True (AND)<br/>One True → True (OR)        | —                               | Not supported |
+| Bool[] → Visibility       | `MultiBoolToVisibilityVisibleValueConverter`            | bool[] → Visibility                | All True → Visible (AND)<br/>One True → Visible (OR)  | —                               | Not supported |
 
 ---

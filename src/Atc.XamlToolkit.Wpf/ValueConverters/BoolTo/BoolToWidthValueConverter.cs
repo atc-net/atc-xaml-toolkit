@@ -1,9 +1,10 @@
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
+[ValueConversion(typeof(bool), typeof(double))]
 public sealed class BoolToWidthValueConverter :
     ValueConverterBase<bool, double>,
-    Avalonia.Data.Converters.IValueConverter
+    System.Windows.Data.IValueConverter
 {
     public static readonly BoolToWidthValueConverter Instance = new();
 
@@ -17,13 +18,23 @@ public sealed class BoolToWidthValueConverter :
             return 0;
         }
 
-        if (parameter is null || parameter.ToString()?.Equals("Auto", StringComparison.OrdinalIgnoreCase) == true)
+        if (parameter is null ||
+            parameter.ToString()?.Equals("Auto", StringComparison.OrdinalIgnoreCase) == true)
         {
             return double.NaN;
         }
 
         var s = parameter.ToString();
-        return double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
+        if (s is null)
+        {
+            return 0;
+        }
+
+        var lengthConverter = new LengthConverter();
+        var converted = lengthConverter.ConvertFromString(s);
+
+        return converted is not null &&
+               double.TryParse(converted.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
             ? result
             : 0;
     }
@@ -34,18 +45,18 @@ public sealed class BoolToWidthValueConverter :
         CultureInfo culture)
         => throw new NotSupportedException("This is a OneWay converter.");
 
-    object? Avalonia.Data.Converters.IValueConverter.Convert(
+    object? System.Windows.Data.IValueConverter.Convert(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IValueConverter)this).Convert(
+        => ((Data.Converters.IValueConverter)this).Convert(
             value,
             targetType,
             parameter,
             culture);
 
-    object Avalonia.Data.Converters.IValueConverter.ConvertBack(
+    object System.Windows.Data.IValueConverter.ConvertBack(
         object? value,
         Type targetType,
         object? parameter,

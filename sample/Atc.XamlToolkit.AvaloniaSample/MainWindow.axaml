@@ -2,11 +2,11 @@
     x:Class="Atc.XamlToolkit.AvaloniaSample.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:atcValueConverters="https://github.com/atc-net/atc-xaml-toolkit/tree/main/schemas/value-converters"
     xmlns:avaloniaSample="clr-namespace:Atc.XamlToolkit.AvaloniaSample"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sampleControls="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls"
+    xmlns:valueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Avalonia"
     Title="Atc.XamlToolkit.AvaloniaSample"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -64,7 +64,7 @@
             <HeaderedContentControl
                 Padding="10"
                 Header="PersonView"
-                IsVisible="{Binding #ShowPersonView.IsChecked, Converter={x:Static atcValueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
+                IsVisible="{Binding #ShowPersonView.IsChecked, Converter={x:Static valueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
                 <sampleControls:PersonView />
             </HeaderedContentControl>
 
