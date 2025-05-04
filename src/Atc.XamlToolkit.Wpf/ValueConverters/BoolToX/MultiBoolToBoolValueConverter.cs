@@ -1,9 +1,11 @@
 // ReSharper disable SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
+[ValueConversion(typeof(bool[]), typeof(bool))]
 public sealed class MultiBoolToBoolValueConverter :
     MultiValueConverterBase<bool, bool>,
-    Avalonia.Data.Converters.IMultiValueConverter
+    System.Windows.Data.IMultiValueConverter
 {
     public static readonly MultiBoolToBoolValueConverter Instance = new();
 
@@ -14,7 +16,9 @@ public sealed class MultiBoolToBoolValueConverter :
         object? parameter,
         CultureInfo culture)
     {
-        var operatorType = ResolveOperator(parameter);
+        var operatorType = BooleanOperatorTypeResolver.Resolve(
+            parameter,
+            DefaultOperator);
 
         return operatorType switch
         {
@@ -24,39 +28,27 @@ public sealed class MultiBoolToBoolValueConverter :
         };
     }
 
-    public object? Convert(
-        IList<object?> values,
-        Type targetType,
-        object? parameter,
-        CultureInfo culture)
-        => ((IMultiValueConverter)this).Convert(
-            values.ToArray(),
-            targetType,
-            parameter,
-            culture);
-
     public override object[] ConvertBack(
         bool value,
         object? parameter,
         CultureInfo culture)
         => throw new NotSupportedException("This is a OneWay converter.");
 
-    private BooleanOperatorType ResolveOperator(
-        object? parameter)
-    {
-        if (parameter is null)
-        {
-            return DefaultOperator;
-        }
+    object? System.Windows.Data.IMultiValueConverter.Convert(
+        object[]? values,
+        Type targetType,
+        object? parameter,
+        CultureInfo culture)
+        => ((Data.Converters.IMultiValueConverter)this).Convert(
+            values,
+            targetType,
+            parameter,
+            culture);
 
-        return parameter switch
-        {
-            BooleanOperatorType operatorType => operatorType is BooleanOperatorType.AND or BooleanOperatorType.OR
-                ? operatorType
-                : DefaultOperator,
-            string s when Enum.TryParse<BooleanOperatorType>(s, ignoreCase: true, out var parsedOperatorType) &&
-                          parsedOperatorType is BooleanOperatorType.AND or BooleanOperatorType.OR => parsedOperatorType,
-            _ => DefaultOperator,
-        };
-    }
+    object?[] System.Windows.Data.IMultiValueConverter.ConvertBack(
+        object? value,
+        Type[] targetTypes,
+        object? parameter,
+        CultureInfo culture)
+        => throw new NotSupportedException("This is a OneWay converter.");
 }

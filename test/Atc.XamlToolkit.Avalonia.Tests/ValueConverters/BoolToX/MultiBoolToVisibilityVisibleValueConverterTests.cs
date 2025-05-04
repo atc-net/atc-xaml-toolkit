@@ -1,8 +1,9 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
 
-public sealed class MultiBoolToBoolValueConverterTests
+public sealed class MultiBoolToVisibilityVisibleValueConverterTests
 {
-    private readonly IMultiValueConverter converter = MultiBoolToBoolValueConverter.Instance;
+    private readonly IMultiValueConverter converter = MultiBoolToVisibilityVisibleValueConverter.Instance;
 
     private static readonly object[] AllTrue = [true, true, true];
     private static readonly object[] OneFalse = [true, false, true];

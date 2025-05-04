@@ -1,40 +1,44 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
+[ValueConversion(typeof(bool), typeof(Visibility))]
 public sealed class BoolToVisibilityVisibleValueConverter :
-    ValueConverterBase<bool, bool>,
-    Avalonia.Data.Converters.IValueConverter
+    ValueConverterBase<bool, Visibility>,
+    System.Windows.Data.IValueConverter
 {
     public static readonly BoolToVisibilityVisibleValueConverter Instance = new();
 
-    public override bool Convert(
+    public override Visibility Convert(
         bool value,
         object? parameter,
         CultureInfo culture)
-        => value;
+        => value
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
     public override bool ConvertBack(
-        bool value,
+        Visibility value,
         object? parameter,
         CultureInfo culture)
-        => value;
+        => value == Visibility.Visible;
 
-    object? Avalonia.Data.Converters.IValueConverter.Convert(
+    object? System.Windows.Data.IValueConverter.Convert(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IValueConverter)this).Convert(
+        => ((Data.Converters.IValueConverter)this).Convert(
             value,
             targetType,
             parameter,
             culture);
 
-    object? Avalonia.Data.Converters.IValueConverter.ConvertBack(
+    object? System.Windows.Data.IValueConverter.ConvertBack(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IValueConverter)this).ConvertBack(
+        => ((Data.Converters.IValueConverter)this).ConvertBack(
             value,
             targetType,
             parameter,

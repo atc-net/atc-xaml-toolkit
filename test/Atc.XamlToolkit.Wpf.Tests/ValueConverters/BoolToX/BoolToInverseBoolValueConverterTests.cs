@@ -1,3 +1,4 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
 
 public sealed class BoolToInverseBoolValueConverterTests

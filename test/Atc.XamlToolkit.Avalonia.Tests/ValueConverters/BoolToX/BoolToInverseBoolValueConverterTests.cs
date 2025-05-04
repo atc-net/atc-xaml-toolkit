@@ -1,8 +1,9 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
 
-public sealed class BoolToVisibilityCollapsedValueConverterTests
+public sealed class BoolToInverseBoolValueConverterTests
 {
-    private readonly IValueConverter converter = BoolToVisibilityCollapsedValueConverter.Instance;
+    private readonly IValueConverter converter = BoolToInverseBoolValueConverter.Instance;
 
     [Theory]
     [InlineData(false, true)]
@@ -13,8 +14,8 @@ public sealed class BoolToVisibilityCollapsedValueConverterTests
             converter.Convert(input, targetType: null!, parameter: null, culture: null!));
 
     [Theory]
-    [InlineData(true, false)]
     [InlineData(false, true)]
+    [InlineData(true, false)]
     public void ConvertBack(bool expected, bool input)
         => Assert.Equal(
             expected,

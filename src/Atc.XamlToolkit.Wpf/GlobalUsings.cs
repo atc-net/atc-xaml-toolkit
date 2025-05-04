@@ -11,3 +11,4 @@ global using System.Windows.Threading;
 
 global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Data.Converters;
+global using Atc.XamlToolkit.Resolvers;
