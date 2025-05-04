@@ -1,4 +1,5 @@
 // ReSharper disable SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
 public sealed class MultiBoolToVisibilityVisibleValueConverter :
@@ -14,7 +15,9 @@ public sealed class MultiBoolToVisibilityVisibleValueConverter :
         object? parameter,
         CultureInfo culture)
     {
-        var operatorType = ResolveOperator(parameter);
+        var operatorType = BooleanOperatorTypeResolver.Resolve(
+            parameter,
+            DefaultOperator);
 
         return operatorType switch
         {
@@ -40,23 +43,4 @@ public sealed class MultiBoolToVisibilityVisibleValueConverter :
             targetType,
             parameter,
             culture);
-
-    private BooleanOperatorType ResolveOperator(
-        object? parameter)
-    {
-        if (parameter is null)
-        {
-            return DefaultOperator;
-        }
-
-        return parameter switch
-        {
-            BooleanOperatorType operatorType => operatorType is BooleanOperatorType.AND or BooleanOperatorType.OR
-                ? operatorType
-                : DefaultOperator,
-            string s when Enum.TryParse<BooleanOperatorType>(s, ignoreCase: true, out var parsedOperatorType) &&
-                          parsedOperatorType is BooleanOperatorType.AND or BooleanOperatorType.OR => parsedOperatorType,
-            _ => DefaultOperator,
-        };
-    }
 }

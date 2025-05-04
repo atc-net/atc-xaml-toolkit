@@ -1,10 +1,11 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
-public sealed class BoolToVisibilityCollapsedValueConverter :
+public sealed class BoolToInverseBoolValueConverter :
     ValueConverterBase<bool, bool>,
     Avalonia.Data.Converters.IValueConverter
 {
-    public static readonly BoolToVisibilityCollapsedValueConverter Instance = new();
+    public static readonly BoolToInverseBoolValueConverter Instance = new();
 
     public override bool Convert(
         bool value,

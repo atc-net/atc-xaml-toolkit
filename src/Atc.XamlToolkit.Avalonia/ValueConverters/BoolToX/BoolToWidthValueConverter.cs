@@ -1,9 +1,9 @@
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
-[ValueConversion(typeof(bool), typeof(double))]
 public sealed class BoolToWidthValueConverter :
     ValueConverterBase<bool, double>,
-    System.Windows.Data.IValueConverter
+    Avalonia.Data.Converters.IValueConverter
 {
     public static readonly BoolToWidthValueConverter Instance = new();
 
@@ -23,16 +23,7 @@ public sealed class BoolToWidthValueConverter :
         }
 
         var s = parameter.ToString();
-        if (s is null)
-        {
-            return 0;
-        }
-
-        var lengthConverter = new LengthConverter();
-        var converted = lengthConverter.ConvertFromString(s);
-
-        return converted is not null &&
-               double.TryParse(converted.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
+        return double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
             ? result
             : 0;
     }
@@ -43,18 +34,18 @@ public sealed class BoolToWidthValueConverter :
         CultureInfo culture)
         => throw new NotSupportedException("This is a OneWay converter.");
 
-    object? System.Windows.Data.IValueConverter.Convert(
+    object? Avalonia.Data.Converters.IValueConverter.Convert(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((Data.Converters.IValueConverter)this).Convert(
+        => ((IValueConverter)this).Convert(
             value,
             targetType,
             parameter,
             culture);
 
-    object System.Windows.Data.IValueConverter.ConvertBack(
+    object Avalonia.Data.Converters.IValueConverter.ConvertBack(
         object? value,
         Type targetType,
         object? parameter,
