@@ -47,4 +47,7 @@ public partial class TestFieldsDependencyPropertiesView
 
     [DependencyProperty(DefaultValue = 12.2)]
     private double myFontSize;
+
+    [DependencyProperty(DefaultValue = double.NaN)]
+    private double spacing;
 }
