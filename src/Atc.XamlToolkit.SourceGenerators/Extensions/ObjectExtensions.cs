@@ -2,6 +2,18 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions;
 
 internal static class ObjectExtensions
 {
+    private static readonly string[] AllowedConst = [
+        "MaxValue",
+        "MinValue",
+        "NaN",
+        "E",
+        "Epsilon",
+        "NegativeInfinity",
+        "NegativeZero",
+        "Pi",
+        "PositiveInfinity",
+        "Tau"];
+
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public static string? TransformDefaultValueIfNeeded(
         this object? defaultValue,
@@ -48,7 +60,11 @@ internal static class ObjectExtensions
                 };
                 break;
             case "decimal":
-                if (!strDefaultValue.StartsWith("decimal", StringComparison.Ordinal))
+                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = "decimal." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("decimal."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
@@ -57,7 +73,11 @@ internal static class ObjectExtensions
 
                 break;
             case "double":
-                if (!strDefaultValue.StartsWith("double", StringComparison.Ordinal))
+                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = "double." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("double."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
@@ -66,7 +86,11 @@ internal static class ObjectExtensions
 
                 break;
             case "float":
-                if (!strDefaultValue.StartsWith("float", StringComparison.Ordinal))
+                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = "float." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("float."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
@@ -75,11 +99,18 @@ internal static class ObjectExtensions
 
                 break;
             case "int" or "long":
-                if (!strDefaultValue.StartsWith("int", StringComparison.Ordinal) &&
-                    !strDefaultValue.StartsWith("long", StringComparison.Ordinal) &&
-                    strDefaultValue.Length == 0)
+                if (strDefaultValue.Length == 0)
                 {
                     strDefaultValue = "0";
+                }
+                else if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = lastPart + "." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("int.") &&
+                         !strDefaultValue.Contains("long."))
+                {
+                    // Skip
                 }
 
                 break;
@@ -93,7 +124,7 @@ internal static class ObjectExtensions
 
             case "Color":
             {
-                if (!strDefaultValue.StartsWith("Colors.", StringComparison.Ordinal))
+                if (!strDefaultValue.Contains("Colors."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? "Colors.DeepPink"
@@ -105,7 +136,7 @@ internal static class ObjectExtensions
 
             case "Brush":
             {
-                if (!strDefaultValue.StartsWith("Brushes.", StringComparison.Ordinal))
+                if (!strDefaultValue.Contains("Brushes."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? "Brushes.DeepPink"
