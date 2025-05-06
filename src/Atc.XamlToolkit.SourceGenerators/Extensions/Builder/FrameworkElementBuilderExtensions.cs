@@ -116,9 +116,7 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"{p.Name.EnsureNameofContent()},");
         }
 
-        builder.AppendLine(p.Type.Contains("<")
-            ? $"typeof({p.Type.RemoveNullableSuffix()}),"
-            : $"typeof({p.Type}),");
+        builder.AppendLine($"typeof({p.Type.TrimNullableForTypeOf()}),");
     }
 
     private static void GenerateDependencyPropertyBody(
@@ -293,6 +291,16 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine(",");
             }
 
+            if (string.IsNullOrEmpty(p.CoerceValueCallback))
+            {
+                builder.AppendLine("coerceValueCallback: null,");
+            }
+
+            if (!p.IsAnimationProhibited.HasValue)
+            {
+                builder.AppendLine("isAnimationProhibited: false,");
+            }
+
             builder.Append($"defaultUpdateSourceTrigger: {p.DefaultUpdateSourceTrigger}");
         }
 
@@ -301,6 +309,12 @@ internal static class FrameworkElementBuilderExtensions
             if (hasAddedLine)
             {
                 builder.AppendLine(",");
+            }
+
+            if (string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger) &&
+                string.IsNullOrEmpty(p.CoerceValueCallback))
+            {
+                builder.AppendLine("coerceValueCallback: null,");
             }
 
             builder.Append($"isAnimationProhibited: {p.IsAnimationProhibited.Value.ToString().ToLowerInvariant()}");

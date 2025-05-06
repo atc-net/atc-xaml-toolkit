@@ -1,3 +1,4 @@
+// ReSharper disable InvertIf
 namespace Atc.XamlToolkit.SourceGenerators.Extensions;
 
 [SuppressMessage("Design", "CA1308:Teplace the call to 'ToLowerInvariant' with 'ToUpperInvariant'", Justification = "OK.")]
@@ -10,21 +11,55 @@ public static class StringExtensions
 
     private static readonly Dictionary<string, string> TypeAliases = new(StringComparer.Ordinal)
     {
-        { nameof(Boolean), "bool" },
-        { nameof(Byte), "byte" },
-        { nameof(SByte), "sbyte" },
-        { nameof(Char), "char" },
-        { nameof(Decimal), "decimal" },
-        { nameof(Double), "double" },
-        { nameof(Single), "float" },
-        { nameof(Int32), "int" },
-        { nameof(UInt32), "uint" },
-        { nameof(Int16), "short" },
-        { nameof(UInt16), "ushort" },
-        { nameof(Int64), "long" },
-        { nameof(UInt64), "ulong" },
-        { nameof(Object), "object" },
-        { nameof(String), "string" },
+        { nameof(Boolean),  "bool" },
+        { nameof(Byte),     "byte" },
+        { nameof(SByte),    "sbyte" },
+        { nameof(Char),     "char" },
+        { nameof(Decimal),  "decimal" },
+        { nameof(Double),   "double" },
+        { nameof(Single),   "float" },
+        { nameof(Int32),    "int" },
+        { nameof(UInt32),   "uint" },
+        { nameof(Int16),    "short" },
+        { nameof(UInt16),   "ushort" },
+        { nameof(Int64),    "long" },
+        { nameof(UInt64),   "ulong" },
+        { nameof(IntPtr),   "nint" },
+        { nameof(UIntPtr),  "nuint" },
+        { nameof(Object),   "object" },
+        { nameof(String),   "string" },
+    };
+
+    private static readonly HashSet<string> KnownValueTypes = new(StringComparer.Ordinal)
+    {
+        // Primitive structs
+        "bool",
+        "byte",
+        "sbyte",
+        "char",
+        "decimal",
+        "double",
+        "float",
+        "int",
+        "uint",
+        "short",
+        "ushort",
+        "long",
+        "ulong",
+        "nint",
+        "nuint",
+
+        // Common framework structs
+        "Guid",
+        "DateTime",
+        "DateTimeOffset",
+        "TimeSpan",
+        "Color",
+        "Point",
+        "Rect",
+        "Size",
+        "Thickness",
+        "Vector",
     };
 
     public static string EnsureNameofContent(
@@ -81,6 +116,30 @@ public static class StringExtensions
             1 => value.ToLowerInvariant(),
             _ => char.ToLowerInvariant(value[0]) + value.Substring(1),
         };
+    }
+
+    public static string EnsureCSharpAliasIfNeeded(
+        this string typeName)
+    {
+        if (string.IsNullOrWhiteSpace(typeName))
+        {
+            return typeName;
+        }
+
+        // Detect a nullable suffix that applies to the whole type
+        var hasNullableSuffix = typeName[typeName.Length - 1] == '?';
+        if (hasNullableSuffix)
+        {
+            typeName = typeName.Substring(0, typeName.Length - 1); // drop '?'
+        }
+
+        // Parse / simplify the *core* type name
+        var simplified = EnsureCSharpAliasIfNeededParse(typeName);
+
+        // Re‑attach the suffix if it was present
+        return hasNullableSuffix
+            ? simplified + "?"
+            : simplified;
     }
 
     public static string ExtractInnerContent(
@@ -174,31 +233,7 @@ public static class StringExtensions
         return fieldName;
     }
 
-    public static string EnsureCSharpAliasIfNeeded(
-        this string typeName)
-    {
-        if (string.IsNullOrEmpty(typeName))
-        {
-            return typeName;
-        }
-
-        var resolvedTypeName = typeName switch
-        {
-            _ => TypeAliases.TryGetValue(typeName, out var alias)
-                ? alias
-                : typeName,
-        };
-
-        if (!resolvedTypeName.Contains("."))
-        {
-            return resolvedTypeName;
-        }
-
-        var parts = resolvedTypeName.Split('.');
-        return parts[parts.Length - 1];
-    }
-
-    public static bool IsSimpleType(
+    public static bool IsKnownValueType(
         this string value)
     {
         if (string.IsNullOrEmpty(value))
@@ -213,31 +248,22 @@ public static class StringExtensions
                 .Replace(">", string.Empty);
         }
 
-        return value.RemoveNullableSuffix()
-            is "bool"
-            or "decimal"
-            or "double"
-            or "float"
-            or "int"
-            or "long"
-            or "string";
+        return KnownValueTypes.Contains(value.RemoveNullableSuffix());
     }
 
-    public static bool IsSimpleUiType(
-        this string value)
+    public static string TrimNullableForTypeOf(
+        this string typeName)
     {
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(typeName) ||
+            !typeName.EndsWith("?", StringComparison.Ordinal))
         {
-            return false;
+            return typeName;
         }
 
-        var parts = value.Split('.');
-        var lastPart = parts[parts.Length - 1];
-
-        return lastPart.RemoveNullableSuffix()
-            is "Brush"
-            or "Color"
-            or "FontFamily";
+        var core = typeName.Substring(0, typeName.Length - 1); // chop '?'
+        return KnownValueTypes.Contains(core)
+            ? typeName
+            : core;
     }
 
     private static string RemoveOuterBrackets(
@@ -250,6 +276,49 @@ public static class StringExtensions
         }
 
         return value;
+    }
+
+    private static string EnsureCSharpAliasIfNeededParse(
+        string typeName)
+    {
+        // Nullable<T>
+        if (typeName.StartsWith("System.Nullable<", StringComparison.Ordinal) ||
+            typeName.StartsWith("Nullable<", StringComparison.Ordinal))
+        {
+            var start = typeName.IndexOf('<') + 1;
+            var inner = typeName.Substring(start, typeName.Length - start - 1); // trim '<' … '>'
+            return EnsureCSharpAliasIfNeededParse(inner) + "?";
+        }
+
+        // Generic type
+        var open = typeName.IndexOf('<');
+        if (open > 0)
+        {
+            var outer = EnsureCSharpAliasIfNeededSimplifyToken(typeName.Substring(0, open));
+
+            var argsStart = open + 1;
+            var argList = typeName.Substring(argsStart, typeName.Length - argsStart - 1); // drop '>'
+            var args = SplitArguments(argList).Select(EnsureCSharpAliasIfNeededParse);
+
+            return outer + "<" + string.Join(", ", args) + ">";
+        }
+
+        // Plain (non‑generic) identifier
+        return EnsureCSharpAliasIfNeededSimplifyToken(typeName);
+    }
+
+    private static string EnsureCSharpAliasIfNeededSimplifyToken(
+        string token)
+    {
+        var lastDot = token.LastIndexOf('.');
+
+        var core = lastDot >= 0
+            ? token.Substring(lastDot + 1)
+            : token;
+
+        return TypeAliases.TryGetValue(core, out var alias)
+            ? alias
+            : core;
     }
 
     private static string ExtractParameterString(
