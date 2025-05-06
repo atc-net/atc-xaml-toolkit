@@ -33,33 +33,26 @@ public static class StringExtensions
     private static readonly HashSet<string> KnownValueTypes = new(StringComparer.Ordinal)
     {
         // Primitive structs
-        "bool",
-        "byte",
-        "sbyte",
-        "char",
-        "decimal",
-        "double",
-        "float",
-        "int",
-        "uint",
-        "short",
-        "ushort",
-        "long",
-        "ulong",
-        "nint",
-        "nuint",
+        "bool", "byte", "sbyte", "char", "decimal", "double", "float", "int", "uint",
+        "short", "ushort", "long", "ulong", "nint", "nuint",
 
-        // Common framework structs
-        "Guid",
-        "DateTime",
-        "DateTimeOffset",
-        "TimeSpan",
-        "Color",
-        "Point",
-        "Rect",
-        "Size",
-        "Thickness",
-        "Vector",
+        // System structs
+        "Guid", "DateTime", "DateTimeOffset", "TimeSpan",
+
+        // WPF / WinUI core structs
+        "Color", "Point", "Rect", "Size", "Thickness", "Vector",
+        "CornerRadius", "Matrix", "Matrix3D", "Point3D", "Vector3D", "Quaternion",
+        "Rect3D", "Int32Rect", "Duration", "GridLength",
+        "FontStretch", "FontStyle", "FontWeight",
+
+        // Common enums (layout / visibility / flow)
+        "HorizontalAlignment", "VerticalAlignment", "FlowDirection", "Orientation",
+        "TextAlignment", "TextWrapping", "Dock", "Visibility", "ScrollBarVisibility",
+        "ResizeMode", "WindowState",
+
+        // Media / drawing enums
+        "Stretch", "AlignmentX", "AlignmentY", "BitmapScalingMode",
+        "PenLineCap", "PenLineJoin", "FillRule", "SweepDirection",
     };
 
     public static string EnsureNameofContent(
