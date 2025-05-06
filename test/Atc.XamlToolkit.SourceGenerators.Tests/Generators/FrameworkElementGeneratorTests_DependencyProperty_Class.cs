@@ -437,6 +437,7 @@ public sealed partial class FrameworkElementGeneratorTests
                         propertyChangedCallback: PropertyChangedCallback,
                         coerceValueCallback: CoerceValueCallback,
                         flags: FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
+                        isAnimationProhibited: false,
                         defaultUpdateSourceTrigger: UpdateSourceTrigger.Default));
 
                 public bool IsRunning

@@ -28,12 +28,6 @@ internal static class ObjectExtensions
             .ToString()?
             .EnsureNoNameof() ?? string.Empty;
 
-        if (!type.IsSimpleType() &&
-            !type.IsSimpleUiType())
-        {
-            return strDefaultValue;
-        }
-
         if (type.Contains("<"))
         {
             var sa = strDefaultValue.Split(';');
@@ -50,12 +44,10 @@ internal static class ObjectExtensions
         switch (lastPart)
         {
             case "bool":
-                strDefaultValue = strDefaultValue switch
+                strDefaultValue = strDefaultValue.ToLowerInvariant() switch
                 {
                     "true" => "BooleanBoxes.TrueBox",
-                    "True" => "BooleanBoxes.TrueBox",
                     "false" => "BooleanBoxes.FalseBox",
-                    "False" => "BooleanBoxes.FalseBox",
                     _ => strDefaultValue,
                 };
                 break;
@@ -135,6 +127,7 @@ internal static class ObjectExtensions
             }
 
             case "Brush":
+            case "SolidColorBrush":
             {
                 if (!strDefaultValue.Contains("Brushes."))
                 {

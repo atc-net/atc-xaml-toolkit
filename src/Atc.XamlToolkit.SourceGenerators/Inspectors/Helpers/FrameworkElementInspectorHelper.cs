@@ -190,7 +190,7 @@ internal static class FrameworkElementInspectorHelper
             description = descriptionValue;
         }
 
-        defaultValue = defaultValue is null && (type.IsSimpleType() || type.IsSimpleUiType())
+        defaultValue = defaultValue is null && type.IsKnownValueType()
             ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
             : defaultValue?.TransformDefaultValueIfNeeded(type);
     }
