@@ -30,8 +30,12 @@ internal static class FrameworkElementInspectorHelper
             }
 
             object? defaultValue = null;
+
             var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue);
+
             const bool isReadOnly = false;
+
+            var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
 
             Extract(
                 argumentValues,
@@ -54,6 +58,7 @@ internal static class FrameworkElementInspectorHelper
                     propertyName,
                     type,
                     isReadOnly,
+                    useNewKeyword,
                     defaultValue,
                     propertyChangedCallback,
                     coerceValueCallback,
@@ -89,6 +94,8 @@ internal static class FrameworkElementInspectorHelper
 
         var type = fieldSymbol.Type.ToString().EnsureCSharpAliasIfNeeded();
 
+        var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
+
         object? defaultValue = null;
 
         Extract(
@@ -111,6 +118,7 @@ internal static class FrameworkElementInspectorHelper
                 propertyName,
                 type,
                 fieldSymbol.IsReadOnly,
+                useNewKeyword,
                 defaultValue,
                 propertyChangedCallback,
                 coerceValueCallback,

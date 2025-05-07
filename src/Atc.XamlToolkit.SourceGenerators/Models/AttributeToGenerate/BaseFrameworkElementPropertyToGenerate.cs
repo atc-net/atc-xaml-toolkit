@@ -6,6 +6,7 @@ internal abstract class BaseFrameworkElementPropertyToGenerate(
     string name,
     string type,
     bool isReadOnly,
+    bool useNewKeyword,
     object? defaultValue,
     string? propertyChangedCallback,
     string? coerceValueCallback,
@@ -25,6 +26,8 @@ internal abstract class BaseFrameworkElementPropertyToGenerate(
     public string Type { get; } = type;
 
     public bool IsReadOnly { get; } = isReadOnly;
+
+    public bool UseNewKeyword { get; } = useNewKeyword;
 
     public object? DefaultValue { get; } = defaultValue;
 
