@@ -50,4 +50,7 @@ public partial class TestFieldsDependencyPropertiesView
 
     [DependencyProperty(DefaultValue = double.NaN)]
     private double spacing;
+
+    [DependencyProperty(DefaultValue = "Red")]
+    private Brush? background;
 }
