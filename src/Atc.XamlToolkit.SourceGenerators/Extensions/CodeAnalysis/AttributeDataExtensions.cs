@@ -10,22 +10,11 @@ internal static class AttributeDataExtensions
             attributeData.NamedArguments.Length == 0)
         {
             // Syntax check
-            if (attributeData.ApplicationSyntaxReference is not null)
-            {
-                return attributeData
-                    .ApplicationSyntaxReference
-                    .GetSyntax()
-                    .ToFullString()
-                    .ExtractAttributeConstructorParameters();
-            }
-        }
-        else
-        {
-            // Runtime check
-            return RunTimeExtractConstructorArgumentValues(attributeData);
+            return attributeData.SyntaxExtractConstructorArgumentValues();
         }
 
-        return new Dictionary<string, string?>(StringComparer.Ordinal);
+        // Runtime check
+        return attributeData.RunTimeExtractConstructorArgumentValues();
     }
 
     public static string ExtractClassFirstArgumentType(
@@ -49,9 +38,19 @@ internal static class AttributeDataExtensions
         return type;
     }
 
+    private static IDictionary<string, string?> SyntaxExtractConstructorArgumentValues(
+        this AttributeData attributeData) =>
+        attributeData.ApplicationSyntaxReference is not null
+            ? attributeData
+                .ApplicationSyntaxReference
+                .GetSyntax()
+                .ToFullString()
+                .ExtractAttributeConstructorParameters()
+            : new Dictionary<string, string?>(StringComparer.Ordinal);
+
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static Dictionary<string, string?> RunTimeExtractConstructorArgumentValues(
-        AttributeData attributeData)
+        this AttributeData attributeData)
     {
         var result = new Dictionary<string, string?>(StringComparer.Ordinal);
 
@@ -109,18 +108,9 @@ internal static class AttributeDataExtensions
                 if (arg.Value.Kind == TypedConstantKind.Enum)
                 {
                     // Syntax check for enum - since arg.Value.Value will be an integer
-                    if (attributeData.ApplicationSyntaxReference is null)
-                    {
-                        continue;
-                    }
-
-                    var dictionary = attributeData
-                        .ApplicationSyntaxReference
-                        .GetSyntax()
-                        .ToFullString()
-                        .ExtractAttributeConstructorParameters();
-
-                    if (dictionary.TryGetValue(arg.Key, out var value))
+                    var dictionary = attributeData.SyntaxExtractConstructorArgumentValues();
+                    if (dictionary is not null &&
+                        dictionary.TryGetValue(arg.Key, out var value))
                     {
                         result.Add(
                             arg.Key,
@@ -129,9 +119,23 @@ internal static class AttributeDataExtensions
                 }
                 else
                 {
-                    result.Add(
-                        arg.Key,
-                        arg.Value.Value?.ToString());
+                    if (arg is { Key: NameConstants.DefaultValue, Value.Kind: TypedConstantKind.Error })
+                    {
+                        var dictionary = attributeData.SyntaxExtractConstructorArgumentValues();
+                        if (dictionary is not null &&
+                            dictionary.TryGetValue(arg.Key, out var value))
+                        {
+                            result.Add(
+                                arg.Key,
+                                value);
+                        }
+                    }
+                    else
+                    {
+                        result.Add(
+                            arg.Key,
+                            arg.Value.Value?.ToString());
+                    }
                 }
             }
         }

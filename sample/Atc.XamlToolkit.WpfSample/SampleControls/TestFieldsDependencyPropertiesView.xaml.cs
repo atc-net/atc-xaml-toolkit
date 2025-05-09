@@ -48,9 +48,21 @@ public partial class TestFieldsDependencyPropertiesView
     [DependencyProperty(DefaultValue = 12.2)]
     private double myFontSize;
 
-    [DependencyProperty(DefaultValue = double.NaN)]
-    private double spacing;
-
     [DependencyProperty(DefaultValue = "Red")]
     private Brush? background;
+
+    [DependencyProperty(DefaultValue = "double.NaN")]
+    private double spacing;
+
+    [DependencyProperty(DefaultValue = "decimal.MinValue")]
+    private decimal minimum1;
+
+    [DependencyProperty(DefaultValue = PropertyDefaultValueConstants.MinValue)]
+    private decimal minimum2;
+
+    [DependencyProperty(DefaultValue = "decimal.MaxValue")]
+    private decimal maximum1;
+
+    [DependencyProperty(DefaultValue = PropertyDefaultValueConstants.MaxValue)]
+    private decimal maximum2;
 }
