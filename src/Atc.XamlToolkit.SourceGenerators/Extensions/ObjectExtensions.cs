@@ -2,17 +2,31 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions;
 
 internal static class ObjectExtensions
 {
-    private static readonly string[] AllowedConst = [
+    private static readonly string[] AllowedIntLongConst = [
+        "MaxValue",
+        "MinValue",
+    ];
+
+    private static readonly string[] AllowedDecimalConst = [
+        "MaxValue",
+        "MinValue",
+        "MinusOne",
+        "One",
+        "Zero",
+    ];
+
+    private static readonly string[] AllowedDoubleFloatConst = [
         "MaxValue",
         "MinValue",
         "NaN",
-        "E",
-        "Epsilon",
         "NegativeInfinity",
         "NegativeZero",
+        "E",
+        "Epsilon",
         "Pi",
         "PositiveInfinity",
-        "Tau"];
+        "Tau",
+    ];
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public static string? TransformDefaultValueIfNeeded(
@@ -52,7 +66,7 @@ internal static class ObjectExtensions
                 };
                 break;
             case "decimal":
-                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                if (AllowedDecimalConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
                 {
                     strDefaultValue = "decimal." + strDefaultValue;
                 }
@@ -65,7 +79,7 @@ internal static class ObjectExtensions
 
                 break;
             case "double":
-                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                if (AllowedDoubleFloatConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
                 {
                     strDefaultValue = "double." + strDefaultValue;
                 }
@@ -78,7 +92,7 @@ internal static class ObjectExtensions
 
                 break;
             case "float":
-                if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                if (AllowedDoubleFloatConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
                 {
                     strDefaultValue = "float." + strDefaultValue;
                 }
@@ -95,7 +109,7 @@ internal static class ObjectExtensions
                 {
                     strDefaultValue = "0";
                 }
-                else if (AllowedConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                else if (AllowedIntLongConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
                 {
                     strDefaultValue = lastPart + "." + strDefaultValue;
                 }
