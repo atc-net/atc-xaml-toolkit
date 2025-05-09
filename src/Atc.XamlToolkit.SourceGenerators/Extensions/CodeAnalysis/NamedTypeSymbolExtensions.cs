@@ -30,4 +30,24 @@ internal static class NamedTypeSymbolExtensions
 
         return false;
     }
+
+    public static bool HasBaseTypeThePropertyName(
+        this INamedTypeSymbol declaringType,
+        string propertyName)
+    {
+        var pascalName = propertyName.EnsureFirstCharacterToUpper();
+        for (var baseType = declaringType.BaseType;
+             baseType is not null;
+             baseType = baseType.BaseType)
+        {
+            if (baseType
+                .GetMembers(pascalName)
+                .Any(m => m.Kind == SymbolKind.Property))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

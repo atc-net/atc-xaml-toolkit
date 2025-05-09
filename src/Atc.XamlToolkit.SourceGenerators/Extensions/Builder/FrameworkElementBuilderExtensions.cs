@@ -104,7 +104,10 @@ internal static class FrameworkElementBuilderExtensions
             : "Register";
 
         builder.AppendLineBeforeMember();
-        builder.AppendLine($"public static readonly DependencyProperty {p.Name}Property = DependencyProperty.{registerMethod}(");
+        builder.AppendLine(
+            p.UseNewKeyword
+                ? $"public static new readonly DependencyProperty {p.Name}Property = DependencyProperty.{registerMethod}("
+                : $"public static readonly DependencyProperty {p.Name}Property = DependencyProperty.{registerMethod}(");
         builder.IncreaseIndent();
 
         if (isAttached || p.IsOwnerTypeStatic)
@@ -378,7 +381,10 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"{p.Description}\")]");
             }
 
-            builder.AppendLine($"public {p.Type} {p.Name}");
+            builder.AppendLine(
+                p.UseNewKeyword
+                    ? $"public new {p.Type} {p.Name}"
+                    : $"public {p.Type} {p.Name}");
             builder.AppendLine("{");
             builder.IncreaseIndent();
             builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
