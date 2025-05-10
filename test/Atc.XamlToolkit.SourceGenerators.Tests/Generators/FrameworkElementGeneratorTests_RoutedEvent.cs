@@ -27,7 +27,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public partial class CustomButton
             {
                 public static readonly RoutedEvent TapEvent = EventManager.RegisterRoutedEvent(
-                    name: "Tap",
+                    name: nameof(Tap),
                     routingStrategy: RoutingStrategy.Bubble,
                     handlerType: typeof(RoutedEventHandler),
                     ownerType: typeof(CustomButton));
@@ -71,7 +71,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public partial class CustomButton
             {
                 public static readonly RoutedEvent TapEvent = EventManager.RegisterRoutedEvent(
-                    name: "Tap",
+                    name: nameof(Tap),
                     routingStrategy: RoutingStrategy.Bubble,
                     handlerType: typeof(RoutedEventHandler),
                     ownerType: typeof(CustomButton));
