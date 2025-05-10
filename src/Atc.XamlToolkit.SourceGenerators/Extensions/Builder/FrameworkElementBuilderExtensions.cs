@@ -447,7 +447,7 @@ internal static class FrameworkElementBuilderExtensions
     {
         builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
         builder.IncreaseIndent();
-        builder.AppendLine($"name: \"{re.Name}\",");
+        builder.AppendLine($"name: nameof({re.Name}),");
         builder.AppendLine(string.IsNullOrEmpty(re.RoutingStrategy)
             ? $"routingStrategy: RoutingStrategy.Bubble,"
             : $"routingStrategy: RoutingStrategy.{re.RoutingStrategy},");

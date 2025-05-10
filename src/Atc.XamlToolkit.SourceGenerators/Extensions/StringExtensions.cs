@@ -1,4 +1,5 @@
 // ReSharper disable InvertIf
+// ReSharper disable ConvertIfStatementToNullCoalescingExpression
 namespace Atc.XamlToolkit.SourceGenerators.Extensions;
 
 [SuppressMessage("Design", "CA1308:Teplace the call to 'ToLowerInvariant' with 'ToUpperInvariant'", Justification = "OK.")]
@@ -254,7 +255,9 @@ public static class StringExtensions
         }
 
         var core = typeName.Substring(0, typeName.Length - 1); // chop '?'
-        return KnownValueTypes.Contains(core)
+        return KnownValueTypes.Contains(core) ||
+               IsTypeEnum(core) ||
+               IsTypeStruct(core)
             ? typeName
             : core;
     }
@@ -464,5 +467,47 @@ public static class StringExtensions
         }
 
         return value;
+    }
+
+    private static bool IsTypeEnum(string value)
+    {
+        var type = ResolveType(value);
+        return type?.IsEnum == true;
+    }
+
+    private static bool IsTypeStruct(string value)
+    {
+        var type = ResolveType(value);
+        return type is { IsValueType: true, IsEnum: false };
+    }
+
+    private static Type? ResolveType(string value)
+    {
+        var type = Type.GetType(value, throwOnError: false);
+
+        if (type is null && value.IndexOf('.') < 0)
+        {
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                try
+                {
+                    type = asm.GetTypes().FirstOrDefault(t => t.Name == value);
+                    if (type is not null)
+                    {
+                        break;
+                    }
+                }
+                catch (System.Reflection.ReflectionTypeLoadException ex)
+                {
+                    type = ex.Types.FirstOrDefault(t => t?.Name == value);
+                    if (type is not null)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return type;
     }
 }
