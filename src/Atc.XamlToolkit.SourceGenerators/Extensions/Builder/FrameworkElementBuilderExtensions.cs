@@ -366,7 +366,10 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine($"public static void Set{p.Name}(UIElement element, {p.Type} value)");
             builder.IncreaseIndent();
-            builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
+            builder.AppendLine(
+                p.Type.StartsWith("bool", StringComparison.Ordinal)
+                ? $"=> element?.SetValue({p.Name}Property, BooleanBoxes.Box(value));"
+                : $"=> element?.SetValue({p.Name}Property, value);");
             builder.DecreaseIndent();
         }
         else
@@ -390,7 +393,10 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
             if (!p.IsReadOnly)
             {
-                builder.AppendLine($"set => SetValue({p.Name}Property, value);");
+                builder.AppendLine(
+                    p.Type.StartsWith("bool", StringComparison.Ordinal)
+                    ? $"set => SetValue({p.Name}Property, BooleanBoxes.Box(value));"
+                    : $"set => SetValue({p.Name}Property, value);");
             }
 
             builder.DecreaseIndent();
@@ -435,7 +441,10 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine($"public static void Set{p.Name}(UIElement element, {p.Type} value)");
             builder.IncreaseIndent();
-            builder.AppendLine($"=> element?.SetValue({p.Name}Property, value);");
+            builder.AppendLine(
+                p.Type.StartsWith("bool", StringComparison.Ordinal)
+                ? $"=> element?.SetValue({p.Name}Property, BooleanBoxes.Box(value));"
+                : $"=> element?.SetValue({p.Name}Property, value);");
         }
 
         builder.DecreaseIndent();
