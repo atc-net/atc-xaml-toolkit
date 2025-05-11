@@ -14,7 +14,7 @@ There are two common approaches to declare a routed event using source generatio
 
 ### ✨ Field-Level Declaration
 
-Alternatively, you can mark a field with the `[RoutedEvent]` attribute, allowing the generator to infer the event name from the field name:
+Annotate a *static* `RoutedEvent` field with the `[RoutedEvent]` attribute, allowing the generator to infer the event name from the field name (pascal‑case the first letter):
 
 ```csharp
 public static partial class CustomButton
@@ -32,7 +32,7 @@ The source generator will produce code equivalent to:
 public partial class CustomButton
 {
     public static readonly RoutedEvent TapEvent = EventManager.RegisterRoutedEvent(
-        name: "Tap",
+        name: nameof(Tap),
         routingStrategy: RoutingStrategy.Bubble,
         handlerType: typeof(RoutedEventHandler),
         ownerType: typeof(CustomButton));
@@ -45,6 +45,39 @@ public partial class CustomButton
 }
 ```
 
+### 🛠️ Specifying a custom delegate type
+
+If you want a strongly‑typed event handler (instead of the generic RoutedEventHandler) add the HandlerType named argument:
+
+```csharp
+public partial class NumericBox
+{
+    // The event will have the delegate type NumericBoxChangedRoutedEventHandler
+    [RoutedEvent(HandlerType = typeof(NumericBoxChangedRoutedEventHandler))]
+    private static readonly RoutedEvent valueIncremented;
+}
+```
+
+The source generator will produce code equivalent to:
+
+```csharp
+public partial class NumericBox
+{
+    public static readonly RoutedEvent ValueIncrementedEvent = EventManager.RegisterRoutedEvent(
+        name: nameof(ValueIncremented),
+        routingStrategy: RoutingStrategy.Bubble,
+        handlerType: typeof(RoutedEventHandler),
+        ownerType: typeof(NumericBox));
+
+    public event NumericBoxChangedRoutedEventHandler ValueIncremented
+    {
+        add => AddHandler(ValueIncrementedEvent, value);
+        remove => RemoveHandler(ValueIncrementedEvent, value);
+    }
+}
+```
+
+
 ---
 
 ## 🖥️ XAML Usage Example
@@ -55,6 +88,7 @@ Once declared, the routed event can be utilized in your XAML like any standard e
 <Window xmlns:local="clr-namespace:YourNamespace">
     <Grid>
         <local:CustomButton Tap="CustomButton_TapHandler" />
+        <local:NumericBox ValueIncremented="NumericBox_OnValueIncremented"/>
     </Grid>
 </Window>
 ```
@@ -66,6 +100,27 @@ private void CustomButton_TapHandler(object sender, RoutedEventArgs e)
 {
     // Handle the Tap event here.
 }
+
+private void NumericBox_OnValueIncremented(
+    object sender,
+    NumericBoxChangedRoutedEventArgs e) // 🎯 strong type!
+{
+    Debug.WriteLine($"Old={e.OldValue}, New={e.NewValue}");
+}
+```
+
+## 🧩 Attribute reference
+
+| Argument        | Position/Name | Type            | Default                    | Description                                |
+|-----------------|---------------|-----------------|----------------------------|--------------------------------------------|
+| routingStrategy | positional    | RoutingStrategy | Bubble                     | How the event propagates.                  |
+| HandlerType     | named         | Type            | typeof(RoutedEventHandler) | CLR delegate type for the generated event. |
+
+```csharp
+[RoutedEvent]                         // Bubble + RoutedEventHandler
+[RoutedEvent(RoutingStrategy.Tunnel)] // Tunnel + RoutedEventHandler
+[RoutedEvent(HandlerType = typeof(MyHandler))]
+[RoutedEvent(RoutingStrategy.Direct, HandlerType = typeof(MyHandler))]
 ```
 
 ## 📌 Summary

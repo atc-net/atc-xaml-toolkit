@@ -72,20 +72,22 @@ internal static class RoutedEventInspector
         var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();
 
         var routingStrategy = "Bubble";
+        var handlerTypeName = NameConstants.RoutedEventHandler;
+
         if (fieldArgumentValues.Count > 0)
         {
-            routingStrategy = fieldArgumentValues.First().Value!.Replace(NameConstants.RoutingStrategy + ".", string.Empty);
-            switch (routingStrategy)
+            var routingStrategyValue = fieldArgumentValues.First().Value!.Replace(NameConstants.RoutingStrategy + ".", string.Empty);
+            routingStrategy = routingStrategyValue switch
             {
-                case "0":
-                    routingStrategy = "Tunnel";
-                    break;
-                case "1":
-                    routingStrategy = "Bubble";
-                    break;
-                case "2":
-                    routingStrategy = "Direct";
-                    break;
+                "0" => "Tunnel",
+                "1" => "Bubble",
+                "2" => "Direct",
+                _ => routingStrategy,
+            };
+
+            if (fieldArgumentValues.TryGetValue(NameConstants.HandlerType, out var handlerTypeNameValue))
+            {
+                handlerTypeName = handlerTypeNameValue!.ExtractInnerContent();
             }
         }
 
@@ -93,6 +95,7 @@ internal static class RoutedEventInspector
             new RoutedEventToGenerate(
                 ownerType: classSymbol.Name,
                 name: propertyName,
-                routingStrategy: routingStrategy));
+                routingStrategy: routingStrategy,
+                handlerTypeName: handlerTypeName));
     }
 }
