@@ -29,6 +29,7 @@ internal static class NameConstants
     public const string Flags = nameof(Flags);
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string Handler = nameof(Handler);
+    public const string HandlerType = nameof(HandlerType);
     public const string IObservableObject = nameof(IObservableObject);
     public const string InvertCanExecute = nameof(InvertCanExecute);
     public const string IRelayCommand = nameof(IRelayCommand);
@@ -50,6 +51,7 @@ internal static class NameConstants
     public const string RelayCommandAttribute = nameof(RelayCommandAttribute);
     public const string RoutedEvent = nameof(RoutedEvent);
     public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
+    public const string RoutedEventHandler = nameof(RoutedEventHandler);
     public const string RoutingStrategy = nameof(RoutingStrategy);
     public const string Task = nameof(Task);
     public const string UserControl = nameof(UserControl);
