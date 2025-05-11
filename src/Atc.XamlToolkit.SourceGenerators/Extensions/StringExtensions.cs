@@ -54,6 +54,9 @@ public static class StringExtensions
         // Media / drawing enums
         "Stretch", "AlignmentX", "AlignmentY", "BitmapScalingMode",
         "PenLineCap", "PenLineJoin", "FillRule", "SweepDirection",
+
+        // Custom enums
+        "ImageLocation",
     };
 
     public static string EnsureNameofContent(
@@ -74,6 +77,30 @@ public static class StringExtensions
         {
             value = value
                 .Replace("nameof(nameof(", "nameof(")
+                .Replace("))", ")");
+        }
+
+        return value;
+    }
+
+    public static string EnsureTypeofContent(
+        this string value)
+    {
+        if (value is null)
+        {
+            throw new ArgumentNullException(nameof(value));
+        }
+
+        if (!value.StartsWith("typeof(", StringComparison.Ordinal) ||
+            !value.EndsWith(")", StringComparison.Ordinal))
+        {
+            return $"typeof({value})";
+        }
+
+        if (value.StartsWith("typeof(typeof(", StringComparison.Ordinal))
+        {
+            value = value
+                .Replace("typeof(typeof(", "typeof(")
                 .Replace("))", ")");
         }
 

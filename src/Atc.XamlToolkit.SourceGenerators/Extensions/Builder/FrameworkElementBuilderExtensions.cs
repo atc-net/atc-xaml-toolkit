@@ -445,17 +445,18 @@ internal static class FrameworkElementBuilderExtensions
         FrameworkElementBuilder builder,
         RoutedEventToGenerate re)
     {
+        builder.AppendLineBeforeMember();
         builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
         builder.IncreaseIndent();
         builder.AppendLine($"name: nameof({re.Name}),");
         builder.AppendLine(string.IsNullOrEmpty(re.RoutingStrategy)
-            ? $"routingStrategy: RoutingStrategy.Bubble,"
+            ? "routingStrategy: RoutingStrategy.Bubble,"
             : $"routingStrategy: RoutingStrategy.{re.RoutingStrategy},");
-        builder.AppendLine("handlerType: typeof(RoutedEventHandler),");
+        builder.AppendLine($"handlerType: typeof({re.HandlerTypeName}),");
         builder.AppendLine($"ownerType: typeof({re.OwnerType}));");
         builder.DecreaseIndent();
         builder.AppendLine();
-        builder.AppendLine($"public event RoutedEventHandler {re.Name}");
+        builder.AppendLine($"public event {re.HandlerTypeName} {re.Name}");
         builder.AppendLine("{");
         builder.IncreaseIndent();
         builder.AppendLine($"add => AddHandler({re.Name}Event, value);");
