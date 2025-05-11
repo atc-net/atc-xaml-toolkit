@@ -148,7 +148,7 @@ public partial class MyControl
     public bool IsRunning
     {
         get => (bool)GetValue(IsRunningProperty);
-        set => SetValue(IsRunningProperty, value);
+        set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
     }
 }
 ```
@@ -266,7 +266,7 @@ public partial class MyControl
     public bool IsRunning
     {
         get => (bool)GetValue(IsRunningProperty);
-        set => SetValue(IsRunningProperty, value);
+        set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
     }
 }
 ```
