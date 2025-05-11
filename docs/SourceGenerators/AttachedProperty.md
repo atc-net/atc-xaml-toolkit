@@ -132,7 +132,7 @@ public static partial class DragBehavior
         => (bool)element.GetValue(IsDraggableProperty);
 
     public static void SetIsDraggable(UIElement element, bool value)
-        => element?.SetValue(IsDraggableProperty, value);
+        => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
 }
 ```
 
@@ -247,7 +247,7 @@ public partial class DragBehavior
     public bool IsDraggable
     {
         get => (bool)GetValue(IsDraggableProperty);
-        set => SetValue(IsDraggableProperty, value);
+        set => SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
     }
 }
 ```

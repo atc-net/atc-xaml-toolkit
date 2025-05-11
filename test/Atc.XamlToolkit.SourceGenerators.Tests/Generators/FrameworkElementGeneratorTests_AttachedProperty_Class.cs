@@ -35,7 +35,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -78,7 +78,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -123,7 +123,7 @@ public sealed partial class FrameworkElementGeneratorTests
 
                 [Category("Layout")]
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -168,7 +168,7 @@ public sealed partial class FrameworkElementGeneratorTests
 
                 [Description("Set: Long description")]
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -215,7 +215,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 [Category("Layout")]
                 [Description("Set: Long description")]
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -260,7 +260,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 public static void SetIsDraggable(UIElement element, bool value)
-                    => element?.SetValue(IsDraggableProperty, value);
+                    => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable
@@ -327,7 +327,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     => (bool)element.GetValue(EnableWatermarkProperty);
 
                 public static void SetEnableWatermark(UIElement element, bool value)
-                    => element?.SetValue(EnableWatermarkProperty, value);
+                    => element?.SetValue(EnableWatermarkProperty, BooleanBoxes.Box(value));
             }
 
             #nullable disable

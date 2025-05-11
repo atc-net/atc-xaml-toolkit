@@ -34,7 +34,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -77,7 +77,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -121,7 +121,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -165,7 +165,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -210,7 +210,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -255,7 +255,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -300,7 +300,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -346,7 +346,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -393,7 +393,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -443,7 +443,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -493,7 +493,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -544,7 +544,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -589,7 +589,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool IsRunning
                 {
                     get => (bool)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -634,7 +634,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool? IsRunning
                 {
                     get => (bool?)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
@@ -679,7 +679,7 @@ public sealed partial class FrameworkElementGeneratorTests
                 public bool? IsRunning
                 {
                     get => (bool?)GetValue(IsRunningProperty);
-                    set => SetValue(IsRunningProperty, value);
+                    set => SetValue(IsRunningProperty, BooleanBoxes.Box(value));
                 }
             }
 
