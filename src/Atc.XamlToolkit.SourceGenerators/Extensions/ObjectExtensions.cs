@@ -85,9 +85,20 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("double."))
                 {
-                    strDefaultValue = strDefaultValue.Length == 0
-                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                        : strDefaultValue.Replace(',', '.') + "d";
+                    if (strDefaultValue == double.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "double.MinValue";
+                    }
+                    else if (strDefaultValue == double.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "double.MaxValue";
+                    }
+                    else
+                    {
+                        strDefaultValue = strDefaultValue.Length == 0
+                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                            : strDefaultValue.Replace(',', '.') + "d";
+                    }
                 }
 
                 break;
@@ -98,9 +109,20 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("float."))
                 {
-                    strDefaultValue = strDefaultValue.Length == 0
-                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                        : strDefaultValue.Replace(',', '.') + "f";
+                    if (strDefaultValue == float.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "float.MinValue";
+                    }
+                    else if (strDefaultValue == float.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "float.MaxValue";
+                    }
+                    else
+                    {
+                        strDefaultValue = strDefaultValue.Length == 0
+                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                            : strDefaultValue.Replace(',', '.') + "f";
+                    }
                 }
 
                 break;
