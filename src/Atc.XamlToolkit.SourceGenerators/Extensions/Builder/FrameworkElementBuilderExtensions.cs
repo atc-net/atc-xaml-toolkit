@@ -172,7 +172,7 @@ internal static class FrameworkElementBuilderExtensions
                     {
                         GeneratePropertyMetadataExtended(builder, p, endWithComma: true);
                         builder.DecreaseIndent();
-                        builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback}));");
+                        builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
                     }
                     else
                     {
