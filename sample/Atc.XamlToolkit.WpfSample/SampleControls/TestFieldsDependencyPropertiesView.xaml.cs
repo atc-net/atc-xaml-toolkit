@@ -60,9 +60,21 @@ public partial class TestFieldsDependencyPropertiesView
     [DependencyProperty(DefaultValue = PropertyDefaultValueConstants.MinValue)]
     private decimal minimum2;
 
+    [DependencyProperty(DefaultValue = double.MinValue)]
+    private double minimum3Double;
+
+    [DependencyProperty(DefaultValue = float.MinValue)]
+    private float minimum3Float;
+
     [DependencyProperty(DefaultValue = "decimal.MaxValue")]
     private decimal maximum1;
 
     [DependencyProperty(DefaultValue = PropertyDefaultValueConstants.MaxValue)]
     private decimal maximum2;
+
+    [DependencyProperty(DefaultValue = double.MaxValue)]
+    private double maximum3Double;
+
+    [DependencyProperty(DefaultValue = float.MaxValue)]
+    private float maximum3Float;
 }
