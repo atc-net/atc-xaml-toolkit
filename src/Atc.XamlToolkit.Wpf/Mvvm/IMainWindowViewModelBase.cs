@@ -1,7 +1,7 @@
 namespace Atc.XamlToolkit.Mvvm;
 
 /// <summary>
-/// Represents the base interface for main window view models in an WPF application.
+/// Represents the base interface for main window view models in a WPF application.
 /// </summary>
 public interface IMainWindowViewModelBase : IViewModelBase
 {

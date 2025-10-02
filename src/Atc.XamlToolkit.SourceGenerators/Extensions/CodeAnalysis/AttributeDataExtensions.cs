@@ -49,6 +49,7 @@ internal static class AttributeDataExtensions
             : new Dictionary<string, string?>(StringComparer.Ordinal);
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
+    [SuppressMessage("Design", "S1871:Either merge this branch with the identical", Justification = "OK.")]
     private static Dictionary<string, string?> RunTimeExtractConstructorArgumentValues(
         this AttributeData attributeData)
     {
