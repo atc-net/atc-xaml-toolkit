@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc" Version="2.0.552" />
+    <PackageReference Include="Atc" Version="2.0.562" />
   </ItemGroup>
 
 </Project>

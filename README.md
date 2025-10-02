@@ -24,7 +24,7 @@ With the `Atc.XamlToolkit.Avalonia` or `Atc.Wpf` package, it is very easy to get
 
 Please read more here:
 
-- [MVVM framework](docs/Mvvm/@Readme.md)
+- [MVVM framework](docs/Mvvm/Readme.md)
 
 ## ⚙️ Source Generators
 
@@ -46,7 +46,7 @@ Example for ViewModel classes
 
 ![MVVM Source Generation](docs/images/mvvm-source-generated.png)
 
-For more details, see the [MVVM](docs/Mvvm/@Readme.md) section.
+For more details, see the [MVVM](docs/Mvvm/Readme.md) section.
 
 ## How to contribute
 
