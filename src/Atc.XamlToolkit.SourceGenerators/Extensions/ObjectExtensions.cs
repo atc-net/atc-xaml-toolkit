@@ -74,7 +74,13 @@ internal static class ObjectExtensions
                 {
                     strDefaultValue = strDefaultValue.Length == 0
                         ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                        : strDefaultValue.Replace(',', '.') + "m";
+                        : strDefaultValue.Replace(',', '.');
+
+                    if (strDefaultValue is not null &&
+                        !strDefaultValue.EndsWith("m", StringComparison.Ordinal))
+                    {
+                        strDefaultValue += "m";
+                    }
                 }
 
                 break;
@@ -97,7 +103,13 @@ internal static class ObjectExtensions
                     {
                         strDefaultValue = strDefaultValue.Length == 0
                             ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                            : strDefaultValue.Replace(',', '.') + "d";
+                            : strDefaultValue.Replace(',', '.');
+
+                        if (strDefaultValue is not null &&
+                            !strDefaultValue.EndsWith("d", StringComparison.Ordinal))
+                        {
+                            strDefaultValue += "d";
+                        }
                     }
                 }
 
@@ -121,7 +133,71 @@ internal static class ObjectExtensions
                     {
                         strDefaultValue = strDefaultValue.Length == 0
                             ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-                            : strDefaultValue.Replace(',', '.') + "f";
+                            : strDefaultValue.Replace(',', '.');
+
+                        if (strDefaultValue is not null &&
+                            !strDefaultValue.EndsWith("f", StringComparison.Ordinal))
+                        {
+                            strDefaultValue += "f";
+                        }
+                    }
+                }
+
+                break;
+            case "uint":
+                if (AllowedDoubleFloatConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = "uint." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("uint."))
+                {
+                    if (strDefaultValue == uint.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "uint.MinValue";
+                    }
+                    else if (strDefaultValue == uint.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "uint.MaxValue";
+                    }
+                    else
+                    {
+                        if (strDefaultValue.Length == 0)
+                        {
+                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                        }
+                        else if (!strDefaultValue.EndsWith("U", StringComparison.Ordinal))
+                        {
+                            strDefaultValue += "U";
+                        }
+                    }
+                }
+
+                break;
+            case "ulong":
+                if (AllowedDoubleFloatConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
+                {
+                    strDefaultValue = "ulong." + strDefaultValue;
+                }
+                else if (!strDefaultValue.Contains("ulong."))
+                {
+                    if (strDefaultValue == ulong.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "ulong.MinValue";
+                    }
+                    else if (strDefaultValue == ulong.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    {
+                        strDefaultValue = "ulong.MaxValue";
+                    }
+                    else
+                    {
+                        if (strDefaultValue.Length == 0)
+                        {
+                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                        }
+                        else if (!strDefaultValue.EndsWith("UL", StringComparison.Ordinal))
+                        {
+                            strDefaultValue += "UL";
+                        }
                     }
                 }
 
@@ -135,20 +211,58 @@ internal static class ObjectExtensions
                 {
                     strDefaultValue = lastPart + "." + strDefaultValue;
                 }
-                else if (!strDefaultValue.Contains("int.") &&
-                         !strDefaultValue.Contains("long."))
-                {
-                    // Skip
-                }
 
                 break;
             case "string":
-            {
                 strDefaultValue = strDefaultValue.Length == 0
                     ? "string.Empty"
                     : $"\"{strDefaultValue}\"";
                 break;
-            }
+
+            case "byte":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                }
+                else if (!strDefaultValue.StartsWith("(byte)", StringComparison.Ordinal))
+                {
+                    strDefaultValue = "(byte)" + strDefaultValue;
+                }
+
+                break;
+            case "sbyte":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                }
+                else if (!strDefaultValue.StartsWith("(sbyte)", StringComparison.Ordinal))
+                {
+                    strDefaultValue = "(sbyte)" + strDefaultValue;
+                }
+
+                break;
+            case "short":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                }
+                else if (!strDefaultValue.StartsWith("(short)", StringComparison.Ordinal))
+                {
+                    strDefaultValue = "(short)" + strDefaultValue;
+                }
+
+                break;
+            case "ushort":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                }
+                else if (!strDefaultValue.StartsWith("(ushort)", StringComparison.Ordinal))
+                {
+                    strDefaultValue = "(ushort)" + strDefaultValue;
+                }
+
+                break;
 
             case "Color":
             {
