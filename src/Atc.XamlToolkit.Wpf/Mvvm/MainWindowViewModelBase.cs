@@ -6,6 +6,9 @@ namespace Atc.XamlToolkit.Mvvm;
 public class MainWindowViewModelBase : ViewModelBase, IMainWindowViewModelBase
 {
     private WindowState windowState;
+    private ICommand? applicationExitCommand;
+
+    protected virtual int ApplicationExitCode => 0;
 
     /// <inheritdoc />
     public WindowState WindowState
@@ -24,7 +27,7 @@ public class MainWindowViewModelBase : ViewModelBase, IMainWindowViewModelBase
     }
 
     /// <inheritdoc />
-    public ICommand ApplicationExitCommand => new RelayCommand(ApplicationExitCommandHandler);
+    public ICommand ApplicationExitCommand => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
 
     /// <inheritdoc />
     public void OnLoaded(
@@ -44,7 +47,7 @@ public class MainWindowViewModelBase : ViewModelBase, IMainWindowViewModelBase
         object sender,
         CancelEventArgs e)
     {
-        Application.Current.Shutdown(-1);
+        Application.Current.Shutdown(ApplicationExitCode);
     }
 
     /// <inheritdoc />
