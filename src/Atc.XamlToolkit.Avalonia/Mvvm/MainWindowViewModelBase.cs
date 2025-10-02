@@ -7,6 +7,9 @@ namespace Atc.XamlToolkit.Mvvm
     public class MainWindowViewModelBase : ViewModelBase, IMainWindowViewModelBase
     {
         private WindowState windowState;
+        private ICommand? applicationExitCommand;
+
+        protected virtual int ApplicationExitCode => 0;
 
         /// <inheritdoc />
         public WindowState WindowState
@@ -25,7 +28,7 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public ICommand ApplicationExitCommand => new RelayCommand(ApplicationExitCommandHandler);
+        public ICommand ApplicationExitCommand => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
 
         /// <inheritdoc />
         public void OnLoaded(object sender, EventArgs e)
@@ -44,14 +47,15 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public void OnClosing(object sender, CancelEventArgs e)
+        public void OnClosing(
+            object sender,
+            CancelEventArgs e)
         {
-            //// TODO:
-            ////// Shutdown the application via the classic desktop style application lifetime.
-            ////if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
-            ////{
-            ////    desktopLifetime.Shutdown(-1);
-            ////}
+            // Shutdown the application via the classic desktop style application lifetime.
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                desktopLifetime.TryShutdown(ApplicationExitCode);
+            }
         }
 
         /// <inheritdoc />

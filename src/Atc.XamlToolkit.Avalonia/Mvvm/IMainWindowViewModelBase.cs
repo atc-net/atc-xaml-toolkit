@@ -1,7 +1,7 @@
 namespace Atc.XamlToolkit.Mvvm;
 
 /// <summary>
-/// Represents the base interface for main window view models in an Avalonia application.
+/// Represents the base interface for main window view models in a Avalonia application.
 /// </summary>
 public interface IMainWindowViewModelBase : IViewModelBase
 {
