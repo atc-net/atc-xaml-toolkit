@@ -14,7 +14,7 @@
         <sampleControls:PersonViewModel />
     </UserControl.DataContext>
 
-    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,50,Auto">
 
         <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
         <TextBox
@@ -62,6 +62,17 @@
             Grid.Column="2"
             Command="{Binding Path=SaveCommand}"
             Content="Save data" />
+
+        <Button
+            Grid.Row="8"
+            Grid.Column="0"
+            Command="{Binding Path=StartLongRunningWorkAsyncCommand}"
+            Content="Start long work" />
+        <Button
+            Grid.Row="8"
+            Grid.Column="2"
+            Command="{Binding Path=CancelLongRunningWorkCommand}"
+            Content="Cancel long work" />
 
     </Grid>
 
