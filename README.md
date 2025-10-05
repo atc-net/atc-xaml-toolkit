@@ -2,13 +2,151 @@
 
 This is a base libraries for building Avalonia or WPF application with the MVVM design pattern.
 
+## 🎁 Key Features
+
+### 🏗️ MVVM Foundation
+
+- **ViewModelBase** - Base class with INotifyPropertyChanged
+- **MainWindowViewModelBase** - Main window lifecycle management
+- **ViewModelDialogBase** - Dialog-specific ViewModels
+- **ObservableObject** - Lightweight observable pattern
+
+### ⚡ Commands
+
+- **RelayCommand** / **`RelayCommand<T>`** - Synchronous commands with `CanExecute` support
+- **RelayCommandAsync** / **`RelayCommandAsync<T>`** - Async/await commands for responsive UIs
+- **Automatic CanExecute refresh** - Commands automatically update UI state
+- **Error handling support** - Built-in `IErrorHandler` interface for graceful error management
+
+### 🔔 Messaging System
+
+Decouple your ViewModels with a powerful messaging infrastructure:
+
+- **Messenger** - Central message bus for app-wide communication
+- **GenericMessage&lt;T&gt;** - Send typed messages between components
+- **NotificationMessage** - Simple notifications with optional callbacks
+- **PropertyChangedMessage&lt;T&gt;** - Broadcast property changes across ViewModels
+
+Perfect for scenarios like:
+
+- Cross-ViewModel communication without direct references
+- Event aggregation patterns
+- Plugin architectures
+- Loosely-coupled component communication
+
+```csharp
+// Send a message
+Messenger.Default.Send(new GenericMessage<User>(currentUser));
+
+// Receive a message
+Messenger.Default.Register<GenericMessage<User>>(this, msg =>
+{
+    var user = msg.Content;
+    // Handle the user...
+});
+```
+
+Learn more: [Messaging System Documentation](docs/Messaging/Readme.md)
+
+### 🎨 Value Converters
+
+Extensive collection of ready-to-use XAML converters for both WPF and Avalonia:
+
+#### Bool Converters
+
+- `BoolToInverseBoolValueConverter`
+- `BoolToVisibilityCollapsedValueConverter`
+- `BoolToVisibilityVisibleValueConverter`
+- `BoolToWidthValueConverter`
+- `MultiBoolToBoolValueConverter` (AND/OR logic)
+- `MultiBoolToVisibilityVisibleValueConverter`
+
+#### String Converters
+
+- `StringNullOrEmptyToBoolValueConverter`
+- `StringNullOrEmptyToInverseBoolValueConverter`
+- `StringNullOrEmptyToVisibilityVisibleValueConverter`
+- `StringNullOrEmptyToVisibilityCollapsedValueConverter`
+- `ToLowerValueConverter` / `ToUpperValueConverter`
+
+See detailed [Value Converters documentation](docs/ValueConverters/Readme.md)
+
+### ⚙️ Source Generators
+
+Eliminate boilerplate with powerful code generation:
+
+- **[ObservableProperty]** - Auto-generate properties with change notification
+- **[RelayCommand]** - Auto-generate command properties from methods
+- **[DependencyProperty]** (WPF) - Auto-generate dependency properties
+- **[AttachedProperty]** (WPF) - Auto-generate attached properties
+- **[RoutedEvent]** (WPF) - Auto-generate routed events
+
+Learn more about each generator:
+
+- [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
+- [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
+- [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
+- [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)
+
+### 🚀 Performance Optimizations
+
+- **BooleanBoxes** - Cached boolean boxing for reduced memory allocations
+- **WeakAction/WeakFunc** - Memory-leak prevention for event handlers and callbacks
+- **PropertyDefaultValueConstants** - Shared default values for common property types
+
+### 🔧 Utilities
+
+- **DesignModeHelper** - Detect design-time vs runtime for better designer experience
+- **Base Converter Classes** - `ValueConverterBase` and `MultiValueConverterBase` for creating custom converters
+- **Error Handling** - `IErrorHandler` interface for centralized command error management
+
+## 🚀 Quick Start
+
+### Installation
+
+Install via NuGet Package Manager or .NET CLI:
+
+**For WPF:**
+
+```powershell
+dotnet add package Atc.XamlToolkit.Wpf
+```
+
+**For Avalonia:**
+
+```powershell
+dotnet add package Atc.XamlToolkit.Avalonia
+```
+
+### Basic Usage
+
+```csharp
+// Create a ViewModel with source-generated properties and commands
+public partial class MainViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string userName;
+
+    [ObservableProperty]
+    private bool isLoading;
+
+    [RelayCommand]
+    private async Task LoadDataAsync()
+    {
+        IsLoading = true;
+        // Load data...
+        IsLoading = false;
+    }
+}
+```
+
+📖 **[Read the full Getting Started Guide](docs/GettingStarted.md)** for a complete walkthrough.
+
 ## Requirements
 
-[.NET >= 9.0.202 - SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-
-[.NET 9 - Runtime for Avalonia](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-
-[.NET 9 - Desktop Runtime for WPF](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [.NET >= 9.0.202 - SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [.NET 9 - Runtime for Avalonia](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [.NET 9 - Desktop Runtime for WPF](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
 ## NuGet Packages Provided in this Repository
 
@@ -18,35 +156,133 @@ This is a base libraries for building Avalonia or WPF application with the MVVM 
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Avalonia.svg?label=Atc.XamlToolkit.Avalonia&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Avalonia) | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Wpf.svg?label=Atc.XamlToolkit.Wpf&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Wpf)                | RelayCommand, MainWindowViewModelBase for WPF       | Atc.XamlToolkit.SourceGenerators       |
 
-## MVVM Easily Separate UI and Business Logic
+## 📚 Documentation
 
-With the `Atc.XamlToolkit.Avalonia` or `Atc.Wpf` package, it is very easy to get started with the nice `MVVM pattern`
+### Get Started
 
-Please read more here:
+- **[Getting Started Guide](docs/GettingStarted.md)** - Complete walkthrough for beginners
 
-- [MVVM framework](docs/Mvvm/Readme.md)
+### Core Concepts
 
-## ⚙️ Source Generators
+- [MVVM Framework](docs/Mvvm/Readme.md) - ViewModels, Commands, and MVVM patterns
+- [Messaging System](docs/Messaging/Readme.md) - Decoupled communication between components
+- [Source Generators](docs/SourceGenerators/ViewModel.md) - Eliminate boilerplate code
 
-Our source generators streamline development by automatically generating boilerplate code for
-both `Avalonia` and `WPF` projects.
+### Advanced Topics
 
-Using custom attributes, they simplify the creation of common
-patterns such as attached properties, dependency properties, and viewmodels — reducing manual
-coding and potential errors.
+- [Value Converters](docs/ValueConverters/Readme.md) - Complete converter reference
+- [Performance Optimizations](docs/Performance/Readme.md) - BooleanBoxes, WeakAction, and more
+- [Utilities and Helpers](docs/Utilities/Readme.md) - DesignModeHelper, base classes, and utilities
 
-Learn more about each generator:
+### Platform-Specific (WPF Only)
 
-- [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
-- [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
-- [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
-- [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)
+- [Dependency Properties](docs/SourceGenerators/DependencyProperty.md) - Auto-generate dependency properties
+- [Attached Properties](docs/SourceGenerators/AttachedProperty.md) - Auto-generate attached properties
+- [Routed Events](docs/SourceGenerators/RoutedEvents.md) - Auto-generate routed events
 
-Example for ViewModel classes
+### Source Generator Examples
+
+Example for ViewModel classes with source generation:
 
 ![MVVM Source Generation](docs/images/mvvm-source-generated.png)
 
 For more details, see the [MVVM](docs/Mvvm/Readme.md) section.
+
+## 🎯 Complete Feature List
+
+### Core MVVM Components
+
+| Component | Description | Package |
+|-----------|-------------|---------|
+| `ViewModelBase` | Base ViewModel with INotifyPropertyChanged | Atc.XamlToolkit |
+| `MainWindowViewModelBase` | Main window lifecycle management | Atc.XamlToolkit.Wpf/Avalonia |
+| `ViewModelDialogBase` | Dialog-specific ViewModels | Atc.XamlToolkit |
+| `ObservableObject` | Lightweight observable pattern | Atc.XamlToolkit |
+
+### Commands
+
+| Command | Description | Async Support |
+|---------|-------------|---------------|
+| `RelayCommand` | Synchronous command | No |
+| `RelayCommand<T>` | Synchronous command with parameter | No |
+| `RelayCommandAsync` | Asynchronous command | Yes |
+| `RelayCommandAsync<T>` | Asynchronous command with parameter | Yes |
+
+All commands support:
+
+- ✅ `CanExecute` with automatic refresh
+- ✅ Error handling via `IErrorHandler`
+- ✅ Auto-generation via `[RelayCommand]` attribute
+
+### Messaging System
+
+| Type | Purpose |
+|------|---------|
+| `Messenger` | Central message bus |
+| `GenericMessage<T>` | Typed message passing |
+| `NotificationMessage` | String-based notifications |
+| `NotificationMessageAction` | Messages with callbacks |
+| `NotificationMessageAction<T>` | Messages with parameterized callbacks |
+| `PropertyChangedMessage<T>` | Property change broadcasts |
+| `NotificationMessageWithCallback` | Generic callback support |
+
+### Source Generators
+
+| Generator | Platform | Description |
+|-----------|----------|-------------|
+| `[ObservableProperty]` | WPF, Avalonia | Auto-generate observable properties |
+| `[RelayCommand]` | WPF, Avalonia | Auto-generate command properties |
+| `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
+| `[AttachedProperty]` | WPF only | Auto-generate attached properties |
+| `[RoutedEvent]` | WPF only | Auto-generate routed events |
+
+### Value Converters
+
+**Bool Converters** (WPF & Avalonia):
+
+- `BoolToInverseBoolValueConverter`
+- `BoolToVisibilityCollapsedValueConverter`
+- `BoolToVisibilityVisibleValueConverter`
+- `BoolToWidthValueConverter`
+- `MultiBoolToBoolValueConverter`
+- `MultiBoolToVisibilityVisibleValueConverter`
+
+**String Converters** (WPF & Avalonia):
+
+- `StringNullOrEmptyToBoolValueConverter`
+- `StringNullOrEmptyToInverseBoolValueConverter`
+- `StringNullOrEmptyToVisibilityVisibleValueConverter`
+- `StringNullOrEmptyToVisibilityCollapsedValueConverter`
+- `ToLowerValueConverter`
+- `ToUpperValueConverter`
+
+### Performance Optimizations
+
+| Optimization | Benefit |
+|--------------|---------|
+| `BooleanBoxes` | Zero-allocation boolean boxing |
+| `WeakAction` | Memory leak prevention |
+| `WeakFunc<T>` | Memory leak prevention with return values |
+| `PropertyDefaultValueConstants` | Shared default values |
+
+### Utilities
+
+| Utility | Purpose |
+|---------|---------|
+| `DesignModeHelper` | Detect design-time vs runtime |
+| `ValueConverterBase` | Base class for custom converters |
+| `MultiValueConverterBase` | Base class for multi-value converters |
+| `IErrorHandler` | Centralized error handling |
+
+## 🌟 Why Choose Atc.XamlToolkit?
+
+- ✅ **Modern** - Built for .NET 9 with latest C# features
+- ✅ **Cross-platform** - Supports both WPF and Avalonia
+- ✅ **High Performance** - Optimized for minimal allocations
+- ✅ **Source Generators** - Eliminate boilerplate code
+- ✅ **Well Documented** - Comprehensive documentation and examples
+- ✅ **Battle Tested** - Used in production applications
+- ✅ **Open Source** - MIT licensed and community-driven
 
 ## How to contribute
 

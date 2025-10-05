@@ -1,4 +1,3 @@
-// ReSharper disable SuggestVarOrType_SimpleTypes
 namespace Atc.XamlToolkit.Command;
 
 /// <summary>
@@ -7,10 +6,8 @@ namespace Atc.XamlToolkit.Command;
 /// method is 'true'. This class does not allow you to accept command parameters in the
 /// Execute and CanExecute callback methods.
 /// </summary>
-public sealed class RelayCommand : IRelayCommand
+public sealed class RelayCommand : RelayCommandBase
 {
-    private readonly WeakAction? waExecute;
-    private readonly WeakFunc<bool>? wfCanExecute;
     private EventHandler requerySuggestedLocal = null!;
 
     /// <summary>
@@ -24,22 +21,21 @@ public sealed class RelayCommand : IRelayCommand
     /// be kept as a hard reference, which might cause a memory leak. You should only set this
     /// parameter to true if the action is causing a closures.</param>
     /// <exception cref="ArgumentNullException">If the execute argument is null.</exception>
-    public RelayCommand(Action execute, Func<bool>? canExecute = null, bool keepTargetAlive = false)
+    public RelayCommand(
+        Action execute,
+        Func<bool>? canExecute = null,
+        bool keepTargetAlive = false)
+        : base(
+            execute,
+            canExecute,
+            keepTargetAlive)
     {
-        ArgumentNullException.ThrowIfNull(execute);
-
-        waExecute = new WeakAction(execute, keepTargetAlive);
-
-        if (canExecute is not null)
-        {
-            wfCanExecute = new WeakFunc<bool>(canExecute, keepTargetAlive);
-        }
     }
 
     /// <summary>
     /// Occurs when changes occur that affect whether the command should execute.
     /// </summary>
-    public event EventHandler? CanExecuteChanged
+    public override event EventHandler? CanExecuteChanged
     {
         add
         {
@@ -91,26 +87,8 @@ public sealed class RelayCommand : IRelayCommand
     }
 
     /// <inheritdoc />
-    public void RaiseCanExecuteChanged()
+    public override void RaiseCanExecuteChanged()
     {
         CommandManager.InvalidateRequerySuggested();
-    }
-
-    /// <inheritdoc />
-    public bool CanExecute(object? parameter)
-    {
-        return wfCanExecute is null ||
-               ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
-    }
-
-    /// <inheritdoc />
-    public void Execute(object? parameter)
-    {
-        if (CanExecute(parameter)
-            && waExecute is not null
-            && (waExecute.IsStatic || waExecute.IsAlive))
-        {
-            waExecute.Execute();
-        }
     }
 }
