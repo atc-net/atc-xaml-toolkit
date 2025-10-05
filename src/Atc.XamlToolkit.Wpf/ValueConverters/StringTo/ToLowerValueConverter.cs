@@ -1,11 +1,12 @@
-// ReSharper disable once CheckNamespace
+// ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 
-public sealed class ToUpperValueConverter :
+[ValueConversion(typeof(string), typeof(string))]
+public sealed class ToLowerValueConverter :
     ValueConverterBase<string, string>,
-    Avalonia.Data.Converters.IValueConverter
+    System.Windows.Data.IValueConverter
 {
-    public static readonly ToUpperValueConverter Instance = new();
+    public static readonly ToLowerValueConverter Instance = new();
 
     public override string Convert(
         string value,
@@ -13,7 +14,7 @@ public sealed class ToUpperValueConverter :
         CultureInfo culture)
         => string.IsNullOrEmpty(value)
             ? value
-            : value.ToUpper(culture);
+            : value.ToLower(culture);
 
     public override string ConvertBack(
         string value,
@@ -21,23 +22,23 @@ public sealed class ToUpperValueConverter :
         CultureInfo culture)
         => throw new NotSupportedException("This is a OneWay converter.");
 
-    object? Avalonia.Data.Converters.IValueConverter.Convert(
+    object? System.Windows.Data.IValueConverter.Convert(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IValueConverter)this).Convert(
+        => ((Data.Converters.IValueConverter)this).Convert(
             value,
             targetType,
             parameter,
             culture);
 
-    object? Avalonia.Data.Converters.IValueConverter.ConvertBack(
+    object? System.Windows.Data.IValueConverter.ConvertBack(
         object? value,
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IValueConverter)this).ConvertBack(
+        => ((Data.Converters.IValueConverter)this).ConvertBack(
             value,
             targetType,
             parameter,

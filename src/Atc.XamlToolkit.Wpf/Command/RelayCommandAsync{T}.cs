@@ -1,5 +1,4 @@
 // ReSharper disable AsyncVoidMethod
-// ReSharper disable SuggestVarOrType_SimpleTypes
 namespace Atc.XamlToolkit.Command;
 
 /// <summary>
@@ -8,13 +7,9 @@ namespace Atc.XamlToolkit.Command;
 /// This class allows you to accept command parameters in the Execute and CanExecute callback methods.
 /// </summary>
 /// <typeparam name="T">The type of the command parameter.</typeparam>
-public class RelayCommandAsync<T> : IRelayCommandAsync<T>
+public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
 {
-    private readonly Func<T, Task>? execute;
-    private readonly WeakFunc<T, bool>? wfCanExecute;
-    private readonly IErrorHandler? errorHandler;
     private EventHandler requerySuggestedLocal = null!;
-    private bool isExecuting;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayCommandAsync{T}"/> class that can always execute.
@@ -38,24 +33,18 @@ public class RelayCommandAsync<T> : IRelayCommandAsync<T>
         Func<T, bool>? canExecute = null,
         IErrorHandler? errorHandler = null,
         bool keepTargetAlive = false)
+        : base(
+            execute,
+            canExecute,
+            errorHandler,
+            keepTargetAlive)
     {
-        this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-
-        if (canExecute is not null)
-        {
-            wfCanExecute = new WeakFunc<T, bool>(canExecute, keepTargetAlive);
-        }
-
-        if (errorHandler is not null)
-        {
-            this.errorHandler = errorHandler;
-        }
     }
 
     /// <summary>
     /// Occurs when changes occur that affect whether the command should execute.
     /// </summary>
-    public event EventHandler? CanExecuteChanged
+    public override event EventHandler? CanExecuteChanged
     {
         add
         {
@@ -109,96 +98,8 @@ public class RelayCommandAsync<T> : IRelayCommandAsync<T>
     /// <summary>
     /// Raises the <see cref="CanExecuteChanged"/> event.
     /// </summary>
-    public void RaiseCanExecuteChanged()
+    public override void RaiseCanExecuteChanged()
     {
         CommandManager.InvalidateRequerySuggested();
-    }
-
-    /// <inheritdoc />
-    public bool CanExecute(object? parameter)
-    {
-        return wfCanExecute is null ||
-               ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
-    }
-
-    /// <inheritdoc />
-    [SuppressMessage("AsyncUsage", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "OK - ICommand signature")]
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "OK - errorHandler will handle it")]
-    public async void Execute(object? parameter)
-    {
-        var val = parameter;
-
-        if (parameter is not null &&
-            parameter.GetType() != typeof(T) &&
-            parameter is IConvertible)
-        {
-            val = Convert.ChangeType(parameter, typeof(T), provider: null);
-        }
-
-        if (isExecuting ||
-            !CanExecute(val) ||
-            execute is null)
-        {
-            return;
-        }
-
-        isExecuting = true;
-
-        if (errorHandler is null)
-        {
-            await DoExecute(val).ConfigureAwait(true);
-            RaiseCanExecuteChanged();
-            isExecuting = false;
-        }
-        else
-        {
-            try
-            {
-                await DoExecute(val).ConfigureAwait(true);
-                RaiseCanExecuteChanged();
-                isExecuting = false;
-            }
-            catch (Exception ex)
-            {
-                errorHandler?.HandleError(ex);
-                isExecuting = false;
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    public Task ExecuteAsync(T parameter)
-    {
-        if (CanExecute(parameter) &&
-            execute is not null)
-        {
-            return execute(parameter);
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private async Task DoExecute(object? val)
-    {
-        if (execute is null)
-        {
-            return;
-        }
-
-        if (val is null)
-        {
-            if (typeof(T).IsValueType)
-            {
-                await ExecuteAsync(default!).ConfigureAwait(true);
-            }
-            else
-            {
-                await execute((T)val!).ConfigureAwait(true);
-            }
-        }
-        else
-        {
-            await execute((T)val).ConfigureAwait(true);
-        }
     }
 }

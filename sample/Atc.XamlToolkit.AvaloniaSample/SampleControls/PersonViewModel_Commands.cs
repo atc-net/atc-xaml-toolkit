@@ -1,8 +1,11 @@
 // ReSharper disable ConvertIfStatementToReturnStatement
 namespace Atc.XamlToolkit.AvaloniaSample.SampleControls;
 
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "OK")]
 public partial class PersonViewModel
 {
+    private CancellationTokenSource? cancellationTokenSource;
+
     [RelayCommand]
     public Task ShowData()
     {
@@ -58,5 +61,58 @@ public partial class PersonViewModel
         }
 
         return true;
+    }
+
+    public bool CanStartLongRunningWork() => cancellationTokenSource is null;
+
+    [RelayCommand(CanExecute = nameof(CanStartLongRunningWork))]
+    public async Task StartLongRunningWorkAsync()
+    {
+        if (cancellationTokenSource is not null)
+        {
+            return; // Already running
+        }
+
+        cancellationTokenSource = new CancellationTokenSource();
+
+        // Immediately update command CanExecute states after starting (depends on cancellationTokenSource)
+        StartLongRunningWorkAsyncCommand.RaiseCanExecuteChanged();
+        CancelLongRunningWorkCommand.RaiseCanExecuteChanged();
+
+        try
+        {
+            for (var i = 1; i <= 10; i++)
+            {
+                cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                await Task.Delay(500, cancellationTokenSource.Token).ConfigureAwait(true);
+            }
+
+            var box = MessageBoxManager.GetMessageBoxStandard(
+                "Information",
+                "Long running work completed");
+            await box.ShowAsync().ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard(
+                "Information",
+                "Long running work cancelled");
+            await box.ShowAsync().ConfigureAwait(true);
+        }
+        finally
+        {
+            cancellationTokenSource.Dispose();
+            cancellationTokenSource = null;
+            StartLongRunningWorkAsyncCommand.RaiseCanExecuteChanged();
+            CancelLongRunningWorkCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public bool CanCancelLongRunningWork() => cancellationTokenSource is not null;
+
+    [RelayCommand(CanExecute = nameof(CanCancelLongRunningWork))]
+    public void CancelLongRunningWork()
+    {
+        cancellationTokenSource?.Cancel();
     }
 }

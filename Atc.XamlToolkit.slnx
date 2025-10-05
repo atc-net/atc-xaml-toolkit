@@ -1,0 +1,33 @@
+<Solution>
+  <Folder Name="/docs/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/docs/Mvvm/">
+    <File Path="docs/Mvvm/Readme.md" />
+  </Folder>
+  <Folder Name="/docs/SourceGenerators/">
+    <File Path="docs/SourceGenerators/AttachedProperty.md" />
+    <File Path="docs/SourceGenerators/DependencyProperty.md" />
+    <File Path="docs/SourceGenerators/RoutedEvents.md" />
+    <File Path="docs/SourceGenerators/ViewModel.md" />
+  </Folder>
+  <Folder Name="/docs/ValueConverters/">
+    <File Path="docs/ValueConverters/Readme.md" />
+  </Folder>
+  <Folder Name="/sample/">
+    <Project Path="sample/Atc.XamlToolkit.AvaloniaSample/Atc.XamlToolkit.AvaloniaSample.csproj" />
+    <Project Path="sample/Atc.XamlToolkit.WpfSample/Atc.XamlToolkit.WpfSample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj" />
+    <Project Path="src/Atc.XamlToolkit.SourceGenerators/Atc.XamlToolkit.SourceGenerators.csproj" />
+    <Project Path="src/Atc.XamlToolkit.Wpf/Atc.XamlToolkit.Wpf.csproj" />
+    <Project Path="src/Atc.XamlToolkit/Atc.XamlToolkit.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Atc.XamlToolkit.Avalonia.Tests/Atc.XamlToolkit.Avalonia.Tests.csproj" />
+    <Project Path="test/Atc.XamlToolkit.SourceGenerators.Tests/Atc.XamlToolkit.SourceGenerators.Tests.csproj" />
+    <Project Path="test/Atc.XamlToolkit.Tests/Atc.XamlToolkit.Tests.csproj" />
+    <Project Path="test/Atc.XamlToolkit.Wpf.Tests/Atc.XamlToolkit.Wpf.Tests.csproj" />
+  </Folder>
+</Solution>
