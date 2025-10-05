@@ -5,6 +5,8 @@ public sealed class ToLowerValueConverter :
     ValueConverterBase<string, string>,
     Avalonia.Data.Converters.IValueConverter
 {
+    public static readonly ToLowerValueConverter Instance = new();
+
     public override string Convert(
         string value,
         object? parameter,
