@@ -12,7 +12,7 @@
     <File Path="docs/SourceGenerators/ViewModel.md" />
   </Folder>
   <Folder Name="/docs/ValueConverters/">
-    <File Path="docs/ValueConverters/@Readme.md" />
+    <File Path="docs/ValueConverters/Readme.md" />
   </Folder>
   <Folder Name="/sample/">
     <Project Path="sample/Atc.XamlToolkit.AvaloniaSample/Atc.XamlToolkit.AvaloniaSample.csproj" />
@@ -30,7 +30,4 @@
     <Project Path="test/Atc.XamlToolkit.Tests/Atc.XamlToolkit.Tests.csproj" />
     <Project Path="test/Atc.XamlToolkit.Wpf.Tests/Atc.XamlToolkit.Wpf.Tests.csproj" />
   </Folder>
-  <Properties Name="ExtensibilityGlobals" Scope="PostLoad">
-    <Property Name="RESX_Rules" Value="{&quot;EnabledRules&quot;:[&quot;StringFormat&quot;,&quot;WhiteSpaceLead&quot;,&quot;WhiteSpaceTail&quot;,&quot;PunctuationTail&quot;]}" />
-  </Properties>
 </Solution>
