@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Atc.XamlToolkit.WinUISample (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Atc.XamlToolkit.WinUISample (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

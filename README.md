@@ -1,6 +1,6 @@
-# ATC.Net Avalonia and WPF
+# ATC.Net WPF, WinUI, and Avalonia
 
-This is a base libraries for building Avalonia or WPF application with the MVVM design pattern.
+This is a base libraries for building WPF, WinUI, or Avalonia application with the MVVM design pattern.
 
 ## 🎁 Key Features
 
@@ -50,7 +50,7 @@ Learn more: [Messaging System Documentation](docs/Messaging/Readme.md)
 
 ### 🎨 Value Converters
 
-Extensive collection of ready-to-use XAML converters for both WPF and Avalonia:
+Extensive collection of ready-to-use XAML converters for WPF, WinUI, and Avalonia:
 
 #### Bool Converters
 
@@ -112,6 +112,12 @@ Install via NuGet Package Manager or .NET CLI:
 dotnet add package Atc.XamlToolkit.Wpf
 ```
 
+**For WinUI:**
+
+```powershell
+dotnet add package Atc.XamlToolkit.WinUI
+```
+
 **For Avalonia:**
 
 ```powershell
@@ -147,14 +153,16 @@ public partial class MainViewModel : ViewModelBase
 - [.NET >= 9.0.202 - SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - [.NET 9 - Runtime for Avalonia](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - [.NET 9 - Desktop Runtime for WPF](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [.NET 9 - Desktop Runtime for WinUI 3](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
 ## NuGet Packages Provided in this Repository
 
 | Nuget package                                                                                                                                                                                          | Description                                         | Dependencies                           |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|----------------------------------------|
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.svg?label=Atc.XamlToolkit&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit)                            | Base package with ViewModelBase, ObservableObject   | Atc & Atc.XamlToolkit.SourceGenerators |
-| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Avalonia.svg?label=Atc.XamlToolkit.Avalonia&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Avalonia) | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Wpf.svg?label=Atc.XamlToolkit.Wpf&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Wpf)                | RelayCommand, MainWindowViewModelBase for WPF       | Atc.XamlToolkit.SourceGenerators       |
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.WinUI.svg?label=Atc.XamlToolkit.WinUI&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.WinUI)          | RelayCommand, MainWindowViewModelBase for WinUI     | Atc.XamlToolkit                        |
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Avalonia.svg?label=Atc.XamlToolkit.Avalonia&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Avalonia) | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
 
 ## 📚 Documentation
 
@@ -195,7 +203,7 @@ For more details, see the [MVVM](docs/Mvvm/Readme.md) section.
 | Component | Description | Package |
 |-----------|-------------|---------|
 | `ViewModelBase` | Base ViewModel with INotifyPropertyChanged | Atc.XamlToolkit |
-| `MainWindowViewModelBase` | Main window lifecycle management | Atc.XamlToolkit.Wpf/Avalonia |
+| `MainWindowViewModelBase` | Main window lifecycle management | Atc.XamlToolkit.Wpf/WinUI/Avalonia |
 | `ViewModelDialogBase` | Dialog-specific ViewModels | Atc.XamlToolkit |
 | `ObservableObject` | Lightweight observable pattern | Atc.XamlToolkit |
 
@@ -230,15 +238,15 @@ All commands support:
 
 | Generator | Platform | Description |
 |-----------|----------|-------------|
-| `[ObservableProperty]` | WPF, Avalonia | Auto-generate observable properties |
-| `[RelayCommand]` | WPF, Avalonia | Auto-generate command properties |
+| `[ObservableProperty]` | WPF, WinUI, Avalonia | Auto-generate observable properties |
+| `[RelayCommand]` | WPF, WinUI, Avalonia | Auto-generate command properties |
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
 
 ### Value Converters
 
-**Bool Converters** (WPF & Avalonia):
+**Bool Converters** (WPF, WinUI & Avalonia):
 
 - `BoolToInverseBoolValueConverter`
 - `BoolToVisibilityCollapsedValueConverter`
@@ -247,7 +255,7 @@ All commands support:
 - `MultiBoolToBoolValueConverter`
 - `MultiBoolToVisibilityVisibleValueConverter`
 
-**String Converters** (WPF & Avalonia):
+**String Converters** (WPF, WinUI & Avalonia):
 
 - `StringNullOrEmptyToBoolValueConverter`
 - `StringNullOrEmptyToInverseBoolValueConverter`
@@ -277,7 +285,7 @@ All commands support:
 ## 🌟 Why Choose Atc.XamlToolkit?
 
 - ✅ **Modern** - Built for .NET 9 with latest C# features
-- ✅ **Cross-platform** - Supports both WPF and Avalonia
+- ✅ **Cross-platform** - Supports WPF, WinUI 3, and Avalonia
 - ✅ **High Performance** - Optimized for minimal allocations
 - ✅ **Source Generators** - Eliminate boilerplate code
 - ✅ **Well Documented** - Comprehensive documentation and examples

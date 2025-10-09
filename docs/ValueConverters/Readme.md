@@ -14,6 +14,12 @@ For WPF:
 dotnet add package Atc.XamlToolkit.Wpf
 ```
 
+For WinUI:
+
+```powershell
+dotnet add package Atc.XamlToolkit.WinUI
+```
+
 For Avalonia:
 
 ```powershell
@@ -22,11 +28,16 @@ For Avalonia:
 
 ## 📜 XML Namespace Mapping
 
-
 For WPF:
 
 ```xml
 xmlns:atcToolkitValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
+```
+
+For WinUI:
+
+```xml
+xmlns:atcToolkitValueConverters="using:Atc.XamlToolkit.ValueConverters"
 ```
 
 For Avalonia:
@@ -39,7 +50,7 @@ xmlns:atcToolkitValueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;a
 
 ## 🧹 Usage
 
-To use a converter in WPF or Avalonia by ResourceDictionary and and key:
+To use a converter in WPF, WinUI, or Avalonia by ResourceDictionary and key:
 
 ```xml
 <UserControl.Resources>
@@ -91,8 +102,8 @@ Or by the ValueConverter's Instance:
 
 ```xml
 <!-- Show TextBlock only if Name is not empty (using Visibility) -->
-<TextBlock 
-    Text="Name is provided" 
+<TextBlock
+    Text="Name is provided"
     Visibility="{Binding Name, Converter={x:Static atcToolkitValueConverters:StringNullOrEmptyToVisibilityCollapsedValueConverter.Instance}}" />
 ```
 
@@ -100,8 +111,8 @@ Or by the ValueConverter's Instance:
 
 ```xml
 <!-- Show TextBlock only if Name is not empty (using IsVisible) -->
-<TextBlock 
-    Text="Name is provided" 
+<TextBlock
+    Text="Name is provided"
     IsVisible="{Binding Name, Converter={x:Static atcToolkitValueConverters:StringNullOrEmptyToInverseBoolValueConverter.Instance}}" />
 ```
 
@@ -111,7 +122,7 @@ Or by the ValueConverter's Instance:
 
 ```xml
 <!-- Display username in uppercase -->
-<TextBlock 
+<TextBlock
     Text="{Binding UserName, Converter={x:Static atcToolkitValueConverters:ToUpperValueConverter.Instance}}" />
 ```
 
@@ -121,8 +132,8 @@ Or by the ValueConverter's Instance:
 
 ```xml
 <!-- Show placeholder text when input is empty -->
-<TextBlock 
-    Text="Enter your name..." 
+<TextBlock
+    Text="Enter your name..."
     Visibility="{Binding UserInput, Converter={x:Static atcToolkitValueConverters:StringNullOrEmptyToVisibilityVisibleValueConverter.Instance}}" />
 ```
 
@@ -130,8 +141,8 @@ Or by the ValueConverter's Instance:
 
 ```xml
 <!-- Show placeholder text when input is empty -->
-<TextBlock 
-    Text="Enter your name..." 
+<TextBlock
+    Text="Enter your name..."
     IsVisible="{Binding UserInput, Converter={x:Static atcToolkitValueConverters:StringNullOrEmptyToBoolValueConverter.Instance}}" />
 ```
 
