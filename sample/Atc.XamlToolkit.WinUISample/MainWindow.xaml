@@ -1,0 +1,54 @@
+<Window
+    x:Class="Atc.XamlToolkit.WinUISample.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sampleControls="using:Atc.XamlToolkit.WinUISample.SampleControls"
+    xmlns:valueConverters="using:Atc.XamlToolkit.ValueConverters"
+    xmlns:winUiSample="using:Atc.XamlToolkit.WinUISample"
+    Title="Atc.XamlToolkit.WinUISample"
+    d:DataContext="{d:DesignInstance Type=winUiSample:MainWindowViewModel}"
+    mc:Ignorable="d">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <StackPanel Margin="20" Orientation="Vertical">
+
+        <CheckBox
+            x:Name="ShowPersonView"
+            Content="Show PersonView"
+            IsChecked="True" />
+
+        <StackPanel Margin="20" Orientation="Horizontal">
+
+            <Border
+                Padding="10"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Border.Visibility>
+                    <Binding ElementName="ShowPersonView" Path="IsChecked">
+                        <Binding.Converter>
+                            <valueConverters:BoolToVisibilityVisibleValueConverter />
+                        </Binding.Converter>
+                    </Binding>
+                </Border.Visibility>
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="PersonView" />
+                    <sampleControls:PersonView />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+
+    </StackPanel>
+
+</Window>
+

@@ -1,11 +1,11 @@
 # RelayCommand's Component
 
-The Atc `RelayCommand's` is a powerful tool designed for the Model-View-ViewModel (MVVM) pattern in .NET applications, 
-especially within the context of WPF or similar XAML-based technologies. 
+The Atc `RelayCommand's` is a powerful tool designed for the Model-View-ViewModel (MVVM) pattern in .NET applications,
+especially within the context of WPF, WinUI, Avalonia, or similar XAML-based technologies.
 
-MVVM facilitates a clean separation of concerns between the application's user interface and its business logic. 
-One of the key features of MVVM is the ability to bind commands, 
-rather than events, to user actions like button clicks. 
+MVVM facilitates a clean separation of concerns between the application's user interface and its business logic.
+One of the key features of MVVM is the ability to bind commands,
+rather than events, to user actions like button clicks.
 This approach offers several advantages:
 
 - **Decoupling of View and ViewModel:**
@@ -21,7 +21,7 @@ This approach offers several advantages:
 compared to traditional event handlers.
 
 By leveraging asynchronous operations,
-`RelayCommand's` ensures that your application remains responsive, even during intensive tasks. 
+`RelayCommand's` ensures that your application remains responsive, even during intensive tasks.
 This is especially crucial in modern applications where user experience is paramount.
 
 The variants of `RelayCommand's`:
@@ -35,8 +35,8 @@ The variants of `RelayCommand's`:
 
 ## Implementation
 
-The `RelayCommand's` extends the ICommand interface with asynchronous capabilities, enabling 
-it to work seamlessly within an async/await programming model. It supports conditional execution 
+The `RelayCommand's` extends the ICommand interface with asynchronous capabilities, enabling
+it to work seamlessly within an async/await programming model. It supports conditional execution
 through a can-execute function and integrates an error handling mechanism.
 
 ## Example Usage

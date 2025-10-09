@@ -1,8 +1,10 @@
-#pragma warning disable S3168
-#pragma warning disable AsyncFixer03
+// ReSharper disable AsyncVoidEventHandlerMethod
 // ReSharper disable AsyncVoidMethod
+// ReSharper disable PartialTypeWithSinglePart
 namespace Atc.XamlToolkit.AvaloniaSample;
 
+[SuppressMessage("Major Code Smell", "S3168:\"async\" methods should not return \"void\"", Justification = "Event handlers")]
+[SuppressMessage("AsyncUsage.CSharp.Naming", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "Event handlers")]
 public partial class App : Application
 {
     private readonly IHost host;
@@ -38,25 +40,36 @@ public partial class App : Application
             InitializeHostAsync(desktop);
 
             // Hook into the exit event to stop and dispose the host.
-            desktop.Exit += Desktop_Exit;
+            desktop.Exit += OnDesktopExit;
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async void InitializeHostAsync(IClassicDesktopStyleApplicationLifetime desktop)
+    private async void InitializeHostAsync(
+        IClassicDesktopStyleApplicationLifetime desktop)
     {
-        await host.StartAsync().ConfigureAwait(true);
+        await host
+            .StartAsync()
+            .ConfigureAwait(false);
+
         desktop.MainWindow = host.Services.GetService<MainWindow>();
     }
 
-    private async void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    private async void OnDesktopExit(
+        object? sender,
+        ControlledApplicationLifetimeExitEventArgs e)
     {
-        await host.StopAsync().ConfigureAwait(true);
+        await host
+            .StopAsync()
+            .ConfigureAwait(false);
+
         host.Dispose();
     }
 
-    private static void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private static void CurrentDomainUnhandledException(
+        object sender,
+        UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception ex)
         {

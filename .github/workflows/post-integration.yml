@@ -83,4 +83,5 @@ jobs:
           cd ${GITHUB_WORKSPACE}/packages
           dotnet nuget push Atc.XamlToolkit.${{ env.NBGV_NuGetPackageVersion }}.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate
           dotnet nuget push Atc.XamlToolkit.Avalonia.${{ env.NBGV_NuGetPackageVersion }}.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate
+          dotnet nuget push Atc.XamlToolkit.WinUI.${{ env.NBGV_NuGetPackageVersion }}.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate
           dotnet nuget push Atc.XamlToolkit.Wpf.${{ env.NBGV_NuGetPackageVersion }}.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.NUGET_REPO_URL }} --skip-duplicate
