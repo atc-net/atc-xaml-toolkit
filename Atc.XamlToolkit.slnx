@@ -16,11 +16,16 @@
   </Folder>
   <Folder Name="/sample/">
     <Project Path="sample/Atc.XamlToolkit.AvaloniaSample/Atc.XamlToolkit.AvaloniaSample.csproj" />
+    <Project Path="sample/Atc.XamlToolkit.WinUISample/Atc.XamlToolkit.WinUISample.csproj" Id="79e5cef1-f968-4a4a-a301-678c3e5ee9cd">
+      <Platform Project="x64" />
+      <Deploy />
+    </Project>
     <Project Path="sample/Atc.XamlToolkit.WpfSample/Atc.XamlToolkit.WpfSample.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Atc.XamlToolkit.Avalonia/Atc.XamlToolkit.Avalonia.csproj" />
     <Project Path="src/Atc.XamlToolkit.SourceGenerators/Atc.XamlToolkit.SourceGenerators.csproj" />
+    <Project Path="src/Atc.XamlToolkit.WinUI/Atc.XamlToolkit.WinUI.csproj" Id="843a5dcc-6190-4096-b9a3-1ced10a416f0" />
     <Project Path="src/Atc.XamlToolkit.Wpf/Atc.XamlToolkit.Wpf.csproj" />
     <Project Path="src/Atc.XamlToolkit/Atc.XamlToolkit.csproj" />
   </Folder>
@@ -28,6 +33,7 @@
     <Project Path="test/Atc.XamlToolkit.Avalonia.Tests/Atc.XamlToolkit.Avalonia.Tests.csproj" />
     <Project Path="test/Atc.XamlToolkit.SourceGenerators.Tests/Atc.XamlToolkit.SourceGenerators.Tests.csproj" />
     <Project Path="test/Atc.XamlToolkit.Tests/Atc.XamlToolkit.Tests.csproj" />
+    <Project Path="test/Atc.XamlToolkit.WinUI.Tests/Atc.XamlToolkit.WinUI.Tests.csproj" Id="3db5218d-5049-4c6d-9968-40f3206feb1f" />
     <Project Path="test/Atc.XamlToolkit.Wpf.Tests/Atc.XamlToolkit.Wpf.Tests.csproj" />
   </Folder>
 </Solution>

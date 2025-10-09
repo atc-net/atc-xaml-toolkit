@@ -1,10 +1,4 @@
-# 🧱 MVVM in Avalonia or WPF
-
-## 🪟 For Avaloina
-
-Avaloina fully supports the **Model-View-ViewModel (MVVM)** pattern, which promotes a clear separation of concerns between the UI and business logic.
-
-The **Atc.XamlToolkit.Avaloina** library provides a robust foundation for implementing MVVM effectively, reducing boilerplate code and simplifying development.
+# 🧱 MVVM in WPF, WinUI, and Avalonia
 
 ## 🖼️ For WPF
 
@@ -12,9 +6,21 @@ Windows Presentation Foundation (WPF) fully supports the **Model-View-ViewModel 
 
 The **Atc.XamlToolkit.Wpf** library provides a robust foundation for implementing MVVM effectively, reducing boilerplate code and simplifying development.
 
+## 🪟 For WinUI
+
+Windows UI Library 3 (WinUI 3) fully supports the **Model-View-ViewModel (MVVM)** pattern, which promotes a clear separation of concerns between the UI and business logic.
+
+The **Atc.XamlToolkit.WinUI** library provides a robust foundation for implementing MVVM effectively, reducing boilerplate code and simplifying development.
+
+## 🌐 For Avalonia
+
+Avalonia fully supports the **Model-View-ViewModel (MVVM)** pattern, which promotes a clear separation of concerns between the UI and business logic.
+
+The **Atc.XamlToolkit.Avalonia** library provides a robust foundation for implementing MVVM effectively, reducing boilerplate code and simplifying development.
+
 ## ⚙️ Features
 
-The `Atc.XamlToolkit.Avaloina` or `Atc.XamlToolkit.Wpf` library offers a variety of base classes and utilities to streamline MVVM implementation:
+The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia` library offers a variety of base classes and utilities to streamline MVVM implementation:
 
 | 🧩 Component              | 📋 Description                                                                |
 |---------------------------|--------------------------------------------------------------------------------|

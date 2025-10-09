@@ -1,6 +1,6 @@
 # ATC coding rules - https://github.com/atc-net/atc-coding-rules
 # Version: 1.0.0
-# Updated: 03-06-2024
+# Updated: 01-03-2025
 # Location: Root
 # Distribution: DotNet9
 # Inspired by: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
@@ -535,6 +535,7 @@ dotnet_diagnostic.CS4014.severity = error          # https://github.com/atc-net/
 # StyleCop
 # https://github.com/DotNetAnalyzers/StyleCopAnalyzers
 dotnet_diagnostic.SA1009.severity = none            # https://github.com/atc-net/atc-coding-rules/blob/main/documentation/CodeAnalyzersRules/StyleCop/SA1009.md
+dotnet_diagnostic.SA1010.severity = none            # False positive when using collection initializers
 dotnet_diagnostic.SA1101.severity = none            # https://github.com/atc-net/atc-coding-rules/blob/main/documentation/CodeAnalyzersRules/StyleCop/SA1101.md
 dotnet_diagnostic.SA1122.severity = error           # https://github.com/atc-net/atc-coding-rules/blob/main/documentation/CodeAnalyzersRules/StyleCop/SA1122.md
 dotnet_diagnostic.SA1133.severity = error           # https://github.com/atc-net/atc-coding-rules/blob/main/documentation/CodeAnalyzersRules/StyleCop/SA1133.md
@@ -561,6 +562,7 @@ dotnet_diagnostic.S3358.severity = none           	# Extract this nested ternary
 dotnet_diagnostic.S6602.severity = none           	# "Find" method should be used instead of the "FirstOrDefault"
 dotnet_diagnostic.S6603.severity = none            	# The collection-specific "TrueForAll" method should be used instead of the "All"
 dotnet_diagnostic.S6605.severity = none             # Collection-specific "Exists" method should be used instead of the "Any"
+dotnet_diagnostic.S6964.severity = none             # Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.
 
 
 ##########################################

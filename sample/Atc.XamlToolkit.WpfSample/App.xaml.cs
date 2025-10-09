@@ -1,3 +1,4 @@
+// ReSharper disable AsyncVoidEventHandlerMethod
 // ReSharper disable AsyncVoidMethod
 namespace Atc.XamlToolkit.WpfSample;
 
@@ -22,10 +23,6 @@ public partial class App
             .Build();
     }
 
-    /// <summary>
-    /// Raises the Startup event.
-    /// </summary>
-    /// <param name="e">The <see cref="StartupEventArgs"/> instance containing the event data.</param>
     protected override void OnStartup(
         StartupEventArgs e)
     {
@@ -42,11 +39,6 @@ public partial class App
         }
     }
 
-    /// <summary>
-    /// Currents the domain unhandled exception.
-    /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The <see cref="UnhandledExceptionEventArgs"/> instance containing the event data.</param>
     private static void CurrentDomainUnhandledException(
         object sender,
         UnhandledExceptionEventArgs e)
@@ -64,11 +56,6 @@ public partial class App
             MessageBoxImage.Error);
     }
 
-    /// <summary>
-    /// Applications the on dispatcher unhandled exception.
-    /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The <see cref="DispatcherUnhandledExceptionEventArgs"/> instance containing the event data.</param>
     private void ApplicationOnDispatcherUnhandledException(
         object sender,
         DispatcherUnhandledExceptionEventArgs e)

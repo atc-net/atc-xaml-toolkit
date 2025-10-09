@@ -1,6 +1,6 @@
 # 🚀 Getting Started with Atc.XamlToolkit
 
-This guide will help you get started with Atc.XamlToolkit for building MVVM applications in WPF or Avalonia.
+This guide will help you get started with Atc.XamlToolkit for building MVVM applications in WPF, WinUI, or Avalonia.
 
 ## Installation
 
@@ -8,6 +8,12 @@ This guide will help you get started with Atc.XamlToolkit for building MVVM appl
 
 ```powershell
 dotnet add package Atc.XamlToolkit.Wpf
+```
+
+### For WinUI Projects
+
+```powershell
+dotnet add package Atc.XamlToolkit.WinUI
 ```
 
 ### For Avalonia Projects
@@ -31,21 +37,21 @@ public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
     private string userName = "Guest";
-    
+
     [ObservableProperty]
     private bool isLoading;
-    
+
     [RelayCommand]
     private void SayHello()
     {
         MessageBox.Show($"Hello, {UserName}!");
     }
-    
+
     [RelayCommand]
     private async Task LoadDataAsync()
     {
         IsLoading = true;
-        
+
         try
         {
             await Task.Delay(2000); // Simulate loading
@@ -69,27 +75,61 @@ public partial class MainViewModel : ViewModelBase
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModels="clr-namespace:MyApp.ViewModels"
         Title="My App" Height="300" Width="400">
-    
+
     <Window.DataContext>
         <viewModels:MainViewModel />
     </Window.DataContext>
-    
+
     <StackPanel Margin="20">
         <TextBlock Text="User Name:" />
-        <TextBox Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}" 
+        <TextBox Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
                  Margin="0,5,0,10" />
-        
-        <Button Content="Say Hello" 
-                Command="{Binding SayHelloCommand}" 
+
+        <Button Content="Say Hello"
+                Command="{Binding SayHelloCommand}"
                 Margin="0,0,0,10" />
-        
-        <Button Content="Load Data" 
-                Command="{Binding LoadDataAsyncCommand}" 
+
+        <Button Content="Load Data"
+                Command="{Binding LoadDataAsyncCommand}"
                 Margin="0,0,0,10" />
-        
-        <ProgressBar IsIndeterminate="True" 
+
+        <ProgressBar IsIndeterminate="True"
                      Height="20"
-                     Visibility="{Binding IsLoading, 
+                     Visibility="{Binding IsLoading,
+                                         Converter={StaticResource BoolToVisibilityConverter}}" />
+    </StackPanel>
+</Window>
+```
+
+**For WinUI:**
+
+```xml
+<Window x:Class="MyApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:viewModels="using:MyApp.ViewModels"
+        Title="My App">
+
+    <Window.DataContext>
+        <viewModels:MainViewModel />
+    </Window.DataContext>
+
+    <StackPanel Margin="20">
+        <TextBlock Text="User Name:" />
+        <TextBox Text="{Binding UserName, Mode=TwoWay}"
+                 Margin="0,5,0,10" />
+
+        <Button Content="Say Hello"
+                Command="{Binding SayHelloCommand}"
+                Margin="0,0,0,10" />
+
+        <Button Content="Load Data"
+                Command="{Binding LoadDataAsyncCommand}"
+                Margin="0,0,0,10" />
+
+        <ProgressBar IsIndeterminate="True"
+                     Height="20"
+                     Visibility="{Binding IsLoading,
                                          Converter={StaticResource BoolToVisibilityConverter}}" />
     </StackPanel>
 </Window>
@@ -103,27 +143,27 @@ public partial class MainViewModel : ViewModelBase
         xmlns:vm="using:MyApp.ViewModels"
         x:Class="MyApp.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="My App" 
+        Title="My App"
         Width="400" Height="300">
-    
+
     <Design.DataContext>
         <vm:MainViewModel />
     </Design.DataContext>
-    
+
     <StackPanel Margin="20">
         <TextBlock Text="User Name:" />
-        <TextBox Text="{Binding UserName}" 
+        <TextBox Text="{Binding UserName}"
                  Margin="0,5,0,10" />
-        
-        <Button Content="Say Hello" 
-                Command="{Binding SayHelloCommand}" 
+
+        <Button Content="Say Hello"
+                Command="{Binding SayHelloCommand}"
                 Margin="0,0,0,10" />
-        
-        <Button Content="Load Data" 
-                Command="{Binding LoadDataAsyncCommand}" 
+
+        <Button Content="Load Data"
+                Command="{Binding LoadDataAsyncCommand}"
                 Margin="0,0,0,10" />
-        
-        <ProgressBar IsIndeterminate="True" 
+
+        <ProgressBar IsIndeterminate="True"
                      Height="20"
                      IsVisible="{Binding IsLoading}" />
     </StackPanel>
@@ -172,7 +212,7 @@ public partial class MyViewModel : ViewModelBase
 XAML:
 
 ```xml
-<Button Content="Delete" 
+<Button Content="Delete"
         Command="{Binding DeleteItemCommand}"
         CommandParameter="123" />
 ```
@@ -197,13 +237,13 @@ public partial class MyViewModel : ViewModelBase
 {
     [ObservableProperty]
     private string userName;
-    
+
     [RelayCommand(CanExecute = nameof(CanSave))]
     private void Save()
     {
         // Save logic
     }
-    
+
     private bool CanSave()
     {
         return !string.IsNullOrWhiteSpace(UserName);
@@ -223,11 +263,11 @@ public partial class PersonViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullName))]
     private string firstName;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullName))]
     private string lastName;
-    
+
     public string FullName => $"{FirstName} {LastName}";
 }
 ```
@@ -240,13 +280,13 @@ public partial class PersonViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private bool hasChanges;
-    
+
     [RelayCommand(CanExecute = nameof(CanSave))]
     private void Save()
     {
         // Save logic
     }
-    
+
     private bool CanSave() => HasChanges;
 }
 ```
@@ -261,7 +301,7 @@ public class OrderViewModel : ViewModelBase
     private void CompleteOrder()
     {
         // Complete the order...
-        
+
         // Notify other ViewModels
         Messenger.Default.Send(
             new GenericMessage<Order>(currentOrder));
@@ -278,16 +318,16 @@ public class InventoryViewModel : ViewModelBase
     {
         // Register for messages
         Messenger.Default.Register<GenericMessage<Order>>(
-            this, 
+            this,
             OnOrderCompleted);
     }
-    
+
     private void OnOrderCompleted(GenericMessage<Order> message)
     {
         var order = message.Content;
         // Update inventory
     }
-    
+
     protected override void Cleanup()
     {
         Messenger.Default.Unregister(this);
@@ -303,8 +343,8 @@ public class InventoryViewModel : ViewModelBase
 ```xml
 xmlns:converters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
 
-<TextBlock Text="Data loaded!" 
-           Visibility="{Binding IsDataLoaded, 
+<TextBlock Text="Data loaded!"
+           Visibility="{Binding IsDataLoaded,
                                Converter={x:Static converters:BoolToVisibilityVisibleValueConverter.Instance}}" />
 ```
 
@@ -313,8 +353,8 @@ xmlns:converters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.Xam
 ```xml
 xmlns:converters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Avalonia"
 
-<TextBlock Text="Data loaded!" 
-           IsVisible="{Binding IsDataLoaded, 
+<TextBlock Text="Data loaded!"
+           IsVisible="{Binding IsDataLoaded,
                               Converter={x:Static converters:BoolToVisibilityVisibleValueConverter.Instance}}" />
 ```
 
@@ -329,7 +369,7 @@ public partial class CustomControl : UserControl
     {
         InitializeComponent();
     }
-    
+
     [DependencyProperty<string>("Title", DefaultValue = "Untitled")]
     [DependencyProperty<bool>("IsExpanded", DefaultValue = true)]
 }
@@ -444,15 +484,15 @@ public partial class DataViewModel : ViewModelBase
 {
     [ObservableProperty]
     private bool isLoading;
-    
+
     [ObservableProperty]
     private ObservableCollection<Item> items = new();
-    
+
     [RelayCommand]
     private async Task LoadDataAsync()
     {
         IsLoading = true;
-        
+
         try
         {
             var data = await _repository.GetAllAsync();
@@ -478,20 +518,20 @@ public partial class FormViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
     private string email;
-    
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
     private string password;
-    
+
     [RelayCommand(CanExecute = nameof(CanSubmit))]
     private async Task SubmitAsync()
     {
         await _authService.LoginAsync(Email, Password);
     }
-    
+
     private bool CanSubmit()
     {
-        return !string.IsNullOrWhiteSpace(Email) 
+        return !string.IsNullOrWhiteSpace(Email)
             && !string.IsNullOrWhiteSpace(Password)
             && Password.Length >= 8;
     }

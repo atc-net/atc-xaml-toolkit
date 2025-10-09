@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Atc.XamlToolkit.WinUI</RootNamespace>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <Title>Atc.XamlToolkit.WinUI</Title>
+    <PackageId>Atc.XamlToolkit.WinUI</PackageId>
+    <PackageTags>winui;xaml;mvvm;relaycommand;ui-toolkit</PackageTags>
+    <Description>Atc.XamlToolkit.WinUI is a library for building WinUI applications using the MVVM design pattern.</Description>
+    <RootNamespace>Atc.XamlToolkit</RootNamespace>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="NewFolder\**" />
+    <Content Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
+    <Page Remove="NewFolder\**" />
+    <PRIResource Remove="NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Link="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Atc" Version="2.0.562" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Atc.XamlToolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Atc.XamlToolkit.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Remove="_._" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
+  </ItemGroup>
+
+</Project>
