@@ -22,9 +22,9 @@ internal static class FieldSymbolExtensions
             return true;
         }
 
-        var parameterValues = attribute.ExtractConstructorArgumentValues();
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
 
-        return parameterValues.TryGetValue(NameConstants.Name, out var nameValue) &&
+        return argumentValues.TryGetValue(NameConstants.Name, out var nameValue) &&
                name.Equals(nameValue!.EnsureFirstCharacterToUpper(), StringComparison.Ordinal);
     }
 

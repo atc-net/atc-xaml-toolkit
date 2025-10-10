@@ -14,6 +14,7 @@ global using Atc.XamlToolkit.SourceGenerators.Inspectors.Attributes;
 global using Atc.XamlToolkit.SourceGenerators.Inspectors.Helpers;
 global using Atc.XamlToolkit.SourceGenerators.Models.AttributeToGenerate;
 global using Atc.XamlToolkit.SourceGenerators.Models.FrameworkElement;
+global using Atc.XamlToolkit.SourceGenerators.Models.ObservableDtoViewModel;
 global using Atc.XamlToolkit.SourceGenerators.Models.ToGenerate;
 global using Atc.XamlToolkit.SourceGenerators.Models.ViewModel;
 

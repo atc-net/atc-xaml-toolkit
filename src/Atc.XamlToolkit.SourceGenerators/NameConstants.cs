@@ -25,6 +25,7 @@ internal static class NameConstants
     public const string DependentCommands = nameof(DependentCommands);
     public const string DependentProperties = nameof(DependentProperties);
     public const string Description = nameof(Description);
+    public const string DtoType = nameof(DtoType);
     public const string ExecuteOnBackgroundThread = nameof(ExecuteOnBackgroundThread);
     public const string Flags = nameof(Flags);
     public const string FrameworkElement = nameof(FrameworkElement);
@@ -39,6 +40,8 @@ internal static class NameConstants
     public const string Name = nameof(Name);
     public const string NotifyPropertyChangedFor = nameof(NotifyPropertyChangedFor);
     public const string NotifyPropertyChangedForAttribute = nameof(NotifyPropertyChangedForAttribute);
+    public const string ObservableDtoViewModel = nameof(ObservableDtoViewModel);
+    public const string ObservableDtoViewModelAttribute = nameof(ObservableDtoViewModelAttribute);
     public const string ObservableObject = nameof(ObservableObject);
     public const string ObservableProperty = nameof(ObservableProperty);
     public const string ObservablePropertyAttribute = nameof(ObservablePropertyAttribute);
