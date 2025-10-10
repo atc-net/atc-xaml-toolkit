@@ -35,6 +35,8 @@ The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia
 
 📖 For detailed information about commands, refer to the [RelayCommand documentation](../SourceGenerators/ViewModel.md).
 
+📖 For wrapping DTOs with ViewModels, see the [ObservableDtoViewModel documentation](../SourceGenerators/ViewModel.md#-wrapping-dtos-with-observabledtoviewmodel).
+
 ---
 
 ### 🚀 Getting started using `ViewModelBase`

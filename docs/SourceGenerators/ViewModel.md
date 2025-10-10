@@ -241,6 +241,148 @@ public async Task Save();
 public async Task Save();
 ```
 
+---
+
+## 🎁 Wrapping DTOs with `ObservableDtoViewModel`
+
+The `ObservableDtoViewModel` attribute generates ViewModels that wrap Data Transfer Objects (DTOs) or POCOs, automatically creating properties that forward to the underlying DTO while implementing `INotifyPropertyChanged`.
+
+This is particularly useful when you want to:
+
+- Wrap API response objects with change notification support
+- Add ViewModel functionality to existing data models
+- Create editable views of immutable data structures
+
+### 🛠 Quick Start: Wrapping a DTO
+
+Given a simple DTO class:
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public int? Age { get; set; }
+}
+```
+
+You can create a ViewModel wrapper with just an attribute:
+
+```csharp
+[ObservableDtoViewModel(typeof(Person))]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+### ✨ Generated Code
+
+The source generator automatically creates:
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    public PersonViewModel(Person dto)
+    {
+        this.dto = dto;
+    }
+
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value)
+            {
+                return;
+            }
+
+            dto.FirstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+        }
+    }
+
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value)
+            {
+                return;
+            }
+
+            dto.LastName = value;
+            RaisePropertyChanged(nameof(LastName));
+        }
+    }
+
+    public int? Age
+    {
+        get => dto.Age;
+        set
+        {
+            if (dto.Age == value)
+            {
+                return;
+            }
+
+            dto.Age = value;
+            RaisePropertyChanged(nameof(Age));
+        }
+    }
+}
+```
+
+### 🔍 How It Works
+
+- All public properties with a setter from the DTO are wrapped
+- Each property getter returns the value from the underlying DTO
+- Each property setter updates the DTO and raises `PropertyChanged`
+- The DTO is injected through the constructor
+- Nullable annotations are preserved
+
+### 🎯 Real-World Example: API Response Wrapper
+
+```csharp
+// API response DTO
+public class UserDto
+{
+    public string Username { get; set; }
+    public string Email { get; set; }
+    public bool IsActive { get; set; }
+}
+
+// ViewModel wrapper
+[ObservableDtoViewModel(typeof(UserDto))]
+public partial class UserViewModel : ViewModelBase
+{
+    // Add custom commands or additional properties here
+    [RelayCommand]
+    private async Task SaveChanges()
+    {
+        // Save the modified dto to the API
+        await userService.UpdateUserAsync(dto);
+    }
+}
+```
+
+### 📝 Usage in XAML
+
+```xml
+<UserControl>
+    <StackPanel>
+        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
+        <CheckBox IsChecked="{Binding IsActive}" Content="Active" />
+        <Button Command="{Binding SaveChangesCommand}" Content="Save" />
+    </StackPanel>
+</UserControl>
+```
+
+**Note:** The `ObservableDtoViewModel` attribute requires that your ViewModel inherits from `ViewModelBase`, `ObservableObject`, or implements `INotifyPropertyChanged` with a `RaisePropertyChanged` method.
 
 ---
 

@@ -80,9 +80,9 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         GeneratorSyntaxContext context)
     {
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
-        var viewModelClassSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (viewModelClassSymbol is null)
+        if (classSymbol is null)
         {
             return null;
         }
@@ -90,7 +90,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         var allPartialDeclarations = context
             .SemanticModel
             .Compilation
-            .GetAllPartialClassDeclarations(viewModelClassSymbol);
+            .GetAllPartialClassDeclarations(classSymbol);
 
         if (!allPartialDeclarations.HasBaseClassFromList(
                 context,
@@ -133,9 +133,9 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         }
 
         var viewModelToGenerate = new ViewModelToGenerate(
-            namespaceName: viewModelClassSymbol.ContainingNamespace.ToDisplayString(),
-            className: viewModelClassSymbol.Name,
-            accessModifier: viewModelClassSymbol.GetAccessModifier())
+            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            className: classSymbol.Name,
+            accessModifier: classSymbol.GetAccessModifier())
         {
             PropertiesToGenerate = allObservableProperties,
             RelayCommandsToGenerate = allRelayCommands,

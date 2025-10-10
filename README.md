@@ -77,6 +77,7 @@ Eliminate boilerplate with powerful code generation:
 
 - **[ObservableProperty]** - Auto-generate properties with change notification
 - **[RelayCommand]** - Auto-generate command properties from methods
+- **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs objects
 - **[DependencyProperty]** (WPF) - Auto-generate dependency properties
 - **[AttachedProperty]** (WPF) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF) - Auto-generate routed events
@@ -243,6 +244,7 @@ All commands support:
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
+| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate wrapper for a DTO/POCO object |
 
 ### Value Converters
 

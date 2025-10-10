@@ -80,9 +80,9 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         GeneratorSyntaxContext context)
     {
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
-        var frameworkElementClassSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (frameworkElementClassSymbol is null)
+        if (classSymbol is null)
         {
             return null;
         }
@@ -90,7 +90,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         var allPartialDeclarations = context
             .SemanticModel
             .Compilation
-            .GetAllPartialClassDeclarations(frameworkElementClassSymbol);
+            .GetAllPartialClassDeclarations(classSymbol);
 
         if (!allPartialDeclarations.HasAnythingAroundFrameworkElement(context))
         {
@@ -140,9 +140,9 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         }
 
         var frameworkElementToGenerate = new FrameworkElementToGenerate(
-            namespaceName: frameworkElementClassSymbol.ContainingNamespace.ToDisplayString(),
-            className: frameworkElementClassSymbol.Name,
-            accessModifier: frameworkElementClassSymbol.GetAccessModifier(),
+            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            className: classSymbol.Name,
+            accessModifier: classSymbol.GetAccessModifier(),
             isStatic: isStatic)
         {
             AttachedPropertiesToGenerate = allAttachedProperties,
