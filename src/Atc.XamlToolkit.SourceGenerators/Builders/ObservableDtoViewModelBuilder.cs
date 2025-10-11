@@ -19,7 +19,7 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
         ObservableDtoViewModelToGenerate viewModelToGenerate)
     {
         var hasAnyRecordParameter = viewModelToGenerate.Properties.Any(p => p.IsRecordParameter);
-        var readonlyModifier = !viewModelToGenerate.IsRecord || !hasAnyRecordParameter
+        var readonlyModifier = !viewModelToGenerate.IsDtoRecord || !hasAnyRecordParameter
             ? "readonly "
             : string.Empty;
 
@@ -54,7 +54,6 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
             AppendLine("}");
             AppendLine();
 
-            // Use 'with' expression for record primary constructor parameters, direct assignment otherwise
             AppendLine(property.IsRecordParameter
                 ? $"dto = dto with {{ {property.Name} = value }};"
                 : $"dto.{property.Name} = value;");
@@ -64,6 +63,28 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
             AppendLine("}");
             DecreaseIndent();
             AppendLine("}");
+        }
+    }
+
+    public void GenerateToString(
+        ObservableDtoViewModelToGenerate viewModelToGenerate)
+    {
+        AppendLine();
+        AppendLine("public override string ToString()");
+
+        if (viewModelToGenerate.HasCustomToString)
+        {
+            AppendLine("    => dto?.ToString() ?? base.ToString();");
+        }
+        else
+        {
+            var propertyNames = viewModelToGenerate.Properties
+                .Select(p => $"{{nameof({p.Name})}}: {{{p.Name}}}")
+                .ToList();
+
+            var toStringExpression = string.Join(", ", propertyNames);
+
+            AppendLine($"    => $\"{toStringExpression}\";");
         }
     }
 }

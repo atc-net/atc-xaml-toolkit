@@ -340,6 +340,9 @@ public partial class PersonViewModel
             RaisePropertyChanged(nameof(Age));
         }
     }
+
+    public override string ToString()
+        => $"{nameof(FirstName)}: {FirstName}, {nameof(LastName)}: {LastName}, {nameof(Age)}: {Age}";
 }
 ```
 
@@ -352,14 +355,140 @@ public partial class PersonViewModel
 - Nullable annotations are preserved
 - **Supports both classes and records** – works seamlessly with modern C# record types
 
-### 🎯 Real-World Example: API Response Wrapper
+### 🐆 Record Support with Immutability
+
+When wrapping C# records, the generator intelligently handles immutability using `with` expressions for primary constructor parameters:
+
+```csharp
+// Record with primary constructor parameters
+public record Person(
+    string? FirstName,
+    string? LastName)
+{
+    // Regular property (mutable)
+    public int? Age { get; set; }
+}
+
+[ObservableDtoViewModel(typeof(Person))]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code for records:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private Person dto;  // Note: NOT readonly for records with primary constructor parameters
+
+    public PersonViewModel(Person dto)
+    {
+        this.dto = dto;
+    }
+
+    // Primary constructor parameter: uses 'with' expression
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value) return;
+            dto = dto with { FirstName = value };  // Immutable update
+            RaisePropertyChanged(nameof(FirstName));
+        }
+    }
+
+    // Primary constructor parameter: uses 'with' expression
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value) return;
+            dto = dto with { LastName = value };  // Immutable update
+            RaisePropertyChanged(nameof(LastName));
+        }
+    }
+
+    // Regular property: uses direct assignment
+    public int? Age
+    {
+        get => dto.Age;
+        set
+        {
+            if (dto.Age == value) return;
+            dto.Age = value;  // Direct assignment
+            RaisePropertyChanged(nameof(Age));
+        }
+    }
+}
+```
+
+**Key differences for records:**
+
+- **Primary constructor parameters** are immutable, so the generator uses `with` expressions to create a new record instance
+- **Regular properties** on records can be mutated directly, so they use standard assignment
+- The `dto` field is **not readonly** when the record has primary constructor parameters, allowing reassignment with `with` expressions
+- The `dto` field **is readonly** for regular classes or records with only regular properties
+
+### 🖨️ ToString Generation
+
+The generator automatically creates a `ToString()` override based on the DTO's implementation:
+
+**When the DTO has a custom ToString:**
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+
+    public string? LastName { get; set; }
+
+    public override string ToString()
+        => $"Person: {FirstName} {LastName}";
+}
+```
+
+**Generated ViewModel ToString delegates to the DTO:**
+
+```csharp
+public override string ToString()
+    => dto?.ToString() ?? base.ToString();
+```
+
+**When the DTO doesn't have a custom ToString:**
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+
+    public string? LastName { get; set; }
+
+    public int? Age { get; set; }
+}
+```
+
+**Generated ViewModel ToString lists all properties:**
+
+```csharp
+public override string ToString()
+    => $"{nameof(FirstName)}: {FirstName}, {nameof(LastName)}: {LastName}, {nameof(Age)}: {Age}";
+```
+
+**Note:** Records have a compiler-generated `ToString()`, which is **not** considered a custom implementation. The generator will create a property-listing `ToString()` for records unless you explicitly override it.
+
+### �🎯 Real-World Example: API Response Wrapper
 
 ```csharp
 // API response DTO
 public class UserDto
 {
     public string Username { get; set; }
+
     public string Email { get; set; }
+
     public bool IsActive { get; set; }
 }
 
