@@ -15,7 +15,7 @@ internal static class ObservableDtoViewModelInspector
 
         if (attribute is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, false, null);
+            return new ObservableDtoViewModelInspectorResult(null, false, false, null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -39,16 +39,18 @@ internal static class ObservableDtoViewModelInspector
 
         if (dtoTypeSymbol is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, false, null);
+            return new ObservableDtoViewModelInspectorResult(null, false, false, null);
         }
 
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
+        var hasCustomToString = HasCustomToString(dtoTypeSymbol);
         var properties = dtoTypeSymbol.ExtractProperties();
 
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
             isRecord,
+            hasCustomToString,
             properties);
     }
 
@@ -144,5 +146,29 @@ internal static class ObservableDtoViewModelInspector
         }
 
         return null;
+    }
+
+    private static bool HasCustomToString(INamedTypeSymbol typeSymbol)
+    {
+        // Check if the type has a ToString method override
+        var toStringMethod = typeSymbol
+            .GetMembers("ToString")
+            .OfType<IMethodSymbol>()
+            .FirstOrDefault(m => m.Parameters.Length == 0 &&
+                                m.ReturnType.SpecialType == SpecialType.System_String);
+
+        if (toStringMethod is null)
+        {
+            return false;
+        }
+
+        // If the method is NOT declared in the current type (inherited), it's not custom
+        if (!SymbolEqualityComparer.Default.Equals(toStringMethod.ContainingType, typeSymbol))
+        {
+            return false;
+        }
+
+        // Check if the method is explicitly declared (not compiler-generated, e.g., records)
+        return !toStringMethod.IsImplicitlyDeclared;
     }
 }
