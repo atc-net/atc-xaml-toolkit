@@ -41,4 +41,15 @@ public partial class MainWindow : Window
         object? sender,
         KeyEventArgs e)
         => GetViewModel().OnKeyUp(this, e);
+
+    private void SampleTreeViewOnSelectionChanged(
+        object? sender,
+        SelectionChangedEventArgs e)
+    {
+        if (sender is TreeView treeView &&
+            treeView.SelectedItem is SampleViewItem item)
+        {
+            GetViewModel().SelectedSampleView = item;
+        }
+    }
 }

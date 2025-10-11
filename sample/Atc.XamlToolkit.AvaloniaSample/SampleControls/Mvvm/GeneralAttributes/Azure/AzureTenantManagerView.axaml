@@ -1,0 +1,70 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.GeneralAttributes.Azure.AzureTenantManagerView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:azure="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.GeneralAttributes.Azure"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="azure:AzureTenantManagerViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <azure:AzureTenantManagerViewModel />
+    </UserControl.DataContext>
+
+    <Grid ColumnDefinitions="200,10,250" RowDefinitions="Auto,Auto,Auto,Auto,Auto,50,Auto,Auto">
+
+        <TextBlock Grid.Row="0" Grid.Column="0">Is Signed In</TextBlock>
+        <CheckBox
+            Grid.Row="0"
+            Grid.Column="2"
+            IsChecked="{Binding Path=IsSignedIn}"
+            IsEnabled="False" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0">Signed In User</TextBlock>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="2"
+            Text="{Binding Path=SignedInUser}" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0">Selected Environment Key</TextBlock>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="2"
+            Text="{Binding Path=SelectedEnvironmentKey}" />
+
+        <TextBlock Grid.Row="3" Grid.Column="0">Default Azure Account</TextBlock>
+        <TextBox
+            Grid.Row="3"
+            Grid.Column="2"
+            Text="{Binding Path=DefaultAzureAccount}" />
+
+        <TextBlock Grid.Row="4" Grid.Column="0">Current Environment Type</TextBlock>
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="2"
+            Text="{Binding Path=CurrentEnvironmentType}" />
+
+        <Button
+            Grid.Row="6"
+            Grid.Column="0"
+            Command="{Binding Path=LoginCommand}"
+            Content="Login" />
+        <Button
+            Grid.Row="6"
+            Grid.Column="2"
+            Command="{Binding Path=LogoutCommand}"
+            Content="Logout" />
+
+        <TextBlock Grid.Row="7" Grid.Column="0">Is Busy</TextBlock>
+        <CheckBox
+            Grid.Row="7"
+            Grid.Column="2"
+            IsChecked="{Binding Path=IsBusy}"
+            IsEnabled="False" />
+
+    </Grid>
+
+</UserControl>

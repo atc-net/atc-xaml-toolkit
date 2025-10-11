@@ -1,9 +1,11 @@
 global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics.CodeAnalysis;
+global using System.Runtime.Versioning;
 global using System.Text;
 
 global using Atc.XamlToolkit.Mvvm;
+global using Atc.XamlToolkit.WinUISample.Models;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;

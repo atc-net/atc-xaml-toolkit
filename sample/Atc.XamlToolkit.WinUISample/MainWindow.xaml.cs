@@ -5,11 +5,15 @@ public sealed partial class MainWindow : Window
 {
     private MainWindowViewModel GetViewModel() => (MainWindowViewModel)((FrameworkElement)Content).DataContext!;
 
+    public MainWindowViewModel ViewModel { get; }
+
     public MainWindow()
     {
+        ViewModel = new MainWindowViewModel();
+
         InitializeComponent();
 
-        ((FrameworkElement)Content).DataContext = new MainWindowViewModel();
+        ((FrameworkElement)Content).DataContext = ViewModel;
 
         var content = (FrameworkElement)Content;
 
@@ -18,12 +22,17 @@ public sealed partial class MainWindow : Window
         content.PreviewKeyDown += OnPreviewKeyDown;
         content.KeyDown += OnKeyDown;
         content.KeyUp += OnKeyUp;
+
+        PopulateTreeView();
     }
 
     public MainWindow(
         MainWindowViewModel viewModel)
-        : this() =>
+        : this()
+    {
+        ViewModel = viewModel;
         ((FrameworkElement)Content).DataContext = viewModel;
+    }
 
     private void OnLoaded(
         object sender,
@@ -65,4 +74,90 @@ public sealed partial class MainWindow : Window
         object sender,
         KeyRoutedEventArgs e)
         => GetViewModel().OnKeyUp(sender, e);
+
+    private void SampleTreeViewOnSelectionChanged(
+        TreeView sender,
+        TreeViewSelectionChangedEventArgs args)
+    {
+        if (sender.SelectedNode is not { Content: string } node)
+        {
+            return;
+        }
+
+        // Find the SampleViewItem by traversing the tree
+        var item = FindSampleViewItemByNode(node);
+        if (item is null)
+        {
+            return;
+        }
+
+        ViewModel.SelectedSampleView = item;
+
+        // Update UI elements manually
+        TitleTextBlock.Text = item.Name;
+        CurrentViewTextBlock.Text = ViewModel.CurrentView?.ToString() ?? string.Empty;
+    }
+
+    private void PopulateTreeView()
+    {
+        SampleTreeView.RootNodes.Clear();
+
+        foreach (var item in ViewModel.SampleViews)
+        {
+            var node = CreateTreeViewNode(item);
+            SampleTreeView.RootNodes.Add(node);
+        }
+    }
+
+    private static TreeViewNode CreateTreeViewNode(
+        SampleViewItem item)
+    {
+        var node = new TreeViewNode
+        {
+            Content = item.Name,
+            IsExpanded = true,
+        };
+
+        foreach (var child in item.Children)
+        {
+            node.Children.Add(CreateTreeViewNode(child));
+        }
+
+        return node;
+    }
+
+    private SampleViewItem? FindSampleViewItemByNode(
+        TreeViewNode node)
+    {
+        // Build path from root to this node
+        var path = new List<string>();
+        var current = node;
+        while (current is not null)
+        {
+            if (current.Content is string name)
+            {
+                path.Insert(0, name);
+            }
+
+            current = current.Parent;
+        }
+
+        // Navigate through SampleViews to find the item
+        SampleViewItem? result = null;
+        var items = ViewModel.SampleViews.AsEnumerable();
+
+        foreach (var segment in path)
+        {
+            var found = items.FirstOrDefault(x => x.Name == segment);
+            if (found is null)
+            {
+                return null;
+            }
+
+            result = found;
+            items = found.Children;
+        }
+
+        return result;
+    }
 }

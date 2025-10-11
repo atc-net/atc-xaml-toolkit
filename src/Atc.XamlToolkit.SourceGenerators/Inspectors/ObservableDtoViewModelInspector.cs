@@ -1,3 +1,4 @@
+// ReSharper disable InvertIf
 namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 
 internal static class ObservableDtoViewModelInspector
@@ -14,7 +15,7 @@ internal static class ObservableDtoViewModelInspector
 
         if (attribute is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, null);
+            return new ObservableDtoViewModelInspectorResult(null, false, null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -38,15 +39,16 @@ internal static class ObservableDtoViewModelInspector
 
         if (dtoTypeSymbol is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, null);
+            return new ObservableDtoViewModelInspectorResult(null, false, null);
         }
 
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
+        var isRecord = dtoTypeSymbol.IsRecord;
         var properties = dtoTypeSymbol.ExtractProperties();
 
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
+            isRecord,
             properties);
     }
 
@@ -116,15 +118,28 @@ internal static class ObservableDtoViewModelInspector
                 .OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.Text == typeName);
 
-            if (classDeclaration is null)
+            if (classDeclaration is not null)
             {
-                continue;
+                var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+                if (symbol is not null)
+                {
+                    return symbol;
+                }
             }
 
-            var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
-            if (symbol is not null)
+            // Look for record declarations with matching name
+            var recordDeclaration = root
+                .DescendantNodes()
+                .OfType<RecordDeclarationSyntax>()
+                .FirstOrDefault(r => r.Identifier.Text == typeName);
+
+            if (recordDeclaration is not null)
             {
-                return symbol;
+                var symbol = semanticModel.GetDeclaredSymbol(recordDeclaration);
+                if (symbol is not null)
+                {
+                    return symbol;
+                }
             }
         }
 
