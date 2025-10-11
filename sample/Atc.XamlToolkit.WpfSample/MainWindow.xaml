@@ -4,35 +4,113 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sampleControls="clr-namespace:Atc.XamlToolkit.WpfSample.SampleControls"
     xmlns:valueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
     xmlns:wpfSample="clr-namespace:Atc.XamlToolkit.WpfSample"
-    Title="MainWindow"
-    Width="800"
-    Height="600"
+    Title="Atc XAML Toolkit - WPF Sample"
+    Width="1200"
+    Height="800"
+    MinWidth="600"
+    MinHeight="600"
     d:DataContext="{d:DesignInstance Type=wpfSample:MainWindowViewModel}"
     WindowStartupLocation="CenterScreen"
     WindowState="{Binding Path=WindowState}"
     mc:Ignorable="d">
 
-    <StackPanel Margin="20" Orientation="Vertical">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" MinWidth="200" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" MinWidth="300" />
+        </Grid.ColumnDefinitions>
 
-        <CheckBox
-            x:Name="ShowPersonView"
-            Content="Show PersonView"
-            IsChecked="True" />
+        <!--  Left Side: TreeView  -->
+        <Border Grid.Column="0" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <TextBlock
+                    Padding="10"
+                    DockPanel.Dock="Top"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Sample Views" />
 
-        <StackPanel Margin="20" Orientation="Horizontal">
+                <TreeView
+                    x:Name="SampleTreeView"
+                    Padding="5"
+                    BorderThickness="0"
+                    ItemsSource="{Binding Path=SampleViews}"
+                    SelectedItemChanged="SampleTreeViewOnSelectedItemChanged">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True" />
+                            <Setter Property="Padding" Value="2" />
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Path=Children}">
+                            <StackPanel Orientation="Horizontal">
+                                <!--  Folder Icon  -->
+                                <TextBlock
+                                    Margin="0,0,5,0"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    FontSize="14"
+                                    Foreground="#FFA500"
+                                    Text="&#xE8B7;"
+                                    Visibility="{Binding Path=IsFolder, Converter={x:Static valueConverters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+                                <!--  File Icon  -->
+                                <TextBlock
+                                    Margin="0,0,5,0"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    FontSize="14"
+                                    Foreground="#4A90E2"
+                                    Text="&#xE8A5;"
+                                    Visibility="{Binding Path=IsFolder, Converter={x:Static valueConverters:BoolToVisibilityCollapsedValueConverter.Instance}}" />
+                                <TextBlock Foreground="White" Text="{Binding Path=Name}" />
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </DockPanel>
+        </Border>
 
-            <GroupBox
-                Padding="10"
-                Header="PersonView"
-                Visibility="{Binding ElementName=ShowPersonView, Path=IsChecked, Converter={x:Static valueConverters:BoolToVisibilityVisibleValueConverter.Instance}}">
-                <sampleControls:PersonView />
-            </GroupBox>
+        <!--  Splitter  -->
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
 
-        </StackPanel>
+        <!--  Right Side: Content Area  -->
+        <Border Grid.Column="2" BorderThickness="1">
+            <DockPanel>
+                <Border
+                    Padding="10"
+                    BorderThickness="0,0,0,1"
+                    DockPanel.Dock="Top">
+                    <StackPanel>
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="{Binding Path=SelectedSampleView.Name, FallbackValue='Select a view from the tree'}" />
+                        <TextBlock FontSize="10" Text="{Binding Path=CurrentView, StringFormat='CurrentView: {0}'}" />
+                    </StackPanel>
+                </Border>
 
-    </StackPanel>
+                <Grid>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Text="Select a view from the tree to display it here"
+                        Visibility="{Binding Path=CurrentView, Converter={x:Static valueConverters:NullToVisibilityVisibleValueConverter.Instance}}" />
+                    <ScrollViewer
+                        Margin="20"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto">
+                        <ContentControl
+                            Content="{Binding Path=CurrentView}"
+                            Focusable="False"
+                            IsTabStop="False" />
+                    </ScrollViewer>
+                </Grid>
+
+            </DockPanel>
+        </Border>
+    </Grid>
 
 </Window>

@@ -49,9 +49,9 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.WinUI\Atc.XamlToolkit.WinUI.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="SampleControls\PersonView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <Folder Include="SampleControls\Mvvm\DtoToViewModel\" />
+    <Folder Include="SampleControls\Mvvm\GeneralAttributes\Azure\" />
+    <Folder Include="SampleControls\Mvvm\GeneralAttributes\Person\" />
   </ItemGroup>
 
   <!--

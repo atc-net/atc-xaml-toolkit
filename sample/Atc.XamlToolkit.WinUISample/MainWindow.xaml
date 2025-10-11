@@ -4,10 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sampleControls="using:Atc.XamlToolkit.WinUISample.SampleControls"
     xmlns:valueConverters="using:Atc.XamlToolkit.ValueConverters"
     xmlns:winUiSample="using:Atc.XamlToolkit.WinUISample"
-    Title="Atc.XamlToolkit.WinUISample"
+    Title="Atc XAML Toolkit - WinUI Sample"
     d:DataContext="{d:DesignInstance Type=winUiSample:MainWindowViewModel}"
     mc:Ignorable="d">
 
@@ -15,40 +14,76 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <StackPanel Margin="20" Orientation="Vertical">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" MinWidth="200" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" MinWidth="300" />
+        </Grid.ColumnDefinitions>
 
-        <CheckBox
-            x:Name="ShowPersonView"
-            Content="Show PersonView"
-            IsChecked="True" />
+        <!--  Left Side: TreeView  -->
+        <Border Grid.Column="0" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <StackPanel Margin="20" Orientation="Horizontal">
+                <TextBlock
+                    Grid.Row="0"
+                    Margin="10"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Sample Views" />
 
-            <Border
-                Padding="10"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <Border.Visibility>
-                    <Binding ElementName="ShowPersonView" Path="IsChecked">
-                        <Binding.Converter>
-                            <valueConverters:BoolToVisibilityVisibleValueConverter />
-                        </Binding.Converter>
-                    </Binding>
-                </Border.Visibility>
-                <StackPanel>
-                    <TextBlock
-                        Margin="0,0,0,10"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Text="PersonView" />
-                    <sampleControls:PersonView />
-                </StackPanel>
-            </Border>
+                <TreeView
+                    x:Name="SampleTreeView"
+                    Grid.Row="1"
+                    Padding="5"
+                    SelectionChanged="SampleTreeViewOnSelectionChanged" />
+            </Grid>
+        </Border>
 
-        </StackPanel>
+        <!--  Splitter  -->
+        <Border
+            Grid.Column="1"
+            Width="5"
+            Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-    </StackPanel>
+        <!--  Right Side: Content Area  -->
+        <Border Grid.Column="2" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    Grid.Row="0"
+                    Padding="10"
+                    BorderThickness="0,0,0,1">
+                    <StackPanel>
+                        <TextBlock
+                            x:Name="TitleTextBlock"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="Select a view from the tree" />
+                        <TextBlock x:Name="CurrentViewTextBlock" FontSize="10" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Row="1">
+                    <ScrollViewer
+                        Margin="20"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto">
+                        <ContentControl Content="{x:Bind ViewModel.CurrentView, Mode=OneWay}" IsTabStop="False" />
+                    </ScrollViewer>
+                </Grid>
+
+            </Grid>
+        </Border>
+    </Grid>
 
 </Window>
 

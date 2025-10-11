@@ -39,6 +39,7 @@ public static class DispatcherQueueExtensions
     /// <param name="priority">The priority at which the action is invoked, if required. The default is <see cref="DispatcherQueuePriority.Normal"/>.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="dispatcherQueue"/> or <paramref name="action"/> is null.</exception>
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "OK")]
     public static async Task InvokeAsyncIfRequired(
         this DispatcherQueue dispatcherQueue,
         Action action,
@@ -61,9 +62,7 @@ public static class DispatcherQueueExtensions
                     action();
                     tcs.SetResult(true);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types - Need to propagate all exceptions to caller
                 catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
                 {
                     tcs.SetException(ex);
                 }

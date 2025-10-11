@@ -56,5 +56,3 @@ public sealed partial class ViewModelGeneratorTests
         Assert.DoesNotContain("FirstName", secondSourceText, StringComparison.Ordinal);
     }
 }
-
-
