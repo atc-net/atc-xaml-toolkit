@@ -11,6 +11,7 @@ global using Atc.Data.Models;
 global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;
+global using Atc.XamlToolkit.WpfSample.Models;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;

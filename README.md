@@ -69,6 +69,11 @@ Extensive collection of ready-to-use XAML converters for WPF, WinUI, and Avaloni
 - `StringNullOrEmptyToVisibilityCollapsedValueConverter`
 - `ToLowerValueConverter` / `ToUpperValueConverter`
 
+#### Null Converters
+
+- `NullToVisibilityCollapsedValueConverter`
+- `NullToVisibilityVisibleValueConverter`
+
 See detailed [Value Converters documentation](docs/ValueConverters/Readme.md)
 
 ### ⚙️ Source Generators
@@ -77,7 +82,7 @@ Eliminate boilerplate with powerful code generation:
 
 - **[ObservableProperty]** - Auto-generate properties with change notification
 - **[RelayCommand]** - Auto-generate command properties from methods
-- **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs objects
+- **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs (classes and records)
 - **[DependencyProperty]** (WPF) - Auto-generate dependency properties
 - **[AttachedProperty]** (WPF) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF) - Auto-generate routed events
@@ -244,7 +249,7 @@ All commands support:
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
-| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate wrapper for a DTO/POCO object |
+| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate wrapper for DTOs/POCOs (classes and records) |
 
 ### Value Converters
 
@@ -265,6 +270,11 @@ All commands support:
 - `StringNullOrEmptyToVisibilityCollapsedValueConverter`
 - `ToLowerValueConverter`
 - `ToUpperValueConverter`
+
+**Null Converters** (WPF, WinUI & Avalonia):
+
+- `NullToVisibilityCollapsedValueConverter`
+- `NullToVisibilityVisibleValueConverter`
 
 ### Performance Optimizations
 

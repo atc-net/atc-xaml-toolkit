@@ -255,15 +255,22 @@ This is particularly useful when you want to:
 
 ### 🛠 Quick Start: Wrapping a DTO
 
-Given a simple DTO class:
+Given a simple DTO class or record:
 
 ```csharp
+// Using a class
 public class Person
 {
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public int? Age { get; set; }
 }
+
+// Or using a record
+public record Person(
+    string? FirstName,
+    string? LastName,
+    int? Age);
 ```
 
 You can create a ViewModel wrapper with just an attribute:
@@ -343,6 +350,7 @@ public partial class PersonViewModel
 - Each property setter updates the DTO and raises `PropertyChanged`
 - The DTO is injected through the constructor
 - Nullable annotations are preserved
+- **Supports both classes and records** – works seamlessly with modern C# record types
 
 ### 🎯 Real-World Example: API Response Wrapper
 

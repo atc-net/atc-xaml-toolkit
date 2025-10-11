@@ -89,6 +89,7 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             className: classSymbol.Name,
             accessModifier: classSymbol.GetAccessModifier(),
             dtoTypeName: result.DtoTypeName!,
+            isRecord: result.IsRecord,
             properties: result.Properties);
     }
 

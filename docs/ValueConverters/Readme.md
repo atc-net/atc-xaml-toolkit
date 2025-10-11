@@ -147,3 +147,88 @@ Or by the ValueConverter's Instance:
 ```
 
 ---
+
+## #️⃣ ValueConverters - Null to [...]
+
+| Category                  | Type                                                    | Source → Target                    | WPF Convert Example                                   | Avalonia Convert Example                              | ConvertBack   |
+|---------------------------|---------------------------------------------------------|------------------------------------|-------------------------------------------------------|-------------------------------------------------------|---------------|
+| Null → Visibility         | `NullToVisibilityCollapsedValueConverter`               | object? → Visibility               | null → Collapsed<br/>value → Visible                  | null → False<br/>value → True                         | ✅            |
+| Null → Visibility         | `NullToVisibilityVisibleValueConverter`                 | object? → Visibility               | null → Visible<br/>value → Collapsed                  | null → True<br/>value → False                         | ✅            |
+
+### Null Converter Usage Examples
+
+#### Example 1: Show loading indicator when data is null
+
+**WPF:**
+
+```xml
+<!-- Show loading spinner only when CurrentUser is null -->
+<ProgressRing
+    IsActive="True"
+    Visibility="{Binding CurrentUser, Converter={x:Static atcToolkitValueConverters:NullToVisibilityVisibleValueConverter.Instance}}" />
+
+<!-- Show user details only when CurrentUser is NOT null -->
+<StackPanel
+    Visibility="{Binding CurrentUser, Converter={x:Static atcToolkitValueConverters:NullToVisibilityCollapsedValueConverter.Instance}}">
+    <TextBlock Text="{Binding CurrentUser.Name}" />
+    <TextBlock Text="{Binding CurrentUser.Email}" />
+</StackPanel>
+```
+
+**Avalonia:**
+
+```xml
+<!-- Show loading spinner only when CurrentUser is null -->
+<ProgressBar
+    IsIndeterminate="True"
+    IsVisible="{Binding CurrentUser, Converter={x:Static atcToolkitValueConverters:NullToVisibilityVisibleValueConverter.Instance}}" />
+
+<!-- Show user details only when CurrentUser is NOT null -->
+<StackPanel
+    IsVisible="{Binding CurrentUser, Converter={x:Static atcToolkitValueConverters:NullToVisibilityCollapsedValueConverter.Instance}}">
+    <TextBlock Text="{Binding CurrentUser.Name}" />
+    <TextBlock Text="{Binding CurrentUser.Email}" />
+</StackPanel>
+```
+
+#### Example 2: Show placeholder when item is not selected
+
+**WPF:**
+
+```xml
+<!-- Show "No selection" message when SelectedItem is null -->
+<TextBlock
+    Text="No item selected. Please select an item from the list."
+    Visibility="{Binding SelectedItem, Converter={x:Static atcToolkitValueConverters:NullToVisibilityVisibleValueConverter.Instance}}" />
+```
+
+**Avalonia:**
+
+```xml
+<!-- Show "No selection" message when SelectedItem is null -->
+<TextBlock
+    Text="No item selected. Please select an item from the list."
+    IsVisible="{Binding SelectedItem, Converter={x:Static atcToolkitValueConverters:NullToVisibilityVisibleValueConverter.Instance}}" />
+```
+
+#### Example 3: Conditional UI based on optional data
+
+**WPF:**
+
+```xml
+<!-- Show edit button only when EditableDocument is loaded (not null) -->
+<Button
+    Content="Edit Document"
+    Visibility="{Binding EditableDocument, Converter={x:Static atcToolkitValueConverters:NullToVisibilityCollapsedValueConverter.Instance}}" />
+```
+
+**WinUI:**
+
+```xml
+<!-- Show edit button only when EditableDocument is loaded (not null) -->
+<Button
+    Content="Edit Document"
+    Visibility="{Binding EditableDocument, Converter={x:Static atcToolkitValueConverters:NullToVisibilityCollapsedValueConverter.Instance}}" />
+```
+
+---

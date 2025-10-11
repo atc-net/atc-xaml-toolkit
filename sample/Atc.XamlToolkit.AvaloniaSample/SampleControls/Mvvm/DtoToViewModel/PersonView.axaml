@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.DtoToViewModel.PersonView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dtoToViewModel="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.DtoToViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="dtoToViewModel:PersonViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <dtoToViewModel:PersonViewModel />
+    </UserControl.DataContext>
+
+    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto">
+
+        <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
+        <TextBox
+            Grid.Row="0"
+            Grid.Column="2"
+            Text="{Binding Path=FirstName}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0">Last name</TextBlock>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="2"
+            Text="{Binding Path=LastName}" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0">Age</TextBlock>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="2"
+            Text="{Binding Path=Age}" />
+
+    </Grid>
+
+</UserControl>

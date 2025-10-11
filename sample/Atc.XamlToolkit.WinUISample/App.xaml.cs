@@ -11,6 +11,13 @@ public partial class App : Application
 
     public static Window? MainWindow { get; private set; }
 
+    [SuppressMessage("Usage", "CA1024:Use properties where appropriate", Justification = "OK")]
+    [SupportedOSPlatform("windows10.0.17763.0")]
+    public static XamlRoot? GetMainWindowXamlRoot()
+    {
+        return MainWindow?.Content?.XamlRoot;
+    }
+
     public App()
     {
         InitializeComponent();
