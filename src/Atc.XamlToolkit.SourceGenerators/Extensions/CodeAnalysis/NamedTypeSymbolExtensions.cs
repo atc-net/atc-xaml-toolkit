@@ -4,8 +4,13 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 internal static class NamedTypeSymbolExtensions
 {
     public static List<DtoPropertyInfo> ExtractProperties(
-        this INamedTypeSymbol namedTypeSymbol)
+        this INamedTypeSymbol namedTypeSymbol,
+        List<string>? ignoreProperties = null)
     {
+        var ignoreSet = ignoreProperties is not null
+            ? new HashSet<string>(ignoreProperties, StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
         var isRecord = namedTypeSymbol.IsRecord;
 
         // Get primary constructor parameters for records
@@ -29,7 +34,8 @@ internal static class NamedTypeSymbolExtensions
             .GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => p.DeclaredAccessibility == Accessibility.Public &&
-                        !p.IsStatic)
+                        !p.IsStatic &&
+                        !ignoreSet.Contains(p.Name))
             .Select(p =>
             {
                 var isRecordParameter = isRecord &&
@@ -47,14 +53,20 @@ internal static class NamedTypeSymbolExtensions
     }
 
     public static List<DtoMethodInfo> ExtractMethods(
-        this INamedTypeSymbol namedTypeSymbol)
+        this INamedTypeSymbol namedTypeSymbol,
+        List<string>? ignoreMethods = null)
     {
+        var ignoreSet = ignoreMethods is not null
+            ? new HashSet<string>(ignoreMethods, StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
         return namedTypeSymbol
             .GetMembers()
             .OfType<IMethodSymbol>()
             .Where(m => m.DeclaredAccessibility == Accessibility.Public &&
                         m is { IsStatic: false, MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false } &&
-                        m.Name != "ToString")
+                        m.Name != "ToString" &&
+                        !ignoreSet.Contains(m.Name))
             .Select(m =>
             {
                 var parameters = m.Parameters

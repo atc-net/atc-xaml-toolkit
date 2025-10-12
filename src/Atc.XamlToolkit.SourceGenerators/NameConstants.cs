@@ -31,6 +31,8 @@ internal static class NameConstants
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string Handler = nameof(Handler);
     public const string HandlerType = nameof(HandlerType);
+    public const string IgnoreMethods = nameof(IgnoreMethods);
+    public const string IgnoreProperties = nameof(IgnoreProperties);
     public const string IObservableObject = nameof(IObservableObject);
     public const string InvertCanExecute = nameof(InvertCanExecute);
     public const string IRelayCommand = nameof(IRelayCommand);

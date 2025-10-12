@@ -82,7 +82,12 @@ Eliminate boilerplate with powerful code generation:
 
 - **[ObservableProperty]** - Auto-generate properties with change notification
 - **[RelayCommand]** - Auto-generate command properties from methods
-- **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs with `IsDirty` tracking and `InnerModel` access
+- **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs with:
+  - `IsDirty` tracking for change detection
+  - `InnerModel` access to underlying DTO
+  - Support for readonly properties
+  - Method proxy generation
+  - Selective generation with `IgnoreProperties` and `IgnoreMethods`
 - **[DependencyProperty]** (WPF) - Auto-generate dependency properties
 - **[AttachedProperty]** (WPF) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF) - Auto-generate routed events
@@ -249,7 +254,7 @@ All commands support:
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
-| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with `IsDirty` and `InnerModel` |
+| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnoreProperties/Methods`, `IsDirty` and `InnerModel` |
 
 ### Value Converters
 
