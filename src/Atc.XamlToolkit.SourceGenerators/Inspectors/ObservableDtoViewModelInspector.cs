@@ -50,12 +50,14 @@ internal static class ObservableDtoViewModelInspector
         }
 
         var useIsDirty = ExtractUseIsDirtyValue(attribute, inheritFromViewModel);
+        var ignoreProperties = ExtractIgnorePropertiesValue(attribute);
+        var ignoreMethods = ExtractIgnoreMethodsValue(attribute);
 
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
         var hasCustomToString = HasCustomToString(dtoTypeSymbol);
-        var properties = dtoTypeSymbol.ExtractProperties();
-        var methods = dtoTypeSymbol.ExtractMethods();
+        var properties = dtoTypeSymbol.ExtractProperties(ignoreProperties);
+        var methods = dtoTypeSymbol.ExtractMethods(ignoreMethods);
 
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
@@ -185,6 +187,107 @@ internal static class ObservableDtoViewModelInspector
         }
 
         return inheritFromViewModel;
+    }
+
+    private static List<string> ExtractIgnorePropertiesValue(
+        AttributeData attribute)
+    {
+        // Try runtime mode first
+        var ignorePropertiesArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnoreProperties);
+        if (ignorePropertiesArg is { Key: NameConstants.IgnoreProperties, Value.Kind: TypedConstantKind.Array })
+        {
+            return ignorePropertiesArg.Value.Values
+                .Where(v => v.Value is string)
+                .Select(v => (string)v.Value!)
+                .ToList();
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.IgnoreProperties, out var ignorePropertiesValue) &&
+            ignorePropertiesValue is not null)
+        {
+            // Parse array syntax like "[nameof(Person.Age)]" or "[\"Age\"]"
+            return ParseArrayString(ignorePropertiesValue);
+        }
+
+        return [];
+    }
+
+    private static List<string> ExtractIgnoreMethodsValue(
+        AttributeData attribute)
+    {
+        // Try runtime mode first
+        var ignoreMethodsArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnoreMethods);
+        if (ignoreMethodsArg is { Key: NameConstants.IgnoreMethods, Value.Kind: TypedConstantKind.Array })
+        {
+            return ignoreMethodsArg.Value.Values
+                .Where(v => v.Value is string)
+                .Select(v => (string)v.Value!)
+                .ToList();
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.IgnoreMethods, out var ignoreMethodsValue) &&
+            ignoreMethodsValue is not null)
+        {
+            // Parse array syntax like "[nameof(Person.GetFullName)]" or "[\"GetFullName\"]"
+            return ParseArrayString(ignoreMethodsValue);
+        }
+
+        return [];
+    }
+
+    private static List<string> ParseArrayString(string arrayString)
+    {
+        if (string.IsNullOrWhiteSpace(arrayString))
+        {
+            return [];
+        }
+
+        var result = new List<string>();
+
+        // Remove brackets and split by comma
+        var cleaned = arrayString.Trim('[', ']', ' ');
+        if (string.IsNullOrWhiteSpace(cleaned))
+        {
+            return [];
+        }
+
+        var parts = cleaned.Split(',');
+        foreach (var part in parts)
+        {
+            var trimmed = part.Trim();
+
+            // Handle nameof(Type.Property) or nameof(Type.Method)
+            if (trimmed.StartsWith("nameof(", StringComparison.Ordinal) &&
+                trimmed.EndsWith(")", StringComparison.Ordinal))
+            {
+                var nameofContent = trimmed.Substring(7, trimmed.Length - 8);
+
+                // Extract the last part after the dot
+                var lastDot = nameofContent.LastIndexOf('.');
+                var propertyName = lastDot >= 0
+                    ? nameofContent.Substring(lastDot + 1)
+                    : nameofContent;
+                result.Add(propertyName.Trim());
+            }
+
+            // Handle direct string literals like "Age" or "GetFullName"
+            else if (trimmed.StartsWith("\"", StringComparison.Ordinal) &&
+                     trimmed.EndsWith("\"", StringComparison.Ordinal))
+            {
+                result.Add(trimmed.Trim('"'));
+            }
+            else
+            {
+                // Just add as-is if no special format
+                result.Add(trimmed);
+            }
+        }
+
+        return result;
     }
 
     private static bool HasCustomToString(

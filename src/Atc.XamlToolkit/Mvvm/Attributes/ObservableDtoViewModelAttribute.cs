@@ -24,9 +24,22 @@ public sealed class ObservableDtoViewModelAttribute : Attribute
     public Type DtoType { get; }
 
     /// <summary>
-    /// Gets or set use of IsDirty for ViewModels.
+    /// Gets or sets a value indicating whether the generated ViewModel should include
+    /// an <c>IsDirty</c> property to track changes to its properties.
     /// </summary>
     public bool UseIsDirty { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a collection of property names from the DTO that should be ignored
+    /// when generating the ViewModel.
+    /// </summary>
+    public string[]? IgnoreProperties { get; set; }
+
+    /// <summary>
+    /// Gets or sets a collection of method names from the DTO that should be ignored
+    /// when generating the ViewModel.
+    /// </summary>
+    public string[]? IgnoreMethods { get; set; }
 
     /// <inheritdoc />
     public override string ToString()

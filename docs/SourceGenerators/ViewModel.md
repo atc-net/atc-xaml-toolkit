@@ -668,6 +668,160 @@ string address = viewModel.FormatAddress("Main St", 12345);
 
 **Note:** Static methods, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
 
+### 🚫 Selective Generation with IgnoreProperties and IgnoreMethods
+
+Sometimes you don't want to generate ViewModels for all properties or methods in your DTO. The `IgnoreProperties` and `IgnoreMethods` options let you exclude specific members from generation:
+
+#### Ignoring Properties
+
+Use `IgnoreProperties` to exclude specific properties from the generated ViewModel:
+
+**DTO with multiple properties:**
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public int? Age { get; set; }
+    public string? InternalId { get; set; }  // Internal use only
+}
+```
+
+**Exclude properties using IgnoreProperties:**
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person), 
+    IgnoreProperties = [nameof(Person.Age), nameof(Person.InternalId)])]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code (Age and InternalId excluded):**
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    // Only FirstName and LastName are generated
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value) return;
+            dto.FirstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+            IsDirty = true;
+        }
+    }
+
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value) return;
+            dto.LastName = value;
+            RaisePropertyChanged(nameof(LastName));
+            IsDirty = true;
+        }
+    }
+
+    // Age and InternalId are NOT generated
+    // ToString also excludes ignored properties
+    public override string ToString()
+        => $"{nameof(FirstName)}: {FirstName}, {nameof(LastName)}: {LastName}";
+}
+```
+
+#### Ignoring Methods
+
+Use `IgnoreMethods` to exclude specific methods from being proxied:
+
+**DTO with multiple methods:**
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+
+    public string GetFullName()
+    {
+        return $"{FirstName} {LastName}";
+    }
+
+    public void InternalCalculation()
+    {
+        // Complex internal logic that shouldn't be exposed
+    }
+}
+```
+
+**Exclude methods using IgnoreMethods:**
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person), 
+    IgnoreMethods = [nameof(Person.InternalCalculation)])]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code (InternalCalculation excluded):**
+
+```csharp
+public partial class PersonViewModel
+{
+    // All properties are generated...
+
+    // GetFullName IS generated
+    public string GetFullName()
+        => dto.GetFullName();
+
+    // InternalCalculation is NOT generated
+}
+```
+
+#### Combining Both Options
+
+You can use both `IgnoreProperties` and `IgnoreMethods` together:
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person),
+    IgnoreProperties = [nameof(Person.Age), nameof(Person.InternalId)],
+    IgnoreMethods = [nameof(Person.InternalCalculation), nameof(Person.Debug)])]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Common use cases for ignoring members:**
+
+- **Internal properties** - Database IDs, internal state that shouldn't be editable
+- **Calculated properties** - Properties you'll override with custom logic
+- **Sensitive data** - Properties that require special handling or encryption
+- **Internal methods** - Debug methods, internal calculations, private business logic
+- **Complex methods** - Methods requiring special error handling or orchestration
+- **Legacy methods** - Methods kept for backward compatibility but not exposed in UI
+
+**Benefits:**
+
+- ✅ Reduces generated code size
+- ✅ Prevents exposing internal implementation details
+- ✅ Gives you control over the ViewModel surface area
+- ✅ Allows custom implementations for specific properties/methods
+- ✅ Automatically updates `ToString()` to exclude ignored properties
+- ✅ Works with both classes and records
+
+**Note:** Property and method names are matched using **case-sensitive** comparison. Use `nameof()` expressions to avoid typos.
+
 ### � Accessing the Underlying DTO
 
 The generated ViewModel automatically includes an `InnerModel` property that provides direct access to the wrapped DTO instance:
