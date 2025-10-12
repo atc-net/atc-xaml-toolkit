@@ -225,7 +225,7 @@ public partial class MyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        await _repository.SaveAsync();
+        await repository.SaveAsync();
     }
 }
 ```
@@ -495,7 +495,7 @@ public partial class DataViewModel : ViewModelBase
 
         try
         {
-            var data = await _repository.GetAllAsync();
+            var data = await .GetAllAsync();
             Items.Clear();
             foreach (var item in data)
             {

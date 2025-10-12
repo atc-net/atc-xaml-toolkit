@@ -29,16 +29,44 @@ internal static class NamedTypeSymbolExtensions
             .GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => p.DeclaredAccessibility == Accessibility.Public &&
-                        p is { IsStatic: false, SetMethod: not null })
+                        !p.IsStatic)
             .Select(p =>
             {
                 var isRecordParameter = isRecord &&
                                         primaryConstructorParameters.Contains(p.Name);
 
+                var isReadOnly = p.SetMethod is null;
+
                 return new DtoPropertyInfo(
                     p.Name,
                     p.Type.ToString(),
-                    isRecordParameter);
+                    isRecordParameter,
+                    isReadOnly);
+            })
+            .ToList();
+    }
+
+    public static List<DtoMethodInfo> ExtractMethods(
+        this INamedTypeSymbol namedTypeSymbol)
+    {
+        return namedTypeSymbol
+            .GetMembers()
+            .OfType<IMethodSymbol>()
+            .Where(m => m.DeclaredAccessibility == Accessibility.Public &&
+                        m is { IsStatic: false, MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false } &&
+                        m.Name != "ToString")
+            .Select(m =>
+            {
+                var parameters = m.Parameters
+                    .Select(p => new DtoMethodParameterInfo(
+                        p.Name,
+                        p.Type.ToString()))
+                    .ToList();
+
+                return new DtoMethodInfo(
+                    m.Name,
+                    m.ReturnType.ToString(),
+                    parameters);
             })
             .ToList();
     }

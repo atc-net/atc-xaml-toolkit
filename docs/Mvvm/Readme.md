@@ -37,6 +37,8 @@ The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia
 
 📖 For wrapping DTOs with ViewModels, see the [ObservableDtoViewModel documentation](../SourceGenerators/ViewModel.md#-wrapping-dtos-with-observabledtoviewmodel).
 
+💡 **Tip:** The `ObservableDtoViewModel` generator automatically adds `IsDirty` tracking to your ViewModels when inheriting from `ViewModelBase`, helping you track changes in your forms and data. See the [Change Tracking with IsDirty](../SourceGenerators/ViewModel.md#-change-tracking-with-isdirty) section for more details.
+
 ---
 
 ### 🚀 Getting started using `ViewModelBase`

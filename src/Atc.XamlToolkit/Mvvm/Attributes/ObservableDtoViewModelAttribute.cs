@@ -23,7 +23,12 @@ public sealed class ObservableDtoViewModelAttribute : Attribute
     /// </summary>
     public Type DtoType { get; }
 
+    /// <summary>
+    /// Gets or set use of IsDirty for ViewModels.
+    /// </summary>
+    public bool UseIsDirty { get; set; } = true;
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(DtoType)}: {DtoType}";
+        => $"{nameof(DtoType)}: {DtoType}, {nameof(UseIsDirty)}: {UseIsDirty}";
 }

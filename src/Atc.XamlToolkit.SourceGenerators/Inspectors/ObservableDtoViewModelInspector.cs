@@ -5,7 +5,8 @@ internal static class ObservableDtoViewModelInspector
 {
     internal static ObservableDtoViewModelInspectorResult Inspect(
         Compilation compilation,
-        INamedTypeSymbol viewModelClassSymbol)
+        INamedTypeSymbol viewModelClassSymbol,
+        bool inheritFromViewModel)
     {
         var attribute = viewModelClassSymbol
             .GetAttributes()
@@ -15,7 +16,7 @@ internal static class ObservableDtoViewModelInspector
 
         if (attribute is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, false, false, null);
+            return new ObservableDtoViewModelInspectorResult(null, false, false, true, null, null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -39,19 +40,30 @@ internal static class ObservableDtoViewModelInspector
 
         if (dtoTypeSymbol is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, false, false, null);
+            return new ObservableDtoViewModelInspectorResult(
+                dtoTypeName: null,
+                isDtoRecord: false,
+                hasCustomToString: false,
+                useIsDirty: true,
+                properties: null,
+                methods: null);
         }
+
+        var useIsDirty = ExtractUseIsDirtyValue(attribute, inheritFromViewModel);
 
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
         var hasCustomToString = HasCustomToString(dtoTypeSymbol);
         var properties = dtoTypeSymbol.ExtractProperties();
+        var methods = dtoTypeSymbol.ExtractMethods();
 
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
             isRecord,
             hasCustomToString,
-            properties);
+            useIsDirty,
+            properties,
+            methods);
     }
 
     private static INamedTypeSymbol? ExtractDtoTypeFromSyntax(
@@ -148,7 +160,35 @@ internal static class ObservableDtoViewModelInspector
         return null;
     }
 
-    private static bool HasCustomToString(INamedTypeSymbol typeSymbol)
+    private static bool ExtractUseIsDirtyValue(
+        AttributeData attribute,
+        bool inheritFromViewModel)
+    {
+        if (!inheritFromViewModel)
+        {
+            return inheritFromViewModel;
+        }
+
+        // Try runtime mode first
+        var useIsDirtyArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.UseIsDirty);
+        if (useIsDirtyArg is { Key: NameConstants.UseIsDirty, Value.Value: bool boolValue })
+        {
+            return boolValue;
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.UseIsDirty, out var useIsDirtyValue) &&
+            bool.TryParse(useIsDirtyValue, out var parsedValue))
+        {
+            return parsedValue;
+        }
+
+        return inheritFromViewModel;
+    }
+
+    private static bool HasCustomToString(
+        INamedTypeSymbol typeSymbol)
     {
         // Check if the type has a ToString method override
         var toStringMethod = typeSymbol

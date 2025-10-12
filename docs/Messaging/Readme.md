@@ -418,7 +418,7 @@ Messenger.Default.Register<NotificationMessageAction<List<Customer>>>(this, msg 
 {
     if (msg.Notification == "GetCustomers")
     {
-        var customers = _repository.GetAll();
+        var customers = repository.GetAll();
         msg.Execute(customers);
     }
 });

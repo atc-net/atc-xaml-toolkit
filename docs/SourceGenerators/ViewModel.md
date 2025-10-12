@@ -252,6 +252,7 @@ This is particularly useful when you want to:
 - Wrap API response objects with change notification support
 - Add ViewModel functionality to existing data models
 - Create editable views of immutable data structures
+- Track changes in your ViewModels with automatic `IsDirty` support
 
 ### 🛠 Quick Start: Wrapping a DTO
 
@@ -295,6 +296,8 @@ public partial class PersonViewModel
     {
         this.dto = dto;
     }
+
+    public Person InnerModel => dto;
 
     public string? FirstName
     {
@@ -352,6 +355,7 @@ public partial class PersonViewModel
 - Each property getter returns the value from the underlying DTO
 - Each property setter updates the DTO and raises `PropertyChanged`
 - The DTO is injected through the constructor
+- An `InnerModel` property provides access to the underlying DTO instance
 - Nullable annotations are preserved
 - **Supports both classes and records** – works seamlessly with modern C# record types
 
@@ -520,6 +524,341 @@ public partial class UserViewModel : ViewModelBase
 ```
 
 **Note:** The `ObservableDtoViewModel` attribute requires that your ViewModel inherits from `ViewModelBase`, `ObservableObject`, or implements `INotifyPropertyChanged` with a `RaisePropertyChanged` method.
+
+### 🔒 Readonly Properties Support
+
+The generator automatically handles readonly properties (properties without setters) from your DTO, generating them as pass-through readonly properties in the ViewModel:
+
+**DTO with readonly property:**
+
+```csharp
+public record Person(
+    string? FirstName,
+    string? LastName)
+{
+    // Readonly property (no setter)
+    public int? Age { get; }
+}
+```
+
+**Generated ViewModel:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private Person dto;
+
+    // Regular properties with setters (writable)
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value) return;
+            dto = dto with { FirstName = value };
+            RaisePropertyChanged(nameof(FirstName));
+            IsDirty = true;
+        }
+    }
+
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value) return;
+            dto = dto with { LastName = value };
+            RaisePropertyChanged(nameof(LastName));
+            IsDirty = true;
+        }
+    }
+
+    // Readonly property (no setter generated)
+    public int? Age => dto.Age;
+}
+```
+
+**Key points:**
+
+- ✅ Readonly properties are generated as expression-bodied properties
+- ✅ No setter is generated, maintaining immutability
+- ✅ The property is still accessible in the ViewModel and can be bound in XAML
+- ✅ Useful for calculated properties, timestamps, IDs, or other immutable data
+- ✅ Works with both classes and records
+
+**Common use cases for readonly properties:**
+
+- **Identifiers** - Database IDs, GUIDs that shouldn't be changed
+- **Timestamps** - Created date, last modified date
+- **Calculated values** - Full names, total amounts, computed status
+- **Metadata** - Version numbers, entity types
+
+### 🔧 Method Proxies Support
+
+The generator automatically creates proxy methods for public methods in your DTO, allowing you to call DTO methods through the ViewModel:
+
+**DTO with methods:**
+
+```csharp
+public class Person
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+
+    public string GetFullName()
+    {
+        return $"{FirstName} {LastName}";
+    }
+
+    public string FormatAddress(string street, int zipCode)
+    {
+        return $"{street}, {zipCode}";
+    }
+}
+```
+
+**Generated ViewModel with method proxies:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    // Properties...
+
+    // Proxy method without parameters
+    public string GetFullName()
+        => dto.GetFullName();
+
+    // Proxy method with parameters
+    public string FormatAddress(string street, int zipCode)
+        => dto.FormatAddress(street, zipCode);
+}
+```
+
+**Using proxy methods:**
+
+```csharp
+var viewModel = new PersonViewModel(new Person 
+{ 
+    FirstName = "John", 
+    LastName = "Doe" 
+});
+
+// Call methods on the ViewModel, which delegates to the DTO
+string fullName = viewModel.GetFullName();
+string address = viewModel.FormatAddress("Main St", 12345);
+```
+
+**Method proxy features:**
+
+- ✅ All public instance methods are proxied
+- ✅ Parameters are preserved with correct types
+- ✅ Return types are maintained
+- ✅ Methods are generated as expression-bodied members for clarity
+- ✅ `ToString()` method is **excluded** (handled separately by the generator)
+- ✅ Works with methods that return `void`, values, or objects
+
+**Common use cases for method proxies:**
+
+- **Business logic** - Calculations, validations, formatting
+- **Helper methods** - Utility functions on the DTO
+- **State checks** - IsValid(), CanProcess(), etc.
+- **Data formatting** - GetDisplayName(), FormatCurrency(), etc.
+
+**Note:** Static methods, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
+
+### � Accessing the Underlying DTO
+
+The generated ViewModel automatically includes an `InnerModel` property that provides direct access to the wrapped DTO instance:
+
+```csharp
+[ObservableDtoViewModel(typeof(Person))]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+
+// Usage:
+var viewModel = new PersonViewModel(new Person 
+{ 
+    FirstName = "John", 
+    LastName = "Doe" 
+});
+
+// Access the underlying DTO
+Person dto = viewModel.InnerModel;
+
+// Pass to a service or repository
+await _personRepository.SaveAsync(viewModel.InnerModel);
+
+// Send via API
+var response = await _httpClient.PostAsJsonAsync("/api/persons", viewModel.InnerModel);
+```
+
+**Common use cases:**
+
+- **Persistence** - Save the DTO to a database or file
+- **API calls** - Send the DTO to a REST API or gRPC service
+- **Serialization** - Convert the DTO to JSON, XML, or other formats
+- **Business logic** - Pass the DTO to domain services or validators
+- **Unit testing** - Verify the ViewModel correctly updates the underlying data
+
+**Why `InnerModel`?**
+
+The property is named `InnerModel` to:
+
+- ✅ Clearly indicate it's the internal/wrapped model
+- ✅ Minimize naming conflicts with DTO properties
+- ✅ Follow common wrapper/decorator pattern conventions
+- ✅ Maintain consistency across your codebase
+
+**Example with repository pattern:**
+
+```csharp
+public class PersonEditViewModel : ViewModelBase
+{
+    private readonly IPersonRepository repository;
+
+    [ObservableDtoViewModel(typeof(PersonDto))]
+    public partial class PersonViewModel : ViewModelBase
+    {
+    }
+
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        if (!ValidateModel())
+        {
+            return;
+        }
+
+        // Get the DTO and save it
+        await repository.UpdateAsync(PersonViewModel.InnerModel);
+        
+        MessageBox.Show("Person saved successfully!");
+        IsDirty = false;
+    }
+}
+```
+
+### �🔄 Change Tracking with `IsDirty`
+
+The `ObservableDtoViewModel` generator automatically adds `IsDirty = true;` to all property setters when your ViewModel inherits from `ViewModelBase`. This provides automatic change tracking without any additional code.
+
+**Default Behavior (IsDirty enabled):**
+
+```csharp
+// DTO
+public class Person
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+}
+
+// ViewModel with automatic IsDirty tracking
+[ObservableDtoViewModel(typeof(Person))]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code includes IsDirty tracking:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    public PersonViewModel(Person dto)
+    {
+        this.dto = dto;
+    }
+
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value)
+            {
+                return;
+            }
+
+            dto.FirstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+            IsDirty = true;  // Automatically added!
+        }
+    }
+
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value)
+            {
+                return;
+            }
+
+            dto.LastName = value;
+            RaisePropertyChanged(nameof(LastName));
+            IsDirty = true;  // Automatically added!
+        }
+    }
+}
+```
+
+**Disabling IsDirty tracking:**
+
+If you don't want automatic `IsDirty` tracking, you can disable it:
+
+```csharp
+[ObservableDtoViewModel(typeof(Person), UseIsDirty = false)]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**When is UseIsDirty available?**
+
+- ✅ **Enabled by default** when your ViewModel inherits from `ViewModelBase`
+- ❌ **Not available** when using `ObservableObject` or custom base classes without `IsDirty` property
+- 🔧 **Can be disabled** by setting `UseIsDirty = false` in the attribute
+
+**Use cases for IsDirty:**
+
+- **Form tracking** - Know when the user has modified any field
+- **Save prompts** - Ask "Do you want to save changes?" before closing
+- **Validation triggers** - Only validate when changes have been made
+- **Change indicators** - Show visual indicators (e.g., asterisk) when data is modified
+- **Undo/Redo** - Track whether there are unsaved changes to enable/disable buttons
+
+**Example with form tracking:**
+
+```csharp
+[ObservableDtoViewModel(typeof(CustomerDto))]
+public partial class CustomerEditViewModel : ViewModelBase
+{
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private async Task SaveAsync()
+    {
+        // Save changes
+        await repository.UpdateAsync(dto);
+        IsDirty = false;  // Reset after save
+    }
+
+    private bool CanSave() => IsDirty;
+}
+```
+
+In XAML:
+
+```xml
+<TextBlock Text="*" Foreground="Red" 
+           Visibility="{Binding IsDirty, 
+                               Converter={StaticResource BoolToVisibilityConverter}}" />
+<Button Content="Save" Command="{Binding SaveCommand}" />
+```
 
 ---
 
