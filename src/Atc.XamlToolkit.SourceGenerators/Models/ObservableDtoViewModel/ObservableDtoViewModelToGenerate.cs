@@ -10,13 +10,17 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         string dtoTypeName,
         bool isDtoRecord,
         bool hasCustomToString,
-        List<DtoPropertyInfo> properties)
+        bool useIsDirty,
+        List<DtoPropertyInfo> properties,
+        List<DtoMethodInfo> methods)
         : base(namespaceName, className, accessModifier, isStatic: false)
     {
         DtoTypeName = dtoTypeName;
         IsDtoRecord = isDtoRecord;
         HasCustomToString = hasCustomToString;
+        UseIsDirty = useIsDirty;
         Properties = properties;
+        Methods = methods;
     }
 
     public string DtoTypeName { get; }
@@ -25,5 +29,9 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
 
     public bool HasCustomToString { get; }
 
+    public bool UseIsDirty { get; }
+
     public List<DtoPropertyInfo> Properties { get; }
+
+    public List<DtoMethodInfo> Methods { get; }
 }

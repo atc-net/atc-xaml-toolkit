@@ -33,36 +33,74 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
         AppendLine("}");
     }
 
+    public void GenerateInnerModelProperty(
+        ObservableDtoViewModelToGenerate viewModelToGenerate)
+    {
+        AppendLine();
+        AppendLine($"public {viewModelToGenerate.DtoTypeName} InnerModel => dto;");
+    }
+
     public void GenerateProperties(
         ObservableDtoViewModelToGenerate viewModelToGenerate)
     {
         foreach (var property in viewModelToGenerate.Properties)
         {
             AppendLine();
-            AppendLine($"public {property.Type} {property.Name}");
-            AppendLine("{");
-            IncreaseIndent();
-            AppendLine($"get => dto.{property.Name};");
-            AppendLine("set");
-            AppendLine("{");
-            IncreaseIndent();
-            AppendLine($"if (dto.{property.Name} == value)");
-            AppendLine("{");
-            IncreaseIndent();
-            AppendLine("return;");
-            DecreaseIndent();
-            AppendLine("}");
+
+            if (property.IsReadOnly)
+            {
+                // Generate readonly property (getter only)
+                AppendLine($"public {property.Type} {property.Name} => dto.{property.Name};");
+            }
+            else
+            {
+                // Generate full property with getter and setter
+                AppendLine($"public {property.Type} {property.Name}");
+                AppendLine("{");
+                IncreaseIndent();
+                AppendLine($"get => dto.{property.Name};");
+                AppendLine("set");
+                AppendLine("{");
+                IncreaseIndent();
+                AppendLine($"if (dto.{property.Name} == value)");
+                AppendLine("{");
+                IncreaseIndent();
+                AppendLine("return;");
+                DecreaseIndent();
+                AppendLine("}");
+                AppendLine();
+
+                AppendLine(property.IsRecordParameter
+                    ? $"dto = dto with {{ {property.Name} = value }};"
+                    : $"dto.{property.Name} = value;");
+
+                AppendLine($"RaisePropertyChanged(nameof({property.Name}));");
+
+                if (viewModelToGenerate.UseIsDirty)
+                {
+                    AppendLine("IsDirty = true;");
+                }
+
+                DecreaseIndent();
+                AppendLine("}");
+                DecreaseIndent();
+                AppendLine("}");
+            }
+        }
+    }
+
+    public void GenerateMethods(
+        ObservableDtoViewModelToGenerate viewModelToGenerate)
+    {
+        foreach (var method in viewModelToGenerate.Methods)
+        {
             AppendLine();
 
-            AppendLine(property.IsRecordParameter
-                ? $"dto = dto with {{ {property.Name} = value }};"
-                : $"dto.{property.Name} = value;");
+            var parameters = string.Join(", ", method.Parameters.Select(p => $"{p.Type} {p.Name}"));
+            var arguments = string.Join(", ", method.Parameters.Select(p => p.Name));
 
-            AppendLine($"RaisePropertyChanged(nameof({property.Name}));");
-            DecreaseIndent();
-            AppendLine("}");
-            DecreaseIndent();
-            AppendLine("}");
+            AppendLine($"public {method.ReturnType} {method.Name}({parameters})");
+            AppendLine($"    => dto.{method.Name}({arguments});");
         }
     }
 

@@ -77,7 +77,13 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             return null;
         }
 
-        var result = ObservableDtoViewModelInspector.Inspect(context.SemanticModel.Compilation, classSymbol);
+        var inheritFromViewModel = allPartialDeclarations.HasBaseClassFromList(
+            context,
+            NameConstants.ViewModelBase,
+            NameConstants.MainWindowViewModelBase,
+            NameConstants.ViewModelDialogBase);
+
+        var result = ObservableDtoViewModelInspector.Inspect(context.SemanticModel.Compilation, classSymbol, inheritFromViewModel);
 
         if (!result.FoundAnythingToGenerate)
         {
@@ -91,7 +97,9 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             dtoTypeName: result.DtoTypeName!,
             isDtoRecord: result.IsDtoRecord,
             hasCustomToString: result.HasCustomToString,
-            properties: result.Properties);
+            useIsDirty: result.UseIsDirty,
+            properties: result.Properties,
+            methods: result.Methods);
     }
 
     private static void Execute(
@@ -109,7 +117,11 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
 
         builder.GenerateConstructor(viewModelToGenerate);
 
+        builder.GenerateInnerModelProperty(viewModelToGenerate);
+
         builder.GenerateProperties(viewModelToGenerate);
+
+        builder.GenerateMethods(viewModelToGenerate);
 
         builder.GenerateToString(viewModelToGenerate);
 

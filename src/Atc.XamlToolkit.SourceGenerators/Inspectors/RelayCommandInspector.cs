@@ -1,4 +1,4 @@
-namespace Atc.XamlToolkit.SourceGenerators.Inspectors.Attributes;
+namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 
 internal static class RelayCommandInspector
 {
