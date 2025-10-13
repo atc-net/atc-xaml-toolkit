@@ -1,5 +1,5 @@
 // ReSharper disable CheckNamespace
-namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters;
+namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters.NullTo;
 
 public sealed class NullToVisibilityCollapsedValueConverterTests
 {

@@ -1,5 +1,5 @@
 // ReSharper disable CheckNamespace
-namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters;
+namespace Atc.XamlToolkit.Avalonia.Tests.ValueConverters.NullTo;
 
 public sealed class NullToVisibilityCollapsedValueConverterTests
 {
