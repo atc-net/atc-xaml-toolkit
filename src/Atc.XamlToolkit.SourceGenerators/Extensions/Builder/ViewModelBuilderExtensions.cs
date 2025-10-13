@@ -103,6 +103,11 @@ internal static class ViewModelBuilderExtensions
             builder.AppendLine($"Broadcast({nameofName}, oldValue, value);");
         }
 
+        if (p.UseIsDirty)
+        {
+            builder.AppendLine("IsDirty = true;");
+        }
+
         if (p.AfterChangedCallback is not null)
         {
             builder.AppendLine();

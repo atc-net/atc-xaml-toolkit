@@ -4,7 +4,8 @@ namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 internal static class ObservablePropertyInspector
 {
     public static List<ObservablePropertyToGenerate> Inspect(
-        INamedTypeSymbol classSymbol)
+        INamedTypeSymbol classSymbol,
+        bool inheritFromViewModel)
     {
         var result = new List<ObservablePropertyToGenerate>();
 
@@ -43,6 +44,7 @@ internal static class ObservablePropertyInspector
                 fieldSymbol,
                 fieldSymbolAttributes,
                 fieldPropertyAttribute,
+                inheritFromViewModel,
                 result);
         }
 
@@ -54,6 +56,7 @@ internal static class ObservablePropertyInspector
         IFieldSymbol fieldSymbol,
         ImmutableArray<AttributeData> fieldSymbolAttributes,
         AttributeData fieldPropertyAttribute,
+        bool inheritFromViewModel,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
         var backingFieldName = fieldSymbol.Name;
@@ -88,7 +91,8 @@ internal static class ObservablePropertyInspector
                     or NameConstants.DependentCommands
                     or NameConstants.AfterChangedCallback
                     or NameConstants.BeforeChangedCallback
-                    or NameConstants.BroadcastOnChange)
+                    or NameConstants.BroadcastOnChange
+                    or NameConstants.UseIsDirty)
                 {
                     continue;
                 }
@@ -121,6 +125,8 @@ internal static class ObservablePropertyInspector
 
         var broadcastOnChange = fieldArgumentValues.TryGetValue(NameConstants.BroadcastOnChange, out var broadcastOnChangeValue) &&
                                 "true".Equals(broadcastOnChangeValue, StringComparison.OrdinalIgnoreCase);
+
+        var useIsDirty = fieldPropertyAttribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: false);
 
         var notifyPropertyChangedForAttributes = fieldSymbolAttributes
             .Where(x => x.AttributeClass?.Name
@@ -155,6 +161,7 @@ internal static class ObservablePropertyInspector
                 BeforeChangedCallback = beforeChangedCallback,
                 AfterChangedCallback = afterChangedCallback,
                 BroadcastOnChange = broadcastOnChange,
+                UseIsDirty = useIsDirty,
             });
     }
 }

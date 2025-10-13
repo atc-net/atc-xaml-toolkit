@@ -38,6 +38,41 @@ internal static class AttributeDataExtensions
         return type;
     }
 
+    /// <summary>
+    /// Extracts the UseIsDirty value from an attribute, handling both runtime and syntax modes.
+    /// </summary>
+    /// <param name="attribute">The attribute data to extract from.</param>
+    /// <param name="inheritFromViewModel">Whether the class inherits from ViewModelBase (which has IsDirty property).</param>
+    /// <param name="defaultValue">The default value to use if UseIsDirty is not specified.</param>
+    /// <returns>True if UseIsDirty should be enabled; otherwise false.</returns>
+    public static bool ExtractUseIsDirtyValue(
+        this AttributeData attribute,
+        bool inheritFromViewModel,
+        bool defaultValue = true)
+    {
+        if (!inheritFromViewModel)
+        {
+            return false;
+        }
+
+        // Try runtime mode first
+        var useIsDirtyArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.UseIsDirty);
+        if (useIsDirtyArg is { Key: NameConstants.UseIsDirty, Value.Value: bool boolValue })
+        {
+            return boolValue;
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.UseIsDirty, out var useIsDirtyValue) &&
+            bool.TryParse(useIsDirtyValue, out var parsedValue))
+        {
+            return parsedValue;
+        }
+
+        return defaultValue;
+    }
+
     private static IDictionary<string, string?> SyntaxExtractConstructorArgumentValues(
         this AttributeData attributeData) =>
         attributeData.ApplicationSyntaxReference is not null
