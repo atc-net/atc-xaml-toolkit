@@ -1,3 +1,4 @@
+// ReSharper disable ReturnTypeCanBeNotNullable
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.ValueConverters;
 

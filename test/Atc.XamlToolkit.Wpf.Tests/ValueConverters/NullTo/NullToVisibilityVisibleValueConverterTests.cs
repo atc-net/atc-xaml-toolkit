@@ -1,5 +1,5 @@
 // ReSharper disable CheckNamespace
-namespace Atc.XamlToolkit.WinUI.Tests.ValueConverters;
+namespace Atc.XamlToolkit.Wpf.Tests.ValueConverters.NullTo;
 
 public sealed class NullToVisibilityVisibleValueConverterTests
 {
@@ -16,15 +16,17 @@ public sealed class NullToVisibilityVisibleValueConverterTests
     public void Convert(Visibility expected, object? input)
         => Assert.Equal(
             expected,
-            converter.Convert(input, targetType: null, parameter: null, language: null));
+            converter.Convert(input, targetType: null, parameter: null, culture: null));
 
     [Fact]
     public void ConvertBack_Visible_ReturnsNull()
         => Assert.Null(
-            converter.ConvertBack(Visibility.Visible, targetType: null, parameter: null, language: null));
+            converter.ConvertBack(Visibility.Visible, targetType: null, parameter: null, culture: null));
 
-    [Fact]
-    public void ConvertBack_Collapsed_ReturnsNonNull()
+    [Theory]
+    [InlineData(Visibility.Collapsed)]
+    [InlineData(Visibility.Hidden)]
+    public void ConvertBack_NotVisible_ReturnsNonNull(Visibility input)
         => Assert.NotNull(
-            converter.ConvertBack(Visibility.Collapsed, targetType: null, parameter: null, language: null));
+            converter.ConvertBack(input, targetType: null, parameter: null, culture: null));
 }
