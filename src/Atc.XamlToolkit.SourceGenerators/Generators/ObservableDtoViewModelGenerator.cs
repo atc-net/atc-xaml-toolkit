@@ -67,23 +67,17 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             .Compilation
             .GetAllPartialClassDeclarations(classSymbol);
 
-        if (!allPartialDeclarations.HasBaseClassFromList(
-                context,
-                NameConstants.ViewModelBase,
-                NameConstants.MainWindowViewModelBase,
-                NameConstants.ViewModelDialogBase,
-                NameConstants.ObservableObject))
+        var (hasAnyBase, inheritFromViewModel) = allPartialDeclarations.CheckBaseClasses(context);
+
+        if (!hasAnyBase)
         {
             return null;
         }
 
-        var inheritFromViewModel = allPartialDeclarations.HasBaseClassFromList(
-            context,
-            NameConstants.ViewModelBase,
-            NameConstants.MainWindowViewModelBase,
-            NameConstants.ViewModelDialogBase);
-
-        var result = ObservableDtoViewModelInspector.Inspect(context.SemanticModel.Compilation, classSymbol, inheritFromViewModel);
+        var result = ObservableDtoViewModelInspector.Inspect(
+            context.SemanticModel.Compilation,
+            classSymbol,
+            inheritFromViewModel);
 
         if (!result.FoundAnythingToGenerate)
         {

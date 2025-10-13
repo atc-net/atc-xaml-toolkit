@@ -3,6 +3,7 @@ namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 
 internal static class ObservableDtoViewModelInspector
 {
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     internal static ObservableDtoViewModelInspectorResult Inspect(
         Compilation compilation,
         INamedTypeSymbol viewModelClassSymbol,
@@ -16,7 +17,13 @@ internal static class ObservableDtoViewModelInspector
 
         if (attribute is null)
         {
-            return new ObservableDtoViewModelInspectorResult(null, false, false, true, null, null);
+            return new ObservableDtoViewModelInspectorResult(
+                dtoTypeName: null,
+                isDtoRecord: false,
+                hasCustomToString: false,
+                useIsDirty: true,
+                properties: null,
+                methods: null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -49,7 +56,7 @@ internal static class ObservableDtoViewModelInspector
                 methods: null);
         }
 
-        var useIsDirty = ExtractUseIsDirtyValue(attribute, inheritFromViewModel);
+        var useIsDirty = attribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: true);
         var ignoreProperties = ExtractIgnorePropertiesValue(attribute);
         var ignoreMethods = ExtractIgnoreMethodsValue(attribute);
 
@@ -160,33 +167,6 @@ internal static class ObservableDtoViewModelInspector
         }
 
         return null;
-    }
-
-    private static bool ExtractUseIsDirtyValue(
-        AttributeData attribute,
-        bool inheritFromViewModel)
-    {
-        if (!inheritFromViewModel)
-        {
-            return inheritFromViewModel;
-        }
-
-        // Try runtime mode first
-        var useIsDirtyArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.UseIsDirty);
-        if (useIsDirtyArg is { Key: NameConstants.UseIsDirty, Value.Value: bool boolValue })
-        {
-            return boolValue;
-        }
-
-        // Fall back to syntax mode (unit test scenario)
-        var argumentValues = attribute.ExtractConstructorArgumentValues();
-        if (argumentValues.TryGetValue(NameConstants.UseIsDirty, out var useIsDirtyValue) &&
-            bool.TryParse(useIsDirtyValue, out var parsedValue))
-        {
-            return parsedValue;
-        }
-
-        return inheritFromViewModel;
     }
 
     private static List<string> ExtractIgnorePropertiesValue(

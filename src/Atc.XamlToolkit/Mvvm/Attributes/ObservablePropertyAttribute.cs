@@ -99,7 +99,13 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// </summary>
     public bool BroadcastOnChange { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the generated ViewModel should include
+    /// an <c>IsDirty</c> property to track changes to its properties.
+    /// </summary>
+    public bool UseIsDirty { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentProperties)}: {DependentProperties}, {nameof(DependentCommands)}: {DependentCommands}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}";
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentProperties)}: {DependentProperties}, {nameof(DependentCommands)}: {DependentCommands}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}";
 }

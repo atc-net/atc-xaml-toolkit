@@ -56,6 +56,7 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `DependentCommands` for 1 to many other commands to be notified.
 - `BeforeChangedCallback` is executed before the property value changes.
 - `AfterChangedCallback` is executed after the property value changes.
+- `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
 
 ### 🛠 Quick Start: Using `ObservableProperty`
 
@@ -115,6 +116,89 @@ private string name;
     BeforeChangedCallback = "DoStuffA();",
     AfterChangedCallback = "EntrySelected?.Invoke(this, selectedEntry); DoStuffB();")]
 ```
+
+### 🔄 Change Tracking with `UseIsDirty`
+
+You can enable automatic change tracking for individual properties by setting `UseIsDirty = true`. When enabled, the generated property setter will automatically set `IsDirty = true` whenever the property value changes.
+
+```csharp
+// Automatically sets IsDirty = true when the name changes
+[ObservableProperty(UseIsDirty = true)]
+private string name;
+
+// Combine with other options
+[ObservableProperty(
+    UseIsDirty = true, 
+    DependentProperties = [nameof(FullName)])]
+private string firstName;
+```
+
+**Generated code includes IsDirty tracking:**
+
+```csharp
+public string Name
+{
+    get => name;
+    set
+    {
+        if (name == value)
+        {
+            return;
+        }
+
+        name = value;
+        RaisePropertyChanged(nameof(Name));
+        IsDirty = true;  // Automatically added!
+    }
+}
+```
+
+**Use cases for UseIsDirty on individual properties:**
+
+- **Form tracking** - Know when specific fields have been modified
+- **Selective tracking** - Only track changes on certain properties
+- **Validation triggers** - Trigger validation when key fields change
+- **Save indicators** - Show visual indicators for modified fields
+- **Undo/Redo** - Track which specific properties have changed
+
+**Example with selective tracking:**
+
+```csharp
+public partial class CustomerEditViewModel : ViewModelBase
+{
+    // Tracked property - important data
+    [ObservableProperty(UseIsDirty = true)]
+    private string email;
+
+    // Tracked property - important data
+    [ObservableProperty(UseIsDirty = true)]
+    private string phoneNumber;
+
+    // Not tracked - UI state only
+    [ObservableProperty]
+    private bool isExpanded;
+
+    // Not tracked - temporary filter
+    [ObservableProperty]
+    private string searchText;
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private async Task SaveAsync()
+    {
+        await repository.UpdateAsync(new CustomerDto 
+        { 
+            Email = Email, 
+            PhoneNumber = PhoneNumber 
+        });
+        
+        IsDirty = false;  // Reset after save
+    }
+
+    private bool CanSave() => IsDirty;
+}
+```
+
+**Note:** Your ViewModel must have an `IsDirty` property for this feature to work. `ViewModelBase` includes this property by default.
 
 ## ⚡ Attributes for `RelayCommand` Source-Generation
 

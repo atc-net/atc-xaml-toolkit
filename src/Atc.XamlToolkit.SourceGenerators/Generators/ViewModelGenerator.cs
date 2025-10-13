@@ -92,12 +92,9 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             .Compilation
             .GetAllPartialClassDeclarations(classSymbol);
 
-        if (!allPartialDeclarations.HasBaseClassFromList(
-                context,
-                NameConstants.ViewModelBase,
-                NameConstants.MainWindowViewModelBase,
-                NameConstants.ViewModelDialogBase,
-                NameConstants.ObservableObject))
+        var (hasAnyBase, inheritFromViewModel) = allPartialDeclarations.CheckBaseClasses(context);
+
+        if (!hasAnyBase)
         {
             return null;
         }
@@ -114,7 +111,9 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 continue;
             }
 
-            var result = ViewModelInspector.Inspect(partialClassSymbol);
+            var result = ViewModelInspector.Inspect(
+                partialClassSymbol,
+                inheritFromViewModel);
 
             if (!result.FoundAnythingToGenerate)
             {
