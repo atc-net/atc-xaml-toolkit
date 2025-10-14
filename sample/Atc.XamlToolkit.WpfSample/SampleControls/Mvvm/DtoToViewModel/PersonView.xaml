@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:person="clr-namespace:Atc.XamlToolkit.WpfSample.SampleControls.Mvvm.DtoToViewModel"
+    xmlns:valueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -13,35 +14,153 @@
         <person:PersonViewModel />
     </UserControl.DataContext>
 
+    <UserControl.Resources>
+        <!--  Converters  -->
+        <valueConverters:StringToNullableIntValueConverter x:Key="StringToNullableIntConverter" />
+
+        <!--  DataTemplate for validation error display  -->
+        <DataTemplate x:Key="ValidationErrorTemplate" DataType="ValidationResult">
+            <TextBlock
+                Foreground="Red"
+                Text="{Binding ErrorContent}"
+                TextWrapping="Wrap" />
+        </DataTemplate>
+
+        <!--  Style for validation error display  -->
+        <Style x:Key="ValidationErrorsDisplay" TargetType="ItemsControl">
+            <Setter Property="Margin" Value="5,0,0,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="ItemTemplate" Value="{StaticResource ValidationErrorTemplate}" />
+        </Style>
+
+        <!--  Style for TextBox with validation  -->
+        <Style x:Key="ValidatedTextBox" TargetType="TextBox">
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <DockPanel>
+                            <Border
+                                BorderBrush="Red"
+                                BorderThickness="2"
+                                CornerRadius="2">
+                                <AdornedElementPlaceholder />
+                            </Border>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="ToolTip">
+                        <Setter.Value>
+                            <Binding Path="(Validation.Errors).CurrentItem.ErrorContent" RelativeSource="{RelativeSource Self}" />
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100" />
             <ColumnDefinition Width="10" />
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="5" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
+        <!--  First name  -->
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            First name *
+        </TextBlock>
         <TextBox
+            x:Name="FirstNameTextBox"
             Grid.Row="0"
             Grid.Column="2"
-            Text="{Binding Path=FirstName}" />
+            Style="{StaticResource ValidatedTextBox}"
+            Text="{Binding Path=FirstName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, NotifyOnValidationError=True}" />
+        <ItemsControl
+            Grid.Row="0"
+            Grid.Column="4"
+            ItemsSource="{Binding ElementName=FirstNameTextBox, Path=(Validation.Errors)}"
+            Style="{StaticResource ValidationErrorsDisplay}" />
 
-        <TextBlock Grid.Row="1" Grid.Column="0">Last name</TextBlock>
+        <!--  Last name  -->
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Last name *
+        </TextBlock>
         <TextBox
-            Grid.Row="1"
-            Grid.Column="2"
-            Text="{Binding Path=LastName}" />
-
-        <TextBlock Grid.Row="2" Grid.Column="0">Age</TextBlock>
-        <TextBox
+            x:Name="LastNameTextBox"
             Grid.Row="2"
             Grid.Column="2"
-            Text="{Binding Path=Age}" />
+            Style="{StaticResource ValidatedTextBox}"
+            Text="{Binding Path=LastName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, NotifyOnValidationError=True}" />
+        <ItemsControl
+            Grid.Row="2"
+            Grid.Column="4"
+            ItemsSource="{Binding ElementName=LastNameTextBox, Path=(Validation.Errors)}"
+            Style="{StaticResource ValidationErrorsDisplay}" />
+
+        <!--  Age  -->
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Age *
+        </TextBlock>
+        <TextBox
+            x:Name="AgeTextBox"
+            Grid.Row="4"
+            Grid.Column="2"
+            Style="{StaticResource ValidatedTextBox}"
+            Text="{Binding Path=Age, Converter={StaticResource StringToNullableIntConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, NotifyOnValidationError=True}" />
+        <ItemsControl
+            Grid.Row="4"
+            Grid.Column="4"
+            ItemsSource="{Binding ElementName=AgeTextBox, Path=(Validation.Errors)}"
+            Style="{StaticResource ValidationErrorsDisplay}" />
+
+        <!--  Validation Status  -->
+        <StackPanel
+            Grid.Row="6"
+            Grid.Column="0"
+            Grid.ColumnSpan="5"
+            Orientation="Vertical">
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Has Errors: " />
+                <Run FontWeight="Bold" Text="{Binding Path=HasErrors, Mode=OneWay}" />
+            </TextBlock>
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Is Dirty: " />
+                <Run FontWeight="Bold" Text="{Binding Path=IsDirty, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+
+        <Button
+            Grid.Row="8"
+            Grid.Column="2"
+            Padding="10,5"
+            Content="Save data"
+            IsEnabled="{Binding Path=IsDirty}" />
 
     </Grid>
 

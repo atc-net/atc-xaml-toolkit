@@ -41,7 +41,17 @@ public sealed class ObservableDtoViewModelAttribute : Attribute
     /// </summary>
     public string[]? IgnoreMethodNames { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether validation should be enabled on property changed.
+    /// </summary>
+    public bool EnableValidationOnPropertyChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether validation should be enabled during initialization.
+    /// </summary>
+    public bool EnableValidationOnInit { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(DtoType)}: {DtoType}, {nameof(UseIsDirty)}: {UseIsDirty}";
+        => $"{nameof(DtoType)}: {DtoType}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(EnableValidationOnPropertyChanged)}: {EnableValidationOnPropertyChanged}, {nameof(EnableValidationOnInit)}: {EnableValidationOnInit}";
 }

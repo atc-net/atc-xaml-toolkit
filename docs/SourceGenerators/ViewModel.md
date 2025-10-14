@@ -979,7 +979,362 @@ public class PersonEditViewModel : ViewModelBase
 }
 ```
 
-### �🔄 Change Tracking with `IsDirty`
+### ✅ Validation Support with Data Annotations
+
+The `ObservableDtoViewModel` generator automatically copies validation attributes from your DTO properties to the generated ViewModel properties. This enables seamless validation using Data Annotations without duplicating attribute definitions.
+
+**Key features:**
+
+- ✅ **Automatic attribute copying** - Validation attributes from DTO are applied to ViewModel properties
+- ✅ **Validation on property change** - Enable real-time validation as users type
+- ✅ **Validation on initialization** - Optionally validate all properties when the ViewModel is created
+- ✅ **Full attribute preservation** - All attribute parameters and error messages are maintained
+- ✅ **Works with all validation attributes** - `Required`, `Range`, `MinLength`, `MaxLength`, `EmailAddress`, etc.
+
+#### Basic Validation Example
+
+**DTO with validation attributes:**
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+
+public class Person
+{
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    public string? FirstName { get; set; }
+
+    [Required(ErrorMessage = "Last name is required")]
+    [MinLength(2, ErrorMessage = "Last name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
+    public string? LastName { get; set; }
+
+    [Required(ErrorMessage = "Age is required")]
+    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
+    public int? Age { get; set; }
+
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string? Email { get; set; }
+}
+```
+
+**ViewModel with validation enabled:**
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true,
+    EnableValidationOnInit = false)]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code includes copied attributes:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    public PersonViewModel(Person dto)
+    {
+        this.dto = dto;
+
+        InitializeValidation(
+            validateOnPropertyChanged: true,
+            validateAllPropertiesOnInit: false);
+    }
+
+    public Person InnerModel => dto;
+
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value)
+            {
+                return;
+            }
+
+            dto.FirstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+            IsDirty = true;
+        }
+    }
+
+    [Required(ErrorMessage = "Last name is required")]
+    [MinLength(2, ErrorMessage = "Last name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value)
+            {
+                return;
+            }
+
+            dto.LastName = value;
+            RaisePropertyChanged(nameof(LastName));
+            IsDirty = true;
+        }
+    }
+
+    [Required(ErrorMessage = "Age is required")]
+    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
+    public int? Age
+    {
+        get => dto.Age;
+        set
+        {
+            if (dto.Age == value)
+            {
+                return;
+            }
+
+            dto.Age = value;
+            RaisePropertyChanged(nameof(Age));
+            IsDirty = true;
+        }
+    }
+
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string? Email
+    {
+        get => dto.Email;
+        set
+        {
+            if (dto.Email == value)
+            {
+                return;
+            }
+
+            dto.Email = value;
+            RaisePropertyChanged(nameof(Email));
+            IsDirty = true;
+        }
+    }
+
+    // ... other properties and methods
+}
+```
+
+#### Validation Configuration Options
+
+**`EnableValidationOnPropertyChanged`**
+
+When `true`, the generator adds an `InitializeValidation` call that validates each property as it changes:
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true)]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+This provides **real-time validation** as users type, with immediate feedback.
+
+**`EnableValidationOnInit`**
+
+When `true`, all properties are validated immediately when the ViewModel is created:
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true,
+    EnableValidationOnInit = true)]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**When to use `EnableValidationOnInit`:**
+
+- ✅ **Edit forms** - When loading existing data that should be pre-validated
+- ✅ **Required field indicators** - Show which fields need attention before submission
+- ❌ **New/empty forms** - Don't use for empty forms (poor UX to show errors immediately)
+
+#### Complete Form Example with Validation
+
+**DTO:**
+
+```csharp
+public class CustomerDto
+{
+    [Required(ErrorMessage = "Customer name is required")]
+    [MinLength(3, ErrorMessage = "Name must be at least 3 characters")]
+    [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+    public string? Name { get; set; }
+
+    [Required(ErrorMessage = "Email is required")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "Phone number is required")]
+    [Phone(ErrorMessage = "Please enter a valid phone number")]
+    public string? Phone { get; set; }
+
+    [Range(18, 150, ErrorMessage = "Age must be between 18 and 150")]
+    public int? Age { get; set; }
+}
+```
+
+**ViewModel:**
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(CustomerDto),
+    EnableValidationOnPropertyChanged = true,
+    EnableValidationOnInit = false)]
+public partial class CustomerEditViewModel : ViewModelBase
+{
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private async Task SaveAsync()
+    {
+        if (!ValidateAllProperties())
+        {
+            MessageBox.Show("Please fix all validation errors before saving.", "Validation Error");
+            return;
+        }
+
+        // Save the customer
+        await _customerRepository.SaveAsync(InnerModel);
+        
+        MessageBox.Show("Customer saved successfully!", "Success");
+        IsDirty = false;
+    }
+
+    private bool CanSave() => !HasErrors && IsDirty;
+}
+```
+
+**XAML (WPF example):**
+
+```xml
+<UserControl>
+    <StackPanel Margin="10">
+        <TextBlock Text="Customer Name *" />
+        <TextBox Text="{Binding Name, 
+                               UpdateSourceTrigger=PropertyChanged, 
+                               ValidatesOnNotifyDataErrors=True}" />
+
+        <TextBlock Text="Email *" Margin="0,10,0,0" />
+        <TextBox Text="{Binding Email, 
+                               UpdateSourceTrigger=PropertyChanged, 
+                               ValidatesOnNotifyDataErrors=True}" />
+
+        <TextBlock Text="Phone *" Margin="0,10,0,0" />
+        <TextBox Text="{Binding Phone, 
+                               UpdateSourceTrigger=PropertyChanged, 
+                               ValidatesOnNotifyDataErrors=True}" />
+
+        <TextBlock Text="Age" Margin="0,10,0,0" />
+        <TextBox Text="{Binding Age, 
+                               UpdateSourceTrigger=PropertyChanged, 
+                               ValidatesOnNotifyDataErrors=True}" />
+
+        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+            <Button Content="Save" 
+                    Command="{Binding SaveCommand}" 
+                    Padding="20,5" />
+            <TextBlock Text="{Binding HasErrors}" 
+                       Margin="10,0,0,0" 
+                       VerticalAlignment="Center" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
+```
+
+#### Benefits of Attribute Copying
+
+**Before (manual duplication):**
+
+```csharp
+// DTO
+public class Person
+{
+    [Required(ErrorMessage = "Name is required")]
+    [MinLength(2)]
+    public string? Name { get; set; }
+}
+
+// ViewModel - manually duplicating attributes
+public class PersonViewModel : ViewModelBase
+{
+    private Person dto;
+
+    [Required(ErrorMessage = "Name is required")]  // Duplicated!
+    [MinLength(2)]                                  // Duplicated!
+    public string? Name
+    {
+        get => dto.Name;
+        set
+        {
+            dto.Name = value;
+            RaisePropertyChanged();
+        }
+    }
+}
+```
+
+**After (automatic with generator):**
+
+```csharp
+// DTO - single source of truth
+public class Person
+{
+    [Required(ErrorMessage = "Name is required")]
+    [MinLength(2)]
+    public string? Name { get; set; }
+}
+
+// ViewModel - attributes automatically copied
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true)]
+public partial class PersonViewModel : ViewModelBase
+{
+    // Attributes automatically copied from DTO!
+}
+```
+
+**Advantages:**
+
+- ✅ **No duplication** - Validation rules defined once in the DTO
+- ✅ **Consistency** - ViewModel and DTO always have matching validation
+- ✅ **Maintainability** - Change validation in one place, it updates everywhere
+- ✅ **Type safety** - Generator ensures attribute syntax is preserved correctly
+- ✅ **Less code** - No manual attribute copying needed
+
+#### Validation Best Practices with ObservableDtoViewModel
+
+**✅ Do's:**
+
+- ✅ Define validation attributes in your DTO (single source of truth)
+- ✅ Use `EnableValidationOnPropertyChanged = true` for real-time validation
+- ✅ Check `HasErrors` before saving data
+- ✅ Use `ValidateAllProperties()` before form submission
+- ✅ Disable save buttons with `CanExecute = nameof(CanSave)` and `!HasErrors`
+
+**❌ Don'ts:**
+
+- ❌ Don't set `EnableValidationOnInit = true` for empty/new forms
+- ❌ Don't duplicate validation attributes in both DTO and ViewModel
+- ❌ Don't ignore validation errors when saving
+- ❌ Don't forget to set `UpdateSourceTrigger=PropertyChanged` in XAML bindings
+
+---
+
+### 🔄 Change Tracking with `IsDirty`
 
 The `ObservableDtoViewModel` generator automatically adds `IsDirty = true;` to all property setters when your ViewModel inherits from `ViewModelBase`. This provides automatic change tracking without any additional code.
 

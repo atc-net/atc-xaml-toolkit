@@ -59,19 +59,8 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
     /// </remarks>
     private static bool IsSyntaxTarget(
         SyntaxNode syntaxNode)
-    {
-        if (syntaxNode is not ClassDeclarationSyntax { AttributeLists.Count: > 0, BaseList: not null } classDeclaration)
-        {
-            return false;
-        }
-
-        if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-        {
-            return false;
-        }
-
-        return true;
-    }
+        => syntaxNode is ClassDeclarationSyntax { BaseList: not null, AttributeLists.Count: > 0 } classDeclaration &&
+           classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
 
     /// <summary>
     /// Extracts the semantic target for code generation (transform phase).
@@ -125,6 +114,8 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             isDtoRecord: result.IsDtoRecord,
             hasCustomToString: result.HasCustomToString,
             useIsDirty: result.UseIsDirty,
+            enableValidationOnPropertyChanged: result.EnableValidationOnPropertyChanged,
+            enableValidationOnInit: result.EnableValidationOnInit,
             properties: result.Properties,
             methods: result.Methods);
     }

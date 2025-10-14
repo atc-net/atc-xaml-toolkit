@@ -1,4 +1,5 @@
 // ReSharper disable InvertIf
+// ReSharper disable ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
 namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 
 internal static class NamedTypeSymbolExtensions
@@ -42,14 +43,38 @@ internal static class NamedTypeSymbolExtensions
                                         primaryConstructorParameters.Contains(p.Name);
 
                 var isReadOnly = p.SetMethod is null;
+                var attributes = ExtractPropertyAttributes(p);
 
                 return new DtoPropertyInfo(
                     p.Name,
                     p.Type.ToString(),
                     isRecordParameter,
-                    isReadOnly);
+                    isReadOnly,
+                    attributes);
             })
             .ToList();
+    }
+
+    public static List<string> ExtractPropertyAttributes(
+        IPropertySymbol propertySymbol)
+    {
+        var attributes = new List<string>();
+        foreach (var syntaxRef in propertySymbol.DeclaringSyntaxReferences)
+        {
+            var syntax = syntaxRef.GetSyntax();
+            if (syntax is PropertyDeclarationSyntax propertyDeclaration)
+            {
+                foreach (var attributeList in propertyDeclaration.AttributeLists)
+                {
+                    foreach (var attribute in attributeList.Attributes)
+                    {
+                        attributes.Add(attribute.ToString());
+                    }
+                }
+            }
+        }
+
+        return attributes;
     }
 
     public static List<DtoMethodInfo> ExtractMethods(

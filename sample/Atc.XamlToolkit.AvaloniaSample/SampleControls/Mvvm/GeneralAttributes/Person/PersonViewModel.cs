@@ -3,25 +3,40 @@ namespace Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.GeneralAttributes.P
 
 public partial class PersonViewModel : ViewModelBase
 {
-    [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
-    [NotifyPropertyChangedFor(nameof(FullName))]
-    [Required]
-    [MinLength(2)]
-    private string firstName = "John";
+    public PersonViewModel()
+    {
+        InitializeValidation(
+            validateOnPropertyChanged: true,
+            validateAllPropertiesOnInit: false);
+    }
 
-    [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FullName))]
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    private string firstName = string.Empty;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullName), nameof(Age))]
     [NotifyPropertyChangedFor(nameof(Email))]
     [NotifyPropertyChangedFor(nameof(TheProperty))]
-    private string? lastName = "Doe";
+    [Required(ErrorMessage = "Last name is required")]
+    [MinLength(2, ErrorMessage = "Last name must be at least 2 characters long")]
+    [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
+    private string? lastName;
 
-    [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
-    private int age = 27;
+    [ObservableProperty]
+    [Required(ErrorMessage = "Age is required")]
+    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
+    private int? age;
 
-    [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
+    [ObservableProperty]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
     private string? email;
 
     [ObservableProperty("TheProperty", DependentPropertyNames = [nameof(FullName), nameof(Age)])]
+    [MaxLength(100, ErrorMessage = "The property cannot exceed 100 characters")]
     private string? myTestProperty;
 
     public string FullName => $"{FirstName} {LastName}";

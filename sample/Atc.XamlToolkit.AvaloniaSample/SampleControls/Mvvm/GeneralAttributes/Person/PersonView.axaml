@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:person="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.GeneralAttributes.Person"
+    xmlns:valueConverters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Avalonia"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="person:PersonViewModel"
@@ -14,65 +15,122 @@
         <person:PersonViewModel />
     </UserControl.DataContext>
 
-    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,50,Auto">
+    <UserControl.Resources>
+        <!--  Converters  -->
+        <valueConverters:StringToNullableIntValueConverter x:Key="StringToNullableIntConverter" />
 
-        <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
+        <!--  Styles  -->
+        <Style x:Key="ErrorTextStyle" Selector="TextBlock">
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="5,0,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="100,10,250" RowDefinitions="Auto,5,Auto,5,Auto,5,Auto,5,Auto,5,Auto,5,Auto,20,Auto">
+
+        <!--  First name  -->
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            First name *
+        </TextBlock>
         <TextBox
+            x:Name="FirstNameTextBox"
             Grid.Row="0"
             Grid.Column="2"
             Text="{Binding Path=FirstName}" />
 
-        <TextBlock Grid.Row="1" Grid.Column="0">Last name</TextBlock>
+        <!--  Last name  -->
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Last name *
+        </TextBlock>
         <TextBox
-            Grid.Row="1"
+            x:Name="LastNameTextBox"
+            Grid.Row="2"
             Grid.Column="2"
             Text="{Binding Path=LastName}" />
 
-        <TextBlock Grid.Row="2" Grid.Column="0">Age</TextBlock>
+        <!--  Age  -->
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Age *
+        </TextBlock>
         <TextBox
-            Grid.Row="2"
+            x:Name="AgeTextBox"
+            Grid.Row="4"
             Grid.Column="2"
-            Text="{Binding Path=Age}" />
+            Text="{Binding Path=Age, Converter={StaticResource StringToNullableIntConverter}}" />
 
-        <TextBlock Grid.Row="3" Grid.Column="0">Email</TextBlock>
+        <!--  Email  -->
+        <TextBlock
+            Grid.Row="6"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Email
+        </TextBlock>
         <TextBox
-            Grid.Row="3"
+            x:Name="EmailTextBox"
+            Grid.Row="6"
             Grid.Column="2"
             Text="{Binding Path=Email}" />
 
-        <TextBlock Grid.Row="4" Grid.Column="0">TheProperty</TextBlock>
+        <!--  TheProperty  -->
+        <TextBlock
+            Grid.Row="8"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            TheProperty
+        </TextBlock>
         <TextBox
-            Grid.Row="4"
+            x:Name="ThePropertyTextBox"
+            Grid.Row="8"
             Grid.Column="2"
             Text="{Binding Path=TheProperty}" />
 
-        <TextBlock Grid.Row="5" Grid.Column="0">Full name</TextBlock>
+        <!--  Full name (read-only)  -->
         <TextBlock
-            Grid.Row="5"
+            Grid.Row="10"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Full name
+        </TextBlock>
+        <TextBlock
+            Grid.Row="10"
             Grid.Column="2"
+            VerticalAlignment="Center"
             Text="{Binding Path=FullName}" />
 
-        <Button
-            Grid.Row="6"
+        <!--  Commands  -->
+        <StackPanel
+            Grid.Row="12"
             Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Orientation="Vertical">
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Has Errors: " />
+                <Run FontWeight="Bold" Text="{Binding Path=HasErrors, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+
+        <Button
+            Grid.Row="14"
+            Grid.Column="0"
+            Padding="10,5"
             Command="{Binding Path=ShowDataCommand}"
             Content="Show data" />
         <Button
-            Grid.Row="6"
+            Grid.Row="14"
             Grid.Column="2"
+            Padding="10,5"
             Command="{Binding Path=SaveCommand}"
             Content="Save data" />
-
-        <Button
-            Grid.Row="8"
-            Grid.Column="0"
-            Command="{Binding Path=StartLongRunningWorkAsyncCommand}"
-            Content="Start long work" />
-        <Button
-            Grid.Row="8"
-            Grid.Column="2"
-            Command="{Binding Path=CancelLongRunningWorkCommand}"
-            Content="Cancel long work" />
 
     </Grid>
 

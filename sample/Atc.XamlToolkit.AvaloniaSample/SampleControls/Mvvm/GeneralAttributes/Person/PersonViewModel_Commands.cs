@@ -15,7 +15,7 @@ public partial class PersonViewModel
         sb.Append("LastName: ");
         sb.AppendLine(LastName);
         sb.Append("Age: ");
-        sb.AppendLine(Age.ToString(GlobalizationConstants.EnglishCultureInfo));
+        sb.AppendLine(Age?.ToString(GlobalizationConstants.EnglishCultureInfo));
         sb.Append("Email: ");
         sb.AppendLine(Email);
         sb.Append("TheProperty: ");
@@ -28,6 +28,12 @@ public partial class PersonViewModel
         return box.ShowAsync();
     }
 
+    public bool CanSaveHandler()
+    {
+        // Use validation errors instead of manual checks
+        return !HasErrors;
+    }
+
     [RelayCommand(CanExecute = nameof(CanSaveHandler))]
     public Task SaveHandler()
     {
@@ -36,31 +42,6 @@ public partial class PersonViewModel
             "Hello from SaveHandler method");
 
         return box.ShowAsync();
-    }
-
-    public bool CanSaveHandler()
-    {
-        if (string.IsNullOrWhiteSpace(FirstName))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(LastName))
-        {
-            return false;
-        }
-
-        if (Age is < 18 or > 120)
-        {
-            return false;
-        }
-
-        if (Email is not null && !Email.IsEmailAddress())
-        {
-            return false;
-        }
-
-        return true;
     }
 
     public bool CanStartLongRunningWork() => cancellationTokenSource is null;

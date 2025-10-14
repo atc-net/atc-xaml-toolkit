@@ -22,6 +22,8 @@ internal static class ObservableDtoViewModelInspector
                 isDtoRecord: false,
                 hasCustomToString: false,
                 useIsDirty: true,
+                enableValidationOnPropertyChanged: false,
+                enableValidationOnInit: false,
                 properties: null,
                 methods: null);
         }
@@ -52,11 +54,15 @@ internal static class ObservableDtoViewModelInspector
                 isDtoRecord: false,
                 hasCustomToString: false,
                 useIsDirty: true,
+                enableValidationOnPropertyChanged: false,
+                enableValidationOnInit: false,
                 properties: null,
                 methods: null);
         }
 
         var useIsDirty = attribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: true);
+        var enableValidationOnPropertyChanged = ExtractEnableValidationOnPropertyChangedValue(attribute);
+        var enableValidationOnInit = ExtractEnableValidationOnInitValue(attribute);
         var ignorePropertyNames = ExtractIgnorePropertyNamesValue(attribute);
         var ignoreMethodNames = ExtractIgnoreMethodNamesValue(attribute);
 
@@ -71,6 +77,8 @@ internal static class ObservableDtoViewModelInspector
             isRecord,
             hasCustomToString,
             useIsDirty,
+            enableValidationOnPropertyChanged,
+            enableValidationOnInit,
             properties,
             methods);
     }
@@ -217,6 +225,48 @@ internal static class ObservableDtoViewModelInspector
         }
 
         return [];
+    }
+
+    private static bool ExtractEnableValidationOnPropertyChangedValue(
+        AttributeData attribute)
+    {
+        // Try runtime mode first
+        var namedArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.EnableValidationOnPropertyChanged);
+        if (namedArg is { Key: NameConstants.EnableValidationOnPropertyChanged, Value.Kind: TypedConstantKind.Primitive })
+        {
+            return namedArg.Value.Value is bool boolValue && boolValue;
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.EnableValidationOnPropertyChanged, out var value) &&
+            value is not null)
+        {
+            return bool.TryParse(value, out var boolValue) && boolValue;
+        }
+
+        return false;
+    }
+
+    private static bool ExtractEnableValidationOnInitValue(
+        AttributeData attribute)
+    {
+        // Try runtime mode first
+        var namedArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.EnableValidationOnInit);
+        if (namedArg is { Key: NameConstants.EnableValidationOnInit, Value.Kind: TypedConstantKind.Primitive })
+        {
+            return namedArg.Value.Value is bool boolValue && boolValue;
+        }
+
+        // Fall back to syntax mode (unit test scenario)
+        var argumentValues = attribute.ExtractConstructorArgumentValues();
+        if (argumentValues.TryGetValue(NameConstants.EnableValidationOnInit, out var value) &&
+            value is not null)
+        {
+            return bool.TryParse(value, out var boolValue) && boolValue;
+        }
+
+        return false;
     }
 
     private static List<string> ParseArrayString(string arrayString)

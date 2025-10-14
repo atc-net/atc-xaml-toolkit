@@ -1,7 +1,7 @@
 namespace Atc.XamlToolkit.Mvvm;
 
 [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
-public interface IViewModelBase : IObservableObject, ICleanup
+public interface IViewModelBase : IObservableObject, ICleanup, INotifyDataErrorInfo
 {
     /// <summary>
     /// Gets or sets a value indicating whether this instance is enabled.

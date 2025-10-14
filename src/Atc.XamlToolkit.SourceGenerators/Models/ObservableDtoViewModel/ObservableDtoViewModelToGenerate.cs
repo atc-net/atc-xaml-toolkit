@@ -11,6 +11,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         bool isDtoRecord,
         bool hasCustomToString,
         bool useIsDirty,
+        bool enableValidationOnPropertyChanged,
+        bool enableValidationOnInit,
         List<DtoPropertyInfo> properties,
         List<DtoMethodInfo> methods)
         : base(namespaceName, className, accessModifier, isStatic: false)
@@ -19,6 +21,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         IsDtoRecord = isDtoRecord;
         HasCustomToString = hasCustomToString;
         UseIsDirty = useIsDirty;
+        EnableValidationOnPropertyChanged = enableValidationOnPropertyChanged;
+        EnableValidationOnInit = enableValidationOnInit;
         Properties = properties;
         Methods = methods;
     }
@@ -30,6 +34,10 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
     public bool HasCustomToString { get; }
 
     public bool UseIsDirty { get; }
+
+    public bool EnableValidationOnPropertyChanged { get; }
+
+    public bool EnableValidationOnInit { get; }
 
     public List<DtoPropertyInfo> Properties { get; }
 
