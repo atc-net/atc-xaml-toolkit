@@ -73,7 +73,7 @@ internal static class ObservablePropertyInspector
                 .EnsureFirstCharacterToUpper();
 
         List<string>? propertyNamesToInvalidate = null;
-        if (fieldArgumentValues.TryGetValue(NameConstants.DependentProperties, out var dependentPropertiesValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.DependentPropertyNames, out var dependentPropertiesValue))
         {
             propertyNamesToInvalidate = [];
 
@@ -88,7 +88,7 @@ internal static class ObservablePropertyInspector
             {
                 if (argumentValue.Key
                     is NameConstants.Name
-                    or NameConstants.DependentCommands
+                    or NameConstants.DependentCommandNames
                     or NameConstants.AfterChangedCallback
                     or NameConstants.BeforeChangedCallback
                     or NameConstants.BroadcastOnChange
@@ -103,7 +103,7 @@ internal static class ObservablePropertyInspector
         }
 
         string[]? commandNamesToInvalidate = null;
-        if (fieldArgumentValues.TryGetValue(NameConstants.DependentCommands, out var dependentCommandsValue))
+        if (fieldArgumentValues.TryGetValue(NameConstants.DependentCommandNames, out var dependentCommandsValue))
         {
             commandNamesToInvalidate = dependentCommandsValue?
                 .Split(',')

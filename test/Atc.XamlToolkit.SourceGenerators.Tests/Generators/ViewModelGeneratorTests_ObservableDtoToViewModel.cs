@@ -710,7 +710,7 @@ public sealed partial class ViewModelGeneratorTests
                  }
              }
 
-             [ObservableDtoViewModel(typeof(Person), IgnoreProperties = [nameof(Person.Age)])]
+             [ObservableDtoViewModel(typeof(Person), IgnorePropertyNames = [nameof(Person.Age)])]
              public partial class PersonViewModel : ViewModelBase
              {
              }
@@ -802,7 +802,7 @@ public sealed partial class ViewModelGeneratorTests
                  }
              }
 
-             [ObservableDtoViewModel(typeof(Person), IgnoreMethods = [nameof(Person.GetFullName)])]
+             [ObservableDtoViewModel(typeof(Person), IgnoreMethodNames = [nameof(Person.GetFullName)])]
              public partial class PersonViewModel : ViewModelBase
              {
              }

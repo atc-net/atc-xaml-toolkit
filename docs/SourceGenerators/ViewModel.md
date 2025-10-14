@@ -52,8 +52,8 @@ The `ObservableProperty` attribute automatically generates properties from priva
 **ObservableProperty options:**
 
 - `PropertyName` for customization.
-- `DependentProperties` for 1 to many other properties to be notified.
-- `DependentCommands` for 1 to many other commands to be notified.
+- `DependentPropertyNames` for 1 to many other properties to be notified.
+- `DependentCommandNames` for 1 to many other commands to be notified.
 - `BeforeChangedCallback` is executed before the property value changes.
 - `AfterChangedCallback` is executed after the property value changes.
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
@@ -70,11 +70,11 @@ private string name;
 private string name;
 
 // Generates a property named "MyName" and notifies FullName and Age
-[ObservableProperty(nameof(MyName), DependentProperties = [nameof(FullName), nameof(Age)])]
+[ObservableProperty(nameof(MyName), DependentPropertyNames = [nameof(FullName), nameof(Age)])]
 private string name;
 
 // Generates a property named "MyName" and notifies ApplyCommand and SaveCommand
-[ObservableProperty(nameof(MyName), DependentCommands = [nameof(ApplyCommand) nameof(SaveCommand)])]
+[ObservableProperty(nameof(MyName), DependentCommandNames = [nameof(ApplyCommand) nameof(SaveCommand)])]
 private string name;
 ```
 
@@ -82,7 +82,7 @@ private string name;
 
 ```csharp
 // Generates a property named "Name" and notifies FullName and Age
-[ObservableProperty(DependentProperties = [nameof(FullName), nameof(Age)])]
+[ObservableProperty(DependentPropertyNames = [nameof(FullName), nameof(Age)])]
 
 // Notifies the property "Email"
 [NotifyPropertyChangedFor(nameof(Email))]
@@ -129,7 +129,7 @@ private string name;
 // Combine with other options
 [ObservableProperty(
     UseIsDirty = true, 
-    DependentProperties = [nameof(FullName)])]
+    DependentPropertyNames = [nameof(FullName)])]
 private string firstName;
 ```
 
@@ -752,13 +752,13 @@ string address = viewModel.FormatAddress("Main St", 12345);
 
 **Note:** Static methods, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
 
-### 🚫 Selective Generation with IgnoreProperties and IgnoreMethods
+### 🚫 Selective Generation with IgnorePropertyNames and IgnoreMethodNames
 
-Sometimes you don't want to generate ViewModels for all properties or methods in your DTO. The `IgnoreProperties` and `IgnoreMethods` options let you exclude specific members from generation:
+Sometimes you don't want to generate ViewModels for all properties or methods in your DTO. The `IgnorePropertyNames` and `IgnoreMethodNames` options let you exclude specific members from generation:
 
 #### Ignoring Properties
 
-Use `IgnoreProperties` to exclude specific properties from the generated ViewModel:
+Use `IgnorePropertyNames` to exclude specific properties from the generated ViewModel:
 
 **DTO with multiple properties:**
 
@@ -772,12 +772,12 @@ public class Person
 }
 ```
 
-**Exclude properties using IgnoreProperties:**
+**Exclude properties using IgnorePropertyNames:**
 
 ```csharp
 [ObservableDtoViewModel(
     typeof(Person), 
-    IgnoreProperties = [nameof(Person.Age), nameof(Person.InternalId)])]
+    IgnorePropertyNames = [nameof(Person.Age), nameof(Person.InternalId)])]
 public partial class PersonViewModel : ViewModelBase
 {
 }
@@ -824,7 +824,7 @@ public partial class PersonViewModel
 
 #### Ignoring Methods
 
-Use `IgnoreMethods` to exclude specific methods from being proxied:
+Use `IgnoreMethodNames` to exclude specific methods from being proxied:
 
 **DTO with multiple methods:**
 
@@ -846,12 +846,12 @@ public class Person
 }
 ```
 
-**Exclude methods using IgnoreMethods:**
+**Exclude methods using IgnoreMethodNames:**
 
 ```csharp
 [ObservableDtoViewModel(
     typeof(Person), 
-    IgnoreMethods = [nameof(Person.InternalCalculation)])]
+    IgnoreMethodNames = [nameof(Person.InternalCalculation)])]
 public partial class PersonViewModel : ViewModelBase
 {
 }
@@ -874,13 +874,13 @@ public partial class PersonViewModel
 
 #### Combining Both Options
 
-You can use both `IgnoreProperties` and `IgnoreMethods` together:
+You can use both `IgnorePropertyNames` and `IgnoreMethodNames` together:
 
 ```csharp
 [ObservableDtoViewModel(
     typeof(Person),
-    IgnoreProperties = [nameof(Person.Age), nameof(Person.InternalId)],
-    IgnoreMethods = [nameof(Person.InternalCalculation), nameof(Person.Debug)])]
+    IgnorePropertyNames = [nameof(Person.Age), nameof(Person.InternalId)],
+    IgnoreMethodNames = [nameof(Person.InternalCalculation), nameof(Person.Debug)])]
 public partial class PersonViewModel : ViewModelBase
 {
 }

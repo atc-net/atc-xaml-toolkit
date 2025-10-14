@@ -33,13 +33,13 @@ public sealed class ObservableDtoViewModelAttribute : Attribute
     /// Gets or sets a collection of property names from the DTO that should be ignored
     /// when generating the ViewModel.
     /// </summary>
-    public string[]? IgnoreProperties { get; set; }
+    public string[]? IgnorePropertyNames { get; set; }
 
     /// <summary>
     /// Gets or sets a collection of method names from the DTO that should be ignored
     /// when generating the ViewModel.
     /// </summary>
-    public string[]? IgnoreMethods { get; set; }
+    public string[]? IgnoreMethodNames { get; set; }
 
     /// <inheritdoc />
     public override string ToString()

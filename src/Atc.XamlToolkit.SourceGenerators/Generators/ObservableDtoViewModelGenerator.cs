@@ -1,3 +1,4 @@
+// ReSharper disable ConvertIfStatementToReturnStatement
 namespace Atc.XamlToolkit.SourceGenerators.Generators;
 
 /// <summary>
@@ -22,8 +23,8 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
 
         var viewModelsToGenerate = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (syntaxNode, _) => IsSyntaxTargetPartialClass(syntaxNode),
-                transform: static (context, _) => GetSemanticTargetViewModelToGenerate(context))
+                predicate: static (syntaxNode, _) => IsSyntaxTarget(syntaxNode),
+                transform: static (context, _) => GetSemanticTarget(context))
             .Where(target => target is not null)
             .Collect()
             .Select((viewModels, _) => viewModels
@@ -42,10 +43,42 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             });
     }
 
-    private static bool IsSyntaxTargetPartialClass(SyntaxNode syntaxNode)
-        => syntaxNode.HasPartialClassDeclaration();
+    /// <summary>
+    /// Determines if a given syntax node is a valid target for code generation (predicate phase).
+    /// </summary>
+    /// <param name="syntaxNode">The syntax node to check.</param>
+    /// <returns>True if the node is a valid target; otherwise, false.</returns>
+    /// <remarks>
+    /// This method performs early filtering to optimize performance by checking:
+    /// <list type="bullet">
+    /// <item><description>The node is a partial class declaration</description></item>
+    /// <item><description>The class has attributes (looking for ObservableDtoViewModel attribute)</description></item>
+    /// <item><description>The class has a base list (inherits from a base class)</description></item>
+    /// </list>
+    /// This avoids expensive semantic model operations on classes that won't generate code.
+    /// </remarks>
+    private static bool IsSyntaxTarget(
+        SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax { AttributeLists.Count: > 0, BaseList: not null } classDeclaration)
+        {
+            return false;
+        }
 
-    private static ObservableDtoViewModelToGenerate? GetSemanticTargetViewModelToGenerate(
+        if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Extracts the semantic target for code generation (transform phase).
+    /// </summary>
+    /// <param name="context">The generator syntax context.</param>
+    /// <returns>An ObservableDtoViewModelToGenerate object if valid; otherwise, null.</returns>
+    private static ObservableDtoViewModelToGenerate? GetSemanticTarget(
         GeneratorSyntaxContext context)
     {
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;

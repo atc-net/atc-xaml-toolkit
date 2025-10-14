@@ -34,12 +34,12 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// <summary>
     /// Gets or sets the dependent property names.
     /// </summary>
-    public string[]? DependentProperties { get; set; }
+    public string[]? DependentPropertyNames { get; set; }
 
     /// <summary>
     /// Gets or sets the dependent commands names.
     /// </summary>
-    public string[]? DependentCommands { get; set; }
+    public string[]? DependentCommandNames { get; set; }
 
     /// <summary>
     /// Gets or sets the method(s) or expressions to execute before property changes.
@@ -107,5 +107,5 @@ public sealed class ObservablePropertyAttribute : Attribute
 
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentProperties)}: {DependentProperties}, {nameof(DependentCommands)}: {DependentCommands}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}";
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}";
 }

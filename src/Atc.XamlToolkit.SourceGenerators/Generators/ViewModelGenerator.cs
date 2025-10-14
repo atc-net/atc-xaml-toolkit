@@ -22,8 +22,8 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
 
         var viewModelsToGenerate = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (syntaxNode, _) => IsSyntaxTargetPartialClass(syntaxNode),
-                transform: static (context, _) => GetSemanticTargetViewModelToGenerate(context))
+                predicate: static (syntaxNode, _) => IsSyntaxTarget(syntaxNode),
+                transform: static (context, _) => GetSemanticTarget(context))
             .Where(target => target is not null)
             .Collect()
             .Select((viewModels, _) => viewModels
@@ -43,22 +43,28 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Determines if a given syntax node is a valid target for processing as a partial class.
+    /// Determines if a given syntax node is a valid target for code generation (predicate phase).
     /// </summary>
     /// <param name="syntaxNode">The syntax node to check.</param>
     /// <returns>True if the node is a valid target; otherwise, false.</returns>
     /// <remarks>
-    /// This method checks for partial class declarations to allow the generator to correctly
-    /// collect and process class definitions that are split across multiple files. Partial
-    /// classes are essential for scenarios where different aspects of a ViewModel or
-    /// FrameworkElement are defined separately but should be combined into a single generated output.
+    /// This method performs early filtering to optimize performance by checking:
+    /// <list type="bullet">
+    /// <item><description>The node is a partial class declaration (required for source generation)</description></item>
+    /// <item><description>The class has a base list (inherits from ViewModelBase or ObservableObject)</description></item>
+    /// </list>
+    /// The semantic analysis will then check for fields/properties with ObservableProperty attribute
+    /// or methods with RelayCommand attribute.
     /// </remarks>
-    private static bool IsSyntaxTargetPartialClass(
+    private static bool IsSyntaxTarget(
         SyntaxNode syntaxNode)
-        => syntaxNode.HasPartialClassDeclaration();
+    {
+        return syntaxNode is ClassDeclarationSyntax { BaseList: not null } classDeclaration &&
+               classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+    }
 
     /// <summary>
-    /// Extracts the semantic target ViewModel to generate.
+    /// Extracts the semantic target for code generation (transform phase).
     /// </summary>
     /// <param name="context">The generator syntax context.</param>
     /// <returns>A ViewModelToGenerate object if valid; otherwise, null.</returns>
@@ -76,7 +82,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     /// </list>
     /// </remarks>
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
-    private static ViewModelToGenerate? GetSemanticTargetViewModelToGenerate(
+    private static ViewModelToGenerate? GetSemanticTarget(
         GeneratorSyntaxContext context)
     {
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;

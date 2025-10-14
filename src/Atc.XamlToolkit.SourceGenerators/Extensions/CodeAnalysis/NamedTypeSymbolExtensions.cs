@@ -5,10 +5,10 @@ internal static class NamedTypeSymbolExtensions
 {
     public static List<DtoPropertyInfo> ExtractProperties(
         this INamedTypeSymbol namedTypeSymbol,
-        List<string>? ignoreProperties = null)
+        List<string>? ignorePropertyNames = null)
     {
-        var ignoreSet = ignoreProperties is not null
-            ? new HashSet<string>(ignoreProperties, StringComparer.Ordinal)
+        var ignoreSet = ignorePropertyNames is not null
+            ? new HashSet<string>(ignorePropertyNames, StringComparer.Ordinal)
             : new HashSet<string>(StringComparer.Ordinal);
 
         var isRecord = namedTypeSymbol.IsRecord;
@@ -54,10 +54,10 @@ internal static class NamedTypeSymbolExtensions
 
     public static List<DtoMethodInfo> ExtractMethods(
         this INamedTypeSymbol namedTypeSymbol,
-        List<string>? ignoreMethods = null)
+        List<string>? ignoreMethodNames = null)
     {
-        var ignoreSet = ignoreMethods is not null
-            ? new HashSet<string>(ignoreMethods, StringComparer.Ordinal)
+        var ignoreSet = ignoreMethodNames is not null
+            ? new HashSet<string>(ignoreMethodNames, StringComparer.Ordinal)
             : new HashSet<string>(StringComparer.Ordinal);
 
         return namedTypeSymbol
