@@ -57,10 +57,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
     /// </remarks>
     private static bool IsSyntaxTarget(
         SyntaxNode syntaxNode)
-    {
-        return syntaxNode is ClassDeclarationSyntax classDeclaration &&
-               classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
-    }
+        => syntaxNode is ClassDeclarationSyntax classDeclaration &&
+           classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
 
     /// <summary>
     /// Extracts the semantic target for code generation (transform phase).

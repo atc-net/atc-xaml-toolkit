@@ -16,7 +16,7 @@ public partial class PersonViewModel
         sb.Append("LastName: ");
         sb.AppendLine(LastName);
         sb.Append("Age: ");
-        sb.AppendLine(Age.ToString(GlobalizationConstants.EnglishCultureInfo));
+        sb.AppendLine(Age?.ToString(GlobalizationConstants.EnglishCultureInfo));
         sb.Append("Email: ");
         sb.AppendLine(Email);
         sb.Append("TheProperty: ");
@@ -35,27 +35,8 @@ public partial class PersonViewModel
 
     public bool CanSaveHandler()
     {
-        if (string.IsNullOrWhiteSpace(FirstName))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(LastName))
-        {
-            return false;
-        }
-
-        if (Age is < 18 or > 120)
-        {
-            return false;
-        }
-
-        if (Email is not null && !StringHasIsExtensions.IsEmailAddress(Email))
-        {
-            return false;
-        }
-
-        return true;
+        // Use validation errors instead of manual checks
+        return !HasErrors;
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveHandler))]

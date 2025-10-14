@@ -1,15 +1,20 @@
 namespace Atc.XamlToolkit.WpfSample.SampleControls.Mvvm.DtoToViewModel;
 
-[ObservableDtoViewModel(typeof(Person))]
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true,
+    EnableValidationOnInit = false,
+    UseIsDirty = true)]
 public partial class PersonViewModel : ViewModelBase
 {
     public PersonViewModel()
+        : this(
+            new Person
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Age = 21,
+            })
     {
-        dto = new Person
-        {
-            FirstName = "John",
-            LastName = "Doe",
-            Age = 21,
-        };
     }
 }

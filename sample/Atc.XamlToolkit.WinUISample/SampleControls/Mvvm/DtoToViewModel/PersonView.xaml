@@ -3,65 +3,113 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dtoToViewModel="using:Atc.XamlToolkit.WinUISample.SampleControls.Mvvm.DtoToViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:valueConverters="using:Atc.XamlToolkit.ValueConverters"
     mc:Ignorable="d">
 
-    <StackPanel Spacing="10">
+    <UserControl.Resources>
+        <!--  Converters  -->
+        <valueConverters:StringToNullableIntValueConverter x:Key="StringToNullableIntConverter" />
+    </UserControl.Resources>
+
+    <Grid ColumnSpacing="10" RowSpacing="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  First name  -->
         <TextBlock
-            FontSize="20"
-            FontWeight="SemiBold"
-            Text="PersonView - Dto To ViewModel Demo" />
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            First name *
+        </TextBlock>
+        <TextBox
+            Grid.Row="0"
+            Grid.Column="1"
+            Text="{x:Bind ViewModel.FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.FirstNameError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
-        <TextBlock Text="This demonstrates the ObservableDtoViewModel source generator." TextWrapping="Wrap" />
+        <!--  Last name  -->
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Last name *
+        </TextBlock>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="1"
+            Text="{x:Bind ViewModel.LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.LastNameError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
-        <Grid ColumnSpacing="10" RowSpacing="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <!--  Age  -->
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Age *
+        </TextBlock>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="1"
+            Text="{x:Bind ViewModel.Age, Converter={StaticResource StringToNullableIntConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.AgeError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="0"
-                VerticalAlignment="Center"
-                Text="First Name:" />
-            <TextBox
-                Grid.Row="0"
-                Grid.Column="1"
-                Text="{x:Bind ViewModel.FirstName, Mode=TwoWay}" />
+        <!--  Validation Status  -->
+        <StackPanel
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Orientation="Vertical">
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Has Errors: " />
+                <Run FontWeight="Bold" Text="{x:Bind ViewModel.HasErrors, Mode=OneWay}" />
+            </TextBlock>
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Is Dirty: " />
+                <Run FontWeight="Bold" Text="{x:Bind ViewModel.IsDirty, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
 
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                VerticalAlignment="Center"
-                Text="Last Name:" />
-            <TextBox
-                Grid.Row="1"
-                Grid.Column="1"
-                Text="{x:Bind ViewModel.LastName, Mode=TwoWay}" />
+        <Button
+            Grid.Row="5"
+            Grid.Column="0"
+            Padding="10,5"
+            Content="Save data"
+            IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" />
 
-            <TextBlock
-                Grid.Row="2"
-                Grid.Column="0"
-                VerticalAlignment="Center"
-                Text="Age:" />
-            <NumberBox
-                Grid.Row="2"
-                Grid.Column="1"
-                SpinButtonPlacementMode="Inline"
-                Value="{x:Bind ViewModel.Age, Mode=TwoWay}" />
-        </Grid>
-
-        <TextBlock FontWeight="SemiBold" Text="Current Values:" />
-        <TextBlock Text="{x:Bind ViewModel.FirstName, Mode=OneWay}" />
-        <TextBlock Text="{x:Bind ViewModel.LastName, Mode=OneWay}" />
-        <TextBlock Text="{x:Bind ViewModel.Age, Mode=OneWay}" />
-    </StackPanel>
+    </Grid>
 
 </UserControl>

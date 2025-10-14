@@ -88,6 +88,7 @@ Eliminate boilerplate with powerful code generation:
   - Support for readonly properties
   - Method proxy generation
   - Selective generation with `IgnorePropertyNames` and `IgnoreMethodNames`
+  - Automatic validation attribute copying with `EnableValidationOnPropertyChanged` and `EnableValidationOnInit`
 - **[DependencyProperty]** (WPF) - Auto-generate dependency properties
 - **[AttachedProperty]** (WPF) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF) - Auto-generate routed events
@@ -254,7 +255,7 @@ All commands support:
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
-| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty` and `InnerModel` |
+| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty`, `InnerModel`, and automatic validation attribute copying |
 
 ### Value Converters
 

@@ -26,6 +26,8 @@ internal static class NameConstants
     public const string DependentPropertyNames = nameof(DependentPropertyNames);
     public const string Description = nameof(Description);
     public const string DtoType = nameof(DtoType);
+    public const string EnableValidationOnPropertyChanged = nameof(EnableValidationOnPropertyChanged);
+    public const string EnableValidationOnInit = nameof(EnableValidationOnInit);
     public const string ExecuteOnBackgroundThread = nameof(ExecuteOnBackgroundThread);
     public const string Flags = nameof(Flags);
     public const string FrameworkElement = nameof(FrameworkElement);

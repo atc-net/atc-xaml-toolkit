@@ -29,6 +29,18 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
         AppendLine("{");
         IncreaseIndent();
         AppendLine("this.dto = dto;");
+
+        // Generate InitializeValidation call if any validation is enabled
+        if (viewModelToGenerate.EnableValidationOnPropertyChanged || viewModelToGenerate.EnableValidationOnInit)
+        {
+            AppendLine();
+            AppendLine("InitializeValidation(");
+            IncreaseIndent();
+            AppendLine($"validateOnPropertyChanged: {viewModelToGenerate.EnableValidationOnPropertyChanged.ToString().ToLowerInvariant()},");
+            AppendLine($"validateAllPropertiesOnInit: {viewModelToGenerate.EnableValidationOnInit.ToString().ToLowerInvariant()});");
+            DecreaseIndent();
+        }
+
         DecreaseIndent();
         AppendLine("}");
     }
@@ -46,6 +58,12 @@ internal sealed class ObservableDtoViewModelBuilder : BuilderBase
         foreach (var property in viewModelToGenerate.Properties)
         {
             AppendLine();
+
+            // Generate attributes if any
+            foreach (var attribute in property.Attributes)
+            {
+                AppendLine($"[{attribute}]");
+            }
 
             if (property.IsReadOnly)
             {

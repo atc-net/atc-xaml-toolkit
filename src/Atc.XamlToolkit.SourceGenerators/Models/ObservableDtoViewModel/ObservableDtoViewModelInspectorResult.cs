@@ -8,6 +8,8 @@ internal sealed class ObservableDtoViewModelInspectorResult
         bool isDtoRecord,
         bool hasCustomToString,
         bool useIsDirty,
+        bool enableValidationOnPropertyChanged,
+        bool enableValidationOnInit,
         List<DtoPropertyInfo>? properties,
         List<DtoMethodInfo>? methods)
     {
@@ -15,6 +17,8 @@ internal sealed class ObservableDtoViewModelInspectorResult
         IsDtoRecord = isDtoRecord;
         HasCustomToString = hasCustomToString;
         UseIsDirty = useIsDirty;
+        EnableValidationOnPropertyChanged = enableValidationOnPropertyChanged;
+        EnableValidationOnInit = enableValidationOnInit;
         Properties = properties ?? [];
         Methods = methods ?? [];
     }
@@ -27,6 +31,10 @@ internal sealed class ObservableDtoViewModelInspectorResult
 
     public bool UseIsDirty { get; }
 
+    public bool EnableValidationOnPropertyChanged { get; }
+
+    public bool EnableValidationOnInit { get; }
+
     public List<DtoPropertyInfo> Properties { get; }
 
     public List<DtoMethodInfo> Methods { get; }
@@ -35,5 +43,5 @@ internal sealed class ObservableDtoViewModelInspectorResult
                                            Properties.Count > 0;
 
     public override string ToString()
-        => $"{nameof(DtoTypeName)}: {DtoTypeName}, {nameof(IsDtoRecord)}: {IsDtoRecord}, {nameof(HasCustomToString)}: {HasCustomToString}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(Properties)}.Count: {Properties.Count}, {nameof(Methods)}.Count: {Methods.Count}, {nameof(FoundAnythingToGenerate)}: {FoundAnythingToGenerate}";
+        => $"{nameof(DtoTypeName)}: {DtoTypeName}, {nameof(IsDtoRecord)}: {IsDtoRecord}, {nameof(HasCustomToString)}: {HasCustomToString}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(EnableValidationOnPropertyChanged)}: {EnableValidationOnPropertyChanged}, {nameof(EnableValidationOnInit)}: {EnableValidationOnInit}, {nameof(Properties)}.Count: {Properties.Count}, {nameof(Methods)}.Count: {Methods.Count}, {nameof(FoundAnythingToGenerate)}: {FoundAnythingToGenerate}";
 }

@@ -14,25 +14,66 @@
         <dtoToViewModel:PersonViewModel />
     </UserControl.DataContext>
 
-    <Grid ColumnDefinitions="Auto,10,Auto" RowDefinitions="Auto,Auto,Auto">
+    <Grid ColumnDefinitions="100,10,250" RowDefinitions="Auto,5,Auto,5,Auto,5,Auto,20,Auto">
 
-        <TextBlock Grid.Row="0" Grid.Column="0">First name</TextBlock>
+        <!--  First name  -->
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            First name *
+        </TextBlock>
         <TextBox
             Grid.Row="0"
             Grid.Column="2"
             Text="{Binding Path=FirstName}" />
 
-        <TextBlock Grid.Row="1" Grid.Column="0">Last name</TextBlock>
-        <TextBox
-            Grid.Row="1"
-            Grid.Column="2"
-            Text="{Binding Path=LastName}" />
-
-        <TextBlock Grid.Row="2" Grid.Column="0">Age</TextBlock>
+        <!--  Last name  -->
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Last name *
+        </TextBlock>
         <TextBox
             Grid.Row="2"
             Grid.Column="2"
+            Text="{Binding Path=LastName}" />
+
+        <!--  Age  -->
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            VerticalAlignment="Center">
+            Age *
+        </TextBlock>
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="2"
             Text="{Binding Path=Age}" />
+
+        <!--  Validation Status  -->
+        <StackPanel
+            Grid.Row="6"
+            Grid.Column="0"
+            Grid.ColumnSpan="5"
+            Orientation="Vertical">
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Has Errors: " />
+                <Run FontWeight="Bold" Text="{Binding Path=HasErrors, Mode=OneWay}" />
+            </TextBlock>
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Is Dirty: " />
+                <Run FontWeight="Bold" Text="{Binding Path=IsDirty, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+
+        <Button
+            Grid.Row="8"
+            Grid.Column="2"
+            Padding="10,5"
+            Content="Save data"
+            IsEnabled="{Binding Path=IsDirty}" />
 
     </Grid>
 

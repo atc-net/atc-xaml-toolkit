@@ -4,13 +4,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:person="using:Atc.XamlToolkit.WinUISample.SampleControls.Mvvm.GeneralAttributes.Person"
+    xmlns:valueConverters="using:Atc.XamlToolkit.ValueConverters"
     mc:Ignorable="d">
 
-    <Grid ColumnSpacing="10" RowSpacing="10">
+    <UserControl.Resources>
+        <!--  Converters  -->
+        <valueConverters:StringToNullableIntValueConverter x:Key="StringToNullableIntConverter" />
+    </UserControl.Resources>
+
+    <Grid ColumnSpacing="10" RowSpacing="5">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100" />
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -20,44 +26,71 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="50" />
+            <RowDefinition Height="20" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!--  First name  -->
         <TextBlock
             Grid.Row="0"
             Grid.Column="0"
             VerticalAlignment="Center">
-            First name
+            First name *
         </TextBlock>
         <TextBox
             Grid.Row="0"
             Grid.Column="1"
-            Text="{x:Bind ViewModel.FirstName, Mode=TwoWay}" />
+            Text="{x:Bind ViewModel.FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.FirstNameError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
+        <!--  Last name  -->
         <TextBlock
             Grid.Row="1"
             Grid.Column="0"
             VerticalAlignment="Center">
-            Last name
+            Last name *
         </TextBlock>
         <TextBox
             Grid.Row="1"
             Grid.Column="1"
-            Text="{x:Bind ViewModel.LastName, Mode=TwoWay}" />
+            Text="{x:Bind ViewModel.LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.LastNameError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
+        <!--  Age  -->
         <TextBlock
             Grid.Row="2"
             Grid.Column="0"
             VerticalAlignment="Center">
-            Age
+            Age *
         </TextBlock>
-        <NumberBox
+        <TextBox
             Grid.Row="2"
             Grid.Column="1"
-            SpinButtonPlacementMode="Inline"
-            Value="{x:Bind ViewModel.Age, Mode=TwoWay}" />
+            Text="{x:Bind ViewModel.Age, Converter={StaticResource StringToNullableIntConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.AgeError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
+        <!--  Email  -->
         <TextBlock
             Grid.Row="3"
             Grid.Column="0"
@@ -67,8 +100,17 @@
         <TextBox
             Grid.Row="3"
             Grid.Column="1"
-            Text="{x:Bind ViewModel.Email, Mode=TwoWay}" />
+            Text="{x:Bind ViewModel.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.EmailError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
+        <!--  TheProperty  -->
         <TextBlock
             Grid.Row="4"
             Grid.Column="0"
@@ -78,8 +120,17 @@
         <TextBox
             Grid.Row="4"
             Grid.Column="1"
-            Text="{x:Bind ViewModel.TheProperty, Mode=TwoWay}" />
+            Text="{x:Bind ViewModel.TheProperty, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="2"
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="Red"
+            Text="{x:Bind ViewModel.ThePropertyError, Mode=OneWay}"
+            TextWrapping="Wrap" />
 
+        <!--  Full name (read-only)  -->
         <TextBlock
             Grid.Row="5"
             Grid.Column="0"
@@ -92,27 +143,30 @@
             VerticalAlignment="Center"
             Text="{x:Bind ViewModel.FullName, Mode=OneWay}" />
 
-        <Button
+        <!--  Commands  -->
+        <StackPanel
             Grid.Row="6"
             Grid.Column="0"
-            Command="{x:Bind ViewModel.ShowDataCommand}"
-            Content="Show data" />
-        <Button
-            Grid.Row="6"
-            Grid.Column="1"
-            Command="{x:Bind ViewModel.SaveCommand}"
-            Content="Save data" />
+            Grid.ColumnSpan="3"
+            Orientation="Vertical">
+            <TextBlock Margin="0,0,0,5">
+                <Run Text="Has Errors: " />
+                <Run FontWeight="Bold" Text="{x:Bind ViewModel.HasErrors, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
 
         <Button
             Grid.Row="8"
             Grid.Column="0"
-            Command="{x:Bind ViewModel.StartLongRunningWorkAsyncCommand}"
-            Content="Start long work" />
+            Padding="10,5"
+            Command="{x:Bind ViewModel.ShowDataCommand}"
+            Content="Show data" />
         <Button
             Grid.Row="8"
             Grid.Column="1"
-            Command="{x:Bind ViewModel.CancelLongRunningWorkCommand}"
-            Content="Cancel long work" />
+            Padding="10,5"
+            Command="{x:Bind ViewModel.SaveCommand}"
+            Content="Save data" />
 
     </Grid>
 

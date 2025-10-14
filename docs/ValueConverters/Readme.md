@@ -91,6 +91,7 @@ Or by the ValueConverter's Instance:
 | String → Bool             | `StringNullOrEmptyToInverseBoolValueConverter`          | string → bool                      | null/empty → False<br/>"text" → True                  | null/empty → False<br/>"text" → True                  | Not supported |
 | String → Visibility       | `StringNullOrEmptyToVisibilityVisibleValueConverter`    | string → Visibility                | null/empty → Visible<br/>"text" → Collapsed           | null/empty → True<br/>"text" → False                  | Not supported |
 | String → Visibility       | `StringNullOrEmptyToVisibilityCollapsedValueConverter`  | string → Visibility                | null/empty → Collapsed<br/>"text" → Visible           | null/empty → False<br/>"text" → True                  | Not supported |
+| String → Int?             | `StringToNullableIntValueConverter`                     | string ↔ int?                      | null → ""<br/>123 → "123"<br/>-456 → "-456"           | null → ""<br/>123 → "123"<br/>-456 → "-456"           | ✅            |
 | String → String           | `ToLowerValueConverter`                                 | string → string                    | "HELLO" → "hello"<br/>"World" → "world"               | "HELLO" → "hello"<br/>"World" → "world"               | Not supported |
 | String → String           | `ToUpperValueConverter`                                 | string → string                    | "hello" → "HELLO"<br/>"World" → "WORLD"               | "hello" → "HELLO"<br/>"World" → "WORLD"               | Not supported |
 
@@ -145,6 +146,58 @@ Or by the ValueConverter's Instance:
     Text="Enter your name..."
     IsVisible="{Binding UserInput, Converter={x:Static atcToolkitValueConverters:StringNullOrEmptyToBoolValueConverter.Instance}}" />
 ```
+
+#### Example 4: Two-way binding for nullable integer input
+
+The `StringToNullableIntValueConverter` provides bidirectional conversion between string and nullable integer, making it ideal for numeric input fields that support empty/null values. The converter automatically filters out non-numeric characters during input.
+
+**WPF:**
+
+```xml
+<!-- Two-way binding for age input (nullable integer) -->
+<TextBox
+    Text="{Binding Age, 
+           Converter={x:Static atcToolkitValueConverters:StringToNullableIntValueConverter.Instance}, 
+           UpdateSourceTrigger=PropertyChanged, 
+           Mode=TwoWay}" />
+
+<!-- Display formatted age or show message if null -->
+<TextBlock>
+    <Run Text="Age: " />
+    <Run Text="{Binding Age, Converter={x:Static atcToolkitValueConverters:StringToNullableIntValueConverter.Instance}, TargetNullValue='Not specified'}" />
+</TextBlock>
+```
+
+**WinUI:**
+
+```xml
+<!-- Two-way binding for quantity input -->
+<TextBox
+    Text="{x:Bind ViewModel.Quantity, 
+           Converter={StaticResource StringToNullableIntConverter}, 
+           Mode=TwoWay, 
+           UpdateSourceTrigger=PropertyChanged}" />
+```
+
+**Avalonia:**
+
+```xml
+<!-- Two-way binding for score input -->
+<TextBox
+    Text="{Binding Score, 
+           Converter={x:Static atcToolkitValueConverters:StringToNullableIntValueConverter.Instance}, 
+           Mode=TwoWay}" />
+
+<!-- Display score or default text -->
+<TextBlock Text="{Binding Score, Converter={x:Static atcToolkitValueConverters:StringToNullableIntValueConverter.Instance}, FallbackValue='No score'}" />
+```
+
+**Key Features:**
+- **ConvertBack Support**: Full two-way binding support for seamless ViewModel integration
+- **Null Handling**: Empty or whitespace strings convert to `null`, allowing optional numeric fields
+- **Character Filtering**: Automatically filters non-numeric characters (keeps digits and minus sign)
+- **Culture-Aware**: Respects the current culture for number formatting
+- **Validation**: Invalid inputs gracefully return `null` instead of throwing exceptions
 
 ---
 
