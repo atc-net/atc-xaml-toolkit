@@ -78,11 +78,11 @@ public sealed class StringExtensionsTests
         ];
 
         yield return [
-            "[ObservableProperty(nameof(MyName), DependentProperties = [nameof(FullName), nameof(Age)])]",
+            "[ObservableProperty(nameof(MyName), DependentPropertyNames = [nameof(FullName), nameof(Age)])]",
             new Dictionary<string, string?>(StringComparer.Ordinal)
             {
                 { "Name", "MyName" },
-                { "DependentProperties", "nameof(FullName), nameof(Age)" },
+                { "DependentPropertyNames", "nameof(FullName), nameof(Age)" },
             },
         ];
 

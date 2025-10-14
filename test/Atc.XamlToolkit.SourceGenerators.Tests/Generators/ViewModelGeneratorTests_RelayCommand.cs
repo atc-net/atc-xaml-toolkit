@@ -744,7 +744,7 @@ public sealed partial class ViewModelGeneratorTests
             }
             """;
 
-        var expectedErrorCodes = new[] { "AtcWpfSG0001" };
+        var expectedErrorCodes = new[] { "AtcXamlToolkit0001" };
 
         var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
 

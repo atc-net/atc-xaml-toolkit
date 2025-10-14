@@ -82,7 +82,7 @@ public sealed partial class ViewModelGeneratorTests
                         {
                             return;
                         }
-            
+
                         _name = value;
                         RaisePropertyChanged(nameof(Name));
                     }
@@ -478,7 +478,7 @@ public sealed partial class ViewModelGeneratorTests
 
             public partial class TestViewModel : ViewModelBase
             {
-                [ObservableProperty(DependentProperties = [nameof(IsReady1), nameof(IsReady2)])]
+                [ObservableProperty(DependentPropertyNames = [nameof(IsReady1), nameof(IsReady2)])]
                 [NotifyPropertyChangedFor(nameof(IsReady3), nameof(IsReady4))]
                 private IDictionary<string, string> names;
             }
@@ -530,7 +530,7 @@ public sealed partial class ViewModelGeneratorTests
 
             public partial class TestViewModel : ViewModelBase
             {
-                [ObservableProperty(DependentCommands = [nameof(SaveCommand)])]
+                [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
                 [NotifyPropertyChangedFor(nameof(FullName))]
                 private string firstName = "John";
             }
@@ -750,10 +750,10 @@ public sealed partial class ViewModelGeneratorTests
                         {
                             return;
                         }
-            
+
                         name = value;
                         RaisePropertyChanged(nameof(Name));
-            
+
                         DoStuff();
                     }
                 }

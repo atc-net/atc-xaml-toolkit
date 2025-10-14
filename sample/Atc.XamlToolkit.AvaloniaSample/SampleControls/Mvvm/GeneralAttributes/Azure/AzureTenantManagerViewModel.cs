@@ -10,7 +10,7 @@ public sealed partial class AzureTenantManagerViewModel : ViewModelBase
     private string? signedInUser;
 
     [ObservableProperty(
-        DependentProperties = [nameof(CurrentEnvironmentType)],
+        DependentPropertyNames = [nameof(CurrentEnvironmentType)],
         AfterChangedCallback = nameof(SetAuthServiceEnvironmentType))]
     private string selectedEnvironmentKey = nameof(AppEnvironmentType.Local);
 

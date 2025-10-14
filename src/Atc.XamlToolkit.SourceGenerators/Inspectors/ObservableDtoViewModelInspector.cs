@@ -57,14 +57,14 @@ internal static class ObservableDtoViewModelInspector
         }
 
         var useIsDirty = attribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: true);
-        var ignoreProperties = ExtractIgnorePropertiesValue(attribute);
-        var ignoreMethods = ExtractIgnoreMethodsValue(attribute);
+        var ignorePropertyNames = ExtractIgnorePropertyNamesValue(attribute);
+        var ignoreMethodNames = ExtractIgnoreMethodNamesValue(attribute);
 
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
         var hasCustomToString = HasCustomToString(dtoTypeSymbol);
-        var properties = dtoTypeSymbol.ExtractProperties(ignoreProperties);
-        var methods = dtoTypeSymbol.ExtractMethods(ignoreMethods);
+        var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames);
+        var methods = dtoTypeSymbol.ExtractMethods(ignoreMethodNames);
 
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
@@ -169,14 +169,14 @@ internal static class ObservableDtoViewModelInspector
         return null;
     }
 
-    private static List<string> ExtractIgnorePropertiesValue(
+    private static List<string> ExtractIgnorePropertyNamesValue(
         AttributeData attribute)
     {
         // Try runtime mode first
-        var ignorePropertiesArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnoreProperties);
-        if (ignorePropertiesArg is { Key: NameConstants.IgnoreProperties, Value.Kind: TypedConstantKind.Array })
+        var ignorePropertyNamesArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnorePropertyNames);
+        if (ignorePropertyNamesArg is { Key: NameConstants.IgnorePropertyNames, Value.Kind: TypedConstantKind.Array })
         {
-            return ignorePropertiesArg.Value.Values
+            return ignorePropertyNamesArg.Value.Values
                 .Where(v => v.Value is string)
                 .Select(v => (string)v.Value!)
                 .ToList();
@@ -184,24 +184,24 @@ internal static class ObservableDtoViewModelInspector
 
         // Fall back to syntax mode (unit test scenario)
         var argumentValues = attribute.ExtractConstructorArgumentValues();
-        if (argumentValues.TryGetValue(NameConstants.IgnoreProperties, out var ignorePropertiesValue) &&
-            ignorePropertiesValue is not null)
+        if (argumentValues.TryGetValue(NameConstants.IgnorePropertyNames, out var ignorePropertyNamesValue) &&
+            ignorePropertyNamesValue is not null)
         {
             // Parse array syntax like "[nameof(Person.Age)]" or "[\"Age\"]"
-            return ParseArrayString(ignorePropertiesValue);
+            return ParseArrayString(ignorePropertyNamesValue);
         }
 
         return [];
     }
 
-    private static List<string> ExtractIgnoreMethodsValue(
+    private static List<string> ExtractIgnoreMethodNamesValue(
         AttributeData attribute)
     {
         // Try runtime mode first
-        var ignoreMethodsArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnoreMethods);
-        if (ignoreMethodsArg is { Key: NameConstants.IgnoreMethods, Value.Kind: TypedConstantKind.Array })
+        var ignoreMethodNamesArg = attribute.NamedArguments.FirstOrDefault(na => na.Key == NameConstants.IgnoreMethodNames);
+        if (ignoreMethodNamesArg is { Key: NameConstants.IgnoreMethodNames, Value.Kind: TypedConstantKind.Array })
         {
-            return ignoreMethodsArg.Value.Values
+            return ignoreMethodNamesArg.Value.Values
                 .Where(v => v.Value is string)
                 .Select(v => (string)v.Value!)
                 .ToList();
@@ -209,11 +209,11 @@ internal static class ObservableDtoViewModelInspector
 
         // Fall back to syntax mode (unit test scenario)
         var argumentValues = attribute.ExtractConstructorArgumentValues();
-        if (argumentValues.TryGetValue(NameConstants.IgnoreMethods, out var ignoreMethodsValue) &&
-            ignoreMethodsValue is not null)
+        if (argumentValues.TryGetValue(NameConstants.IgnoreMethodNames, out var ignoreMethodNamesValue) &&
+            ignoreMethodNamesValue is not null)
         {
             // Parse array syntax like "[nameof(Person.GetFullName)]" or "[\"GetFullName\"]"
-            return ParseArrayString(ignoreMethodsValue);
+            return ParseArrayString(ignoreMethodNamesValue);
         }
 
         return [];

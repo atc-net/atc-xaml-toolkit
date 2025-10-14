@@ -22,8 +22,8 @@ internal static class NameConstants
     public const string DependencyProperty = nameof(DependencyProperty);
     public const string DependencyPropertyAttribute = nameof(DependencyPropertyAttribute);
     public const string DependencyObject = nameof(DependencyObject);
-    public const string DependentCommands = nameof(DependentCommands);
-    public const string DependentProperties = nameof(DependentProperties);
+    public const string DependentCommandNames = nameof(DependentCommandNames);
+    public const string DependentPropertyNames = nameof(DependentPropertyNames);
     public const string Description = nameof(Description);
     public const string DtoType = nameof(DtoType);
     public const string ExecuteOnBackgroundThread = nameof(ExecuteOnBackgroundThread);
@@ -31,8 +31,8 @@ internal static class NameConstants
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string Handler = nameof(Handler);
     public const string HandlerType = nameof(HandlerType);
-    public const string IgnoreMethods = nameof(IgnoreMethods);
-    public const string IgnoreProperties = nameof(IgnoreProperties);
+    public const string IgnoreMethodNames = nameof(IgnoreMethodNames);
+    public const string IgnorePropertyNames = nameof(IgnorePropertyNames);
     public const string IObservableObject = nameof(IObservableObject);
     public const string InvertCanExecute = nameof(InvertCanExecute);
     public const string IRelayCommand = nameof(IRelayCommand);

@@ -87,7 +87,7 @@ Eliminate boilerplate with powerful code generation:
   - `InnerModel` access to underlying DTO
   - Support for readonly properties
   - Method proxy generation
-  - Selective generation with `IgnoreProperties` and `IgnoreMethods`
+  - Selective generation with `IgnorePropertyNames` and `IgnoreMethodNames`
 - **[DependencyProperty]** (WPF) - Auto-generate dependency properties
 - **[AttachedProperty]** (WPF) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF) - Auto-generate routed events
@@ -254,7 +254,7 @@ All commands support:
 | `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
 | `[AttachedProperty]` | WPF only | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
-| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnoreProperties/Methods`, `IsDirty` and `InnerModel` |
+| `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty` and `InnerModel` |
 
 ### Value Converters
 
