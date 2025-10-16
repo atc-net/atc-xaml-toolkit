@@ -53,6 +53,13 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     {
         SampleViews =
         [
+            new SampleViewItem("Mvvm", "SampleControls/Behaviors")
+            {
+                Children =
+                {
+                    new SampleViewItem("EventToCommandBehaviorView", viewType: typeof(SampleControls.Behaviors.EventToCommandBehaviorView)),
+                },
+            },
             new SampleViewItem("Mvvm", "SampleControls/Mvvm")
             {
                 Children =

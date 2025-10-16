@@ -48,7 +48,30 @@ Messenger.Default.Register<GenericMessage<User>>(this, msg =>
 
 Learn more: [Messaging System Documentation](docs/Messaging/Readme.md)
 
-### 🎨 Value Converters
+### � Behaviors
+
+Attach declarative behaviors to UI elements without code-behind:
+
+- **EventToCommandBehavior** - Execute commands in response to any event
+  - Works with any routed or standard .NET event
+  - Optional `CommandParameter` for passing custom data
+  - `PassEventArgsToCommand` to access event details
+  - Perfect for maintaining clean MVVM architecture
+
+```csharp
+<!-- WPF Example -->
+<Button Content="Save">
+    <i:Interaction.Behaviors>
+        <behaviors:EventToCommandBehavior 
+            EventName="Click"
+            Command="{Binding SaveCommand}" />
+    </i:Interaction.Behaviors>
+</Button>
+```
+
+Learn more: [Behaviors Documentation](docs/Behaviors/Readme.md)
+
+### �🎨 Value Converters
 
 Extensive collection of ready-to-use XAML converters for WPF, WinUI, and Avalonia:
 
@@ -188,6 +211,7 @@ public partial class MainViewModel : ViewModelBase
 
 - [MVVM Framework](docs/Mvvm/Readme.md) - ViewModels, Commands, and MVVM patterns
 - [Messaging System](docs/Messaging/Readme.md) - Decoupled communication between components
+- [Behaviors](docs/Behaviors/Readme.md) - EventToCommandBehavior and declarative behaviors
 - [Source Generators](docs/SourceGenerators/ViewModel.md) - Eliminate boilerplate code
 
 ### Advanced Topics

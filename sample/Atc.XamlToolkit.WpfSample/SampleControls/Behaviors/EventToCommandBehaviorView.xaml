@@ -1,0 +1,152 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WpfSample.SampleControls.Behaviors.EventToCommandBehaviorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:behaviors="clr-namespace:Atc.XamlToolkit.Behaviors;assembly=Atc.XamlToolkit.Wpf"
+    xmlns:local="clr-namespace:Atc.XamlToolkit.WpfSample.SampleControls.Behaviors"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <local:EventToCommandBehaviorViewModel />
+    </UserControl.DataContext>
+
+    <StackPanel Margin="20">
+        <TextBlock
+            FontSize="20"
+            FontWeight="Bold"
+            Text="EventToCommandBehavior Sample" />
+
+        <Separator Margin="0,10" />
+
+        <!--  Example 1: Button Click Event  -->
+        <GroupBox Header="Example 1: Button Click Event" Margin="0,10">
+            <StackPanel Margin="10">
+                <TextBlock
+                    Margin="0,0,0,10"
+                    Text="Click the button to execute a command via EventToCommandBehavior:"
+                    TextWrapping="Wrap" />
+
+                <Button
+                    Width="200"
+                    HorizontalAlignment="Left"
+                    Padding="10,5"
+                    Content="Click Me">
+                    <i:Interaction.Behaviors>
+                        <behaviors:EventToCommandBehavior
+                            EventName="Click"
+                            Command="{Binding ButtonClickCommand}" />
+                    </i:Interaction.Behaviors>
+                </Button>
+
+                <TextBlock Margin="0,10,0,0">
+                    <Run Text="Button clicked: " />
+                    <Run FontWeight="Bold" Text="{Binding ClickCount, Mode=OneWay}" />
+                    <Run Text=" times" />
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+
+        <!--  Example 2: ListBox SelectionChanged with EventArgs  -->
+        <GroupBox Header="Example 2: ListBox SelectionChanged with EventArgs" Margin="0,10">
+            <StackPanel Margin="10">
+                <TextBlock
+                    Margin="0,0,0,10"
+                    Text="Select items to see the selection changed event passed to the command:"
+                    TextWrapping="Wrap" />
+
+                <ListBox
+                    Width="300"
+                    Height="120"
+                    HorizontalAlignment="Left"
+                    ItemsSource="{Binding Items}"
+                    SelectionMode="Single">
+                    <i:Interaction.Behaviors>
+                        <behaviors:EventToCommandBehavior
+                            EventName="SelectionChanged"
+                            Command="{Binding SelectionChangedCommand}"
+                            PassEventArgsToCommand="True" />
+                    </i:Interaction.Behaviors>
+                </ListBox>
+
+                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">
+                    <Run Text="Last selection: " />
+                    <Run FontWeight="Bold" Text="{Binding LastSelection, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+
+        <!--  Example 3: TextBox TextChanged with CommandParameter  -->
+        <GroupBox Header="Example 3: TextBox TextChanged with CommandParameter" Margin="0,10">
+            <StackPanel Margin="10">
+                <TextBlock
+                    Margin="0,0,0,10"
+                    Text="Type in the textbox to trigger the command with a custom parameter:"
+                    TextWrapping="Wrap" />
+
+                <TextBox
+                    Width="300"
+                    HorizontalAlignment="Left">
+                    <i:Interaction.Behaviors>
+                        <behaviors:EventToCommandBehavior
+                            EventName="TextChanged"
+                            Command="{Binding TextChangedCommand}"
+                            CommandParameter="From TextBox" />
+                    </i:Interaction.Behaviors>
+                </TextBox>
+
+                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">
+                    <Run Text="Text changed triggered: " />
+                    <Run FontWeight="Bold" Text="{Binding TextChangeCount, Mode=OneWay}" />
+                    <Run Text=" times" />
+                </TextBlock>
+                <TextBlock Margin="0,5,0,0" TextWrapping="Wrap">
+                    <Run Text="Parameter received: " />
+                    <Run FontWeight="Bold" Text="{Binding LastParameter, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+
+        <!--  Example 4: MouseEnter and MouseLeave Events  -->
+        <GroupBox Header="Example 4: MouseEnter and MouseLeave Events" Margin="0,10">
+            <StackPanel Margin="10">
+                <TextBlock
+                    Margin="0,0,0,10"
+                    Text="Hover over the border to trigger mouse events:"
+                    TextWrapping="Wrap" />
+
+                <Border
+                    Width="300"
+                    Height="100"
+                    HorizontalAlignment="Left"
+                    Background="{Binding BorderBackground}"
+                    BorderBrush="Gray"
+                    BorderThickness="2"
+                    CornerRadius="5">
+                    <i:Interaction.Behaviors>
+                        <behaviors:EventToCommandBehavior
+                            EventName="MouseEnter"
+                            Command="{Binding MouseEnterCommand}" />
+                        <behaviors:EventToCommandBehavior
+                            EventName="MouseLeave"
+                            Command="{Binding MouseLeaveCommand}" />
+                    </i:Interaction.Behaviors>
+
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="Hover over me!" />
+                </Border>
+
+                <TextBlock Margin="0,10,0,0">
+                    <Run Text="Mouse state: " />
+                    <Run FontWeight="Bold" Text="{Binding MouseState, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
+</UserControl>
