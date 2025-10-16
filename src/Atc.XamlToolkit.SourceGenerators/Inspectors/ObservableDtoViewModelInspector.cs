@@ -25,7 +25,9 @@ internal static class ObservableDtoViewModelInspector
                 enableValidationOnPropertyChanged: false,
                 enableValidationOnInit: false,
                 properties: null,
-                methods: null);
+                methods: null,
+                customProperties: null,
+                customCommands: null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -57,7 +59,9 @@ internal static class ObservableDtoViewModelInspector
                 enableValidationOnPropertyChanged: false,
                 enableValidationOnInit: false,
                 properties: null,
-                methods: null);
+                methods: null,
+                customProperties: null,
+                customCommands: null);
         }
 
         var useIsDirty = attribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: true);
@@ -72,6 +76,11 @@ internal static class ObservableDtoViewModelInspector
         var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames);
         var methods = dtoTypeSymbol.ExtractMethods(ignoreMethodNames);
 
+        // Inspect for custom ObservableProperty and RelayCommand attributes
+        var viewModelInspectorResult = ViewModelInspector.Inspect(
+            viewModelClassSymbol,
+            inheritFromViewModel);
+
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
             isRecord,
@@ -80,7 +89,9 @@ internal static class ObservableDtoViewModelInspector
             enableValidationOnPropertyChanged,
             enableValidationOnInit,
             properties,
-            methods);
+            methods,
+            viewModelInspectorResult.PropertiesToGenerate,
+            viewModelInspectorResult.RelayCommandsToGenerate);
     }
 
     private static INamedTypeSymbol? ExtractDtoTypeFromSyntax(
