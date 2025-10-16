@@ -95,6 +95,205 @@ private string name;
 
 - `NotifyPropertyChangedFor` ensures that when the annotated property changes, specified dependent properties also get notified.
 
+### 🧮 Computed Properties with Automatic Dependency Detection
+
+The `ComputedProperty` attribute automatically detects which properties a computed property depends on and ensures those dependencies trigger property change notifications. This eliminates the need to manually specify `NotifyPropertyChangedFor` on multiple properties.
+
+**What is a Computed Property?**
+
+A computed property is a property whose value is calculated from other properties. Common examples include:
+
+- `FullName` derived from `FirstName` and `LastName`
+- `TotalPrice` calculated from `UnitPrice` and `Quantity`
+- `DisplayText` formatted from multiple data fields
+- `IsValid` based on validation of other properties
+
+**How It Works:**
+
+```csharp
+public partial class PersonViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string firstName = string.Empty;
+
+    [ObservableProperty]
+    private string? lastName;
+
+    // Mark computed properties with [ComputedProperty]
+    [ComputedProperty]
+    public string FullName => $"{FirstName} {LastName}";
+}
+```
+
+**Generated Code:**
+
+The source generator automatically analyzes `FullName` and detects it depends on `FirstName` and `LastName`. It then generates setters that notify `FullName` when either dependency changes:
+
+```csharp
+public partial class PersonViewModel
+{
+    public string FirstName
+    {
+        get => firstName;
+        set
+        {
+            if (firstName == value) return;
+            firstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+            RaisePropertyChanged(nameof(FullName));  // Automatically added!
+        }
+    }
+
+    public string? LastName
+    {
+        get => lastName;
+        set
+        {
+            if (lastName == value) return;
+            lastName = value;
+            RaisePropertyChanged(nameof(LastName));
+            RaisePropertyChanged(nameof(FullName));  // Automatically added!
+        }
+    }
+}
+```
+
+**Benefits of ComputedProperty:**
+
+✅ **Automatic dependency detection** - No need to manually track which properties depend on each other  
+✅ **Less boilerplate** - No repetitive `[NotifyPropertyChangedFor]` attributes on multiple properties  
+✅ **Maintainable** - When you change the computed property implementation, dependencies are automatically updated  
+✅ **Type-safe** - The generator analyzes your code, so typos in property names are impossible  
+✅ **Works with expressions** - Supports expression-bodied properties, string interpolation, method calls, etc.
+
+**Before (manual approach):**
+
+```csharp
+public partial class PersonViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FullName))]  // Manual
+    private string firstName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FullName))]  // Manual
+    private string? lastName;
+
+    public string FullName => $"{FirstName} {LastName}";
+}
+```
+
+**After (with ComputedProperty):**
+
+```csharp
+public partial class PersonViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string firstName;
+
+    [ObservableProperty]
+    private string? lastName;
+
+    [ComputedProperty]  // Dependencies detected automatically!
+    public string FullName => $"{FirstName} {LastName}";
+}
+```
+
+**Advanced Examples:**
+
+**Multiple computed properties:**
+
+```csharp
+public partial class OrderViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private decimal unitPrice;
+
+    [ObservableProperty]
+    private int quantity;
+
+    [ObservableProperty]
+    private decimal taxRate;
+
+    [ComputedProperty]
+    public decimal Subtotal => UnitPrice * Quantity;
+
+    [ComputedProperty]
+    public decimal Tax => Subtotal * TaxRate;
+
+    [ComputedProperty]
+    public decimal Total => Subtotal + Tax;
+}
+```
+
+When `UnitPrice` or `Quantity` changes, `Subtotal`, `Tax`, and `Total` all get notified automatically!
+
+**Complex expressions:**
+
+```csharp
+public partial class UserViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string? email;
+
+    [ObservableProperty]
+    private string? phoneNumber;
+
+    [ObservableProperty]
+    private bool termsAccepted;
+
+    [ComputedProperty]
+    public bool CanRegister => 
+        !string.IsNullOrWhiteSpace(Email) && 
+        !string.IsNullOrWhiteSpace(PhoneNumber) && 
+        TermsAccepted;
+}
+```
+
+**Using with ObservableDtoViewModel:**
+
+ComputedProperty also works seamlessly with `ObservableDtoViewModel` for wrapping DTOs:
+
+```csharp
+public class PersonDto
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public DateTime? BirthDate { get; set; }
+}
+
+[ObservableDtoViewModel(typeof(PersonDto))]
+public partial class PersonViewModel : ViewModelBase
+{
+    [ComputedProperty]
+    public string FullName => $"{FirstName} {LastName}".Trim();
+
+    [ComputedProperty]
+    public int? Age => BirthDate.HasValue 
+        ? (int?)((DateTime.Now - BirthDate.Value).TotalDays / 365.25)
+        : null;
+}
+```
+
+**Best Practices:**
+
+✅ **Use expression-bodied properties** - Keep computed properties simple and readable  
+✅ **Mark all computed properties** - Consistently use `[ComputedProperty]` for all derived properties  
+✅ **Keep logic simple** - Computed properties should be fast calculations, not heavy processing  
+✅ **Combine with validation** - Use computed properties to derive `IsValid` or `CanSave` states
+
+**What's Analyzed:**
+
+The source generator automatically detects dependencies in:
+
+- String interpolation: `$"{FirstName} {LastName}"`
+- Property access: `FirstName + " " + LastName`
+- Method calls with property arguments: `string.Join(" ", FirstName, LastName)`
+- Conditional expressions: `FirstName ?? "Unknown"`
+- Complex expressions: `(FirstName?.Length ?? 0) + (LastName?.Length ?? 0)`
+
+**Note:** The generator only analyzes properties defined in the same class. External method calls or properties from other objects are not tracked as dependencies.
+
 ### 🔮 Callbacks
 
 ```csharp

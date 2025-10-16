@@ -11,15 +11,13 @@ public partial class PersonViewModel : ViewModelBase
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FullName))]
     [Required(ErrorMessage = "First name is required")]
     [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
     [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
     private string firstName;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FullName), nameof(Age))]
-    [NotifyPropertyChangedFor(nameof(Email))]
+    [NotifyPropertyChangedFor(nameof(Email), nameof(Age))]
     [NotifyPropertyChangedFor(nameof(TheProperty))]
     [Required(ErrorMessage = "Last name is required")]
     [MinLength(2, ErrorMessage = "Last name must be at least 2 characters long")]
@@ -39,5 +37,6 @@ public partial class PersonViewModel : ViewModelBase
     [MaxLength(100, ErrorMessage = "The property cannot exceed 100 characters")]
     private string? myTestProperty;
 
+    [ComputedProperty]
     public string FullName => $"{FirstName} {LastName}";
 }

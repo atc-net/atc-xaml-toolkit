@@ -13,8 +13,13 @@ internal static class ViewModelInspector
         var relayCommandsToGenerate = RelayCommandInspector.Inspect(
             viewModelClassSymbol);
 
+        var computedPropertiesToGenerate = ComputedPropertyInspector.Inspect(
+            viewModelClassSymbol,
+            propertiesToGenerate);
+
         return new ViewModelInspectorResult(
             propertiesToGenerate,
-            relayCommandsToGenerate);
+            relayCommandsToGenerate,
+            computedPropertiesToGenerate);
     }
 }

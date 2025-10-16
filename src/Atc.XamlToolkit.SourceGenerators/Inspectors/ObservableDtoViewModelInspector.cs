@@ -27,7 +27,8 @@ internal static class ObservableDtoViewModelInspector
                 properties: null,
                 methods: null,
                 customProperties: null,
-                customCommands: null);
+                customCommands: null,
+                computedProperties: null);
         }
 
         INamedTypeSymbol? dtoTypeSymbol = null;
@@ -61,7 +62,8 @@ internal static class ObservableDtoViewModelInspector
                 properties: null,
                 methods: null,
                 customProperties: null,
-                customCommands: null);
+                customCommands: null,
+                computedProperties: null);
         }
 
         var useIsDirty = attribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: true);
@@ -81,6 +83,34 @@ internal static class ObservableDtoViewModelInspector
             viewModelClassSymbol,
             inheritFromViewModel);
 
+        // Link computed properties to both DTO properties and custom observable properties
+        var allProperties = new List<ObservablePropertyToGenerate>();
+        if (properties is not null)
+        {
+            foreach (var property in properties)
+            {
+                allProperties.Add(new ObservablePropertyToGenerate(
+                    property.Name,
+                    property.Type,
+                    backingFieldName: string.Empty,
+                    isReadOnly: false));
+            }
+        }
+
+        if (viewModelInspectorResult.PropertiesToGenerate is not null)
+        {
+            allProperties.AddRange(viewModelInspectorResult.PropertiesToGenerate);
+        }
+
+        var computedProperties = ComputedPropertyInspector.Inspect(
+            viewModelClassSymbol,
+            allProperties);
+
+        // Link computed properties to custom observable properties only
+        LinkComputedPropertiesToObservableProperties(
+            viewModelInspectorResult.PropertiesToGenerate,
+            computedProperties);
+
         return new ObservableDtoViewModelInspectorResult(
             dtoTypeName,
             isRecord,
@@ -91,7 +121,38 @@ internal static class ObservableDtoViewModelInspector
             properties,
             methods,
             viewModelInspectorResult.PropertiesToGenerate,
-            viewModelInspectorResult.RelayCommandsToGenerate);
+            viewModelInspectorResult.RelayCommandsToGenerate,
+            computedProperties);
+    }
+
+    /// <summary>
+    /// Links computed properties to observable properties by adding them to the PropertyNamesToInvalidate list.
+    /// </summary>
+    /// <param name="observableProperties">The list of observable properties.</param>
+    /// <param name="computedProperties">The list of computed properties.</param>
+    private static void LinkComputedPropertiesToObservableProperties(
+        List<ObservablePropertyToGenerate>? observableProperties,
+        List<ComputedPropertyToGenerate> computedProperties)
+    {
+        if (observableProperties is null)
+        {
+            return;
+        }
+
+        foreach (var observableProperty in observableProperties)
+        {
+            foreach (var computedProperty in computedProperties)
+            {
+                if (computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
+                {
+                    observableProperty.PropertyNamesToInvalidate ??= [];
+                    if (!observableProperty.PropertyNamesToInvalidate.Contains(computedProperty.Name, StringComparer.Ordinal))
+                    {
+                        observableProperty.PropertyNamesToInvalidate.Add(computedProperty.Name);
+                    }
+                }
+            }
+        }
     }
 
     private static INamedTypeSymbol? ExtractDtoTypeFromSyntax(

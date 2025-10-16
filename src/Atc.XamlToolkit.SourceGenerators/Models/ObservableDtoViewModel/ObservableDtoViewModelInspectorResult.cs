@@ -13,7 +13,8 @@ internal sealed class ObservableDtoViewModelInspectorResult
         List<DtoPropertyInfo>? properties,
         List<DtoMethodInfo>? methods,
         List<ObservablePropertyToGenerate>? customProperties,
-        List<RelayCommandToGenerate>? customCommands)
+        List<RelayCommandToGenerate>? customCommands,
+        List<ComputedPropertyToGenerate>? computedProperties)
     {
         DtoTypeName = dtoTypeName;
         IsDtoRecord = isDtoRecord;
@@ -25,6 +26,7 @@ internal sealed class ObservableDtoViewModelInspectorResult
         Methods = methods ?? [];
         CustomProperties = customProperties ?? [];
         CustomCommands = customCommands ?? [];
+        ComputedProperties = computedProperties ?? [];
     }
 
     public string? DtoTypeName { get; }
@@ -47,9 +49,11 @@ internal sealed class ObservableDtoViewModelInspectorResult
 
     public List<RelayCommandToGenerate> CustomCommands { get; }
 
+    public List<ComputedPropertyToGenerate> ComputedProperties { get; }
+
     public bool FoundAnythingToGenerate => !string.IsNullOrEmpty(DtoTypeName) &&
                                            Properties.Count > 0;
 
     public override string ToString()
-        => $"{nameof(DtoTypeName)}: {DtoTypeName}, {nameof(IsDtoRecord)}: {IsDtoRecord}, {nameof(HasCustomToString)}: {HasCustomToString}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(EnableValidationOnPropertyChanged)}: {EnableValidationOnPropertyChanged}, {nameof(EnableValidationOnInit)}: {EnableValidationOnInit}, {nameof(Properties)}.Count: {Properties.Count}, {nameof(Methods)}.Count: {Methods.Count}, {nameof(CustomProperties)}.Count: {CustomProperties.Count}, {nameof(CustomCommands)}.Count: {CustomCommands.Count}, {nameof(FoundAnythingToGenerate)}: {FoundAnythingToGenerate}";
+        => $"{nameof(DtoTypeName)}: {DtoTypeName}, {nameof(IsDtoRecord)}: {IsDtoRecord}, {nameof(HasCustomToString)}: {HasCustomToString}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(EnableValidationOnPropertyChanged)}: {EnableValidationOnPropertyChanged}, {nameof(EnableValidationOnInit)}: {EnableValidationOnInit}, {nameof(Properties)}.Count: {Properties.Count}, {nameof(Methods)}.Count: {Methods.Count}, {nameof(CustomProperties)}.Count: {CustomProperties.Count}, {nameof(CustomCommands)}.Count: {CustomCommands.Count}, {nameof(ComputedProperties)}.Count: {ComputedProperties.Count}, {nameof(FoundAnythingToGenerate)}: {FoundAnythingToGenerate}";
 }

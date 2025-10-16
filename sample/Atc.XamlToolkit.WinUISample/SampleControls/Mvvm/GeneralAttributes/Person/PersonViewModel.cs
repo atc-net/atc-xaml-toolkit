@@ -11,15 +11,13 @@ public partial class PersonViewModel : ViewModelBase
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FullName), nameof(FirstNameError))]
     [Required(ErrorMessage = "First name is required")]
     [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
     [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
-    private string firstName = string.Empty;
+    private string firstName;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FullName), nameof(Age), nameof(LastNameError))]
-    [NotifyPropertyChangedFor(nameof(Email))]
+    [NotifyPropertyChangedFor(nameof(Email), nameof(Age))]
     [NotifyPropertyChangedFor(nameof(TheProperty))]
     [Required(ErrorMessage = "Last name is required")]
     [MinLength(2, ErrorMessage = "Last name must be at least 2 characters long")]
@@ -27,20 +25,19 @@ public partial class PersonViewModel : ViewModelBase
     private string? lastName;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AgeError))]
     [Required(ErrorMessage = "Age is required")]
     [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
     private int? age;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(EmailError))]
     [EmailAddress(ErrorMessage = "Please enter a valid email address")]
     private string? email;
 
-    [ObservableProperty("TheProperty", DependentPropertyNames = [nameof(FullName), nameof(Age), nameof(ThePropertyError)])]
+    [ObservableProperty("TheProperty", DependentPropertyNames = [nameof(FullName), nameof(Age)])]
     [MaxLength(100, ErrorMessage = "The property cannot exceed 100 characters")]
     private string? myTestProperty;
 
+    [ComputedProperty]
     public string FullName => $"{FirstName} {LastName}";
 
     // Error message properties for UI binding

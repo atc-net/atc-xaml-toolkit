@@ -119,6 +119,15 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
                 AppendLine($"RaisePropertyChanged(nameof({property.Name}));");
 
+                // Raise property changed for computed properties that depend on this property
+                foreach (var computedProperty in viewModelToGenerate.ComputedProperties)
+                {
+                    if (computedProperty.DependentPropertyNames.Contains(property.Name, StringComparer.Ordinal))
+                    {
+                        AppendLine($"RaisePropertyChanged(nameof({computedProperty.Name}));");
+                    }
+                }
+
                 if (viewModelToGenerate.UseIsDirty)
                 {
                     AppendLine("IsDirty = true;");
