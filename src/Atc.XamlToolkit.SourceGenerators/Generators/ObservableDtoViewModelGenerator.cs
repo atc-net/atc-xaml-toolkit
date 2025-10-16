@@ -119,7 +119,8 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             properties: result.Properties,
             methods: result.Methods,
             customProperties: result.CustomProperties,
-            customCommands: result.CustomCommands);
+            customCommands: result.CustomCommands,
+            computedProperties: result.ComputedProperties);
     }
 
     private static void Execute(

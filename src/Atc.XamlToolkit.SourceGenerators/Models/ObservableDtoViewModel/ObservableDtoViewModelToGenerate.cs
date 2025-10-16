@@ -16,7 +16,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         List<DtoPropertyInfo> properties,
         List<DtoMethodInfo> methods,
         List<ObservablePropertyToGenerate> customProperties,
-        List<RelayCommandToGenerate> customCommands)
+        List<RelayCommandToGenerate> customCommands,
+        List<ComputedPropertyToGenerate> computedProperties)
         : base(namespaceName, className, accessModifier, isStatic: false)
     {
         DtoTypeName = dtoTypeName;
@@ -29,6 +30,7 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         Methods = methods;
         CustomProperties = customProperties;
         CustomCommands = customCommands;
+        ComputedProperties = computedProperties;
     }
 
     public string DtoTypeName { get; }
@@ -50,4 +52,6 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
     public List<ObservablePropertyToGenerate> CustomProperties { get; }
 
     public List<RelayCommandToGenerate> CustomCommands { get; }
+
+    public List<ComputedPropertyToGenerate> ComputedProperties { get; }
 }

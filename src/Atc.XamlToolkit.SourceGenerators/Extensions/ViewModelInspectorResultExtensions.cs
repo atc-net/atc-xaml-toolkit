@@ -5,7 +5,8 @@ internal static class ViewModelInspectorResultExtensions
     public static void ApplyCommandsAndProperties(
         this ViewModelInspectorResult result,
         List<ObservablePropertyToGenerate> allObservableProperties,
-        List<RelayCommandToGenerate> allRelayCommands)
+        List<RelayCommandToGenerate> allRelayCommands,
+        List<ComputedPropertyToGenerate> allComputedProperties)
     {
         if (allObservableProperties.Count == 0)
         {
@@ -30,6 +31,19 @@ internal static class ViewModelInspectorResultExtensions
                          .Where(rc => allRelayCommands.Find(x => x.CommandName == rc.CommandName) is null))
             {
                 allRelayCommands.Add(relayCommandToGenerate);
+            }
+        }
+
+        if (allComputedProperties.Count == 0)
+        {
+            allComputedProperties.AddRange(result.ComputedPropertiesToGenerate);
+        }
+        else
+        {
+            foreach (var computedPropertyToGenerate in result.ComputedPropertiesToGenerate
+                         .Where(cp => allComputedProperties.Find(x => x.Name == cp.Name) is null))
+            {
+                allComputedProperties.Add(computedPropertyToGenerate);
             }
         }
     }

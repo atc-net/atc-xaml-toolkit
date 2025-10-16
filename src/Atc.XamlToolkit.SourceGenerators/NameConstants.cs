@@ -17,6 +17,8 @@ internal static class NameConstants
     public const string Command = nameof(Command);
     public const string CommandName = nameof(CommandName);
     public const string CoerceValueCallback = nameof(CoerceValueCallback);
+    public const string ComputedProperty = nameof(ComputedProperty);
+    public const string ComputedPropertyAttribute = nameof(ComputedPropertyAttribute);
     public const string DefaultValue = nameof(DefaultValue);
     public const string DefaultUpdateSourceTrigger = nameof(DefaultUpdateSourceTrigger);
     public const string DependencyProperty = nameof(DependencyProperty);
