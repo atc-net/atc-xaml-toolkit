@@ -14,7 +14,9 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         bool enableValidationOnPropertyChanged,
         bool enableValidationOnInit,
         List<DtoPropertyInfo> properties,
-        List<DtoMethodInfo> methods)
+        List<DtoMethodInfo> methods,
+        List<ObservablePropertyToGenerate> customProperties,
+        List<RelayCommandToGenerate> customCommands)
         : base(namespaceName, className, accessModifier, isStatic: false)
     {
         DtoTypeName = dtoTypeName;
@@ -25,6 +27,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         EnableValidationOnInit = enableValidationOnInit;
         Properties = properties;
         Methods = methods;
+        CustomProperties = customProperties;
+        CustomCommands = customCommands;
     }
 
     public string DtoTypeName { get; }
@@ -42,4 +46,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
     public List<DtoPropertyInfo> Properties { get; }
 
     public List<DtoMethodInfo> Methods { get; }
+
+    public List<ObservablePropertyToGenerate> CustomProperties { get; }
+
+    public List<RelayCommandToGenerate> CustomCommands { get; }
 }

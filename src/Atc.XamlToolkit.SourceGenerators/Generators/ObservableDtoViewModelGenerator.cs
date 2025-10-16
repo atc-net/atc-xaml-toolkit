@@ -117,7 +117,9 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             enableValidationOnPropertyChanged: result.EnableValidationOnPropertyChanged,
             enableValidationOnInit: result.EnableValidationOnInit,
             properties: result.Properties,
-            methods: result.Methods);
+            methods: result.Methods,
+            customProperties: result.CustomProperties,
+            customCommands: result.CustomCommands);
     }
 
     private static void Execute(
@@ -133,13 +135,19 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
 
         builder.GenerateStart(viewModelToGenerate);
 
+        builder.GenerateDtoFieldAndCommandBackingFields(viewModelToGenerate);
+
         builder.GenerateConstructor(viewModelToGenerate);
+
+        builder.GenerateCustomCommandProperties(viewModelToGenerate);
 
         builder.GenerateInnerModelProperty(viewModelToGenerate);
 
         builder.GenerateProperties(viewModelToGenerate);
 
         builder.GenerateMethods(viewModelToGenerate);
+
+        builder.GenerateCustomProperties(viewModelToGenerate);
 
         builder.GenerateToString(viewModelToGenerate);
 
