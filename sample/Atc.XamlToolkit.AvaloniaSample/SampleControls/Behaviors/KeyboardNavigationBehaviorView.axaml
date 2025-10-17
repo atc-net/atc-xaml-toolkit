@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ia="using:Avalonia.Xaml.Interactivity"
+             xmlns:behaviors="using:Atc.XamlToolkit.Behaviors"
+             xmlns:vm="using:Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors.KeyboardNavigationBehaviorView"
+             x:DataType="vm:KeyboardNavigationBehaviorViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="KeyboardNavigationBehavior Examples"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Margin="0,0,0,20" />
+
+            <!-- Example: Grid Navigation -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example: Arrow Key Grid Navigation"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="Use arrow keys to navigate the grid. Press Enter to select, Escape to reset."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <Border BorderBrush="Gray" BorderThickness="2"
+                            Background="White"
+                            Width="400" Height="300"
+                            HorizontalAlignment="Left"
+                            Focusable="True">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:KeyboardNavigationBehavior
+                                UpCommand="{Binding NavigateUpCommand}"
+                                DownCommand="{Binding NavigateDownCommand}"
+                                LeftCommand="{Binding NavigateLeftCommand}"
+                                RightCommand="{Binding NavigateRightCommand}"
+                                EnterCommand="{Binding HandleEnterCommand}"
+                                EscapeCommand="{Binding HandleEscapeCommand}" />
+                        </ia:Interaction.Behaviors>
+
+                        <Grid ShowGridLines="True">
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Grid cells -->
+                            <Border Grid.Row="0" Grid.Column="0" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(0,0)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(0,1)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(0,2)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <Border Grid.Row="1" Grid.Column="0" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(1,0)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="1" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(1,1)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="2" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(1,2)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <Border Grid.Row="2" Grid.Column="0" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(2,0)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="1" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(2,1)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="2" Margin="5" BorderBrush="LightGray" BorderThickness="1">
+                                <TextBlock Text="(2,2)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <!-- Highlight current position -->
+                            <Ellipse Grid.Row="{Binding CurrentRow}" Grid.Column="{Binding CurrentColumn}"
+                                     Fill="LightBlue" Width="30" Height="30"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     Opacity="0.5" />
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Margin="0,10,0,0">
+                        <Run Text="Current Position: " />
+                        <Run Text="{Binding CurrentRow, StringFormat='({0},'}" FontWeight="Bold" />
+                        <Run Text="{Binding CurrentColumn, StringFormat=' {0})'}" FontWeight="Bold" />
+                    </TextBlock>
+
+                    <TextBlock Text="Navigation Log:" FontWeight="Bold" Margin="0,10,0,5" />
+                    <ScrollViewer Height="150">
+                        <TextBox Text="{Binding NavigationLog}"
+                                 IsReadOnly="True"
+                                 FontFamily="Consolas"
+                                 TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,147 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WpfSample.SampleControls.Behaviors.FocusBehaviorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Atc.XamlToolkit.Behaviors;assembly=Atc.XamlToolkit.Wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:Atc.XamlToolkit.WpfSample.SampleControls.Behaviors"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <local:FocusBehaviorViewModel />
+    </UserControl.DataContext>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock
+                Margin="0,0,0,20"
+                FontSize="24"
+                FontWeight="Bold"
+                Text="FocusBehavior Examples" />
+
+            <!--  Example 1: HasInitialFocus  -->
+            <GroupBox Margin="0,0,0,20" Header="Example 1: HasInitialFocus">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="The TextBox below receives focus automatically when loaded:"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Text="{Binding InitialFocusText, UpdateSourceTrigger=PropertyChanged}">
+                        <i:Interaction.Behaviors>
+                            <behaviors:FocusBehavior HasInitialFocus="True" />
+                        </i:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Example 2: IsFocused Two-Way Binding  -->
+            <GroupBox Margin="0,0,0,20" Header="Example 2: IsFocused Two-Way Binding">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="The TextBox focus state is synchronized with the ViewModel:"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        Margin="0,0,0,10"
+                        HorizontalAlignment="Left"
+                        Text="Click to focus">
+                        <i:Interaction.Behaviors>
+                            <behaviors:FocusBehavior IsFocused="{Binding IsTextBoxFocused, Mode=TwoWay}" />
+                        </i:Interaction.Behaviors>
+                    </TextBox>
+
+                    <TextBlock Margin="0,0,0,10">
+                        <Run Text="Is Focused:" />
+                        <Run FontWeight="Bold" Text="{Binding IsTextBoxFocused, Mode=OneWay}" />
+                    </TextBlock>
+
+                    <Button
+                        Width="200"
+                        HorizontalAlignment="Left"
+                        Command="{Binding SetFocusCommand}"
+                        Content="Set Focus Programmatically" />
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Example 3: SelectAllOnFocus  -->
+            <GroupBox Margin="0,0,0,20" Header="Example 3: SelectAllOnFocus">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="Click or tab into the TextBox - all text will be selected automatically:"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Text="This text will be selected on focus">
+                        <i:Interaction.Behaviors>
+                            <behaviors:FocusBehavior SelectAllOnFocus="True" />
+                        </i:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Example 4: FocusTrigger  -->
+            <GroupBox Margin="0,0,0,20" Header="Example 4: FocusTrigger">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="Click the button to trigger focus on the TextBox below:"
+                        TextWrapping="Wrap" />
+
+                    <Button
+                        Width="150"
+                        Margin="0,0,0,10"
+                        HorizontalAlignment="Left"
+                        Command="{Binding TriggerFocusCommand}"
+                        Content="Trigger Focus" />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Text="I will receive focus when triggered">
+                        <i:Interaction.Behaviors>
+                            <behaviors:FocusBehavior FocusTrigger="{Binding FocusTrigger}" />
+                        </i:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Example 5: Combined Features  -->
+            <GroupBox Margin="0,0,0,20" Header="Example 5: Combined Features">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="This example combines SelectAllOnFocus with IsFocused binding:"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        Margin="0,0,0,10"
+                        HorizontalAlignment="Left"
+                        Text="Combined features example">
+                        <i:Interaction.Behaviors>
+                            <behaviors:FocusBehavior IsFocused="{Binding IsCombinedFocused, Mode=TwoWay}" SelectAllOnFocus="True" />
+                        </i:Interaction.Behaviors>
+                    </TextBox>
+
+                    <TextBlock>
+                        <Run Text="Focus State:" />
+                        <Run FontWeight="Bold" Text="{Binding IsCombinedFocused, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

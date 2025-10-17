@@ -30,11 +30,14 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     {
         SampleViews =
         [
-            new SampleViewItem("Mvvm", "SampleControls/Behaviors")
+            new SampleViewItem("Behaviors", "SampleControls/Behaviors")
             {
                 Children =
                 {
+                    new SampleViewItem("AnimationBehaviorView", viewType: typeof(SampleControls.Behaviors.AnimationBehaviorView)),
                     new SampleViewItem("EventToCommandBehaviorView", viewType: typeof(SampleControls.Behaviors.EventToCommandBehaviorView)),
+                    new SampleViewItem("FocusBehaviorView", viewType: typeof(SampleControls.Behaviors.FocusBehaviorView)),
+                    new SampleViewItem("KeyboardNavigationBehaviorView", viewType: typeof(SampleControls.Behaviors.KeyboardNavigationBehaviorView)),
                 },
             },
             new SampleViewItem("Mvvm", "SampleControls/Mvvm")

@@ -1,0 +1,168 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors.AnimationBehaviorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+    xmlns:b="clr-namespace:Atc.XamlToolkit.Behaviors;assembly=Atc.XamlToolkit.Avalonia"
+    xmlns:vm="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors"
+    mc:Ignorable="d"
+    x:DataType="vm:AnimationBehaviorViewModel"
+    d:DesignHeight="800" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
+            <!-- Example 1: Fade Animations -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="Fade Animations" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <TextBlock Text="Fade In / Fade Out" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
+                        <Button Content="Fade In" Command="{Binding TriggerFadeInCommand}"/>
+                        <Button Content="Fade Out" Command="{Binding TriggerFadeOutCommand}"/>
+                    </StackPanel>
+                    <Border Background="LightBlue" Padding="20" HorizontalAlignment="Left">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Watch me fade!" FontSize="16" Foreground="DarkBlue">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding FadeInTrigger}"
+                                        AnimationType="FadeIn"
+                                        Duration="500"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                            <TextBlock Text="I fade too!" FontSize="16" Foreground="DarkBlue">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding FadeOutTrigger}"
+                                        AnimationType="FadeOut"
+                                        Duration="500"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 2: Slide Animations - Horizontal -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="Slide Animations - Horizontal" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <TextBlock Text="Slide from Left / Right" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
+                        <Button Content="Slide from Left" Command="{Binding TriggerSlideLeftCommand}"/>
+                        <Button Content="Slide from Right" Command="{Binding TriggerSlideRightCommand}"/>
+                    </StackPanel>
+                    <UniformGrid Rows="1" Columns="2">
+                        <Border Background="LightGreen" Padding="20" Margin="0,0,5,0">
+                            <TextBlock Text="Sliding from left!" FontSize="16" Foreground="DarkGreen">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding SlideLeftTrigger}"
+                                        AnimationType="SlideInFromLeft"
+                                        Duration="600"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                        <Border Background="LightCoral" Padding="20" Margin="5,0,0,0">
+                            <TextBlock Text="Sliding from right!" FontSize="16" Foreground="DarkRed">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding SlideRightTrigger}"
+                                        AnimationType="SlideInFromRight"
+                                        Duration="600"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 3: Slide Animations - Vertical -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="Slide Animations - Vertical" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <TextBlock Text="Slide from Top / Bottom" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
+                        <Button Content="Slide from Top" Command="{Binding TriggerSlideTopCommand}"/>
+                        <Button Content="Slide from Bottom" Command="{Binding TriggerSlideBottomCommand}"/>
+                    </StackPanel>
+                    <UniformGrid Rows="1" Columns="2">
+                        <Border Background="LightYellow" Padding="20" Margin="0,0,5,0">
+                            <TextBlock Text="Sliding from top!" FontSize="16" Foreground="DarkGoldenrod">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding SlideTrigger}"
+                                        AnimationType="SlideInFromTop"
+                                        Duration="600"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                        <Border Background="LightPink" Padding="20" Margin="5,0,0,0">
+                            <TextBlock Text="Sliding from bottom!" FontSize="16" Foreground="DarkMagenta">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding SlideBottomTrigger}"
+                                        AnimationType="SlideInFromBottom"
+                                        Duration="600"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 4: Scale Animations -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="Scale Animations" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <TextBlock Text="Scale In / Scale Out" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
+                        <Button Content="Scale In" Command="{Binding TriggerScaleInCommand}"/>
+                        <Button Content="Scale Out" Command="{Binding TriggerScaleOutCommand}"/>
+                    </StackPanel>
+                    <UniformGrid Rows="1" Columns="2">
+                        <Border Background="Lavender" Padding="20" Margin="0,0,5,0">
+                            <TextBlock Text="Scaling in!" FontSize="16" Foreground="Indigo">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding ScaleInTrigger}"
+                                        AnimationType="ScaleIn"
+                                        Duration="400"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                        <Border Background="PeachPuff" Padding="20" Margin="5,0,0,0">
+                            <TextBlock Text="Scaling out!" FontSize="16" Foreground="OrangeRed">
+                                <i:Interaction.Behaviors>
+                                    <b:AnimationBehavior
+                                        AnimationTrigger="{Binding ScaleOutTrigger}"
+                                        AnimationType="ScaleOut"
+                                        Duration="400"/>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 5: Auto-Start Animation -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
+                <StackPanel>
+                    <TextBlock Text="Auto-Start Animation" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                    <TextBlock Text="This element automatically fades in when loaded" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <Border Background="PaleGreen" Padding="20" HorizontalAlignment="Left">
+                        <TextBlock Text="I fade in automatically!" FontSize="16" Foreground="DarkGreen">
+                            <i:Interaction.Behaviors>
+                                <b:AnimationBehavior
+                                    AnimationType="FadeIn"
+                                    Duration="1000"
+                                    AutoStart="True"/>
+                            </i:Interaction.Behaviors>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

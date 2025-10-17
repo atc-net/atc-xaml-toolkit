@@ -2,6 +2,25 @@
 
 This is a base libraries for building WPF, WinUI, or Avalonia application with the MVVM design pattern.
 
+## 📑 Table of Contents
+
+- [Key Features](#-key-features)
+  - [MVVM Foundation](#️-mvvm-foundation)
+  - [Commands](#-commands)
+  - [Messaging System](#-messaging-system)
+  - [Behaviors](#-behaviors)
+  - [Value Converters](#-value-converters)
+  - [Source Generators](#️-source-generators)
+  - [Performance Optimizations](#-performance-optimizations)
+  - [Utilities](#-utilities)
+- [Quick Start](#-quick-start)
+- [Requirements](#requirements)
+- [NuGet Packages](#nuget-packages-provided-in-this-repository)
+- [Documentation](#-documentation)
+- [Complete Feature List](#-complete-feature-list)
+- [Why Choose Atc.XamlToolkit?](#-why-choose-atcxamltoolkit)
+- [How to Contribute](#how-to-contribute)
+
 ## 🎁 Key Features
 
 ### 🏗️ MVVM Foundation
@@ -48,17 +67,20 @@ Messenger.Default.Register<GenericMessage<User>>(this, msg =>
 
 Learn more: [Messaging System Documentation](docs/Messaging/Readme.md)
 
-### � Behaviors
+### 🎭 Behaviors
 
-Attach declarative behaviors to UI elements without code-behind:
+Attach declarative behaviors to UI elements without code-behind. All behaviors work seamlessly across WPF, WinUI, and Avalonia platforms.
 
-- **EventToCommandBehavior** - Execute commands in response to any event
-  - Works with any routed or standard .NET event
-  - Optional `CommandParameter` for passing custom data
-  - `PassEventArgsToCommand` to access event details
-  - Perfect for maintaining clean MVVM architecture
+#### EventToCommandBehavior
 
-```csharp
+Execute commands in response to any UI event, eliminating the need for code-behind event handlers.
+
+- Works with any routed or standard .NET event
+- Optional `CommandParameter` for passing custom data
+- `PassEventArgsToCommand` to access event details
+- Perfect for maintaining clean MVVM architecture
+
+```xml
 <!-- WPF Example -->
 <Button Content="Save">
     <i:Interaction.Behaviors>
@@ -69,9 +91,79 @@ Attach declarative behaviors to UI elements without code-behind:
 </Button>
 ```
 
-Learn more: [Behaviors Documentation](docs/Behaviors/Readme.md)
+[Learn more about EventToCommandBehavior](docs/Behaviors/EventToCommandBehavior.md)
 
-### �🎨 Value Converters
+#### AnimationBehavior
+
+Provides simple, declarative animations for UI elements without writing animation code.
+
+- **8 animation types**: FadeIn, FadeOut, SlideInFromLeft/Right/Top/Bottom, ScaleIn, ScaleOut
+- Trigger-based or auto-start animations
+- Customizable duration
+- GPU-accelerated for smooth performance
+
+```xml
+<Border Background="LightBlue" Padding="20">
+    <i:Interaction.Behaviors>
+        <behaviors:AnimationBehavior 
+            AnimationType="FadeIn"
+            Duration="1000"
+            AutoStart="True" />
+    </i:Interaction.Behaviors>
+    <TextBlock Text="I fade in automatically!" />
+</Border>
+```
+
+[Learn more about AnimationBehavior](docs/Behaviors/AnimationBehavior.md)
+
+#### FocusBehavior
+
+Manages focus for UI elements declaratively through XAML properties.
+
+- **HasInitialFocus** - Set focus when element loads
+- **IsFocused** - Two-way bindable focus state
+- **SelectAllOnFocus** - Automatically select text in TextBox
+- **FocusTrigger** - Trigger focus from ViewModel
+
+```xml
+<TextBox Width="300">
+    <i:Interaction.Behaviors>
+        <behaviors:FocusBehavior 
+            IsFocused="{Binding IsFieldFocused, Mode=TwoWay}"
+            SelectAllOnFocus="True" />
+    </i:Interaction.Behaviors>
+</TextBox>
+```
+
+[Learn more about FocusBehavior](docs/Behaviors/FocusBehavior.md)
+
+#### KeyboardNavigationBehavior
+
+Enables custom keyboard navigation with arrow keys, Enter, Escape, and Tab through declarative command bindings.
+
+- Arrow key navigation (Up, Down, Left, Right)
+- Action keys (Enter, Escape, Tab)
+- Enable/disable toggle
+- Perfect for grids, lists, and custom controls
+
+```xml
+<Border Focusable="True">
+    <i:Interaction.Behaviors>
+        <behaviors:KeyboardNavigationBehavior
+            UpCommand="{Binding NavigateUpCommand}"
+            DownCommand="{Binding NavigateDownCommand}"
+            LeftCommand="{Binding NavigateLeftCommand}"
+            RightCommand="{Binding NavigateRightCommand}"
+            EnterCommand="{Binding SelectCommand}" />
+    </i:Interaction.Behaviors>
+</Border>
+```
+
+[Learn more about KeyboardNavigationBehavior](docs/Behaviors/KeyboardNavigationBehavior.md)
+
+**Complete Behaviors Documentation:** [Behaviors Overview](docs/Behaviors/Readme.md)
+
+### 🎨 Value Converters
 
 Extensive collection of ready-to-use XAML converters for WPF, WinUI, and Avalonia:
 
