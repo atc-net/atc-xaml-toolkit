@@ -10,11 +10,32 @@ Execute commands in response to any UI event, eliminating the need for code-behi
 
 [Learn more about EventToCommandBehavior](EventToCommandBehavior.md)
 
+### AnimationBehavior
+
+Provides simple, declarative animations (fade, slide, scale) for UI elements without writing code-behind.
+
+[Learn more about AnimationBehavior](AnimationBehavior.md)
+
+### FocusBehavior
+
+Manages focus for UI elements declaratively with two-way binding, automatic text selection, and trigger-based focus control.
+
+[Learn more about FocusBehavior](FocusBehavior.md)
+
+### KeyboardNavigationBehavior
+
+Enables custom keyboard navigation with arrow keys, Enter, Escape, and Tab through declarative command bindings.
+
+[Learn more about KeyboardNavigationBehavior](KeyboardNavigationBehavior.md)
+
 ## Platform Support
 
 | Behavior | WPF | WinUI | Avalonia |
 |----------|-----|-------|----------|
 | EventToCommandBehavior | ✅ | ✅ | ✅ |
+| AnimationBehavior | ✅ | ✅ | ✅ |
+| FocusBehavior | ✅ | ✅ | ✅ |
+| KeyboardNavigationBehavior | ✅ | ✅ | ✅ |
 
 ## Getting Started
 

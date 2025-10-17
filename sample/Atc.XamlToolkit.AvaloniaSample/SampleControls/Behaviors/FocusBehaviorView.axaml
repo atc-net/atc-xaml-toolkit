@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ia="using:Avalonia.Xaml.Interactivity"
+             xmlns:behaviors="using:Atc.XamlToolkit.Behaviors"
+             xmlns:vm="using:Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Behaviors.FocusBehaviorView"
+             x:DataType="vm:FocusBehaviorViewModel">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="FocusBehavior Examples"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Margin="0,0,0,20" />
+
+            <!-- Example 1: HasInitialFocus -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example 1: HasInitialFocus"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="The TextBox below receives focus automatically when loaded:"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <TextBox Width="300" HorizontalAlignment="Left"
+                             Text="{Binding InitialFocusText}">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:FocusBehavior HasInitialFocus="True" />
+                        </ia:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 2: IsFocused Two-Way Binding -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example 2: IsFocused Two-Way Binding"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="The TextBox focus state is synchronized with the ViewModel:"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <TextBox Width="300" HorizontalAlignment="Left"
+                             Text="Click to focus" Margin="0,0,0,10">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:FocusBehavior IsFocused="{Binding IsTextBoxFocused, Mode=TwoWay}" />
+                        </ia:Interaction.Behaviors>
+                    </TextBox>
+
+                    <TextBlock Margin="0,0,0,10">
+                        <Run Text="Is Focused:" />
+                        <Run Text="{Binding IsTextBoxFocused}"
+                             FontWeight="Bold" />
+                    </TextBlock>
+
+                    <Button Content="Set Focus Programmatically"
+                            Command="{Binding SetFocusCommand}"
+                            Width="200"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <!-- Example 3: SelectAllOnFocus -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example 3: SelectAllOnFocus"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="Click or tab into the TextBox - all text will be selected automatically:"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <TextBox Width="300" HorizontalAlignment="Left"
+                             Text="This text will be selected on focus">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:FocusBehavior SelectAllOnFocus="True" />
+                        </ia:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 4: FocusTrigger -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example 4: FocusTrigger"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="Click the button to trigger focus on the TextBox below:"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <Button Content="Trigger Focus"
+                            Command="{Binding TriggerFocusCommand}"
+                            Width="150"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,10" />
+
+                    <TextBox Width="300" HorizontalAlignment="Left"
+                             Text="I will receive focus when triggered">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:FocusBehavior FocusTrigger="{Binding FocusTrigger}" />
+                        </ia:Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Example 5: Combined Features -->
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Example 5: Combined Features"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="This example combines SelectAllOnFocus with IsFocused binding:"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <TextBox Width="300" HorizontalAlignment="Left"
+                             Text="Combined features example" Margin="0,0,0,10">
+                        <ia:Interaction.Behaviors>
+                            <behaviors:FocusBehavior
+                                IsFocused="{Binding IsCombinedFocused, Mode=TwoWay}"
+                                SelectAllOnFocus="True" />
+                        </ia:Interaction.Behaviors>
+                    </TextBox>
+
+                    <TextBlock>
+                        <Run Text="Focus State:" />
+                        <Run Text="{Binding IsCombinedFocused}"
+                             FontWeight="Bold" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

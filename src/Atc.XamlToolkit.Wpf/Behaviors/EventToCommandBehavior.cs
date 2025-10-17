@@ -1,3 +1,5 @@
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 namespace Atc.XamlToolkit.Behaviors;
 
 /// <summary>

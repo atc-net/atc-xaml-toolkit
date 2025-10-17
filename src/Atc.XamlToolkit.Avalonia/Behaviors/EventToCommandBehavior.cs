@@ -1,3 +1,4 @@
+// ReSharper disable InvertIf
 // ReSharper disable UnusedParameter.Local
 namespace Atc.XamlToolkit.Behaviors;
 
@@ -9,26 +10,26 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
     /// <summary>
     /// Styled property for the event name to listen to.
     /// </summary>
-    public static readonly Avalonia.StyledProperty<string> EventNameProperty =
-        Avalonia.AvaloniaProperty.Register<EventToCommandBehavior, string>(nameof(EventName), string.Empty);
+    public static readonly StyledProperty<string> EventNameProperty =
+        AvaloniaProperty.Register<EventToCommandBehavior, string>(nameof(EventName), string.Empty);
 
     /// <summary>
     /// Styled property for the command to execute.
     /// </summary>
-    public static readonly Avalonia.StyledProperty<ICommand?> CommandProperty =
-        Avalonia.AvaloniaProperty.Register<EventToCommandBehavior, ICommand?>(nameof(Command));
+    public static readonly StyledProperty<ICommand?> CommandProperty =
+        AvaloniaProperty.Register<EventToCommandBehavior, ICommand?>(nameof(Command));
 
     /// <summary>
     /// Styled property for the command parameter.
     /// </summary>
-    public static readonly Avalonia.StyledProperty<object?> CommandParameterProperty =
-        Avalonia.AvaloniaProperty.Register<EventToCommandBehavior, object?>(nameof(CommandParameter));
+    public static readonly StyledProperty<object?> CommandParameterProperty =
+        AvaloniaProperty.Register<EventToCommandBehavior, object?>(nameof(CommandParameter));
 
     /// <summary>
     /// Styled property to determine if event arguments should be passed to the command.
     /// </summary>
-    public static readonly Avalonia.StyledProperty<bool> PassEventArgsToCommandProperty =
-        Avalonia.AvaloniaProperty.Register<EventToCommandBehavior, bool>(nameof(PassEventArgsToCommand), defaultValue: false);
+    public static readonly StyledProperty<bool> PassEventArgsToCommandProperty =
+        AvaloniaProperty.Register<EventToCommandBehavior, bool>(nameof(PassEventArgsToCommand), defaultValue: false);
 
     private Delegate? eventHandler;
     private System.Reflection.EventInfo? eventInfo;
@@ -85,7 +86,7 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
 
     /// <inheritdoc/>
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1", Justification = "Method should fail with an exception if func is null.")]
-    protected override void OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs change)
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
@@ -121,7 +122,9 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
 
     private void DetachHandler()
     {
-        if (eventInfo is not null && eventHandler is not null && AssociatedObject is not null)
+        if (eventInfo is not null &&
+            eventHandler is not null &&
+            AssociatedObject is not null)
         {
             eventInfo.RemoveEventHandler(AssociatedObject, eventHandler);
             eventHandler = null;

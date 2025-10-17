@@ -1,0 +1,204 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Behaviors.KeyboardNavigationBehaviorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Atc.XamlToolkit.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock
+                Margin="0,0,0,20"
+                FontSize="24"
+                FontWeight="Bold"
+                Text="KeyboardNavigationBehavior Examples" />
+
+            <!--  Example: Grid Navigation  -->
+            <Border
+                Margin="0,0,0,20"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontWeight="Bold"
+                        Text="Example: Arrow Key Grid Navigation" />
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        Text="Use arrow keys to navigate the grid. Press Enter to select, Escape to reset."
+                        TextWrapping="Wrap" />
+
+                    <Border
+                        Width="400"
+                        Height="300"
+                        HorizontalAlignment="Left"
+                        AllowFocusOnInteraction="True"
+                        Background="White"
+                        BorderBrush="Gray"
+                        BorderThickness="2"
+                        IsTabStop="True"
+                        IsTapEnabled="True">
+                        <interactivity:Interaction.Behaviors>
+                            <behaviors:KeyboardNavigationBehavior
+                                DownCommand="{x:Bind ViewModel.NavigateDownCommand}"
+                                EnterCommand="{x:Bind ViewModel.HandleEnterCommand}"
+                                EscapeCommand="{x:Bind ViewModel.HandleEscapeCommand}"
+                                LeftCommand="{x:Bind ViewModel.NavigateLeftCommand}"
+                                RightCommand="{x:Bind ViewModel.NavigateRightCommand}"
+                                UpCommand="{x:Bind ViewModel.NavigateUpCommand}" />
+                        </interactivity:Interaction.Behaviors>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <!--  Grid cells  -->
+                            <Border
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(0,0)" />
+                            </Border>
+                            <Border
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(0,1)" />
+                            </Border>
+                            <Border
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(0,2)" />
+                            </Border>
+
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(1,0)" />
+                            </Border>
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(1,1)" />
+                            </Border>
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(1,2)" />
+                            </Border>
+
+                            <Border
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(2,0)" />
+                            </Border>
+                            <Border
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(2,1)" />
+                            </Border>
+                            <Border
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                Margin="5"
+                                BorderBrush="LightGray"
+                                BorderThickness="1">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="(2,2)" />
+                            </Border>
+
+                            <!--  Highlight current position  -->
+                            <Ellipse
+                                Grid.Row="{x:Bind ViewModel.CurrentRow, Mode=OneWay}"
+                                Grid.Column="{x:Bind ViewModel.CurrentColumn, Mode=OneWay}"
+                                Width="30"
+                                Height="30"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="LightBlue"
+                                Opacity="0.5" />
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Margin="0,10,0,0">
+                        <Run Text="Current Position: " />
+                        <Run FontWeight="Bold" Text="{x:Bind ViewModel.CurrentRow, Mode=OneWay}" />
+                        <Run Text=", " />
+                        <Run FontWeight="Bold" Text="{x:Bind ViewModel.CurrentColumn, Mode=OneWay}" />
+                    </TextBlock>
+
+                    <TextBlock
+                        Margin="0,10,0,5"
+                        FontWeight="Bold"
+                        Text="Navigation Log:" />
+                    <ScrollViewer Height="150" VerticalScrollBarVisibility="Auto">
+                        <TextBox
+                            FontFamily="Consolas"
+                            IsReadOnly="True"
+                            Text="{x:Bind ViewModel.NavigationLog, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
