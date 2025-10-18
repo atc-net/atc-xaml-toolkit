@@ -76,7 +76,15 @@ public sealed class RelayCommandAttribute : Attribute
     /// </summary>
     public bool AutoSetIsBusy { get; set; }
 
+    /// <summary>
+    /// Gets or sets cancellation support.
+    /// - Null (default): Auto-detect from method signature (has CancellationToken parameter?)
+    /// - True: Force cancellation support (adds CancellationToken parameter if missing)
+    /// - False: Force no cancellation support (ignores CancellationToken parameter)
+    /// </summary>
+    public bool SupportsCancellation { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(CommandName)}: {CommandName}, {nameof(CanExecute)}: {CanExecute}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(ParameterValue)}: {ParameterValue}, {nameof(ParameterValues)}: {ParameterValues}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}";
+        => $"{nameof(CommandName)}: {CommandName}, {nameof(CanExecute)}: {CanExecute}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(ParameterValue)}: {ParameterValue}, {nameof(ParameterValues)}: {ParameterValues}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}, {nameof(SupportsCancellation)}: {SupportsCancellation}";
 }

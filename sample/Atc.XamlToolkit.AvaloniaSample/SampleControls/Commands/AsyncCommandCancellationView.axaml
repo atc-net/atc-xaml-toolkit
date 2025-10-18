@@ -55,7 +55,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Button
                         Width="120"
-                        Command="{Binding StartLongRunningTaskCommand}"
+                        Command="{Binding StartLongRunningTaskAsyncCommand}"
                         Content="Start Task" />
 
                     <Button
@@ -122,7 +122,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Button
                         Width="120"
-                        Command="{Binding StartDownloadCommand}"
+                        Command="{Binding StartDownloadAsyncCommand}"
                         Content="Start Download" />
 
                     <Button

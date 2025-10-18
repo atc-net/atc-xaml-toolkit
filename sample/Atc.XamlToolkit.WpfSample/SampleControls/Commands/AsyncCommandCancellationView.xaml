@@ -59,7 +59,7 @@
                     <Button
                         Width="120"
                         Margin="0,0,10,0"
-                        Command="{Binding StartLongRunningTaskCommand}"
+                        Command="{Binding StartLongRunningTaskAsyncCommand}"
                         Content="Start Task" />
 
                     <Button
@@ -127,7 +127,7 @@
                     <Button
                         Width="120"
                         Margin="0,0,10,0"
-                        Command="{Binding StartDownloadCommand}"
+                        Command="{Binding StartDownloadAsyncCommand}"
                         Content="Start Download" />
 
                     <Button

@@ -179,8 +179,14 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
     {
         if (CanExecute(parameter))
         {
-            if (executeWithCancellation is not null && cancellationTokenSource is not null)
+            if (executeWithCancellation is not null)
             {
+                // Create cancellation token source if it doesn't exist
+                if (cancellationTokenSource is null)
+                {
+                    cancellationTokenSource = new CancellationTokenSource();
+                }
+
                 return executeWithCancellation(cancellationTokenSource.Token);
             }
 

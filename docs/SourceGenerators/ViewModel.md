@@ -504,6 +504,109 @@ public void Save();
 public async Task Save();
 ```
 
+### 🛑 Commands with Cancellation Support
+
+The `SupportsCancellation` property enables automatic cancellation token support for asynchronous commands, allowing users to cancel long-running operations.
+
+**Key features:**
+
+- ✅ **Automatic Cancel method generation** - Generates a `Cancel{CommandName}()` method for each cancellable command
+- ✅ **Works with or without CancellationToken parameter** - Adapts based on your method signature
+- ✅ **Combines with other features** - Works with `CanExecute`, `ExecuteOnBackgroundThread`, and `AutoSetIsBusy`
+
+**Basic usage with CancellationToken parameter:**
+
+```csharp
+// Method has CancellationToken parameter - passed directly to command
+[RelayCommand(SupportsCancellation = true)]
+private async Task ProcessAsync(CancellationToken cancellationToken)
+{
+    await Task.Delay(1000, cancellationToken);
+}
+
+// Generated code:
+// - ProcessCommand (IRelayCommandAsync)
+// - CancelProcess() method
+```
+
+**Usage without CancellationToken parameter:**
+
+```csharp
+// Method doesn't have CancellationToken - wrapper lambda generated
+[RelayCommand(SupportsCancellation = true)]
+private async Task ProcessAsync()
+{
+    await Task.Delay(1000);
+}
+
+// Generated: ProcessCommand => new RelayCommandAsync(async (ct) => await ProcessAsync());
+// Also generated: CancelProcess() method
+```
+
+**With generic parameter:**
+
+```csharp
+[RelayCommand(SupportsCancellation = true)]
+private async Task SearchAsync(string query, CancellationToken cancellationToken)
+{
+    await Task.Delay(1000, cancellationToken);
+}
+
+// Generated: SearchCommand (IRelayCommandAsync<string>)
+// Also generated: CancelSearch() method
+```
+
+**Combining with CanExecute:**
+
+```csharp
+[RelayCommand(CanExecute = nameof(CanProcess), SupportsCancellation = true)]
+private async Task ProcessAsync(CancellationToken cancellationToken)
+{
+    await Task.Delay(1000, cancellationToken);
+}
+
+private bool CanProcess() => !string.IsNullOrEmpty(InputData);
+
+// Generated command with both CanExecute and cancellation support
+```
+
+**Combining with ExecuteOnBackgroundThread:**
+
+```csharp
+[RelayCommand(ExecuteOnBackgroundThread = true, SupportsCancellation = true)]
+private async Task ProcessAsync(CancellationToken cancellationToken)
+{
+    await Task.Delay(1000, cancellationToken);
+}
+
+// Generated: ProcessCommand with background thread execution and cancellation
+```
+
+**Using the generated Cancel method:**
+
+```xml
+<StackPanel>
+    <Button Content="Start Process" Command="{Binding ProcessCommand}" />
+    <Button Content="Cancel" Click="CancelButton_Click" />
+</StackPanel>
+```
+
+```csharp
+private void CancelButton_Click(object sender, RoutedEventArgs e)
+{
+    viewModel.CancelProcess();
+}
+```
+
+**Best practices:**
+
+- ✅ Use `SupportsCancellation = true` for long-running operations
+- ✅ Always pass the `CancellationToken` to async operations inside your method
+- ✅ Provide a Cancel button in your UI for better user experience
+- ✅ Handle `OperationCanceledException` gracefully if needed
+
+📖 For detailed information about cancellation token support, see the [Async Command Cancellation](../Command/AsyncCommandCancellation.md) guide.
+
 ### ♿ Commands with auto set on IsBusy
 
 ```csharp

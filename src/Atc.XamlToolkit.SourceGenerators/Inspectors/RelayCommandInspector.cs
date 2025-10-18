@@ -121,6 +121,13 @@ internal static class RelayCommandInspector
             autoSetIsBusy = autoSetIsBusyValueAsBool;
         }
 
+        var supportsCancellation = false;
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.SupportsCancellation, out var supportsCancellationValue) &&
+            bool.TryParse(supportsCancellationValue, out var supportsCancellationValueAsBool))
+        {
+            supportsCancellation = supportsCancellationValueAsBool;
+        }
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
@@ -133,6 +140,7 @@ internal static class RelayCommandInspector
                 methodSymbol.IsAsync,
                 useTask,
                 executeOnBackgroundThread,
-                autoSetIsBusy));
+                autoSetIsBusy,
+                supportsCancellation));
     }
 }
