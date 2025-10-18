@@ -40,6 +40,13 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
                     new SampleViewItem("KeyboardNavigationBehaviorView", viewType: typeof(SampleControls.Behaviors.KeyboardNavigationBehaviorView)),
                 },
             },
+            new SampleViewItem("Commands", "SampleControls/Commands")
+            {
+                Children =
+                {
+                    new SampleViewItem("AsyncCommandCancellationView", viewType: typeof(SampleControls.Commands.AsyncCommandCancellationView)),
+                },
+            },
             new SampleViewItem("Mvvm", "SampleControls/Mvvm")
             {
                 Children =

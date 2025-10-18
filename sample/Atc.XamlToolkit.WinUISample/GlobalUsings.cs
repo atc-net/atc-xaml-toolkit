@@ -5,6 +5,7 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.Runtime.Versioning;
 global using System.Text;
 
+global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Mvvm;
 global using Atc.XamlToolkit.WinUISample.Models;
 

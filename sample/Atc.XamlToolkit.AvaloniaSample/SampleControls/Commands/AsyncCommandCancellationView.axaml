@@ -1,0 +1,136 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Commands.AsyncCommandCancellationView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:commands="using:Atc.XamlToolkit.AvaloniaSample.SampleControls.Commands"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="commands:AsyncCommandCancellationViewModel"
+    mc:Ignorable="d">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Title  -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="24"
+            FontWeight="Bold"
+            Text="Async Command Cancellation Sample" />
+
+        <!--  Long Running Task Section  -->
+        <Border
+            Grid.Row="2"
+            Padding="10"
+            BorderBrush="Gray"
+            BorderThickness="1">
+            <StackPanel>
+                <TextBlock
+                    Margin="0,0,0,10"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Long Running Task" />
+
+                <ProgressBar
+                    Height="25"
+                    Margin="0,0,0,10"
+                    Maximum="100"
+                    Minimum="0"
+                    Value="{Binding Progress}" />
+
+                <TextBlock Margin="0,0,0,10" Text="{Binding StatusMessage}" />
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button
+                        Width="120"
+                        Command="{Binding StartLongRunningTaskCommand}"
+                        Content="Start Task" />
+
+                    <Button
+                        Width="120"
+                        Command="{Binding CancelTaskCommand}"
+                        Content="Cancel Task" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!--  Search with Cancellation Section  -->
+        <Border
+            Grid.Row="4"
+            Padding="10"
+            BorderBrush="Gray"
+            BorderThickness="1">
+            <StackPanel>
+                <TextBlock
+                    Margin="0,0,0,10"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Search with Auto-Cancel" />
+
+                <TextBlock Margin="0,0,0,10" TextWrapping="Wrap">
+                    <Run Text="Type in the search box. Previous search will be automatically cancelled when you type a new search." />
+                </TextBlock>
+
+                <TextBox
+                    Height="25"
+                    Margin="0,0,0,10"
+                    Text="{Binding SearchQuery}" />
+
+                <TextBlock
+                    Margin="0,0,0,10"
+                    FontStyle="Italic"
+                    Text="{Binding SearchStatus}" />
+
+                <ListBox Height="100" ItemsSource="{Binding SearchResults}" />
+            </StackPanel>
+        </Border>
+
+        <!--  Download Simulation Section  -->
+        <Border
+            Grid.Row="6"
+            Padding="10"
+            BorderBrush="Gray"
+            BorderThickness="1">
+            <StackPanel>
+                <TextBlock
+                    Margin="0,0,0,10"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="File Download Simulation" />
+
+                <ProgressBar
+                    Height="25"
+                    Margin="0,0,0,10"
+                    Maximum="100"
+                    Minimum="0"
+                    Value="{Binding DownloadProgress}" />
+
+                <TextBlock Margin="0,0,0,10" Text="{Binding DownloadStatus}" />
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button
+                        Width="120"
+                        Command="{Binding StartDownloadCommand}"
+                        Content="Start Download" />
+
+                    <Button
+                        Width="120"
+                        Command="{Binding CancelDownloadCommand}"
+                        Content="Cancel Download" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

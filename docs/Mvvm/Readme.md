@@ -35,6 +35,8 @@ The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia
 
 📖 For detailed information about commands, refer to the [RelayCommand documentation](../SourceGenerators/ViewModel.md).
 
+📖 For cancellation token support in async commands, see the [Async Command Cancellation](../Command/AsyncCommandCancellation.md) guide.
+
 📖 For wrapping DTOs with ViewModels, see the [ObservableDtoViewModel documentation](../SourceGenerators/ViewModel.md#-wrapping-dtos-with-observabledtoviewmodel).
 
 💡 **Tip:** The `ObservableDtoViewModel` generator automatically adds `IsDirty` tracking to your ViewModels when inheriting from `ViewModelBase`, helping you track changes in your forms and data. See the [Change Tracking with IsDirty](../SourceGenerators/ViewModel.md#-change-tracking-with-isdirty) section for more details.

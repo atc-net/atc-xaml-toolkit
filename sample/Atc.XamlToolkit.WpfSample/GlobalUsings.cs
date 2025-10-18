@@ -10,6 +10,7 @@ global using System.Windows.Media;
 global using System.Windows.Threading;
 
 global using Atc.Data.Models;
+global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Diagnostics;
 global using Atc.XamlToolkit.Mvvm;
