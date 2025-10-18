@@ -558,7 +558,11 @@ public async Task Command_CanBeCancelled()
 
 ### Q: Does the source generator support CancellationToken?
 
-**A:** Yes! If your method signature includes a `CancellationToken` parameter, the source generator automatically creates the command with cancellation support:
+**A:** Yes! The source generator supports cancellation in two ways:
+
+#### 1. Automatic Detection (Method with CancellationToken parameter)
+
+If your method signature includes a `CancellationToken` parameter, the generator automatically creates the command with cancellation support:
 
 ```csharp
 public partial class MyViewModel : ViewModelBase
@@ -569,9 +573,195 @@ public partial class MyViewModel : ViewModelBase
         await Task.Delay(1000, cancellationToken);
     }
     
-    // Generator creates: public IRelayCommandAsync LoadDataCommand { get; }
+    // Generator creates:
+    // - public IRelayCommandAsync LoadDataCommand { get; }
+    // - Cancel method available: LoadDataCommand.Cancel()
 }
 ```
+
+#### 2. Explicit Declaration (SupportsCancellation property)
+
+Use `SupportsCancellation = true` to generate a `Cancel{CommandName}()` method even when your async method doesn't have a `CancellationToken` parameter:
+
+```csharp
+public partial class MyViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task ProcessAsync()
+    {
+        // No CancellationToken parameter
+        await Task.Delay(1000);
+    }
+    
+    // Generator creates:
+    // - public IRelayCommandAsync ProcessCommand { get; }
+    // - public void CancelProcess() => ProcessCommand.Cancel();
+}
+```
+
+This is useful for:
+
+- Convenience methods to cancel commands from code or XAML
+- Consistent cancellation API across your ViewModels
+- Commands that call services with their own cancellation handling
+
+**See [ViewModel Source Generator Documentation](../SourceGenerators/ViewModel.md#-commands-with-cancellation-support) for more details and advanced scenarios.**
+
+## Using Source Generator for Cancellation
+
+The `[RelayCommand]` attribute makes working with cancellable async commands much simpler than manual command creation.
+
+### Basic Example with Auto-Detection
+
+```csharp
+public partial class DownloadViewModel : ViewModelBase
+{
+    [RelayCommand]
+    private async Task DownloadAsync(CancellationToken cancellationToken)
+    {
+        for (int i = 0; i <= 100; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Delay(50, cancellationToken);
+            Progress = i;
+        }
+    }
+    
+    // Use the generated command:
+    // <Button Content="Download" Command="{Binding DownloadCommand}" />
+    // <Button Content="Cancel" Command="{Binding DownloadCommand.CancelCommand}" />
+}
+```
+
+### Example with SupportsCancellation
+
+```csharp
+public partial class SearchViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task SearchAsync(string query)
+    {
+        // Your existing method without CancellationToken
+        var results = await _searchService.SearchAsync(query);
+        SearchResults = results;
+    }
+    
+    // Generator creates CancelSearch() method for easy access
+    public void ClearSearch()
+    {
+        CancelSearch(); // Generated method
+        SearchResults = null;
+    }
+    
+    // XAML binding:
+    // <Button Content="Search" Command="{Binding SearchCommand}" CommandParameter="{Binding QueryText}" />
+    // <Button Content="Cancel" Click="ClearSearchButton_Click" />
+}
+```
+
+### Combining with CanExecute
+
+```csharp
+public partial class DataViewModel : ViewModelBase
+{
+    private bool _hasConnection;
+    
+    [RelayCommand(CanExecute = nameof(HasConnection), SupportsCancellation = true)]
+    private async Task LoadAsync()
+    {
+        await _service.LoadDataAsync();
+    }
+    
+    public bool HasConnection
+    {
+        get => _hasConnection;
+        set
+        {
+            if (SetProperty(ref _hasConnection, value))
+            {
+                LoadCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+}
+```
+
+### Combining with ExecuteOnBackgroundThread
+
+```csharp
+public partial class ProcessingViewModel : ViewModelBase
+{
+    [RelayCommand(ExecuteOnBackgroundThread = true, SupportsCancellation = true)]
+    private async Task ProcessLargeDataAsync(CancellationToken cancellationToken)
+    {
+        // Runs on background thread with cancellation support
+        await Task.Run(() => 
+        {
+            for (int i = 0; i < 1000000; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ProcessItem(i);
+            }
+        }, cancellationToken);
+    }
+    
+    // Generator creates:
+    // - ProcessLargeDataCommand with background execution
+    // - CancelProcessLargeData() method
+}
+```
+
+### Migration from Manual to Source Generator
+
+**Before (Manual):**
+
+```csharp
+public class MyViewModel : ViewModelBase
+{
+    public IRelayCommandAsync LoadDataCommand { get; }
+    
+    public MyViewModel()
+    {
+        LoadDataCommand = new RelayCommandAsync(LoadDataAsync);
+    }
+    
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+    
+    public void CancelLoad()
+    {
+        LoadDataCommand.Cancel();
+    }
+}
+```
+
+**After (Source Generator):**
+
+```csharp
+public partial class MyViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+    
+    // CancelLoadData() method is auto-generated
+    // No constructor needed!
+}
+```
+
+### When to Use SupportsCancellation
+
+| Scenario | Use SupportsCancellation? |
+|----------|--------------------------|
+| Method has `CancellationToken` parameter | Optional (auto-detected) |
+| Method doesn't have `CancellationToken` parameter | Yes, if you need `Cancel{CommandName}()` method |
+| Need explicit cancel method in code | Yes |
+| Need to bind cancel button in XAML | Optional (can use `CommandName.Cancel()` directly) |
+| Want consistent API across ViewModels | Yes |
 
 ## See Also
 

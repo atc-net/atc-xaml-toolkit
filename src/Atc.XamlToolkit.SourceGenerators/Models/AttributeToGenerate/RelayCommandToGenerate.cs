@@ -12,7 +12,8 @@ internal sealed class RelayCommandToGenerate(
     bool isAsync,
     bool useTask,
     bool executeOnBackgroundThread,
-    bool autoSetIsBusy)
+    bool autoSetIsBusy,
+    bool supportsCancellation)
 {
     public string CommandName { get; } = commandName;
 
@@ -36,6 +37,8 @@ internal sealed class RelayCommandToGenerate(
 
     public bool AutoSetIsBusy { get; } = autoSetIsBusy;
 
+    public bool SupportsCancellation { get; } = supportsCancellation;
+
     public override string ToString()
-        => $"{nameof(CommandName)}: {CommandName}, {nameof(MethodName)}: {MethodName}, {nameof(ParameterTypes)}.Count: {ParameterTypes?.Length}, {nameof(ParameterValues)}.Count: {ParameterValues?.Length}, {nameof(CanExecuteName)}: {CanExecuteName}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(UsePropertyForCanExecute)}: {UsePropertyForCanExecute}, {nameof(IsAsync)}: {IsAsync}, {nameof(UseTask)}: {UseTask}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}";
+        => $"{nameof(CommandName)}: {CommandName}, {nameof(MethodName)}: {MethodName}, {nameof(ParameterTypes)}.Count: {ParameterTypes?.Length}, {nameof(ParameterValues)}.Count: {ParameterValues?.Length}, {nameof(CanExecuteName)}: {CanExecuteName}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(UsePropertyForCanExecute)}: {UsePropertyForCanExecute}, {nameof(IsAsync)}: {IsAsync}, {nameof(UseTask)}: {UseTask}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}, {nameof(SupportsCancellation)}: {SupportsCancellation}";
 }

@@ -1,10 +1,9 @@
 // ReSharper disable ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-// ReSharper disable GCSuppressFinalizeForTypeWithoutDestructor
 // ReSharper disable UnusedMember.Global
 namespace Atc.XamlToolkit.AvaloniaSample.SampleControls.Commands;
 
 [SuppressMessage("Style", "MA0076:Do not use implicit culture-sensitive ToString in interpolated strings", Justification = "OK")]
-public sealed partial class AsyncCommandCancellationViewModel : ObservableObject, IDisposable
+public sealed partial class AsyncCommandCancellationViewModel : ViewModelBase
 {
     [ObservableProperty]
     private int progress;
@@ -28,53 +27,43 @@ public sealed partial class AsyncCommandCancellationViewModel : ObservableObject
         get => searchQuery;
         set
         {
-            if (Set(ref searchQuery, value))
+            if (!Set(ref searchQuery, value))
             {
-                // Cancel previous search and start new one
-                SearchCommand.Cancel();
-                _ = SearchCommand.ExecuteAsync(value);
+                return;
             }
+
+            // Cancel previous search and start new one
+            if (SearchAsyncCommand.IsExecuting)
+            {
+                CancelSearchAsync();
+            }
+
+            _ = SearchAsyncCommand.ExecuteAsync(value);
         }
     }
 
     public ObservableCollection<string> SearchResults { get; } = [];
 
-    public IRelayCommandAsync StartLongRunningTaskCommand { get; }
+    // Cancel commands for XAML binding
+    [RelayCommand(CanExecute = nameof(CanCancelTask))]
+    private void CancelTask() => CancelStartLongRunningTaskAsync();
 
-    public IRelayCommand CancelTaskCommand { get; }
+    [RelayCommand(CanExecute = nameof(CanCancelDownload))]
+    private void CancelDownload() => CancelStartDownloadAsync();
 
-    public IRelayCommandAsync<string> SearchCommand { get; }
+    private bool CanCancelTask() => StartLongRunningTaskAsyncCommand.IsExecuting;
 
-    public IRelayCommandAsync StartDownloadCommand { get; }
+    private bool CanCancelDownload() => StartDownloadAsyncCommand.IsExecuting;
 
-    public IRelayCommand CancelDownloadCommand { get; }
-
-    public AsyncCommandCancellationViewModel()
-    {
-        // Long-running task with cancellation
-        StartLongRunningTaskCommand = new RelayCommandAsync(LongRunningTaskAsync);
-
-        CancelTaskCommand = new RelayCommand(
-            () => StartLongRunningTaskCommand.Cancel(),
-            () => StartLongRunningTaskCommand.IsExecuting);
-
-        // Search with cancellation
-        SearchCommand = new RelayCommandAsync<string>(SearchAsync);
-
-        // Download with cancellation
-        StartDownloadCommand = new RelayCommandAsync(DownloadFileAsync);
-
-        CancelDownloadCommand = new RelayCommand(
-            () => StartDownloadCommand.Cancel(),
-            () => StartDownloadCommand.IsExecuting);
-    }
-
-    private async Task LongRunningTaskAsync(CancellationToken cancellationToken)
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task StartLongRunningTaskAsync(CancellationToken cancellationToken)
     {
         try
         {
             StatusMessage = "Task running...";
             Progress = 0;
+
+            // Notify cancel command that execution state changed
             CancelTaskCommand.RaiseCanExecuteChanged();
 
             for (var i = 0; i <= 100; i++)
@@ -98,10 +87,12 @@ public sealed partial class AsyncCommandCancellationViewModel : ObservableObject
         }
         finally
         {
+            // Notify cancel command that execution state changed
             CancelTaskCommand.RaiseCanExecuteChanged();
         }
     }
 
+    [RelayCommand(SupportsCancellation = true)]
     private async Task SearchAsync(string query, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -123,7 +114,7 @@ public sealed partial class AsyncCommandCancellationViewModel : ObservableObject
             cancellationToken.ThrowIfCancellationRequested();
 
             // Simulate search results
-            for (int i = 1; i <= 10; i++)
+            for (var i = 1; i <= 10; i++)
             {
                 SearchResults.Add($"Result {i} for '{query}'");
             }
@@ -137,16 +128,19 @@ public sealed partial class AsyncCommandCancellationViewModel : ObservableObject
         }
     }
 
-    private async Task DownloadFileAsync(CancellationToken cancellationToken)
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task StartDownloadAsync(CancellationToken cancellationToken)
     {
         try
         {
             DownloadStatus = "Download started...";
             DownloadProgress = 0;
+
+            // Notify cancel command that execution state changed
             CancelDownloadCommand.RaiseCanExecuteChanged();
 
             // Simulate download in chunks
-            for (int i = 0; i <= 100; i += 5)
+            for (var i = 0; i <= 100; i += 5)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -166,15 +160,8 @@ public sealed partial class AsyncCommandCancellationViewModel : ObservableObject
         }
         finally
         {
+            // Notify cancel command that execution state changed
             CancelDownloadCommand.RaiseCanExecuteChanged();
         }
-    }
-
-    public void Dispose()
-    {
-        (StartLongRunningTaskCommand as IDisposable)?.Dispose();
-        (SearchCommand as IDisposable)?.Dispose();
-        (StartDownloadCommand as IDisposable)?.Dispose();
-        GC.SuppressFinalize(this);
     }
 }
