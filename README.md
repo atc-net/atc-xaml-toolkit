@@ -33,7 +33,7 @@ This is a base libraries for building WPF, WinUI, or Avalonia application with t
 ### ⚡ Commands
 
 - **RelayCommand** / **`RelayCommand<T>`** - Synchronous commands with `CanExecute` support
-- **RelayCommandAsync** / **`RelayCommandAsync<T>`** - Async/await commands for responsive UIs
+- **RelayCommandAsync** / **`RelayCommandAsync<T>`** - Async/await commands for responsive UIs with [cancellation token support](docs/Command/AsyncCommandCancellation.md)
 - **Automatic CanExecute refresh** - Commands automatically update UI state
 - **Error handling support** - Built-in `IErrorHandler` interface for graceful error management
 
@@ -302,6 +302,7 @@ public partial class MainViewModel : ViewModelBase
 ### Core Concepts
 
 - [MVVM Framework](docs/Mvvm/Readme.md) - ViewModels, Commands, and MVVM patterns
+- [Async Command Cancellation](docs/Command/AsyncCommandCancellation.md) - CancellationToken support for async commands
 - [Messaging System](docs/Messaging/Readme.md) - Decoupled communication between components
 - [Behaviors](docs/Behaviors/Readme.md) - EventToCommandBehavior and declarative behaviors
 - [Source Generators](docs/SourceGenerators/ViewModel.md) - Eliminate boilerplate code
@@ -351,6 +352,7 @@ All commands support:
 - ✅ `CanExecute` with automatic refresh
 - ✅ Error handling via `IErrorHandler`
 - ✅ Auto-generation via `[RelayCommand]` attribute
+- ✅ [Cancellation token support](docs/Command/AsyncCommandCancellation.md) for async commands
 
 ### Messaging System
 

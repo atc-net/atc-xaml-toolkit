@@ -18,7 +18,7 @@ public sealed class RelayCommandAsyncGenericTests
         var canExecuteChangedCalled = 0;
         var canExecuteChangedEventHandler = new EventHandler((_, _) => canExecuteChangedCalled++);
 
-        var command = new RelayCommandAsync<string>(_ => MyTask(), _ => canExecute);
+        using var command = new RelayCommandAsync<string>(_ => MyTask(), _ => canExecute);
 
         for (var i = 0; i < registerOnChangeCount; i++)
         {
@@ -41,7 +41,7 @@ public sealed class RelayCommandAsyncGenericTests
     public void CanExecute(bool expected, bool canExecute)
     {
         // Arrange
-        var command = new RelayCommandAsync<string>(_ => MyTask(), _ => canExecute);
+        using var command = new RelayCommandAsync<string>(_ => MyTask(), _ => canExecute);
 
         // Act
         var actual = command.CanExecute(parameter: null);
@@ -60,7 +60,7 @@ public sealed class RelayCommandAsyncGenericTests
         // Arrange
         var actual = "Not executed";
 
-        var command = new RelayCommandAsync<string>(_ => MyTask(expected, op => actual = op), _ => canExecute);
+        using var command = new RelayCommandAsync<string>(_ => MyTask(expected, op => actual = op), _ => canExecute);
 
         // Act
         await command.ExecuteAsync(parameter?.ToString());
