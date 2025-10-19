@@ -59,13 +59,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             var execExpr = BuildExecuteExpression(cmd);
             var canExecExpr = BuildCanExecuteExpression(cmd);
             var hasCan = canExecExpr is not null;
-            var hasExecuteOnBackgroundThreadParam = cmd.SupportsCancellation &&
-                                                    cmd.ExecuteOnBackgroundThread &&
-                                                    cmd.HasParameterTypesOfCancellationToken();
             var appendAsMultiLine = hasCan ||
                                     cmd.ExecuteOnBackgroundThread ||
-                                    cmd.AutoSetIsBusy ||
-                                    hasExecuteOnBackgroundThreadParam;
+                                    cmd.AutoSetIsBusy;
 
             if (appendAsMultiLine)
             {
@@ -82,19 +78,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                 }
                 else
                 {
-                    var suffix = hasCan || hasExecuteOnBackgroundThreadParam ? "," : ");";
+                    var suffix = hasCan ? "," : ");";
                     builder.AppendLine($"{execExpr}{suffix}");
                 }
 
                 if (hasCan)
                 {
-                    var suffix = hasExecuteOnBackgroundThreadParam ? "," : ");";
-                    builder.AppendLine($"{canExecExpr}{suffix}");
-                }
-
-                if (hasExecuteOnBackgroundThreadParam)
-                {
-                    builder.AppendLine("executeOnBackgroundThread: true);");
+                    builder.AppendLine($"{canExecExpr});");
                 }
 
                 builder.DecreaseIndent();

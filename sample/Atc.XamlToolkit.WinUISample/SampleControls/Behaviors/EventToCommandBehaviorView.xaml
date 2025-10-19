@@ -2,11 +2,11 @@
     x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Behaviors.EventToCommandBehaviorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:behaviors="using:Atc.XamlToolkit.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:local="using:Atc.XamlToolkit.WinUISample.SampleControls.Behaviors"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <UserControl.DataContext>
@@ -29,23 +29,17 @@
                 BorderThickness="1"
                 CornerRadius="5">
                 <StackPanel Spacing="10">
-                    <TextBlock
-                        FontWeight="SemiBold"
-                        Text="Example 1: Button Click Event" />
+                    <TextBlock FontWeight="SemiBold" Text="Example 1: Button Click Event" />
 
-                    <TextBlock
-                        TextWrapping="Wrap"
-                        Text="Click the button to execute a command via EventToCommandBehavior:" />
+                    <TextBlock Text="Click the button to execute a command via EventToCommandBehavior:" TextWrapping="Wrap" />
 
                     <Button
                         Width="200"
-                        HorizontalAlignment="Left"
                         Padding="10,5"
+                        HorizontalAlignment="Left"
                         Content="Click Me">
                         <interactivity:Interaction.Behaviors>
-                            <behaviors:EventToCommandBehavior
-                                EventName="Click"
-                                Command="{x:Bind ViewModel.ButtonClickCommand}" />
+                            <behaviors:EventToCommandBehavior Command="{x:Bind ViewModel.ButtonClickCommand}" EventName="Click" />
                         </interactivity:Interaction.Behaviors>
                     </Button>
 
@@ -64,13 +58,9 @@
                 BorderThickness="1"
                 CornerRadius="5">
                 <StackPanel Spacing="10">
-                    <TextBlock
-                        FontWeight="SemiBold"
-                        Text="Example 2: ListBox SelectionChanged with EventArgs" />
+                    <TextBlock FontWeight="SemiBold" Text="Example 2: ListBox SelectionChanged with EventArgs" />
 
-                    <TextBlock
-                        TextWrapping="Wrap"
-                        Text="Select items to see the selection changed event passed to the command:" />
+                    <TextBlock Text="Select items to see the selection changed event passed to the command:" TextWrapping="Wrap" />
 
                     <ListBox
                         Width="300"
@@ -80,8 +70,8 @@
                         SelectionMode="Single">
                         <interactivity:Interaction.Behaviors>
                             <behaviors:EventToCommandBehavior
-                                EventName="SelectionChanged"
                                 Command="{x:Bind ViewModel.SelectionChangedCommand}"
+                                EventName="SelectionChanged"
                                 PassEventArgsToCommand="True" />
                         </interactivity:Interaction.Behaviors>
                     </ListBox>
@@ -100,22 +90,16 @@
                 BorderThickness="1"
                 CornerRadius="5">
                 <StackPanel Spacing="10">
-                    <TextBlock
-                        FontWeight="SemiBold"
-                        Text="Example 3: TextBox TextChanged with CommandParameter" />
+                    <TextBlock FontWeight="SemiBold" Text="Example 3: TextBox TextChanged with CommandParameter" />
 
-                    <TextBlock
-                        TextWrapping="Wrap"
-                        Text="Type in the textbox to trigger the command with a custom parameter:" />
+                    <TextBlock Text="Type in the textbox to trigger the command with a custom parameter:" TextWrapping="Wrap" />
 
-                    <TextBox
-                        Width="300"
-                        HorizontalAlignment="Left">
+                    <TextBox Width="300" HorizontalAlignment="Left">
                         <interactivity:Interaction.Behaviors>
                             <behaviors:EventToCommandBehavior
-                                EventName="TextChanged"
                                 Command="{x:Bind ViewModel.TextChangedCommand}"
-                                CommandParameter="From TextBox" />
+                                CommandParameter="From TextBox"
+                                EventName="TextChanged" />
                         </interactivity:Interaction.Behaviors>
                     </TextBox>
 
@@ -138,13 +122,9 @@
                 BorderThickness="1"
                 CornerRadius="5">
                 <StackPanel Spacing="10">
-                    <TextBlock
-                        FontWeight="SemiBold"
-                        Text="Example 4: PointerEntered and PointerExited Events" />
+                    <TextBlock FontWeight="SemiBold" Text="Example 4: PointerEntered and PointerExited Events" />
 
-                    <TextBlock
-                        TextWrapping="Wrap"
-                        Text="Hover over the border to trigger pointer events:" />
+                    <TextBlock Text="Hover over the border to trigger pointer events:" TextWrapping="Wrap" />
 
                     <Border
                         Width="300"
@@ -155,12 +135,8 @@
                         BorderThickness="2"
                         CornerRadius="5">
                         <interactivity:Interaction.Behaviors>
-                            <behaviors:EventToCommandBehavior
-                                EventName="PointerEntered"
-                                Command="{x:Bind ViewModel.MouseEnterCommand}" />
-                            <behaviors:EventToCommandBehavior
-                                EventName="PointerExited"
-                                Command="{x:Bind ViewModel.MouseLeaveCommand}" />
+                            <behaviors:EventToCommandBehavior Command="{x:Bind ViewModel.MouseEnterCommand}" EventName="PointerEntered" />
+                            <behaviors:EventToCommandBehavior Command="{x:Bind ViewModel.MouseLeaveCommand}" EventName="PointerExited" />
                         </interactivity:Interaction.Behaviors>
 
                         <TextBlock

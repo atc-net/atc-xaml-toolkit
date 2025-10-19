@@ -2,39 +2,55 @@
     x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Behaviors.AnimationBehaviorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:b="using:Atc.XamlToolkit.Behaviors"
-    xmlns:vm="using:Atc.XamlToolkit.WinUISample.SampleControls.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="using:Microsoft.Xaml.Interactivity"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="10">
-            <!-- Example 1: Fade Animations -->
-            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+            <!--  Example 1: Fade Animations  -->
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Fade Animations" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    <TextBlock Text="Fade In / Fade Out" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
-                        <Button Content="Fade In" Command="{x:Bind ViewModel.TriggerFadeInCommand}"/>
-                        <Button Content="Fade Out" Command="{x:Bind ViewModel.TriggerFadeOutCommand}"/>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="Fade Animations" />
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="SemiBold"
+                        Text="Fade In / Fade Out" />
+                    <StackPanel
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal"
+                        Spacing="5">
+                        <Button Command="{x:Bind ViewModel.TriggerFadeInCommand}" Content="Fade In" />
+                        <Button Command="{x:Bind ViewModel.TriggerFadeOutCommand}" Content="Fade Out" />
                     </StackPanel>
-                    <Border Background="LightBlue" Padding="20" HorizontalAlignment="Left">
+                    <Border
+                        Padding="20"
+                        HorizontalAlignment="Left"
+                        Background="LightBlue">
                         <StackPanel Spacing="5">
-                            <TextBlock Text="Watch me fade!" FontSize="16">
+                            <TextBlock FontSize="16" Text="Watch me fade!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.FadeInTrigger, Mode=OneWay}"
                                         AnimationType="FadeIn"
-                                        Duration="500"/>
+                                        Duration="500" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
-                            <TextBlock Text="I fade too!" FontSize="16">
+                            <TextBlock FontSize="16" Text="I fade too!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.FadeOutTrigger, Mode=OneWay}"
                                         AnimationType="FadeOut"
-                                        Duration="500"/>
+                                        Duration="500" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </StackPanel>
@@ -42,37 +58,57 @@
                 </StackPanel>
             </Border>
 
-            <!-- Example 2: Slide Animations - Horizontal -->
-            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+            <!--  Example 2: Slide Animations - Horizontal  -->
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Slide Animations - Horizontal" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    <TextBlock Text="Slide from Left / Right" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
-                        <Button Content="Slide from Left" Command="{x:Bind ViewModel.TriggerSlideLeftCommand}"/>
-                        <Button Content="Slide from Right" Command="{x:Bind ViewModel.TriggerSlideRightCommand}"/>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="Slide Animations - Horizontal" />
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="SemiBold"
+                        Text="Slide from Left / Right" />
+                    <StackPanel
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal"
+                        Spacing="5">
+                        <Button Command="{x:Bind ViewModel.TriggerSlideLeftCommand}" Content="Slide from Left" />
+                        <Button Command="{x:Bind ViewModel.TriggerSlideRightCommand}" Content="Slide from Right" />
                     </StackPanel>
                     <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Background="LightGreen" Padding="20">
-                            <TextBlock Text="Sliding from left!" FontSize="16">
+                        <Border
+                            Grid.Column="0"
+                            Padding="20"
+                            Background="LightGreen">
+                            <TextBlock FontSize="16" Text="Sliding from left!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.SlideLeftTrigger, Mode=OneWay}"
                                         AnimationType="SlideInFromLeft"
-                                        Duration="600"/>
+                                        Duration="600" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
-                        <Border Grid.Column="1" Background="LightCoral" Padding="20">
-                            <TextBlock Text="Sliding from right!" FontSize="16">
+                        <Border
+                            Grid.Column="1"
+                            Padding="20"
+                            Background="LightCoral">
+                            <TextBlock FontSize="16" Text="Sliding from right!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.SlideRightTrigger, Mode=OneWay}"
                                         AnimationType="SlideInFromRight"
-                                        Duration="600"/>
+                                        Duration="600" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
@@ -80,37 +116,57 @@
                 </StackPanel>
             </Border>
 
-            <!-- Example 3: Slide Animations - Vertical -->
-            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+            <!--  Example 3: Slide Animations - Vertical  -->
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Slide Animations - Vertical" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    <TextBlock Text="Slide from Top / Bottom" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
-                        <Button Content="Slide from Top" Command="{x:Bind ViewModel.TriggerSlideTopCommand}"/>
-                        <Button Content="Slide from Bottom" Command="{x:Bind ViewModel.TriggerSlideBottomCommand}"/>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="Slide Animations - Vertical" />
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="SemiBold"
+                        Text="Slide from Top / Bottom" />
+                    <StackPanel
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal"
+                        Spacing="5">
+                        <Button Command="{x:Bind ViewModel.TriggerSlideTopCommand}" Content="Slide from Top" />
+                        <Button Command="{x:Bind ViewModel.TriggerSlideBottomCommand}" Content="Slide from Bottom" />
                     </StackPanel>
                     <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Background="LightYellow" Padding="20">
-                            <TextBlock Text="Sliding from top!" FontSize="16">
+                        <Border
+                            Grid.Column="0"
+                            Padding="20"
+                            Background="LightYellow">
+                            <TextBlock FontSize="16" Text="Sliding from top!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.SlideTrigger, Mode=OneWay}"
                                         AnimationType="SlideInFromTop"
-                                        Duration="600"/>
+                                        Duration="600" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
-                        <Border Grid.Column="1" Background="LightPink" Padding="20">
-                            <TextBlock Text="Sliding from bottom!" FontSize="16">
+                        <Border
+                            Grid.Column="1"
+                            Padding="20"
+                            Background="LightPink">
+                            <TextBlock FontSize="16" Text="Sliding from bottom!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.SlideBottomTrigger, Mode=OneWay}"
                                         AnimationType="SlideInFromBottom"
-                                        Duration="600"/>
+                                        Duration="600" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
@@ -118,37 +174,57 @@
                 </StackPanel>
             </Border>
 
-            <!-- Example 4: Scale Animations -->
-            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+            <!--  Example 4: Scale Animations  -->
+            <Border
+                Margin="0,0,0,10"
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Scale Animations" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    <TextBlock Text="Scale In / Scale Out" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="5">
-                        <Button Content="Scale In" Command="{x:Bind ViewModel.TriggerScaleInCommand}"/>
-                        <Button Content="Scale Out" Command="{x:Bind ViewModel.TriggerScaleOutCommand}"/>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="Scale Animations" />
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="SemiBold"
+                        Text="Scale In / Scale Out" />
+                    <StackPanel
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal"
+                        Spacing="5">
+                        <Button Command="{x:Bind ViewModel.TriggerScaleInCommand}" Content="Scale In" />
+                        <Button Command="{x:Bind ViewModel.TriggerScaleOutCommand}" Content="Scale Out" />
                     </StackPanel>
                     <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Background="Lavender" Padding="20">
-                            <TextBlock Text="Scaling in!" FontSize="16">
+                        <Border
+                            Grid.Column="0"
+                            Padding="20"
+                            Background="Lavender">
+                            <TextBlock FontSize="16" Text="Scaling in!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.ScaleInTrigger, Mode=OneWay}"
                                         AnimationType="ScaleIn"
-                                        Duration="400"/>
+                                        Duration="400" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
-                        <Border Grid.Column="1" Background="PeachPuff" Padding="20">
-                            <TextBlock Text="Scaling out!" FontSize="16">
+                        <Border
+                            Grid.Column="1"
+                            Padding="20"
+                            Background="PeachPuff">
+                            <TextBlock FontSize="16" Text="Scaling out!">
                                 <i:Interaction.Behaviors>
                                     <b:AnimationBehavior
                                         AnimationTrigger="{x:Bind ViewModel.ScaleOutTrigger, Mode=OneWay}"
                                         AnimationType="ScaleOut"
-                                        Duration="400"/>
+                                        Duration="400" />
                                 </i:Interaction.Behaviors>
                             </TextBlock>
                         </Border>
@@ -156,18 +232,31 @@
                 </StackPanel>
             </Border>
 
-            <!-- Example 5: Auto-Start Animation -->
-            <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
+            <!--  Example 5: Auto-Start Animation  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Auto-Start Animation" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    <TextBlock Text="This element automatically fades in when loaded" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <Border Background="PaleGreen" Padding="20" HorizontalAlignment="Left">
-                        <TextBlock Text="I fade in automatically!" FontSize="16">
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="Auto-Start Animation" />
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="SemiBold"
+                        Text="This element automatically fades in when loaded" />
+                    <Border
+                        Padding="20"
+                        HorizontalAlignment="Left"
+                        Background="PaleGreen">
+                        <TextBlock FontSize="16" Text="I fade in automatically!">
                             <i:Interaction.Behaviors>
                                 <b:AnimationBehavior
                                     AnimationType="FadeIn"
-                                    Duration="1000"
-                                    AutoStart="True"/>
+                                    AutoStart="True"
+                                    Duration="1000" />
                             </i:Interaction.Behaviors>
                         </TextBlock>
                     </Border>
