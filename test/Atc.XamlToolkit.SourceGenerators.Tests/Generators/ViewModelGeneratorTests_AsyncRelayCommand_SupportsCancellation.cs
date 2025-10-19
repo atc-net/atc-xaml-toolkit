@@ -226,8 +226,7 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? processCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
-                    (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process,
-                    executeOnBackgroundThread: true);
+                    (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process);
 
                 public void CancelProcess()
                 {
@@ -276,8 +275,7 @@ public sealed partial class ViewModelGeneratorTests
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
                     (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process,
-                    CanProcess,
-                    executeOnBackgroundThread: true);
+                    CanProcess);
 
                 public void CancelProcess()
                 {

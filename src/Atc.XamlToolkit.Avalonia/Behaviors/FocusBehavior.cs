@@ -31,6 +31,7 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         AvaloniaProperty.Register<FocusBehavior, object?>(nameof(FocusTrigger));
 
     private object? lastFocusTrigger;
+    private bool isUpdatingFocus;
 
     /// <summary>
     /// Gets or sets a value indicating whether the element should receive focus when the behavior is attached.
@@ -113,7 +114,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         if (e.Property == IsFocusedProperty)
         {
             // When IsFocused changes to true (from ViewModel), set focus
+            // Skip if we're updating the property ourselves to avoid infinite loops
             if (e.NewValue is true &&
+                !isUpdatingFocus &&
                 AssociatedObject is not null &&
                 !AssociatedObject.IsFocused)
             {
@@ -141,7 +144,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 
     private void OnGotFocus(object? sender, GotFocusEventArgs e)
     {
+        isUpdatingFocus = true;
         IsFocused = true;
+        isUpdatingFocus = false;
 
         if (SelectAllOnFocus && AssociatedObject is TextBox textBox)
         {
@@ -154,45 +159,46 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 
     private void OnLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        isUpdatingFocus = true;
         IsFocused = false;
+        isUpdatingFocus = false;
     }
 
     private void SetFocus()
     {
-        if (AssociatedObject is not null)
+        if (AssociatedObject is null)
         {
-            // Ensure the control is focusable
-            if (!AssociatedObject.Focusable)
-            {
-                AssociatedObject.Focusable = true;
-            }
-
-            // Try setting KeyboardNavigation.IsTabStop to ensure it's reachable
-            if (!KeyboardNavigation.GetIsTabStop(AssociatedObject))
-            {
-                KeyboardNavigation.SetIsTabStop(AssociatedObject, value: true);
-            }
-
-            // Use InvokeAsync with delay to ensure button click completes
-            _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(
-                async () =>
-                {
-                    // Delay to ensure button click completes and doesn't steal focus back
-                    await Task.Delay(100).ConfigureAwait(false);
-
-                    // Set focus using keyboard navigation to trigger proper focus visuals
-                    var focused = AssociatedObject.Focus(NavigationMethod.Tab);
-
-                    if (focused && AssociatedObject is TextBox textBox && !SelectAllOnFocus)
-                    {
-                        // For TextBox, position caret at the end (only if not using SelectAllOnFocus)
-                        var length = textBox.Text?.Length ?? 0;
-                        textBox.CaretIndex = length;
-                        textBox.SelectionStart = length;
-                        textBox.SelectionEnd = length;
-                    }
-                },
-                Avalonia.Threading.DispatcherPriority.Background);
+            return;
         }
+
+        // Ensure the control is focusable
+        if (!AssociatedObject.Focusable)
+        {
+            AssociatedObject.Focusable = true;
+        }
+
+        // Try setting KeyboardNavigation.IsTabStop to ensure it's reachable
+        if (!KeyboardNavigation.GetIsTabStop(AssociatedObject))
+        {
+            KeyboardNavigation.SetIsTabStop(AssociatedObject, value: true);
+        }
+
+        // Use InvokeAsync to ensure focus is set after the current operation completes
+        _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(
+            () =>
+            {
+                // Set focus using keyboard navigation to trigger proper focus visuals
+                var focused = AssociatedObject.Focus(NavigationMethod.Directional);
+
+                if (focused && AssociatedObject is TextBox textBox && !SelectAllOnFocus)
+                {
+                    // For TextBox, position caret at the end (only if not using SelectAllOnFocus)
+                    var length = textBox.Text?.Length ?? 0;
+                    textBox.CaretIndex = length;
+                    textBox.SelectionStart = length;
+                    textBox.SelectionEnd = length;
+                }
+            },
+            Avalonia.Threading.DispatcherPriority.Input);
     }
 }

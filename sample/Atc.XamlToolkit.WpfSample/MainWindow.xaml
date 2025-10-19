@@ -8,7 +8,7 @@
     xmlns:wpfSample="clr-namespace:Atc.XamlToolkit.WpfSample"
     Title="Atc XAML Toolkit - WPF Sample"
     Width="1200"
-    Height="800"
+    Height="950"
     MinWidth="600"
     MinHeight="600"
     d:DataContext="{d:DesignInstance Type=wpfSample:MainWindowViewModel}"
@@ -18,7 +18,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" MinWidth="200" />
+            <ColumnDefinition Width="350" MinWidth="200" />
             <ColumnDefinition Width="5" />
             <ColumnDefinition Width="*" MinWidth="300" />
         </Grid.ColumnDefinitions>

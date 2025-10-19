@@ -2,7 +2,9 @@ global using System.Collections.ObjectModel;
 global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics.CodeAnalysis;
+global using System.Reflection;
 global using System.Text;
+
 global using Atc.XamlToolkit.AvaloniaSample.Models;
 global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Mvvm;
@@ -14,6 +16,7 @@ global using Avalonia.Input;
 global using Avalonia.Interactivity;
 global using Avalonia.Markup.Xaml;
 global using Avalonia.Media;
+
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;

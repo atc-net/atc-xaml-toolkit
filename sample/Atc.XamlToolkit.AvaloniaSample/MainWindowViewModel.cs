@@ -26,6 +26,93 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
     public MainWindowViewModel()
         => InitializeSampleViews();
 
+    private void InitializeSampleViews()
+            => SampleViews = BuildSampleViewTree(
+                rootNamespace: "SampleControls",
+                assembly: typeof(MainWindowViewModel).Assembly);
+
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
+    private static List<SampleViewItem> BuildSampleViewTree(
+        string rootNamespace,
+        Assembly assembly)
+    {
+        var anchorMid = "." + rootNamespace + ".";
+        var anchorEnd = "." + rootNamespace;
+
+        var views = assembly
+            .GetTypes()
+            .Where(t =>
+                t is { IsClass: true, IsAbstract: false, Namespace: not null } &&
+                t.Namespace.Contains(anchorEnd, StringComparison.Ordinal) &&
+                t.Name.EndsWith("View", StringComparison.Ordinal))
+            .OrderBy(t => t.Namespace, StringComparer.Ordinal)
+            .ThenBy(t => t.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        var result = new List<SampleViewItem>();
+        var nodes = new Dictionary<string, SampleViewItem>(StringComparer.Ordinal);
+
+        foreach (var type in views)
+        {
+            string remainder;
+            var ns = type.Namespace!;
+            var idx = ns.IndexOf(anchorMid, StringComparison.Ordinal);
+            if (idx >= 0)
+            {
+                remainder = ns[(idx + anchorMid.Length)..];
+            }
+            else if (ns.EndsWith(anchorEnd, StringComparison.Ordinal))
+            {
+                remainder = string.Empty;
+            }
+            else
+            {
+                continue;
+            }
+
+            var relativeSegments = string.IsNullOrEmpty(remainder)
+                ? []
+                : remainder.Split('.');
+
+            for (var i = 0; i < relativeSegments.Length; i++)
+            {
+                var seg = relativeSegments[i];
+                var key = string.Join('/', relativeSegments.Take(i + 1));
+
+                if (nodes.TryGetValue(key, out var node))
+                {
+                    continue;
+                }
+
+                var route = $"{rootNamespace}/{key}";
+                node = new SampleViewItem(seg, route);
+                nodes[key] = node;
+
+                if (i == 0)
+                {
+                    result.Add(node);
+                }
+                else
+                {
+                    var parentKey = string.Join('/', relativeSegments.Take(i));
+                    nodes[parentKey].Children.Add(node);
+                }
+            }
+
+            if (relativeSegments.Length == 0)
+            {
+                result.Add(new SampleViewItem(type.Name, viewType: type));
+            }
+            else
+            {
+                var parentKey = string.Join('/', relativeSegments);
+                nodes[parentKey].Children.Add(new SampleViewItem(type.Name, viewType: type));
+            }
+        }
+
+        return result;
+    }
+
     [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "OK")]
     private void UpdateCurrentView()
     {
@@ -47,62 +134,5 @@ public partial class MainWindowViewModel : MainWindowViewModelBase
         {
             CurrentView = null;
         }
-    }
-
-    private void InitializeSampleViews()
-    {
-        SampleViews =
-        [
-            new SampleViewItem("Behaviors", "SampleControls/Behaviors")
-            {
-                Children =
-                {
-                    new SampleViewItem("AnimationBehaviorView", viewType: typeof(SampleControls.Behaviors.AnimationBehaviorView)),
-                    new SampleViewItem("EventToCommandBehaviorView", viewType: typeof(SampleControls.Behaviors.EventToCommandBehaviorView)),
-                    new SampleViewItem("FocusBehaviorView", viewType: typeof(SampleControls.Behaviors.FocusBehaviorView)),
-                    new SampleViewItem("KeyboardNavigationBehaviorView", viewType: typeof(SampleControls.Behaviors.KeyboardNavigationBehaviorView)),
-                },
-            },
-            new SampleViewItem("Commands", "SampleControls/Commands")
-            {
-                Children =
-                {
-                    new SampleViewItem("AsyncCommandCancellationView", viewType: typeof(SampleControls.Commands.AsyncCommandCancellationView)),
-                },
-            },
-            new SampleViewItem("Mvvm", "SampleControls/Mvvm")
-            {
-                Children =
-                {
-                    new SampleViewItem("Dto To ViewModel", "SampleControls/Mvvm/DtoToViewModel")
-                    {
-                        Children =
-                        {
-                            new SampleViewItem("PersonView", viewType: typeof(SampleControls.Mvvm.DtoToViewModel.PersonView)),
-                        },
-                    },
-                    new SampleViewItem("General Attributes", "SampleControls/Mvvm/GeneralAttributes")
-                    {
-                        Children =
-                        {
-                            new SampleViewItem("Person", "SampleControls/Mvvm/GeneralAttributes/Person")
-                            {
-                                Children =
-                                {
-                                    new SampleViewItem("PersonView", viewType: typeof(SampleControls.Mvvm.GeneralAttributes.Person.PersonView)),
-                                },
-                            },
-                            new SampleViewItem("Azure", "SampleControls/Mvvm/GeneralAttributes/Azure")
-                            {
-                                Children =
-                                {
-                                    new SampleViewItem("AzureTenantManagerView", viewType: typeof(SampleControls.Mvvm.GeneralAttributes.Azure.AzureTenantManagerView)),
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        ];
     }
 }

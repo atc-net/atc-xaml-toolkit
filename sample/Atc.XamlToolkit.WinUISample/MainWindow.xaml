@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:valueConverters="using:Atc.XamlToolkit.ValueConverters"
     xmlns:winUiSample="using:Atc.XamlToolkit.WinUISample"
     Title="Atc XAML Toolkit - WinUI Sample"
     d:DataContext="{d:DesignInstance Type=winUiSample:MainWindowViewModel}"
@@ -16,7 +15,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" MinWidth="200" />
+            <ColumnDefinition Width="350" MinWidth="200" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" MinWidth="300" />
         </Grid.ColumnDefinitions>
