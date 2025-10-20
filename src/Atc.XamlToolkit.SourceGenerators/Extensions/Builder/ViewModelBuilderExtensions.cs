@@ -140,6 +140,73 @@ internal static class ViewModelBuilderExtensions
         ViewModelBuilder builder,
         string valueContent)
     {
+        // Check if this is multi-line code (contains line breaks)
+        if (valueContent.Contains('\n') || valueContent.Contains('\r'))
+        {
+            GenerateMultiLineCallbackCode(builder, valueContent);
+        }
+        else
+        {
+            GenerateSingleLineCallbackCode(builder, valueContent);
+        }
+    }
+
+    private static void GenerateMultiLineCallbackCode(
+        ViewModelBuilder builder,
+        string valueContent)
+    {
+        // For multi-line code, output as-is with proper semicolon handling
+        // Trim to remove any leading/trailing newlines from the raw string literal
+        valueContent = valueContent.Trim('\r', '\n');
+
+        // Then trim any trailing whitespace to remove indentation-only final lines
+        valueContent = valueContent.TrimEnd();
+
+        var lines = valueContent
+            .Split(["\r\n", "\r", "\n"], StringSplitOptions.None)
+            .Where(l => l.Trim() != "\"\"")
+            .ToList();
+
+        // Find the minimum number of leading whitespace characters across all non-empty lines
+        var leadingSpacesCount = lines
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .Select(l => l.Length - l.TrimStart().Length)
+            .DefaultIfEmpty(0)
+            .Min();
+
+        // Track the last non-empty line for semicolon handling
+        var lastNonEmptyLine = lines.Last(l => !string.IsNullOrWhiteSpace(l));
+
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                builder.AppendLine();
+                continue;
+            }
+
+            // Remove the leading spaces count from the start of the line
+            var adjustedLine = line.Length >= leadingSpacesCount
+                ? line.Substring(leadingSpacesCount)
+                : line.TrimStart();
+
+            var isLastLine = line == lastNonEmptyLine;
+
+            if (isLastLine && !adjustedLine.TrimEnd().EndsWith(";", StringComparison.Ordinal))
+            {
+                builder.AppendLine(adjustedLine.TrimEnd() + ";");
+            }
+            else
+            {
+                builder.AppendLine(adjustedLine);
+            }
+        }
+    }
+
+    private static void GenerateSingleLineCallbackCode(
+        ViewModelBuilder builder,
+        string valueContent)
+    {
         var sa = valueContent.Split([';'], StringSplitOptions.RemoveEmptyEntries);
         foreach (var s in sa)
         {
