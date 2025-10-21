@@ -44,6 +44,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     public static Guid ViewModelId => Guid.NewGuid();
 
     /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsEnable
     {
         get => isEnable;
@@ -60,6 +61,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     }
 
     /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsVisible
     {
         get => isVisible;
@@ -76,6 +78,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     }
 
     /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsBusy
     {
         get => isBusy;
@@ -92,6 +95,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     }
 
     /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsDirty
     {
         get => isDirty;
@@ -108,6 +112,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     }
 
     /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsSelected
     {
         get => isSelected;
@@ -129,11 +134,13 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
     /// <value>
     /// The messenger instance.
     /// </value>
+    [System.Text.Json.Serialization.JsonIgnore]
     protected IMessenger MessengerInstance { get; init; }
 
     /// <summary>
     /// Gets a value indicating whether the entity has validation errors.
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool HasErrors => errors.Count > 0;
 
     /// <summary>
