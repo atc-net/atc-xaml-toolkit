@@ -77,12 +77,19 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         AppendLine($"public {viewModelToGenerate.DtoTypeName} InnerModel => dto;");
     }
 
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public void GenerateProperties(
         ObservableDtoViewModelToGenerate viewModelToGenerate)
     {
         foreach (var property in viewModelToGenerate.Properties)
         {
             AppendLine();
+
+            // Generate documentation comments if any
+            foreach (var documentationComment in property.DocumentationComments)
+            {
+                AppendLine(documentationComment);
+            }
 
             // Generate attributes if any
             foreach (var attribute in property.Attributes)

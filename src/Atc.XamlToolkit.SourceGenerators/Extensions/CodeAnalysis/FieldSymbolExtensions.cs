@@ -82,4 +82,43 @@ internal static class FieldSymbolExtensions
             ? customAttributes
             : null;
     }
+
+    public static List<string>? ExtractDocumentationComments(
+        this IFieldSymbol fieldSymbol)
+    {
+        var documentationComments = new List<string>();
+
+        // Extract documentation comments from the syntax tree
+        foreach (var syntaxRef in fieldSymbol.DeclaringSyntaxReferences)
+        {
+            var syntax = syntaxRef.GetSyntax();
+            if (syntax is not VariableDeclaratorSyntax
+                {
+                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration }
+                })
+            {
+                continue;
+            }
+
+            // Get leading trivia which contains documentation comments
+            var leadingTrivia = fieldDeclaration.GetLeadingTrivia();
+            foreach (var trivia in leadingTrivia)
+            {
+                if (trivia.Kind() is SyntaxKind.SingleLineDocumentationCommentTrivia
+                    or SyntaxKind.MultiLineDocumentationCommentTrivia)
+                {
+                    // Get the full text of the documentation comment
+                    var commentText = trivia.ToFullString().Trim();
+                    if (!string.IsNullOrWhiteSpace(commentText))
+                    {
+                        documentationComments.Add(commentText);
+                    }
+                }
+            }
+        }
+
+        return documentationComments.Count > 0
+            ? documentationComments
+            : null;
+    }
 }

@@ -44,13 +44,15 @@ internal static class NamedTypeSymbolExtensions
 
                 var isReadOnly = p.SetMethod is null;
                 var attributes = ExtractPropertyAttributes(p);
+                var documentationComments = ExtractPropertyDocumentationComments(p);
 
                 return new DtoPropertyInfo(
                     p.Name,
                     p.Type.ToString(),
                     isRecordParameter,
                     isReadOnly,
-                    attributes);
+                    attributes,
+                    documentationComments);
             })
             .ToList();
     }
@@ -75,6 +77,38 @@ internal static class NamedTypeSymbolExtensions
         }
 
         return attributes;
+    }
+
+    public static List<string>? ExtractPropertyDocumentationComments(
+        IPropertySymbol propertySymbol)
+    {
+        var documentationComments = new List<string>();
+        foreach (var syntaxRef in propertySymbol.DeclaringSyntaxReferences)
+        {
+            var syntax = syntaxRef.GetSyntax();
+            if (syntax is PropertyDeclarationSyntax propertyDeclaration)
+            {
+                // Get leading trivia which contains documentation comments
+                var leadingTrivia = propertyDeclaration.GetLeadingTrivia();
+                foreach (var trivia in leadingTrivia)
+                {
+                    if (trivia.Kind() is SyntaxKind.SingleLineDocumentationCommentTrivia
+                        or SyntaxKind.MultiLineDocumentationCommentTrivia)
+                    {
+                        // Get the full text of the documentation comment
+                        var commentText = trivia.ToFullString().Trim();
+                        if (!string.IsNullOrWhiteSpace(commentText))
+                        {
+                            documentationComments.Add(commentText);
+                        }
+                    }
+                }
+            }
+        }
+
+        return documentationComments.Count > 0
+            ? documentationComments
+            : null;
     }
 
     public static List<DtoMethodInfo> ExtractMethods(

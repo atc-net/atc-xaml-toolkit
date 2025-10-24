@@ -29,6 +29,8 @@ internal sealed class ObservablePropertyToGenerate(
 
     public List<string>? CustomAttributes { get; set; }
 
+    public List<string>? DocumentationComments { get; set; }
+
     public override string ToString()
         => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(BackingFieldName)}: {BackingFieldName}, {nameof(PropertyNamesToInvalidate)}.Count: {PropertyNamesToInvalidate?.Count}, {nameof(CommandNamesToInvalidate)}.Count: {CommandNamesToInvalidate?.Count}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}";
 }
