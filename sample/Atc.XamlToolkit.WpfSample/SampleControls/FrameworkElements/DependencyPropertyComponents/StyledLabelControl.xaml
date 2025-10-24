@@ -1,0 +1,34 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WpfSample.SampleControls.FrameworkElements.DependencyPropertyComponents.StyledLabelControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="50"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+
+    <Border
+        Padding="10,5"
+        Background="White"
+        BorderBrush="LightGray"
+        BorderThickness="1"
+        CornerRadius="3">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                FontWeight="Bold"
+                Foreground="{Binding Path=IconColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Text="{Binding Path=Icon, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Foreground="{Binding Path=TextColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Text="{Binding Path=Text, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+    </Border>
+</UserControl>
