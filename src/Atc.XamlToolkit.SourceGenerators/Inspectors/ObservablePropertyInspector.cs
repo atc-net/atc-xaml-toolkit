@@ -149,6 +149,8 @@ internal static class ObservablePropertyInspector
             }
         }
 
+        var customAttributes = fieldSymbol.ExtractCustomAttributes();
+
         propertiesToGenerate.Add(
             new ObservablePropertyToGenerate(
                 propertyName,
@@ -162,6 +164,7 @@ internal static class ObservablePropertyInspector
                 AfterChangedCallback = afterChangedCallback,
                 BroadcastOnChange = broadcastOnChange,
                 UseIsDirty = useIsDirty,
+                CustomAttributes = customAttributes,
             });
     }
 }
