@@ -42,6 +42,16 @@ internal static class ViewModelBuilderExtensions
         ObservablePropertyToGenerate p)
     {
         builder.AppendLineBeforeMember();
+
+        // Generate custom attributes if present
+        if (p.CustomAttributes is not null)
+        {
+            foreach (var customAttribute in p.CustomAttributes)
+            {
+                builder.AppendLine($"[{customAttribute}]");
+            }
+        }
+
         builder.AppendLine($"public {p.Type} {p.Name}");
         builder.AppendLine("{");
         builder.IncreaseIndent();
