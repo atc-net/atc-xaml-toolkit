@@ -13,7 +13,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -57,7 +57,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty]
-                private bool _isDraggable
+                private static bool _isDraggable
             }
             """;
 
@@ -101,7 +101,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty]
-                public bool isDraggable
+                public static bool isDraggable
             }
             """;
 
@@ -120,7 +120,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty]
-                private bool IsDraggable
+                private static bool IsDraggable
             }
             """;
 
@@ -139,7 +139,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty(DefaultValue = true)]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -183,7 +183,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty(DefaultValue = true, Category = "Layout")]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -229,7 +229,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty(DefaultValue = true, Description = "Long description")]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -275,7 +275,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty(DefaultValue = true, Category = "Layout", Description = "Long description")]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -323,7 +323,7 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class DragBehavior
             {
                 [AttachedProperty(PropertyChangedCallback = nameof(OnIsDraggableChanged))]
-                private bool isDraggable
+                private static bool isDraggable
             }
             """;
 
@@ -369,13 +369,13 @@ public sealed partial class FrameworkElementGeneratorTests
             public static partial class WatermarkTextBoxBehavior
             {
                 [AttachedProperty]
-                private string label;
+                private static string label;
 
                 [AttachedProperty]
-                private Style labelStyle;
-            
+                private static Style labelStyle;
+
                 [AttachedProperty]
-                private bool enableWatermark;
+                private static bool enableWatermark;
             }
             """;
 
