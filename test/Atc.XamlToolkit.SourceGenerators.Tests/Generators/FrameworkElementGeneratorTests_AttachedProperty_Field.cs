@@ -32,10 +32,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(DragBehavior),
                     new PropertyMetadata(defaultValue: BooleanBoxes.FalseBox));
 
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -76,10 +76,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(DragBehavior),
                     new PropertyMetadata(defaultValue: BooleanBoxes.FalseBox));
             
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
             
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -158,10 +158,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(DragBehavior),
                     new PropertyMetadata(defaultValue: BooleanBoxes.TrueBox));
 
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -203,11 +203,11 @@ public sealed partial class FrameworkElementGeneratorTests
                     new PropertyMetadata(defaultValue: BooleanBoxes.TrueBox));
 
                 [Category("Layout")]
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 [Category("Layout")]
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -249,11 +249,11 @@ public sealed partial class FrameworkElementGeneratorTests
                     new PropertyMetadata(defaultValue: BooleanBoxes.TrueBox));
 
                 [Description("Get: Long description")]
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 [Description("Set: Long description")]
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -296,12 +296,12 @@ public sealed partial class FrameworkElementGeneratorTests
 
                 [Category("Layout")]
                 [Description("Get: Long description")]
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
                 [Category("Layout")]
                 [Description("Set: Long description")]
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -344,10 +344,10 @@ public sealed partial class FrameworkElementGeneratorTests
                         defaultValue: BooleanBoxes.FalseBox,
                         propertyChangedCallback: OnIsDraggableChanged));
 
-                public static bool GetIsDraggable(UIElement element)
+                public static bool GetIsDraggable(DependencyObject element)
                     => (bool)element.GetValue(IsDraggableProperty);
 
-                public static void SetIsDraggable(UIElement element, bool value)
+                public static void SetIsDraggable(DependencyObject element, bool value)
                     => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
             }
 
@@ -393,10 +393,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(string),
                     typeof(WatermarkTextBoxBehavior));
 
-                public static string GetLabel(UIElement element)
+                public static string GetLabel(DependencyObject element)
                     => (string)element.GetValue(LabelProperty);
 
-                public static void SetLabel(UIElement element, string value)
+                public static void SetLabel(DependencyObject element, string value)
                     => element?.SetValue(LabelProperty, value);
 
                 public static readonly DependencyProperty LabelStyleProperty = DependencyProperty.RegisterAttached(
@@ -404,10 +404,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(Style),
                     typeof(WatermarkTextBoxBehavior));
 
-                public static Style GetLabelStyle(UIElement element)
+                public static Style GetLabelStyle(DependencyObject element)
                     => (Style)element.GetValue(LabelStyleProperty);
 
-                public static void SetLabelStyle(UIElement element, Style value)
+                public static void SetLabelStyle(DependencyObject element, Style value)
                     => element?.SetValue(LabelStyleProperty, value);
 
                 public static readonly DependencyProperty EnableWatermarkProperty = DependencyProperty.RegisterAttached(
@@ -416,10 +416,10 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(WatermarkTextBoxBehavior),
                     new PropertyMetadata(defaultValue: BooleanBoxes.FalseBox));
 
-                public static bool GetEnableWatermark(UIElement element)
+                public static bool GetEnableWatermark(DependencyObject element)
                     => (bool)element.GetValue(EnableWatermarkProperty);
 
-                public static void SetEnableWatermark(UIElement element, bool value)
+                public static void SetEnableWatermark(DependencyObject element, bool value)
                     => element?.SetValue(EnableWatermarkProperty, BooleanBoxes.Box(value));
             }
 

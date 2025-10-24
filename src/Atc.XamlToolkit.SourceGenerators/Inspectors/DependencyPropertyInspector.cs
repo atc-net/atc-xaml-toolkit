@@ -4,15 +4,16 @@ internal static class DependencyPropertyInspector<T>
     where T : BaseFrameworkElementPropertyToGenerate
 {
     public static List<T> Inspect(
+        XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
         string primaryAttributeName,
         string secondaryAttributeName)
     {
         var properties = new List<T>();
 
-        properties.AddRange(InspectFromClass(classSymbol, primaryAttributeName, secondaryAttributeName));
+        properties.AddRange(InspectFromClass(xamlPlatform, classSymbol, primaryAttributeName, secondaryAttributeName));
 
-        var propertyToGenerates = InspectFromFields(classSymbol, primaryAttributeName, secondaryAttributeName);
+        var propertyToGenerates = InspectFromFields(xamlPlatform, classSymbol, primaryAttributeName, secondaryAttributeName);
 
         if (properties.Count == 0)
         {
@@ -33,6 +34,7 @@ internal static class DependencyPropertyInspector<T>
     }
 
     private static IEnumerable<T> InspectFromClass(
+        XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
         string primaryAttributeName,
         string secondaryAttributeName)
@@ -45,10 +47,12 @@ internal static class DependencyPropertyInspector<T>
 
         return FrameworkElementInspectorHelper.InspectPropertyAttributes<T>(
             classSymbol,
-            propertyAttributes);
+            propertyAttributes,
+            xamlPlatform);
     }
 
     private static IEnumerable<T> InspectFromFields(
+        XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
         string primaryAttributeName,
         string secondaryAttributeName)
@@ -84,6 +88,7 @@ internal static class DependencyPropertyInspector<T>
             }
 
             var propertyToGenerate = FrameworkElementInspectorHelper.InspectPropertyAttribute<T>(
+                xamlPlatform,
                 classSymbol,
                 fieldSymbol,
                 fieldPropertyAttribute);

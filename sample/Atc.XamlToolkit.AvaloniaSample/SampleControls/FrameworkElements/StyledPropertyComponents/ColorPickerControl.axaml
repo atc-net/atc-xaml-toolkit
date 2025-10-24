@@ -1,0 +1,78 @@
+<UserControl
+    x:Name="Root"
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.FrameworkElements.StyledPropertyComponents.ColorPickerControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="150"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+
+    <Border
+        Padding="10"
+        Background="Chocolate"
+        BorderBrush="Gray"
+        BorderThickness="1"
+        CornerRadius="5">
+        <Grid RowDefinitions="Auto,10,Auto,10,Auto">
+
+            <!--  Red Slider  -->
+            <Grid Grid.Row="0" ColumnDefinitions="60,*,50">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Red:" />
+                <Slider
+                    x:Name="RedSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{Binding Red, ElementName=Root, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding Value, ElementName=RedSlider, StringFormat='{}{0:F0}'}" />
+            </Grid>
+
+            <!--  Green Slider  -->
+            <Grid Grid.Row="2" ColumnDefinitions="60,*,50">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Green:" />
+                <Slider
+                    x:Name="GreenSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{Binding Green, ElementName=Root, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding Value, ElementName=GreenSlider, StringFormat='{}{0:F0}'}" />
+            </Grid>
+
+            <!--  Blue Slider  -->
+            <Grid Grid.Row="4" ColumnDefinitions="60,*,50">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Blue:" />
+                <Slider
+                    x:Name="BlueSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{Binding Blue, ElementName=Root, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding Value, ElementName=BlueSlider, StringFormat='{}{0:F0}'}" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

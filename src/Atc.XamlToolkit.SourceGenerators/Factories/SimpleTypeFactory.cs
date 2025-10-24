@@ -1,14 +1,15 @@
 namespace Atc.XamlToolkit.SourceGenerators.Factories;
 
-public static class SimpleTypeFactory
+internal static class SimpleTypeFactory
 {
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
-    public static string? CreateDefaultValueAsStrForType(
-        string type)
+    internal static string? CreateDefaultValueAsStrForType(
+        string type,
+        XamlPlatform xamlPlatform = XamlPlatform.Wpf)
         => type switch
         {
             // Primitive types
-            "bool" => "BooleanBoxes.FalseBox",
+            "bool" => xamlPlatform == XamlPlatform.Avalonia ? "false" : "BooleanBoxes.FalseBox",
             "byte" => "(byte)0",
             "sbyte" => "(sbyte)0",
             "char" => "'\\0'",

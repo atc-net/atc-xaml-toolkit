@@ -1,0 +1,158 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.FrameworkElements.AttachedPropertyView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:attachedPropertyComponents="using:Atc.XamlToolkit.WinUISample.SampleControls.FrameworkElements.AttachedPropertyComponents"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="20" Spacing="10">
+            <TextBlock
+                FontSize="20"
+                FontWeight="Bold"
+                Text="AttachedProperty Source Generator Examples" />
+
+            <Border Height="1" Background="Gray" />
+
+            <!--  Example 1: Class-Level Attribute - Watermark Behavior  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 1: Class-Level Attribute - Watermark Behavior" />
+                    <TextBlock
+                        Text="The WatermarkBehavior is defined using [AttachedProperty&lt;string&gt;(&quot;Watermark&quot;)] at the class level."
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [AttachedProperty&lt;string&gt;(&quot;Watermark&quot;, DefaultValue = &quot;&quot;, PropertyChangedCallback = nameof(OnWatermarkChanged))]"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        Text="Enter text in the TextBoxes below. The watermark text will disappear when focused and reappear if empty:"
+                        TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        attachedPropertyComponents:WatermarkBehavior.Watermark="Enter your name..." />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        attachedPropertyComponents:WatermarkBehavior.Watermark="Enter your email address..." />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        attachedPropertyComponents:WatermarkBehavior.Watermark="Enter your phone number..." />
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated code: GetWatermark(), SetWatermark(), WatermarkProperty"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!--  Example 2: Field-Level Attribute - Highlight Behavior  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 2: Field-Level Attribute - Highlight Behavior" />
+                    <TextBlock
+                        Text="The HighlightBehavior is defined using [AttachedProperty] on private fields, which infers property names and types."
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [AttachedProperty(PropertyChangedCallback = nameof(OnIsHighlightEnabledChanged))] private static bool isHighlightEnabled;"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        Text="Hover over the buttons and borders below to see the highlight effect (buttons dim, borders change color):"
+                        TextWrapping="Wrap" />
+
+                    <!--  Example 2a: Basic Highlight  -->
+                    <TextBlock FontWeight="SemiBold" Text="Basic Highlight:" />
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="10">
+                        <Button
+                            Padding="15,8"
+                            attachedPropertyComponents:HighlightBehavior.IsHighlightEnabled="True"
+                            Content="Hover Me" />
+
+                        <Border
+                            Width="120"
+                            Height="40"
+                            attachedPropertyComponents:HighlightBehavior.IsHighlightEnabled="True"
+                            Background="LightGreen">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="Hover Border" />
+                        </Border>
+                    </StackPanel>
+
+                    <!--  Example 2b: Disabled Highlight  -->
+                    <TextBlock FontWeight="SemiBold" Text="Highlight Disabled:" />
+
+                    <Button
+                        Padding="15,8"
+                        attachedPropertyComponents:HighlightBehavior.IsHighlightEnabled="False"
+                        Content="No Highlight" />
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated code: GetIsHighlightEnabled(), SetIsHighlightEnabled(), IsHighlightEnabledProperty"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!--  Comparison Section  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Comparison: Class vs Field Attribute" />
+                    <TextBlock FontWeight="SemiBold" Text="Class-Level Attribute Approach:" />
+                    <TextBlock Text="✓ Explicit property name and type declaration" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Good for single attached properties" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ More visible at class level" TextWrapping="Wrap" />
+
+                    <TextBlock FontWeight="SemiBold" Text="Field-Level Attribute Approach:" />
+                    <TextBlock Text="✓ Less boilerplate - name and type inferred" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Great for multiple related properties" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ More concise and DRY (Don't Repeat Yourself)" TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="DarkGreen"
+                        Text="Both approaches generate the same dependency property infrastructure!"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

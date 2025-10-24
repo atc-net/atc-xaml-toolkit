@@ -7,6 +7,7 @@ global using System.Text;
 
 global using Atc.XamlToolkit.AvaloniaSample.Models;
 global using Atc.XamlToolkit.Command;
+global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Mvvm;
 
 global using Avalonia;

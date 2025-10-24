@@ -1,0 +1,69 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.FrameworkElements.StyledPropertyView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:styledPropertyComponents="using:Atc.XamlToolkit.AvaloniaSample.SampleControls.FrameworkElements.StyledPropertyComponents"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <styledPropertyComponents:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+    </UserControl.Resources>
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20">
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Styled Properties Sample" />
+
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 1: Field-Level Attribute - Color Picker Control" />
+                    <TextBlock Text="The ColorPickerControl uses field-level [StyledProperty] attributes on private fields." TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [StyledProperty(PropertyChangedCallback = nameof(OnColorChanged))] private Color selectedColor;"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock Text="Select colors using the sliders. The control uses styled properties for data binding:" TextWrapping="Wrap" />
+
+                    <styledPropertyComponents:ColorPickerControl
+                        x:Name="ColorPicker"
+                        Width="400"
+                        HorizontalAlignment="Left"
+                        SelectedColor="Blue" />
+
+                    <StackPanel Margin="0,15,0,0" Orientation="Horizontal" Spacing="10">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Text="Selected Color Preview: " />
+                        <Border
+                            Width="100"
+                            Height="40"
+                            Background="{Binding SelectedColor, ElementName=ColorPicker, Converter={StaticResource ColorToBrushConverter}}"
+                            BorderBrush="Black"
+                            BorderThickness="1" />
+                        <TextBlock VerticalAlignment="Center" Text="{Binding SelectedColor, ElementName=ColorPicker}" />
+                    </StackPanel>
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: RedProperty, GreenProperty, BlueProperty, SelectedColorProperty with CLR getters/setters"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

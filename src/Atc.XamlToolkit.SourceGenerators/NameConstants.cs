@@ -62,6 +62,8 @@ internal static class NameConstants
     public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
     public const string RoutedEventHandler = nameof(RoutedEventHandler);
     public const string RoutingStrategy = nameof(RoutingStrategy);
+    public const string StyledProperty = nameof(StyledProperty);
+    public const string StyledPropertyAttribute = nameof(StyledPropertyAttribute);
     public const string SupportsCancellation = nameof(SupportsCancellation);
     public const string Task = nameof(Task);
     public const string UseIsDirty = nameof(UseIsDirty);

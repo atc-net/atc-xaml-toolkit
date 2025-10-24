@@ -1,8 +1,10 @@
 # ⚙️ DependencyProperties with SourceGeneration
 
-> ❗ This feature is only supported in `WPF` for now ❗
+> ✅ This feature is supported in `WPF`, `WinUI 3`, and `Avalonia` ✅
 
-In WPF, **dependency properties** are a specialized type of property that extends the functionality of standard CLR properties. They support features such as data binding, animation, and property value inheritance, which are integral to the WPF property system. However, defining dependency properties traditionally involves verbose boilerplate code. To streamline this process, source generators can automatically generate the necessary code, reducing errors and improving maintainability.
+In WPF and WinUI 3, **dependency properties** are a specialized type of property that extends the functionality of standard CLR properties. In Avalonia, the equivalent is **styled properties**. These properties support features such as data binding, animation, and property value inheritance, which are integral to the XAML property system. However, defining these properties traditionally involves verbose boilerplate code. To streamline this process, source generators can automatically generate the necessary code, reducing errors and improving maintainability.
+
+> **Note:** For Avalonia, use the `[StyledProperty]` attribute instead of `[DependencyProperty]`. The source generator will automatically create `StyledProperty<T>` registrations with the appropriate Avalonia-specific code.
 
 ---
 
@@ -75,6 +77,36 @@ This field-level approach further reduces redundancy by eliminating the need to 
 ```
 
 This setup allows the UI to dynamically update when the IsRunning property changes.
+
+---
+
+## 🔧 Platform-Specific Considerations
+
+### WPF vs WinUI 3 vs Avalonia
+
+While the source generator provides a unified API across all platforms, there are some differences in the generated code:
+
+**WPF:**
+- Supports all `FrameworkPropertyMetadataOptions` flags
+- Supports `ValidateValueCallback`, `CoerceValueCallback`, `DefaultUpdateSourceTrigger`, and `IsAnimationProhibited`
+- Uses `FrameworkPropertyMetadata` for advanced scenarios
+- Uses `BooleanBoxes` for boolean default values to reduce allocations
+
+**WinUI 3:**
+- Uses `PropertyMetadata` (simpler than WPF's `FrameworkPropertyMetadata`)
+- Does NOT support: `ValidateValueCallback`, `CoerceValueCallback`, `Flags`, `DefaultUpdateSourceTrigger`, or `IsAnimationProhibited`
+- If you specify WPF-only features in WinUI, they will be ignored by the generator
+
+**Avalonia:**
+- Uses `[StyledProperty]` attribute instead of `[DependencyProperty]`
+- Generates `StyledProperty<T>` fields instead of `DependencyProperty`
+- Uses `Avalonia.AvaloniaProperty.Register<>()` for registration
+- Property changed callbacks are registered in a static constructor via `.Changed.AddClassHandler<T>()`
+- Does NOT use `BooleanBoxes` (uses plain bool values)
+- Supports `DefaultValue` and `PropertyChangedCallback` parameters
+- Control must inherit from `AvaloniaObject` (or `UserControl`, `Control`, etc.)
+
+The source generator automatically detects your platform and generates the appropriate code.
 
 ---
 
@@ -270,3 +302,136 @@ public partial class MyControl
     }
 }
 ```
+
+---
+
+## 🌐 Avalonia StyledProperty Example
+
+### 📝 Human-Written Code - Avalonia
+
+For Avalonia, use the `[StyledProperty]` attribute with field-level declaration:
+
+```csharp
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Atc.XamlToolkit.Mvvm.Attributes;
+
+namespace MyApp.Controls;
+
+public partial class ColorPickerControl : UserControl
+{
+    public ColorPickerControl()
+    {
+        InitializeComponent();
+    }
+
+    [StyledProperty(DefaultValue = "Colors.Blue", PropertyChangedCallback = nameof(OnColorChanged))]
+    private Color selectedColor;
+
+    [StyledProperty(PropertyChangedCallback = nameof(OnColorComponentChanged))]
+    private byte red;
+
+    [StyledProperty(PropertyChangedCallback = nameof(OnColorComponentChanged))]
+    private byte green;
+
+    [StyledProperty(PropertyChangedCallback = nameof(OnColorComponentChanged))]
+    private byte blue;
+
+    private static void OnColorChanged(
+        AvaloniaObject d,
+        AvaloniaPropertyChangedEventArgs e)
+    {
+        if (d is not ColorPickerControl control)
+        {
+            return;
+        }
+
+        var color = (Color)e.NewValue;
+        control.Red = color.R;
+        control.Green = color.G;
+        control.Blue = color.B;
+    }
+
+    private static void OnColorComponentChanged(
+        AvaloniaObject d,
+        AvaloniaPropertyChangedEventArgs e)
+    {
+        if (d is not ColorPickerControl control)
+        {
+            return;
+        }
+
+        var newColor = Color.FromRgb(control.Red, control.Green, control.Blue);
+        if (control.SelectedColor != newColor)
+        {
+            control.SelectedColor = newColor;
+        }
+    }
+}
+```
+
+### ⚙️ Auto-Generated Code - Avalonia
+
+The source generator will produce code equivalent to:
+
+```csharp
+public partial class ColorPickerControl
+{
+    public static readonly StyledProperty<Color> SelectedColorProperty = Avalonia.AvaloniaProperty.Register<ColorPickerControl, Color>(
+        nameof(SelectedColor),
+        defaultValue: Colors.Blue);
+
+    public Color SelectedColor
+    {
+        get => (Color)GetValue(SelectedColorProperty);
+        set => SetValue(SelectedColorProperty, value);
+    }
+
+    public static readonly StyledProperty<byte> RedProperty = Avalonia.AvaloniaProperty.Register<ColorPickerControl, byte>(
+        nameof(Red),
+        defaultValue: (byte)0);
+
+    public byte Red
+    {
+        get => (byte)GetValue(RedProperty);
+        set => SetValue(RedProperty, value);
+    }
+
+    public static readonly StyledProperty<byte> GreenProperty = Avalonia.AvaloniaProperty.Register<ColorPickerControl, byte>(
+        nameof(Green),
+        defaultValue: (byte)0);
+
+    public byte Green
+    {
+        get => (byte)GetValue(GreenProperty);
+        set => SetValue(GreenProperty, value);
+    }
+
+    public static readonly StyledProperty<byte> BlueProperty = Avalonia.AvaloniaProperty.Register<ColorPickerControl, byte>(
+        nameof(Blue),
+        defaultValue: (byte)0);
+
+    public byte Blue
+    {
+        get => (byte)GetValue(BlueProperty);
+        set => SetValue(BlueProperty, value);
+    }
+
+    static ColorPickerControl()
+    {
+        SelectedColorProperty.Changed.AddClassHandler<ColorPickerControl>(OnColorChanged);
+        RedProperty.Changed.AddClassHandler<ColorPickerControl>(OnColorComponentChanged);
+        GreenProperty.Changed.AddClassHandler<ColorPickerControl>(OnColorComponentChanged);
+        BlueProperty.Changed.AddClassHandler<ColorPickerControl>(OnColorComponentChanged);
+    }
+}
+```
+
+**Key Differences in Avalonia:**
+
+- Uses `StyledProperty<T>` instead of `DependencyProperty`
+- Registration uses `Avalonia.AvaloniaProperty.Register<TOwner, TValue>()`
+- No `BooleanBoxes` - plain bool values are used
+- Property changed callbacks registered in static constructor via `.Changed.AddClassHandler<T>()`
+- Simpler metadata system - only `DefaultValue` and callbacks supported (no flags, coercion, validation)

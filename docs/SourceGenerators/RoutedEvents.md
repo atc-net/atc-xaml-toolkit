@@ -1,10 +1,12 @@
 # ⚙️ RoutedEvents with Source Generation
 
-> ❗ This feature is only supported in WPF for now ❗
+> ❗ This feature is only supported in WPF ❗
 
 In WPF, **routed events** enable events to travel up or down the visual tree, allowing parent or ancestor elements to handle events raised by child elements. This mechanism simplifies event handling in complex user interfaces by reducing the need to wire up events on every control.
 
-Traditionally, creating a routed event involves writing repetitive boilerplate code using EventManager.RegisterRoutedEvent and manually defining event add/remove accessors. With Atc.XamlToolkit’s source generators, you can simply annotate your class or field, and the generator will automatically produce the code necessary for registering and exposing the event.
+Traditionally, creating a routed event involves writing repetitive boilerplate code using EventManager.RegisterRoutedEvent and manually defining event add/remove accessors. With Atc.XamlToolkit's source generators, you can simply annotate your class or field, and the generator will automatically produce the code necessary for registering and exposing the event.
+
+> **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For Avalonia, use standard .NET events or Avalonia's built-in routing features.
 
 ---
 

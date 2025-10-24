@@ -1,8 +1,8 @@
 # ⚙️ AttachedProperty with SourceGeneration
 
-> ❗ This feature is only supported in `WPF` for now ❗
+> ✅ This feature is supported in `WPF`, `WinUI 3`, and `Avalonia` ✅
 
-In WPF, **attached properties** are a type of dependency property that allows properties to be defined in one class but used in another. They are widely used in scenarios like behaviors, layout configurations, and interactions where a property needs to be applied to multiple elements without modifying their class definitions. Traditionally, defining attached properties requires boilerplate code, but source generators can automate this process, reducing errors and improving maintainability.
+In WPF, WinUI 3, and Avalonia, **attached properties** are a type of dependency/styled property that allows properties to be defined in one class but used in another. They are widely used in scenarios like behaviors, layout configurations, and interactions where a property needs to be applied to multiple elements without modifying their class definitions. Traditionally, defining attached properties requires boilerplate code, but source generators can automate this process, reducing errors and improving maintainability.
 
 ---
 
@@ -55,6 +55,37 @@ This method reduces redundancy by eliminating the need to specify the property n
 ```
 
 This allows the `IsDraggable` property to be applied to any UI element dynamically.
+
+---
+
+## 🔧 Platform-Specific Considerations
+
+### WPF vs WinUI 3 vs Avalonia
+
+While the source generator provides a unified API for all platforms, there are some differences in the generated code:
+
+**WPF:**
+- Supports all `FrameworkPropertyMetadataOptions` flags
+- Supports `ValidateValueCallback`, `CoerceValueCallback`, `DefaultUpdateSourceTrigger`, and `IsAnimationProhibited`
+- Uses `FrameworkPropertyMetadata` for advanced scenarios
+- Uses `BooleanBoxes` for boolean default values (performance optimization)
+- Generated Get/Set methods use `DependencyObject` as the parameter type
+
+**WinUI 3:**
+- Uses `PropertyMetadata` (simpler than WPF's `FrameworkPropertyMetadata`)
+- Does NOT support: `ValidateValueCallback`, `CoerceValueCallback`, `Flags`, `DefaultUpdateSourceTrigger`, or `IsAnimationProhibited`
+- Uses `BooleanBoxes` for boolean default values (performance optimization)
+- Generated Get/Set methods use `DependencyObject` as the parameter type
+- If you specify WPF-only features in WinUI, they will be ignored by the generator
+
+**Avalonia:**
+- Uses generic type parameters in property registration (e.g., `RegisterAttached<TOwner, THost, TValue>`)
+- Uses plain `bool` values instead of `BooleanBoxes`
+- Generated Get/Set methods use `AvaloniaObject` as the parameter type
+- **Important:** Owner class must inherit from `AvaloniaObject` (cannot be static)
+- Does NOT support WPF-specific features like `ValidateValueCallback`, `CoerceValueCallback`, or metadata flags
+
+The source generator automatically detects your platform and generates the appropriate code.
 
 ---
 
@@ -128,10 +159,10 @@ public static partial class DragBehavior
         typeof(DragBehavior),
         new PropertyMetadata(defaultValue: BooleanBoxes.FalseBox));
 
-    public static bool GetIsDraggable(UIElement element)
+    public static bool GetIsDraggable(DependencyObject element)
         => (bool)element.GetValue(IsDraggableProperty);
 
-    public static void SetIsDraggable(UIElement element, bool value)
+    public static void SetIsDraggable(DependencyObject element, bool value)
         => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
 }
 ```
