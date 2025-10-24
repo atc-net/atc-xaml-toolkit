@@ -6,7 +6,8 @@ internal sealed class DtoPropertyInfo(
     string type,
     bool isRecordParameter = false,
     bool isReadOnly = false,
-    List<string>? attributes = null)
+    List<string>? attributes = null,
+    List<string>? documentationComments = null)
 {
     public string Name { get; } = name;
 
@@ -18,6 +19,8 @@ internal sealed class DtoPropertyInfo(
 
     public List<string> Attributes { get; } = attributes ?? [];
 
+    public List<string> DocumentationComments { get; } = documentationComments ?? [];
+
     public override string ToString()
-        => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(IsRecordParameter)}: {IsRecordParameter}, {nameof(IsReadOnly)}: {IsReadOnly}, {nameof(Attributes)}.Count: {Attributes.Count}";
+        => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(IsRecordParameter)}: {IsRecordParameter}, {nameof(IsReadOnly)}: {IsReadOnly}, {nameof(Attributes)}.Count: {Attributes.Count}, {nameof(DocumentationComments)}.Count: {DocumentationComments.Count}";
 }

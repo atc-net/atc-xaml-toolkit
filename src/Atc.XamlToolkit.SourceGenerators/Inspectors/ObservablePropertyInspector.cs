@@ -150,6 +150,7 @@ internal static class ObservablePropertyInspector
         }
 
         var customAttributes = fieldSymbol.ExtractCustomAttributes();
+        var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
         propertiesToGenerate.Add(
             new ObservablePropertyToGenerate(
@@ -165,6 +166,7 @@ internal static class ObservablePropertyInspector
                 BroadcastOnChange = broadcastOnChange,
                 UseIsDirty = useIsDirty,
                 CustomAttributes = customAttributes,
+                DocumentationComments = documentationComments,
             });
     }
 }

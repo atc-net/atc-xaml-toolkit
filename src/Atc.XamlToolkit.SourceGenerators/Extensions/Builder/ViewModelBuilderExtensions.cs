@@ -43,6 +43,15 @@ internal static class ViewModelBuilderExtensions
     {
         builder.AppendLineBeforeMember();
 
+        // Generate documentation comments if present
+        if (p.DocumentationComments is not null)
+        {
+            foreach (var documentationComment in p.DocumentationComments)
+            {
+                builder.AppendLine(documentationComment);
+            }
+        }
+
         // Generate custom attributes if present
         if (p.CustomAttributes is not null)
         {

@@ -316,6 +316,76 @@ The source generator automatically detects dependencies in:
     AfterChangedCallback = "EntrySelected?.Invoke(this, selectedEntry); DoStuffB();")]
 ```
 
+### 📝 XML Documentation Comments Support
+
+The source generator automatically preserves XML documentation comments (like `<summary>` and `<remarks>`) from your backing fields and copies them to the generated properties. This ensures your generated code maintains the same documentation as your source code.
+
+**Example with documentation comments:**
+
+```csharp
+public partial class PersonViewModel : ViewModelBase
+{
+    /// <summary>
+    /// Gets or sets the person's first name.
+    /// </summary>
+    /// <remarks>
+    /// The first name must be between 2 and 50 characters.
+    /// </remarks>
+    [ObservableProperty]
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    private string firstName;
+}
+```
+
+**Generated code includes the documentation:**
+
+```csharp
+public partial class PersonViewModel
+{
+    /// <summary>
+    /// Gets or sets the person's first name.
+    /// </summary>
+    /// <remarks>
+    /// The first name must be between 2 and 50 characters.
+    /// </remarks>
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    public string FirstName
+    {
+        get => firstName;
+        set
+        {
+            if (firstName == value)
+            {
+                return;
+            }
+
+            firstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+        }
+    }
+}
+```
+
+**Benefits:**
+
+- ✅ **IntelliSense support** - Documentation appears in Visual Studio/Rider tooltips
+- ✅ **API documentation** - Generated XML docs can be exported to documentation sites
+- ✅ **Maintainability** - Keep documentation synchronized with implementation
+- ✅ **Code clarity** - Make it clear what each property is for and how it should be used
+- ✅ **Validation context** - Explain validation rules and constraints
+
+**Best practices:**
+
+- ✅ Document all public-facing properties that will be bound in XAML
+- ✅ Use `<summary>` for a brief description
+- ✅ Use `<remarks>` for additional details, validation rules, or usage notes
+- ✅ Keep documentation concise and focused on the property's purpose
+- ✅ Update documentation when validation attributes or business rules change
+
 ### 🔄 Change Tracking with `UseIsDirty`
 
 You can enable automatic change tracking for individual properties by setting `UseIsDirty = true`. When enabled, the generated property setter will automatically set `IsDirty = true` whenever the property value changes.
@@ -1633,6 +1703,194 @@ public partial class PersonViewModel : ViewModelBase
 - ❌ Don't duplicate validation attributes in both DTO and ViewModel
 - ❌ Don't ignore validation errors when saving
 - ❌ Don't forget to set `UpdateSourceTrigger=PropertyChanged` in XAML bindings
+
+---
+
+### 📝 XML Documentation Comments Preservation
+
+The `ObservableDtoViewModel` generator automatically preserves XML documentation comments from your DTO properties and copies them to the generated ViewModel properties. This ensures your documentation is maintained across the wrapper layer.
+
+**DTO with documentation:**
+
+```csharp
+public class Person
+{
+    /// <summary>
+    /// Gets or sets the person's first name.
+    /// </summary>
+    /// <remarks>
+    /// The first name is used as the primary identifier in the system.
+    /// </remarks>
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    public string? FirstName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the person's last name.
+    /// </summary>
+    /// <remarks>
+    /// The last name is optional but recommended for proper identification.
+    /// </remarks>
+    [Required(ErrorMessage = "Last name is required")]
+    public string? LastName { get; set; }
+
+    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
+    public int? Age { get; set; }
+}
+```
+
+**ViewModel with preserved documentation:**
+
+```csharp
+[ObservableDtoViewModel(
+    typeof(Person),
+    EnableValidationOnPropertyChanged = true)]
+public partial class PersonViewModel : ViewModelBase
+{
+}
+```
+
+**Generated code includes documentation from DTO:**
+
+```csharp
+public partial class PersonViewModel
+{
+    private readonly Person dto;
+
+    public PersonViewModel(Person dto)
+    {
+        this.dto = dto;
+        InitializeValidation(validateOnPropertyChanged: true, validateAllPropertiesOnInit: false);
+    }
+
+    public Person InnerModel => dto;
+
+    /// <summary>
+    /// Gets or sets the person's first name.
+    /// </summary>
+    /// <remarks>
+    /// The first name is used as the primary identifier in the system.
+    /// </remarks>
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+    [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
+    public string? FirstName
+    {
+        get => dto.FirstName;
+        set
+        {
+            if (dto.FirstName == value)
+            {
+                return;
+            }
+
+            dto.FirstName = value;
+            RaisePropertyChanged(nameof(FirstName));
+            IsDirty = true;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the person's last name.
+    /// </summary>
+    /// <remarks>
+    /// The last name is optional but recommended for proper identification.
+    /// </remarks>
+    [Required(ErrorMessage = "Last name is required")]
+    public string? LastName
+    {
+        get => dto.LastName;
+        set
+        {
+            if (dto.LastName == value)
+            {
+                return;
+            }
+
+            dto.LastName = value;
+            RaisePropertyChanged(nameof(LastName));
+            IsDirty = true;
+        }
+    }
+
+    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
+    public int? Age
+    {
+        get => dto.Age;
+        set
+        {
+            if (dto.Age == value)
+            {
+                return;
+            }
+
+            dto.Age = value;
+            RaisePropertyChanged(nameof(Age));
+            IsDirty = true;
+        }
+    }
+}
+```
+
+**Documentation preservation features:**
+
+- ✅ **All XML tags preserved** - `<summary>`, `<remarks>`, `<param>`, `<returns>`, etc.
+- ✅ **Formatting maintained** - Original indentation and line breaks are kept
+- ✅ **IntelliSense support** - Documentation appears in IDE tooltips when using the ViewModel
+- ✅ **Combined with attributes** - Documentation appears before validation attributes
+- ✅ **Works with all properties** - Regular properties, readonly properties, and record parameters
+
+**Benefits:**
+
+- ✅ **Single source of truth** - Document your DTO once, documentation flows to ViewModels
+- ✅ **Better IntelliSense** - XAML developers see documentation when binding to ViewModel properties
+- ✅ **API consistency** - ViewModels maintain the same documentation as DTOs
+- ✅ **Reduced duplication** - No need to manually copy documentation to ViewModels
+- ✅ **Maintainability** - Update documentation in one place (DTO) and it propagates automatically
+
+**Best practices:**
+
+- ✅ Document your DTO properties thoroughly with `<summary>` and `<remarks>` tags
+- ✅ Include business rules, constraints, and usage guidance in documentation
+- ✅ Use meaningful descriptions that help UI developers understand property purposes
+- ✅ Update DTO documentation when business rules change
+- ✅ Combine documentation with validation attributes for complete property context
+
+**Example with comprehensive documentation:**
+
+```csharp
+public class CustomerDto
+{
+    /// <summary>
+    /// Gets or sets the customer's email address.
+    /// </summary>
+    /// <remarks>
+    /// This email is used for:
+    /// - Account verification
+    /// - Password reset
+    /// - Order confirmations
+    /// - Marketing communications (if opted in)
+    ///
+    /// Must be a valid email format and unique in the system.
+    /// </remarks>
+    [Required(ErrorMessage = "Email is required")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// Gets or sets the customer's phone number.
+    /// </summary>
+    /// <remarks>
+    /// Used for SMS notifications and account recovery.
+    /// Format: +1-XXX-XXX-XXXX or (XXX) XXX-XXXX
+    /// </remarks>
+    [Phone(ErrorMessage = "Please enter a valid phone number")]
+    public string? PhoneNumber { get; set; }
+}
+```
+
+When wrapped with `[ObservableDtoViewModel(typeof(CustomerDto))]`, the generated ViewModel properties will include all this documentation, making your ViewModels self-documenting and easy to use in XAML.
 
 ---
 
