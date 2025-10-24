@@ -5,7 +5,8 @@ internal static class FrameworkElementInspectorHelper
 {
     public static List<T> InspectPropertyAttributes<T>(
         INamedTypeSymbol classSymbol,
-        IEnumerable<AttributeData> propertyAttributes)
+        IEnumerable<AttributeData> propertyAttributes,
+        XamlPlatform xamlPlatform)
         where T : BaseFrameworkElementPropertyToGenerate
     {
         var propertiesToGenerate = new List<T>();
@@ -40,6 +41,7 @@ internal static class FrameworkElementInspectorHelper
             Extract(
                 argumentValues,
                 type,
+                xamlPlatform,
                 out var propertyChangedCallback,
                 out var coerceValueCallback,
                 out var validateValueCallback,
@@ -74,6 +76,7 @@ internal static class FrameworkElementInspectorHelper
     }
 
     public static T InspectPropertyAttribute<T>(
+        XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
         IFieldSymbol fieldSymbol,
         AttributeData propertyAttribute)
@@ -92,7 +95,7 @@ internal static class FrameworkElementInspectorHelper
 
         propertyName = propertyName.EnsureFirstCharacterToUpper();
 
-        var type = fieldSymbol.Type.ToString().EnsureCSharpAliasIfNeeded();
+        var type = fieldSymbol.Type.ToDisplayString().EnsureCSharpAliasIfNeeded();
 
         var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
 
@@ -101,6 +104,7 @@ internal static class FrameworkElementInspectorHelper
         Extract(
             argumentValues,
             type,
+            xamlPlatform,
             out var propertyChangedCallback,
             out var coerceValueCallback,
             out var validateValueCallback,
@@ -135,6 +139,7 @@ internal static class FrameworkElementInspectorHelper
     private static void Extract(
         IDictionary<string, string?> argumentValues,
         string type,
+        XamlPlatform xamlPlatform,
         out string? propertyChangedCallback,
         out string? coerceValueCallback,
         out string? validateValueCallback,
@@ -199,7 +204,7 @@ internal static class FrameworkElementInspectorHelper
         }
 
         defaultValue = defaultValue is null && type.IsKnownValueType()
-            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
-            : defaultValue?.TransformDefaultValueIfNeeded(type);
+            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform)
+            : defaultValue?.TransformDefaultValueIfNeeded(type, xamlPlatform);
     }
 }

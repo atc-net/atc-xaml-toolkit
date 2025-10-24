@@ -106,6 +106,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         var allRelayCommands = new List<RelayCommandToGenerate>();
         var isStatic = false;
 
+        var xamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform();
+
         foreach (var partialClassSyntax in allPartialDeclarations)
         {
             if (context.SemanticModel.Compilation
@@ -115,7 +117,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
                 continue;
             }
 
-            var result = FrameworkElementInspector.Inspect(partialClassSymbol);
+            var result = FrameworkElementInspector.Inspect(xamlPlatform, partialClassSymbol);
 
             if (!result.FoundAnythingToGenerate)
             {
@@ -143,6 +145,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         }
 
         var frameworkElementToGenerate = new FrameworkElementToGenerate(
+            xamlPlatform: xamlPlatform,
             namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
             className: classSymbol.Name,
             accessModifier: classSymbol.GetAccessModifier(),
@@ -177,12 +180,16 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
 
         if (frameworkElementToGenerate.AttachedPropertiesToGenerate?.Count > 0)
         {
-            frameworkElementBuilder.GenerateAttachedProperties(frameworkElementToGenerate.AttachedPropertiesToGenerate);
+            frameworkElementBuilder.GenerateAttachedProperties(
+                frameworkElementToGenerate.XamlPlatform,
+                frameworkElementToGenerate.AttachedPropertiesToGenerate);
         }
 
         if (frameworkElementToGenerate.DependencyPropertiesToGenerate?.Count > 0)
         {
-            frameworkElementBuilder.GenerateDependencyProperties(frameworkElementToGenerate.DependencyPropertiesToGenerate);
+            frameworkElementBuilder.GenerateDependencyProperties(
+                frameworkElementToGenerate.XamlPlatform,
+                frameworkElementToGenerate.DependencyPropertiesToGenerate);
         }
 
         if (frameworkElementToGenerate.RoutedEventsToGenerate?.Count > 0)

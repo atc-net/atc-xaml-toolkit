@@ -7,6 +7,7 @@ global using System.Runtime.Versioning;
 global using System.Text;
 
 global using Atc.XamlToolkit.Command;
+global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Mvvm;
 global using Atc.XamlToolkit.WinUISample.Models;
 
@@ -18,3 +19,5 @@ global using Microsoft.UI.Xaml;
 global using Microsoft.UI.Xaml.Controls;
 global using Microsoft.UI.Xaml.Input;
 global using Microsoft.UI.Xaml.Media;
+
+global using Windows.UI;

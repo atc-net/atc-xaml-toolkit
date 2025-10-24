@@ -206,9 +206,10 @@ Eliminate boilerplate with powerful code generation:
   - Selective generation with `IgnorePropertyNames` and `IgnoreMethodNames`
   - Automatic validation attribute copying with `EnableValidationOnPropertyChanged` and `EnableValidationOnInit`
   - Support for `[ComputedProperty]` with automatic dependency tracking
-- **[DependencyProperty]** (WPF) - Auto-generate dependency properties
-- **[AttachedProperty]** (WPF) - Auto-generate attached properties
-- **[RoutedEvent]** (WPF) - Auto-generate routed events
+- **[DependencyProperty]** (WPF & WinUI 3) - Auto-generate dependency properties
+- **[StyledProperty]** (Avalonia) - Auto-generate styled properties
+- **[AttachedProperty]** (WPF, WinUI 3 & Avalonia) - Auto-generate attached properties
+- **[RoutedEvent]** (WPF only) - Auto-generate routed events
 
 Learn more about each generator:
 
@@ -373,8 +374,9 @@ All commands support:
 | `[ObservableProperty]` | WPF, WinUI, Avalonia | Auto-generate observable properties |
 | `[ComputedProperty]` | WPF, WinUI, Avalonia | Auto-detect dependencies for computed properties and generate automatic property change notifications |
 | `[RelayCommand]` | WPF, WinUI, Avalonia | Auto-generate command properties |
-| `[DependencyProperty]` | WPF only | Auto-generate dependency properties |
-| `[AttachedProperty]` | WPF only | Auto-generate attached properties |
+| `[DependencyProperty]` | WPF, WinUI | Auto-generate dependency properties |
+| `[StyledProperty]` | Avalonia | Auto-generate styled properties (Avalonia's equivalent to DependencyProperty) |
+| `[AttachedProperty]` | WPF, WinUI, Avalonia | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events |
 | `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty`, `InnerModel`, automatic validation attribute copying, and `[ComputedProperty]` support |
 

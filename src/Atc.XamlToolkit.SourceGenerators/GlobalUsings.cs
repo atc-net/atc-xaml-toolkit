@@ -11,6 +11,7 @@ global using Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 global using Atc.XamlToolkit.SourceGenerators.Factories;
 global using Atc.XamlToolkit.SourceGenerators.Inspectors;
 global using Atc.XamlToolkit.SourceGenerators.Inspectors.Helpers;
+global using Atc.XamlToolkit.SourceGenerators.Models;
 global using Atc.XamlToolkit.SourceGenerators.Models.AttributeToGenerate;
 global using Atc.XamlToolkit.SourceGenerators.Models.FrameworkElement;
 global using Atc.XamlToolkit.SourceGenerators.Models.ObservableDtoViewModel;

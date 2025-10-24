@@ -31,7 +31,8 @@ internal static class ObjectExtensions
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public static string? TransformDefaultValueIfNeeded(
         this object? defaultValue,
-        string type)
+        string type,
+        XamlPlatform xamlPlatform)
     {
         if (defaultValue is null)
         {
@@ -58,12 +59,21 @@ internal static class ObjectExtensions
         switch (lastPart)
         {
             case "bool":
-                strDefaultValue = strDefaultValue.ToLowerInvariant() switch
+                // Avalonia doesn't use BooleanBoxes, only WPF/WinUI do
+                if (xamlPlatform != XamlPlatform.Avalonia)
                 {
-                    "true" => "BooleanBoxes.TrueBox",
-                    "false" => "BooleanBoxes.FalseBox",
-                    _ => strDefaultValue,
-                };
+                    strDefaultValue = strDefaultValue.ToLowerInvariant() switch
+                    {
+                        "true" => "BooleanBoxes.TrueBox",
+                        "false" => "BooleanBoxes.FalseBox",
+                        _ => strDefaultValue,
+                    };
+                }
+                else
+                {
+                    strDefaultValue = strDefaultValue.ToLowerInvariant();
+                }
+
                 break;
             case "decimal":
                 if (AllowedDecimalConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
@@ -73,7 +83,7 @@ internal static class ObjectExtensions
                 else if (!strDefaultValue.Contains("decimal."))
                 {
                     strDefaultValue = strDefaultValue.Length == 0
-                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                        ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform)
                         : strDefaultValue.Replace(',', '.');
 
                     if (strDefaultValue is not null &&
@@ -102,7 +112,7 @@ internal static class ObjectExtensions
                     else
                     {
                         strDefaultValue = strDefaultValue.Length == 0
-                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform)
                             : strDefaultValue.Replace(',', '.');
 
                         if (strDefaultValue is not null &&
@@ -132,7 +142,7 @@ internal static class ObjectExtensions
                     else
                     {
                         strDefaultValue = strDefaultValue.Length == 0
-                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type)
+                            ? SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform)
                             : strDefaultValue.Replace(',', '.');
 
                         if (strDefaultValue is not null &&
@@ -163,7 +173,7 @@ internal static class ObjectExtensions
                     {
                         if (strDefaultValue.Length == 0)
                         {
-                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                         }
                         else if (!strDefaultValue.EndsWith("U", StringComparison.Ordinal))
                         {
@@ -192,7 +202,7 @@ internal static class ObjectExtensions
                     {
                         if (strDefaultValue.Length == 0)
                         {
-                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                            strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                         }
                         else if (!strDefaultValue.EndsWith("UL", StringComparison.Ordinal))
                         {
@@ -222,7 +232,7 @@ internal static class ObjectExtensions
             case "byte":
                 if (strDefaultValue.Length == 0)
                 {
-                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                 }
                 else if (!strDefaultValue.StartsWith("(byte)", StringComparison.Ordinal))
                 {
@@ -233,7 +243,7 @@ internal static class ObjectExtensions
             case "sbyte":
                 if (strDefaultValue.Length == 0)
                 {
-                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                 }
                 else if (!strDefaultValue.StartsWith("(sbyte)", StringComparison.Ordinal))
                 {
@@ -244,7 +254,7 @@ internal static class ObjectExtensions
             case "short":
                 if (strDefaultValue.Length == 0)
                 {
-                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                 }
                 else if (!strDefaultValue.StartsWith("(short)", StringComparison.Ordinal))
                 {
@@ -255,7 +265,7 @@ internal static class ObjectExtensions
             case "ushort":
                 if (strDefaultValue.Length == 0)
                 {
-                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type);
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
                 }
                 else if (!strDefaultValue.StartsWith("(ushort)", StringComparison.Ordinal))
                 {
@@ -279,11 +289,23 @@ internal static class ObjectExtensions
             case "Brush":
             case "SolidColorBrush":
             {
-                if (!strDefaultValue.Contains("Brushes."))
+                if (xamlPlatform == XamlPlatform.Wpf)
                 {
-                    strDefaultValue = strDefaultValue.Length == 0
-                        ? "Brushes.DeepPink"
-                        : $"Brushes.{strDefaultValue}";
+                    if (!strDefaultValue.Contains("Brushes."))
+                    {
+                        strDefaultValue = strDefaultValue.Length == 0
+                            ? "Brushes.DeepPink"
+                            : $"Brushes.{strDefaultValue}";
+                    }
+                }
+                else
+                {
+                    if (!strDefaultValue.Contains("new SolidColorBrush(Colors."))
+                    {
+                        strDefaultValue = strDefaultValue.Length == 0
+                            ? "new SolidColorBrush(Colors.DeepPink)"
+                            : $"new SolidColorBrush(Colors.{strDefaultValue})";
+                    }
                 }
 
                 break;

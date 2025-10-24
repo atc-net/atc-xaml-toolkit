@@ -2,6 +2,7 @@
 namespace Atc.XamlToolkit.SourceGenerators.Models.FrameworkElement;
 
 internal sealed class FrameworkElementToGenerate(
+    XamlPlatform xamlPlatform,
     string namespaceName,
     string className,
     string accessModifier,
@@ -12,6 +13,8 @@ internal sealed class FrameworkElementToGenerate(
         accessModifier,
         isStatic)
 {
+    public XamlPlatform XamlPlatform { get; } = xamlPlatform;
+
     public IList<AttachedPropertyToGenerate>? AttachedPropertiesToGenerate { get; set; }
 
     public IList<DependencyPropertyToGenerate>? DependencyPropertiesToGenerate { get; set; }
@@ -21,5 +24,5 @@ internal sealed class FrameworkElementToGenerate(
     public IList<RelayCommandToGenerate>? RelayCommandsToGenerate { get; set; }
 
     public override string ToString()
-        => $"{base.ToString()}, {nameof(AttachedPropertiesToGenerate)}.Count: {AttachedPropertiesToGenerate?.Count}, {nameof(DependencyPropertiesToGenerate)}.Count: {DependencyPropertiesToGenerate?.Count}, {nameof(RoutedEventsToGenerate)}.Count: {RoutedEventsToGenerate?.Count}, {nameof(RelayCommandsToGenerate)}.Count: {RelayCommandsToGenerate?.Count}";
+        => $"{base.ToString()}, {nameof(XamlPlatform)}: {XamlPlatform}, {nameof(AttachedPropertiesToGenerate)}.Count: {AttachedPropertiesToGenerate?.Count}, {nameof(DependencyPropertiesToGenerate)}.Count: {DependencyPropertiesToGenerate?.Count}, {nameof(RoutedEventsToGenerate)}.Count: {RoutedEventsToGenerate?.Count}, {nameof(RelayCommandsToGenerate)}.Count: {RelayCommandsToGenerate?.Count}";
 }

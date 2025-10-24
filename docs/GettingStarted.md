@@ -358,9 +358,9 @@ xmlns:converters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.Xam
                               Converter={x:Static converters:BoolToVisibilityVisibleValueConverter.Instance}}" />
 ```
 
-## WPF-Specific Features
+## Platform-Specific Features
 
-### Dependency Properties
+### Dependency Properties (WPF & WinUI 3)
 
 ```csharp
 public partial class CustomControl : UserControl
@@ -375,7 +375,31 @@ public partial class CustomControl : UserControl
 }
 ```
 
-### Attached Properties
+**Note:** WinUI 3 uses simpler `PropertyMetadata` and doesn't support advanced WPF features like `CoerceValueCallback` or `ValidateValueCallback`.
+
+### Styled Properties (Avalonia)
+
+For Avalonia, use the `[StyledProperty]` attribute for instance properties:
+
+```csharp
+public partial class ColorPickerControl : UserControl
+{
+    public ColorPickerControl()
+    {
+        InitializeComponent();
+    }
+
+    [StyledProperty(DefaultValue = "Colors.Blue", PropertyChangedCallback = nameof(OnColorChanged))]
+    private Color selectedColor;
+
+    private static void OnColorChanged(AvaloniaObject d, AvaloniaPropertyChangedEventArgs e)
+    {
+        // Handle property change
+    }
+}
+```
+
+### Attached Properties (WPF, WinUI 3 & Avalonia)
 
 ```csharp
 [AttachedProperty<bool>("IsEnabled")]
@@ -392,7 +416,9 @@ XAML:
 </Grid>
 ```
 
-### Routed Events
+**Note:** For Avalonia attached properties, the owner class must be non-static and inherit from `AvaloniaObject`.
+
+### Routed Events (WPF Only)
 
 ```csharp
 public partial class CustomButton : Button

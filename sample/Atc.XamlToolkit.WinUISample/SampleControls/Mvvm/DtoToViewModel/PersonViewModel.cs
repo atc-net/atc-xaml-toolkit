@@ -14,10 +14,8 @@ public partial class PersonViewModel : ViewModelBase
                 FirstName = "John",
                 LastName = "Doe",
                 Age = 21,
-            })
-    {
+            }) =>
         PropertyChanged += OnPropertyChangedToError;
-    }
 
     // Error message properties for UI binding
     public string FirstNameError => GetErrors(nameof(FirstName)).Cast<string>().FirstOrDefault() ?? string.Empty;

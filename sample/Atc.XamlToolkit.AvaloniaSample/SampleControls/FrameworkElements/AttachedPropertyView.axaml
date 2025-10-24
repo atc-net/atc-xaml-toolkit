@@ -1,0 +1,84 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.FrameworkElements.AttachedPropertyView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:attachedPropertyComponents="using:Atc.XamlToolkit.AvaloniaSample.SampleControls.FrameworkElements.AttachedPropertyComponents"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20">
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Attached Properties Sample" />
+
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 1: Class-Level Attribute - Watermark Behavior" />
+                    <TextBlock Text="The WatermarkBehavior uses class-level [AttachedProperty&lt;T&gt;] attribute." TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [AttachedProperty&lt;string&gt;(&quot;Watermark&quot;, DefaultValue = &quot;&quot;)]"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock Text="Click on the textbox below to remove the watermark, then click outside to restore it:" TextWrapping="Wrap" />
+
+                    <TextBox
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        attachedPropertyComponents:WatermarkBehavior.Watermark="Enter your name..." />
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: WatermarkProperty, GetWatermark(), SetWatermark()"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 2: Field-Level Attribute - Highlight Behavior" />
+                    <TextBlock Text="The HighlightBehavior uses field-level [AttachedProperty] attributes on private static fields." TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [AttachedProperty] private static bool isHighlightEnabled;"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock Text="Hover over the button below to see the highlight effect:" TextWrapping="Wrap" />
+
+                    <Button
+                        Width="200"
+                        HorizontalAlignment="Left"
+                        attachedPropertyComponents:HighlightBehavior.IsHighlightEnabled="True"
+                        Content="Hover Me" />
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: IsHighlightEnabledProperty, OriginalBackgroundProperty, OriginalOpacityProperty"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

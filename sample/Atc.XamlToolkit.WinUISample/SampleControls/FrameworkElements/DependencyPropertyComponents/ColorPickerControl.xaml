@@ -1,0 +1,95 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.FrameworkElements.DependencyPropertyComponents.ColorPickerControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Border
+        Padding="10"
+        Background="Chocolate"
+        BorderBrush="Gray"
+        BorderThickness="1"
+        CornerRadius="5">
+        <Grid RowSpacing="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  Red Slider  -->
+            <Grid Grid.Row="0" ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Red:" />
+                <Slider
+                    x:Name="RedSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{x:Bind Red, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind RedSlider.Value, Mode=OneWay}" />
+            </Grid>
+
+            <!--  Green Slider  -->
+            <Grid Grid.Row="1" ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Green:" />
+                <Slider
+                    x:Name="GreenSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{x:Bind Green, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind GreenSlider.Value, Mode=OneWay}" />
+            </Grid>
+
+            <!--  Blue Slider  -->
+            <Grid Grid.Row="2" ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Blue:" />
+                <Slider
+                    x:Name="BlueSlider"
+                    Grid.Column="1"
+                    Maximum="255"
+                    Minimum="0"
+                    Value="{x:Bind Blue, Mode=TwoWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind BlueSlider.Value, Mode=OneWay}" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

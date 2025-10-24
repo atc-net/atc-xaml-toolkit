@@ -1,0 +1,151 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.FrameworkElements.DependencyPropertyView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dependencyPropertyComponents="using:Atc.XamlToolkit.WinUISample.SampleControls.FrameworkElements.DependencyPropertyComponents"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <dependencyPropertyComponents:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="20" Spacing="10">
+            <TextBlock
+                FontSize="20"
+                FontWeight="Bold"
+                Text="DependencyProperty Source Generator Examples" />
+
+            <Border Height="1" Background="Gray" />
+
+            <!--  Example 1: Field-Level Attribute - Color Picker Control  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 1: Field-Level Attribute - Color Picker Control" />
+                    <TextBlock Text="The ColorPickerControl uses field-level [DependencyProperty] attributes on private fields." TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [DependencyProperty(PropertyChangedCallback = nameof(OnColorChanged))] private Color selectedColor;"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock Text="Select colors using the sliders. The control uses dependency properties for data binding:" TextWrapping="Wrap" />
+
+                    <dependencyPropertyComponents:ColorPickerControl
+                        x:Name="ColorPicker"
+                        Width="400"
+                        HorizontalAlignment="Left"
+                        SelectedColor="Blue" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Text="Selected Color Preview: " />
+                        <Border
+                            Width="100"
+                            Height="40"
+                            Background="{x:Bind ColorPicker.SelectedColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay}"
+                            BorderBrush="Black"
+                            BorderThickness="1" />
+                        <TextBlock VerticalAlignment="Center" Text="{x:Bind ColorPicker.SelectedColor, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: SelectedColorProperty, RedProperty, GreenProperty, BlueProperty with getters/setters"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!--  Example 2: Class-Level Attribute - Label Control  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 2: Class-Level Attribute - Label Control" />
+                    <TextBlock Text="The StyledLabelControl uses class-level [DependencyProperty&lt;T&gt;] attributes for explicit property declarations." TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [DependencyProperty&lt;string&gt;(&quot;Text&quot;, DefaultValue = &quot;&quot;)]"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock Text="The styled label below demonstrates multiple dependency properties:" TextWrapping="Wrap" />
+
+                    <dependencyPropertyComponents:StyledLabelControl
+                        FontSize="16"
+                        Icon="★"
+                        IconColor="Gold"
+                        Text="This is a styled label with an icon"
+                        TextColor="DarkBlue" />
+
+                    <dependencyPropertyComponents:StyledLabelControl
+                        FontSize="14"
+                        Icon="⚠"
+                        IconColor="Orange"
+                        Text="Warning: Check your configuration"
+                        TextColor="DarkRed" />
+
+                    <dependencyPropertyComponents:StyledLabelControl
+                        FontSize="18"
+                        Icon="✓"
+                        IconColor="Green"
+                        Text="Success! Operation completed"
+                        TextColor="DarkGreen" />
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: TextProperty, TextColorProperty, IconProperty, IconColorProperty, FontSizeProperty"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!--  Comparison Section  -->
+            <Border
+                Padding="10"
+                BorderBrush="Gray"
+                BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Comparison: Class vs Field Attribute" />
+                    <TextBlock FontWeight="SemiBold" Text="Field-Level Attribute Approach:" />
+                    <TextBlock Text="✓ Property name and type inferred from field" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Less verbose, more concise code" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Field must be private and camelCase" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Best for controls with few properties" TextWrapping="Wrap" />
+
+                    <TextBlock FontWeight="SemiBold" Text="Class-Level Attribute Approach:" />
+                    <TextBlock Text="✓ Explicit property name and type declaration" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ Multiple properties declared at class level" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ More self-documenting and visible" TextWrapping="Wrap" />
+                    <TextBlock Text="✓ No backing fields needed" TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="DarkGreen"
+                        Text="Both approaches generate the same WinUI dependency property infrastructure with full data binding support!"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
