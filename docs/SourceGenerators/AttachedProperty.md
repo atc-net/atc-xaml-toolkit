@@ -31,7 +31,7 @@ Alternatively, you can declare the attached property on a private field. Here, y
 public static partial class DragBehavior
 {
     [AttachedProperty]
-    private bool isDraggable;
+    private static bool isDraggable;
 }
 ```
 
@@ -103,7 +103,7 @@ public static partial class DragBehavior
 public static partial class DragBehavior
 {
     [AttachedProperty]
-    private bool isDraggable
+    private static bool isDraggable
 }
 ```
 
