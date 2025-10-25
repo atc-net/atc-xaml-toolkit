@@ -34,10 +34,4 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.Avalonia\Atc.XamlToolkit.Avalonia.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="SampleControls\PersonView.axaml.cs">
-      <DependentUpon>PersonView.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
 </Project>

@@ -11,6 +11,8 @@ internal sealed class ViewModelToGenerate(
         accessModifier,
         isStatic: false)
 {
+    public XamlPlatform XamlPlatform { get; set; } = XamlPlatform.Wpf;
+
     public IList<ObservablePropertyToGenerate>? PropertiesToGenerate { get; set; }
 
     public IList<RelayCommandToGenerate>? RelayCommandsToGenerate { get; set; }

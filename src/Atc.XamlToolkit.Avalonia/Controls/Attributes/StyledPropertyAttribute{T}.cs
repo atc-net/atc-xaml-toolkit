@@ -37,4 +37,13 @@ public sealed class StyledPropertyAttribute<T> : StyledPropertyBaseAttribute
     /// Gets the name of the property.
     /// </summary>
     public string PropertyName { get; }
+
+    /// <summary>
+    /// Gets the type.
+    /// </summary>
+    public Type Type { get; } = typeof(T);
+
+    /// <inheritdoc/>
+    public override string ToString()
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(Type)}: {Type}, {base.ToString()}";
 }

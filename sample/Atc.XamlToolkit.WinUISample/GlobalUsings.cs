@@ -21,3 +21,4 @@ global using Microsoft.UI.Xaml.Input;
 global using Microsoft.UI.Xaml.Media;
 
 global using Windows.UI;
+global using Atc.Data.Models;

@@ -32,21 +32,12 @@ public partial class NumericUpDown : Control
     /// <summary>
     /// Dependency property for the current value.
     /// </summary>
-    public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(
-        nameof(Value),
-        typeof(int),
-        typeof(NumericUpDown),
-        new FrameworkPropertyMetadata(
-            defaultValue: 0,
-            propertyChangedCallback: OnValueChanged));
+    [DependencyProperty(PropertyChangedCallback = nameof(OnValueChanged))]
+    private int value;
 
-    public int Value
-    {
-        get => (int)GetValue(ValueProperty);
-        set => SetValue(ValueProperty, value);
-    }
-
-    private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnValueChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is not NumericUpDown control)
         {
@@ -60,18 +51,18 @@ public partial class NumericUpDown : Control
         {
             var args = new ValueChangedRoutedEventArgs(
                 ValueIncrementedEvent,
-                OldValue: oldValue,
-                NewValue: newValue,
-                Delta: newValue - oldValue);
+                oldValue: oldValue,
+                newValue: newValue,
+                delta: newValue - oldValue);
             control.RaiseEvent(args);
         }
         else if (newValue < oldValue)
         {
             var args = new ValueChangedRoutedEventArgs(
                 ValueDecrementedEvent,
-                OldValue: oldValue,
-                NewValue: newValue,
-                Delta: oldValue - newValue);
+                oldValue: oldValue,
+                newValue: newValue,
+                delta: oldValue - newValue);
             control.RaiseEvent(args);
         }
     }
@@ -85,26 +76,4 @@ public partial class NumericUpDown : Control
     {
         Value--;
     }
-}
-
-/// <summary>
-/// Custom event handler delegate for value change events.
-/// </summary>
-public delegate void ValueChangedRoutedEventHandler(object sender, ValueChangedRoutedEventArgs e);
-
-/// <summary>
-/// Custom routed event args containing value change details.
-/// </summary>
-public sealed class ValueChangedRoutedEventArgs(
-    RoutedEvent routedEvent,
-    int OldValue,
-    int NewValue,
-    int Delta)
-    : RoutedEventArgs(routedEvent)
-{
-    public int OldValue { get; } = OldValue;
-
-    public int NewValue { get; } = NewValue;
-
-    public int Delta { get; } = Delta;
 }

@@ -12,6 +12,12 @@ internal static class ViewModelBuilderExtensions
         if (viewModelToGenerate.RelayCommandsToGenerate?.Count > 0)
         {
             builder.AppendLine("using Atc.XamlToolkit.Command;");
+
+            // Add platform-specific using directives for dispatcher extension methods
+            if (builder.XamlPlatform == XamlPlatform.WinUI)
+            {
+                builder.AppendLine("using Microsoft.UI.Dispatching;");
+            }
         }
 
         builder.AppendLine();

@@ -10,6 +10,8 @@ internal abstract class BuilderBase
 
     public int IndentLevel { get; private set; }
 
+    public XamlPlatform XamlPlatform { get; set; } = XamlPlatform.Wpf;
+
     public void IncreaseIndent()
     {
         IndentLevel++;

@@ -575,9 +575,16 @@ dotnet_diagnostic.S6964.severity = none             # Value type property used a
 ##########################################
 [*.{cs,csx,cake}]
 
+dotnet_naming_rule.stylecop_static_readonly_fields_must_be_pascal_case_rule.severity   = none
+dotnet_style_readonly_field = false                 # IDE0044
+
 dotnet_diagnostic.CA1515.severity = none            # Because an application's API isn't typically referenced from outside the assembly, types can be made internal
+dotnet_diagnostic.CA1823.severity = none            # Unused field
+
+dotnet_diagnostic.CS0169.severity = none            # Unused variable
 
 dotnet_diagnostic.SA1010.severity = none            # Opening square brackets should not be preceded by a space
+dotnet_diagnostic.SA1311.severity = none            # Static readonly fields should begin with upper-case letter
 
 dotnet_diagnostic.S2589.severity = none             # Change this condition so that it does not always evaluate to 'True'
 dotnet_diagnostic.S3267.severity = none             # Loop should be simplified by calling Select
