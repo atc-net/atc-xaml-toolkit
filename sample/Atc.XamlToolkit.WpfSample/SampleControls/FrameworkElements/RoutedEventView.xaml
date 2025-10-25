@@ -1,0 +1,248 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WpfSample.SampleControls.FrameworkElements.RoutedEventView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:routedEventComponents="clr-namespace:Atc.XamlToolkit.WpfSample.SampleControls.FrameworkElements.RoutedEventComponents"
+    d:DesignHeight="700"
+    d:DesignWidth="900"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Routed Events Sample" />
+
+            <Border
+                Padding="15"
+                BorderBrush="Gray"
+                BorderThickness="1"
+                CornerRadius="5">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 1: Simple Routed Events with Custom Button" />
+                    <TextBlock TextWrapping="Wrap">
+                        The CustomButton demonstrates source-generated routed events using the [RoutedEvent] attribute.
+                        Click the button to see events being raised and handled at different levels.
+                    </TextBlock>
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [RoutedEvent] private static readonly RoutedEvent itemClicked;"
+                        TextWrapping="Wrap" />
+
+                    <!--  Container that handles the bubbling event  -->
+                    <Border
+                        Padding="10"
+                        routedEventComponents:CustomButton.ItemClicked="OnItemClickedAtBorder"
+                        BorderBrush="Orange"
+                        BorderThickness="2"
+                        CornerRadius="3">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="Event Handling Container (handles ItemClicked)" />
+
+                            <routedEventComponents:CustomButton
+                                x:Name="CustomBtn"
+                                Width="200"
+                                Padding="10,5"
+                                HorizontalAlignment="Left"
+                                Content="Click Me!"
+                                ItemActionPerformed="OnItemActionPerformed" />
+
+                            <TextBlock
+                                x:Name="EventLogSimple"
+                                Margin="0,10,0,0"
+                                FontFamily="Consolas"
+                                Foreground="DarkBlue"
+                                Text="Event log will appear here..."
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: ItemClickedEvent, PreviewItemClickedEvent, ItemActionPerformedEvent with event handlers"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="15"
+                BorderBrush="Gray"
+                BorderThickness="1"
+                CornerRadius="5">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 2: Custom Event Handler Type - NumericUpDown" />
+                    <TextBlock TextWrapping="Wrap">
+                        This control demonstrates routed events with custom event handler delegates and custom event args.
+                        The ValueIncremented and ValueDecremented events use ValueChangedRoutedEventHandler.
+                    </TextBlock>
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        Text="Code: [RoutedEvent(HandlerType = typeof(ValueChangedRoutedEventHandler))] private static readonly RoutedEvent valueIncremented;"
+                        TextWrapping="Wrap" />
+
+                    <Border
+                        Padding="10"
+                        routedEventComponents:NumericUpDown.ValueDecremented="OnValueDecremented"
+                        routedEventComponents:NumericUpDown.ValueIncremented="OnValueIncremented"
+                        BorderBrush="DarkCyan"
+                        BorderThickness="2"
+                        CornerRadius="3">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="Event Handling Container (handles ValueIncremented/Decremented)" />
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    Width="30"
+                                    Click="DecrementButton_Click"
+                                    Content="-" />
+
+                                <TextBlock
+                                    x:Name="ValueDisplay"
+                                    VerticalAlignment="Center"
+                                    FontSize="18"
+                                    FontWeight="Bold"
+                                    Text="0" />
+
+                                <Button
+                                    Width="30"
+                                    Click="IncrementButton_Click"
+                                    Content="+" />
+
+                                <routedEventComponents:NumericUpDown x:Name="NumericControl" Visibility="Collapsed" />
+                            </StackPanel>
+
+                            <TextBlock
+                                x:Name="EventLogNumeric"
+                                Margin="0,10,0,0"
+                                FontFamily="Consolas"
+                                Foreground="DarkGreen"
+                                Text="Event log will appear here..."
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="Generated: ValueIncrementedEvent and ValueDecrementedEvent with custom ValueChangedRoutedEventHandler"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="15"
+                BorderBrush="Gray"
+                BorderThickness="1"
+                CornerRadius="5">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Example 3: Event Routing Strategies" />
+                    <TextBlock TextWrapping="Wrap">
+                        Routed events can use different routing strategies: Bubble (default), Tunnel (preview), and Direct.
+                        This example shows the difference between Bubble and Tunnel events.
+                    </TextBlock>
+
+                    <TextBlock
+                        FontStyle="Italic"
+                        Foreground="CadetBlue"
+                        TextWrapping="Wrap">
+                        <Run Text="Bubble: " />
+                        <Run FontWeight="SemiBold" Text="[RoutedEvent]" />
+                        <LineBreak />
+                        <Run Text="Tunnel: " />
+                        <Run FontWeight="SemiBold" Text="[RoutedEvent(RoutingStrategy.Tunnel)]" />
+                    </TextBlock>
+
+                    <Border
+                        Padding="10"
+                        routedEventComponents:CustomButton.PreviewItemClicked="OnPreviewItemClicked_Outer"
+                        BorderBrush="DarkRed"
+                        BorderThickness="2"
+                        CornerRadius="3">
+                        <Border
+                            Padding="10"
+                            routedEventComponents:CustomButton.PreviewItemClicked="OnPreviewItemClicked_Inner"
+                            BorderBrush="Red"
+                            BorderThickness="1"
+                            CornerRadius="2">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold" Text="Nested Containers (both handle PreviewItemClicked)" />
+                                <TextBlock FontSize="11" Text="Outer Border: Handles PreviewItemClicked (first)" />
+                                <TextBlock FontSize="11" Text="Inner Border: Handles PreviewItemClicked (second)" />
+
+                                <routedEventComponents:CustomButton
+                                    Width="200"
+                                    Margin="0,10,0,0"
+                                    Padding="10,5"
+                                    HorizontalAlignment="Left"
+                                    Content="Click to See Tunneling" />
+
+                                <TextBlock
+                                    x:Name="EventLogTunnel"
+                                    Margin="0,10,0,0"
+                                    FontFamily="Consolas"
+                                    Foreground="DarkRed"
+                                    Text="Event log will appear here..."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        FontSize="12"
+                        Foreground="Gray"
+                        TextWrapping="Wrap">
+                        <Run Text="Tunnel events (Preview*) travel " />
+                        <Run FontWeight="Bold" Text="down" />
+                        <Run Text=" the visual tree (parent to child), while Bubble events travel " />
+                        <Run FontWeight="Bold" Text="up" />
+                        <Run Text=" (child to parent)." />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="15"
+                BorderBrush="DimGray"
+                BorderThickness="1"
+                CornerRadius="5">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="How It Works" />
+                    <TextBlock TextWrapping="Wrap">
+                        The [RoutedEvent] attribute triggers the source generator to create:
+                    </TextBlock>
+                    <TextBlock
+                        Margin="10,0,0,0"
+                        FontFamily="Consolas"
+                        FontSize="11"
+                        TextWrapping="Wrap">
+                        • Static RoutedEvent field (e.g., ItemClickedEvent)<LineBreak />
+                        • CLR event with add/remove accessors using AddHandler/RemoveHandler<LineBreak />
+                        • Automatic registration with EventManager<LineBreak />
+                        • Support for custom event handler types and routing strategies</TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

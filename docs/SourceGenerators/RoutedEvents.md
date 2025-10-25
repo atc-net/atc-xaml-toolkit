@@ -6,7 +6,45 @@ In WPF, **routed events** enable events to travel up or down the visual tree, al
 
 Traditionally, creating a routed event involves writing repetitive boilerplate code using EventManager.RegisterRoutedEvent and manually defining event add/remove accessors. With Atc.XamlToolkit's source generators, you can simply annotate your class or field, and the generator will automatically produce the code necessary for registering and exposing the event.
 
-> **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For Avalonia, use standard .NET events or Avalonia's built-in routing features.
+> **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For WinUI and Avalonia, use standard .NET events instead.
+
+---
+
+## 🔍 Platform Support
+
+### Why WPF Only?
+
+Routed events are fundamentally a WPF-specific feature that relies on infrastructure not available in other XAML frameworks:
+
+**WPF (✅ Full Support):**
+- Native `RoutedEvent` type and `EventManager.RegisterRoutedEvent()` API
+- Supports three routing strategies: Bubble (child → parent), Tunnel (parent → child), and Direct
+- Custom event handler types with typed `RoutedEventArgs`
+- Built-in event routing through the visual tree
+- The `[RoutedEvent]` attribute generates all necessary boilerplate
+
+**WinUI 3 (❌ No Support):**
+- Does NOT have `RoutedEvent` or `EventManager` classes
+- Microsoft.UI.Xaml uses standard .NET events exclusively
+- No event routing infrastructure for custom events
+- Built-in framework events (like `Click`, `Loaded`) exist but cannot be replicated for custom scenarios
+- **Alternative:** Use standard .NET events with `EventHandler` or `EventHandler<TEventArgs>`
+
+**Avalonia (⚠️ Different System):**
+- Has `RoutedEventArgs` but uses a different event registration mechanism
+- Cannot create custom routed events using `EventManager` (doesn't exist)
+- Uses `AddHandler` with pre-defined events from framework classes like `InputElement`
+- Custom events rely on standard .NET event patterns
+- **Alternative:** Use standard .NET events or leverage Avalonia's built-in event routing for framework-provided events
+
+### Source Generator Behavior
+
+The source generator automatically detects your target platform and:
+
+- **WPF Projects:** Generates full routed event code with `EventManager.RegisterRoutedEvent()`, routing strategies, and CLR event wrappers
+- **WinUI/Avalonia Projects:** Silently ignores `[RoutedEvent]` attributes since these platforms don't support the pattern
+
+This ensures your code remains platform-appropriate without compilation errors.
 
 ---
 
