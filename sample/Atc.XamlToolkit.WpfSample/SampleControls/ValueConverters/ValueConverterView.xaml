@@ -1,0 +1,475 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WpfSample.SampleControls.ValueConverters.ValueConverterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Atc.XamlToolkit.ValueConverters;assembly=Atc.XamlToolkit.Wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="800"
+    d:DesignWidth="900"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Value Converters Sample" />
+
+            <Separator Margin="0,10" />
+
+            <!--  BoolTo Converters  -->
+            <GroupBox Margin="0,10" Header="BoolTo Converters">
+                <StackPanel Margin="10">
+
+                    <!--  BoolToInverseBoolValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="BoolToInverseBoolValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Inverts boolean values (true → false, false → true)"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="InverseSourceCheckBox"
+                                Margin="0,5,0,0"
+                                Content="Source Boolean Value"
+                                IsChecked="True" />
+                            <CheckBox
+                                Margin="0,5,0,0"
+                                Content="Inverted Result"
+                                IsChecked="{Binding IsChecked, ElementName=InverseSourceCheckBox, Converter={x:Static converters:BoolToInverseBoolValueConverter.Instance}}"
+                                IsEnabled="False" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  BoolToVisibilityVisibleValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="BoolToVisibilityVisibleValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Converts bool to Visibility (true → Visible, false → Collapsed)"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="VisibleCheckBox"
+                                Margin="0,5,0,0"
+                                Content="Toggle Visibility"
+                                IsChecked="True" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontWeight="Bold"
+                                Foreground="Green"
+                                Text="This text is visible when checkbox is checked"
+                                Visibility="{Binding IsChecked, ElementName=VisibleCheckBox, Converter={x:Static converters:BoolToVisibilityVisibleValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  BoolToVisibilityCollapsedValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="BoolToVisibilityCollapsedValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Converts bool to Visibility (true → Collapsed, false → Visible)"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="CollapsedCheckBox"
+                                Margin="0,5,0,0"
+                                Content="Toggle Visibility (Inverted)"
+                                IsChecked="False" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontWeight="Bold"
+                                Foreground="Red"
+                                Text="This text is visible when checkbox is UNCHECKED"
+                                Visibility="{Binding IsChecked, ElementName=CollapsedCheckBox, Converter={x:Static converters:BoolToVisibilityCollapsedValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  BoolToWidthValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="BoolToWidthValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Converts bool to width (true → parameter value, false → 0). Parameter: 200"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="WidthCheckBox"
+                                Margin="0,5,0,0"
+                                Content="Toggle Width"
+                                IsChecked="True" />
+                            <Border
+                                Width="{Binding IsChecked, ElementName=WidthCheckBox, Converter={x:Static converters:BoolToWidthValueConverter.Instance}, ConverterParameter=200}"
+                                Height="30"
+                                Margin="0,5,0,0"
+                                Background="LightGreen">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="Width changes based on checkbox" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  MultiBoolToBoolValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="MultiBoolToBoolValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Combines multiple bools with AND/OR logic (Parameter: AND/OR)"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="Multi1CheckBox"
+                                Margin="0,5,0,0"
+                                Content="Condition 1"
+                                IsChecked="True" />
+                            <CheckBox
+                                x:Name="Multi2CheckBox"
+                                Margin="0,5,0,0"
+                                Content="Condition 2"
+                                IsChecked="False" />
+                            <CheckBox
+                                x:Name="Multi3CheckBox"
+                                Margin="0,5,0,0"
+                                Content="Condition 3"
+                                IsChecked="True" />
+                            <TextBlock Margin="0,5,0,0" Text="AND Result (all must be true):" />
+                            <CheckBox
+                                Margin="10,2,0,0"
+                                Content="AND Result"
+                                IsEnabled="False">
+                                <CheckBox.IsChecked>
+                                    <MultiBinding Converter="{x:Static converters:MultiBoolToBoolValueConverter.Instance}" ConverterParameter="AND">
+                                        <Binding ElementName="Multi1CheckBox" Path="IsChecked" />
+                                        <Binding ElementName="Multi2CheckBox" Path="IsChecked" />
+                                        <Binding ElementName="Multi3CheckBox" Path="IsChecked" />
+                                    </MultiBinding>
+                                </CheckBox.IsChecked>
+                            </CheckBox>
+                            <TextBlock Margin="0,5,0,0" Text="OR Result (at least one must be true):" />
+                            <CheckBox
+                                Margin="10,2,0,0"
+                                Content="OR Result"
+                                IsEnabled="False">
+                                <CheckBox.IsChecked>
+                                    <MultiBinding Converter="{x:Static converters:MultiBoolToBoolValueConverter.Instance}" ConverterParameter="OR">
+                                        <Binding ElementName="Multi1CheckBox" Path="IsChecked" />
+                                        <Binding ElementName="Multi2CheckBox" Path="IsChecked" />
+                                        <Binding ElementName="Multi3CheckBox" Path="IsChecked" />
+                                    </MultiBinding>
+                                </CheckBox.IsChecked>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  MultiBoolToVisibilityVisibleValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        BorderBrush="CornflowerBlue"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="MultiBoolToVisibilityVisibleValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Combines multiple bools to Visibility with AND/OR logic"
+                                TextWrapping="Wrap" />
+                            <CheckBox
+                                x:Name="Vis1CheckBox"
+                                Margin="0,5,0,0"
+                                Content="Visibility Condition 1"
+                                IsChecked="True" />
+                            <CheckBox
+                                x:Name="Vis2CheckBox"
+                                Margin="0,5,0,0"
+                                Content="Visibility Condition 2"
+                                IsChecked="True" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontWeight="Bold"
+                                Foreground="Purple"
+                                Text="Visible when ALL conditions are true (AND)">
+                                <TextBlock.Visibility>
+                                    <MultiBinding Converter="{x:Static converters:MultiBoolToVisibilityVisibleValueConverter.Instance}" ConverterParameter="AND">
+                                        <Binding ElementName="Vis1CheckBox" Path="IsChecked" />
+                                        <Binding ElementName="Vis2CheckBox" Path="IsChecked" />
+                                    </MultiBinding>
+                                </TextBlock.Visibility>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </GroupBox>
+
+            <!--  StringTo Converters  -->
+            <GroupBox Margin="0,10" Header="StringTo Converters">
+                <StackPanel Margin="10">
+
+                    <!--  StringNullOrEmptyToBoolValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToBoolValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="String null/empty check to bool (null/empty → true, text → false)"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="EmptyCheckTextBox"
+                                Margin="0,5,0,0"
+                                Text="" />
+                            <CheckBox
+                                Margin="0,5,0,0"
+                                Content="Is Empty"
+                                IsChecked="{Binding Text, ElementName=EmptyCheckTextBox, Converter={x:Static converters:StringNullOrEmptyToBoolValueConverter.Instance}}"
+                                IsEnabled="False" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  StringNullOrEmptyToInverseBoolValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToInverseBoolValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Inverted string null/empty check (null/empty → false, text → true)"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="NotEmptyCheckTextBox"
+                                Margin="0,5,0,0"
+                                Text="Sample" />
+                            <CheckBox
+                                Margin="0,5,0,0"
+                                Content="Has Text"
+                                IsChecked="{Binding Text, ElementName=NotEmptyCheckTextBox, Converter={x:Static converters:StringNullOrEmptyToInverseBoolValueConverter.Instance}}"
+                                IsEnabled="False" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  StringNullOrEmptyToVisibilityVisibleValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToVisibilityVisibleValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Shows placeholder when text is empty (null/empty → Visible)"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="PlaceholderTextBox"
+                                Margin="0,5,0,0"
+                                Text="" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontStyle="Italic"
+                                Foreground="Gray"
+                                Text="Please enter some text..."
+                                Visibility="{Binding Text, ElementName=PlaceholderTextBox, Converter={x:Static converters:StringNullOrEmptyToVisibilityVisibleValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  StringNullOrEmptyToVisibilityCollapsedValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToVisibilityCollapsedValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Shows content when text has value (null/empty → Collapsed)"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="ContentTextBox"
+                                Margin="0,5,0,0"
+                                Text="Hello" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontWeight="Bold"
+                                Foreground="DarkGreen"
+                                Text="Text is present!"
+                                Visibility="{Binding Text, ElementName=ContentTextBox, Converter={x:Static converters:StringNullOrEmptyToVisibilityCollapsedValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ToLowerValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="ToLowerValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Converts string to lowercase"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="LowerTextBox"
+                                Margin="0,5,0,0"
+                                Text="HELLO World" />
+                            <TextBlock Margin="0,5,0,0">
+                                <Run Text="Result: " />
+                                <Run FontWeight="Bold" Text="{Binding Text, ElementName=LowerTextBox, Converter={x:Static converters:ToLowerValueConverter.Instance}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ToUpperValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="ToUpperValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Converts string to uppercase"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="UpperTextBox"
+                                Margin="0,5,0,0"
+                                Text="hello World" />
+                            <TextBlock Margin="0,5,0,0">
+                                <Run Text="Result: " />
+                                <Run FontWeight="Bold" Text="{Binding Text, ElementName=UpperTextBox, Converter={x:Static converters:ToUpperValueConverter.Instance}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  StringToNullableIntValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Honeydew"
+                        BorderBrush="SeaGreen"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="StringToNullableIntValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Two-way conversion between string and nullable int"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="IntTextBox"
+                                Margin="0,5,0,0"
+                                Text="{Binding Value, ElementName=IntSlider, Converter={x:Static converters:StringToNullableIntValueConverter.Instance}, UpdateSourceTrigger=PropertyChanged}" />
+                            <Slider
+                                x:Name="IntSlider"
+                                Margin="0,5,0,0"
+                                Maximum="100"
+                                Minimum="0"
+                                Value="50" />
+                            <TextBlock Margin="0,5,0,0">
+                                <Run Text="Slider Value: " />
+                                <Run FontWeight="Bold" Text="{Binding Value, ElementName=IntSlider, StringFormat={}{0:F0}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </GroupBox>
+
+            <!--  NullTo Converters  -->
+            <GroupBox Margin="0,10" Header="NullTo Converters">
+                <StackPanel Margin="10">
+
+                    <!--  NullToVisibilityCollapsedValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Lavender"
+                        BorderBrush="MediumPurple"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="NullToVisibilityCollapsedValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Shows content when value is not null (null → Collapsed, not-null → Visible)"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                x:Name="NullCheckTextBox1"
+                                Margin="0,5,0,0"
+                                Text="Content" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontWeight="Bold"
+                                Foreground="DarkViolet"
+                                Text="Value is NOT null"
+                                Visibility="{Binding Text, ElementName=NullCheckTextBox1, Converter={x:Static converters:NullToVisibilityCollapsedValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  NullToVisibilityVisibleValueConverter  -->
+                    <Border
+                        Margin="0,5"
+                        Padding="10"
+                        Background="Lavender"
+                        BorderBrush="MediumPurple"
+                        BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="NullToVisibilityVisibleValueConverter" />
+                            <TextBlock
+                                Foreground="Gray"
+                                Text="Shows placeholder when value is null (null → Visible, not-null → Collapsed)"
+                                TextWrapping="Wrap" />
+                            <ComboBox
+                                x:Name="NullComboBox"
+                                Margin="0,5,0,0"
+                                SelectedIndex="-1">
+                                <ComboBoxItem Content="Option 1" />
+                                <ComboBoxItem Content="Option 2" />
+                                <ComboBoxItem Content="Option 3" />
+                            </ComboBox>
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontStyle="Italic"
+                                Foreground="Gray"
+                                Text="Please select an option..."
+                                Visibility="{Binding SelectedItem, ElementName=NullComboBox, Converter={x:Static converters:NullToVisibilityVisibleValueConverter.Instance}}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

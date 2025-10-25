@@ -27,7 +27,8 @@ public partial class ColorPickerControl : UserControl
         AvaloniaObject d,
         AvaloniaPropertyChangedEventArgs e)
     {
-        if (d is not ColorPickerControl control)
+        if (d is not ColorPickerControl control ||
+            e.NewValue is null)
         {
             return;
         }

@@ -33,6 +33,8 @@ internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
         ComputedProperties = computedProperties;
     }
 
+    public XamlPlatform XamlPlatform { get; set; } = XamlPlatform.Wpf;
+
     public string DtoTypeName { get; }
 
     public bool IsDtoRecord { get; }

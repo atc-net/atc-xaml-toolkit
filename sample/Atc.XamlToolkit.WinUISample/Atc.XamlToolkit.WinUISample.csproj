@@ -48,11 +48,6 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.WinUI\Atc.XamlToolkit.WinUI.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="SampleControls\Mvvm\DtoToViewModel\" />
-    <Folder Include="SampleControls\Mvvm\GeneralAttributes\Azure\" />
-    <Folder Include="SampleControls\Mvvm\GeneralAttributes\Person\" />
-  </ItemGroup>
 
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution

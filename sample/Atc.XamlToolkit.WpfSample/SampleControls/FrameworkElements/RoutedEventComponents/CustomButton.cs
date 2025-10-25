@@ -39,27 +39,8 @@ public partial class CustomButton : Button
         // Raise the custom ItemActionPerformed event with additional data
         var itemActionArgs = new ItemActionRoutedEventArgs(
             ItemActionPerformedEvent,
-            ActionType: "Click",
-            Timestamp: DateTime.Now);
+            actionType: "Click",
+            timestamp: DateTime.Now);
         RaiseEvent(itemActionArgs);
     }
-}
-
-/// <summary>
-/// Custom event handler delegate for item action events.
-/// </summary>
-public delegate void ItemActionRoutedEventHandler(object sender, ItemActionRoutedEventArgs e);
-
-/// <summary>
-/// Custom routed event args containing action details.
-/// </summary>
-public sealed class ItemActionRoutedEventArgs(
-    RoutedEvent routedEvent,
-    string ActionType,
-    DateTime Timestamp)
-    : RoutedEventArgs(routedEvent)
-{
-    public string ActionType { get; } = ActionType;
-
-    public DateTime Timestamp { get; } = Timestamp;
 }

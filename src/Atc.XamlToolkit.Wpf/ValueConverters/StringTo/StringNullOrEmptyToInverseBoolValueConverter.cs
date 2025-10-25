@@ -3,19 +3,19 @@ namespace Atc.XamlToolkit.ValueConverters;
 
 [ValueConversion(typeof(string), typeof(bool))]
 public sealed class StringNullOrEmptyToInverseBoolValueConverter :
-    ValueConverterBase<string, bool>,
+    ValueConverterBase<string?, bool>,
     System.Windows.Data.IValueConverter
 {
     public static readonly StringNullOrEmptyToInverseBoolValueConverter Instance = new();
 
     public override bool Convert(
-        string value,
+        string? value,
         object? parameter,
         CultureInfo culture)
         => !(value is null ||
              string.IsNullOrEmpty(value));
 
-    public override string ConvertBack(
+    public override string? ConvertBack(
         bool value,
         object? parameter,
         CultureInfo culture)

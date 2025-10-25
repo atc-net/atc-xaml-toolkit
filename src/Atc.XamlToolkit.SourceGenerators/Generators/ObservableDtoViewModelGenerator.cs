@@ -120,7 +120,10 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             methods: result.Methods,
             customProperties: result.CustomProperties,
             customCommands: result.CustomCommands,
-            computedProperties: result.ComputedProperties);
+            computedProperties: result.ComputedProperties)
+        {
+            XamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform(),
+        };
     }
 
     private static void Execute(
@@ -132,7 +135,10 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             return;
         }
 
-        var builder = new ObservableDtoViewModelBuilder();
+        var builder = new ObservableDtoViewModelBuilder
+        {
+            XamlPlatform = viewModelToGenerate.XamlPlatform,
+        };
 
         builder.GenerateStart(viewModelToGenerate);
 

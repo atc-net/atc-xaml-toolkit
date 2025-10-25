@@ -1,3 +1,5 @@
+// ReSharper disable InvertIf
+// ReSharper disable ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 namespace Atc.XamlToolkit.SourceGenerators.Generators;
 
 /// <summary>
@@ -144,6 +146,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             className: classSymbol.Name,
             accessModifier: classSymbol.GetAccessModifier())
         {
+            XamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform(),
             PropertiesToGenerate = allObservableProperties,
             RelayCommandsToGenerate = allRelayCommands,
         };
@@ -190,7 +193,10 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             return;
         }
 
-        var viewModelBuilder = new ViewModelBuilder();
+        var viewModelBuilder = new ViewModelBuilder
+        {
+            XamlPlatform = viewModelToGenerate.XamlPlatform,
+        };
 
         viewModelBuilder.GenerateStart(viewModelToGenerate);
 

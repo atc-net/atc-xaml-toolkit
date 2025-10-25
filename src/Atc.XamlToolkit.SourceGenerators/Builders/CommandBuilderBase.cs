@@ -187,15 +187,11 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.IncreaseIndent();
         if (useDispatcherInvokeAsync)
         {
-            builder.AppendLine("await Application.Current.Dispatcher");
-            builder.IncreaseIndent();
-            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = true)");
-            builder.AppendLine(".ConfigureAwait(false);");
-            builder.DecreaseIndent();
+            AppendDispatcherInvokeAsync(builder, "IsBusy = true");
         }
         else if (useDispatcherInvoke)
         {
-            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);");
+            AppendDispatcherInvoke(builder, "IsBusy = true");
         }
         else
         {
@@ -255,15 +251,11 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.IncreaseIndent();
         if (useDispatcherInvokeAsync)
         {
-            builder.AppendLine("await Application.Current.Dispatcher");
-            builder.IncreaseIndent();
-            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = false)");
-            builder.AppendLine(".ConfigureAwait(false);");
-            builder.DecreaseIndent();
+            AppendDispatcherInvokeAsync(builder, "IsBusy = false");
         }
         else if (useDispatcherInvoke)
         {
-            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);");
+            AppendDispatcherInvoke(builder, "IsBusy = false");
         }
         else
         {
@@ -274,6 +266,53 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine("}");
         builder.DecreaseIndent();
         builder.AppendLine(hasCan ? "}," : "});");
+    }
+
+    private static void AppendDispatcherInvokeAsync(
+        CommandBuilderBase builder,
+        string action)
+    {
+        switch (builder.XamlPlatform)
+        {
+            case XamlPlatform.Wpf:
+                builder.AppendLine("await Application.Current.Dispatcher");
+                builder.IncreaseIndent();
+                builder.AppendLine($".InvokeAsyncIfRequired(() => {action})");
+                builder.AppendLine(".ConfigureAwait(false);");
+                builder.DecreaseIndent();
+                break;
+            case XamlPlatform.WinUI:
+                builder.AppendLine("await Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()");
+                builder.IncreaseIndent();
+                builder.AppendLine($".InvokeAsyncIfRequired(() => {action})");
+                builder.AppendLine(".ConfigureAwait(false);");
+                builder.DecreaseIndent();
+                break;
+            case XamlPlatform.Avalonia:
+                builder.AppendLine("await Avalonia.Threading.Dispatcher.UIThread");
+                builder.IncreaseIndent();
+                builder.AppendLine($".InvokeAsync(() => {action});");
+                builder.DecreaseIndent();
+                break;
+        }
+    }
+
+    private static void AppendDispatcherInvoke(
+        CommandBuilderBase builder,
+        string action)
+    {
+        switch (builder.XamlPlatform)
+        {
+            case XamlPlatform.Wpf:
+                builder.AppendLine($"Application.Current.Dispatcher.InvokeIfRequired(() => {action});");
+                break;
+            case XamlPlatform.WinUI:
+                builder.AppendLine($"Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread().InvokeIfRequired(() => {action});");
+                break;
+            case XamlPlatform.Avalonia:
+                builder.AppendLine($"Avalonia.Threading.Dispatcher.UIThread.Invoke(() => {action});");
+                break;
+        }
     }
 
     private static string BuildExecuteExpression(

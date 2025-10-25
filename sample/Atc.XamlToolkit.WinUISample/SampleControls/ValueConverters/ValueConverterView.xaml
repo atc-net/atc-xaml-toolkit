@@ -1,0 +1,309 @@
+<Page
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.ValueConverters.ValueConverterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Atc.XamlToolkit.ValueConverters">
+
+    <Page.Resources>
+        <!--  BoolTo Converters  -->
+        <converters:BoolToInverseBoolValueConverter x:Key="BoolToInverseBoolConverter" />
+        <converters:BoolToVisibilityCollapsedValueConverter x:Key="BoolToVisibilityCollapsedConverter" />
+        <converters:BoolToVisibilityVisibleValueConverter x:Key="BoolToVisibilityVisibleConverter" />
+        <converters:BoolToWidthValueConverter x:Key="BoolToWidthConverter" />
+        <!--  Note: MultiBinding converters cannot be used in WinUI XAML (no MultiBinding support)  -->
+        <!-- <converters:MultiBoolToBoolValueConverter x:Key="MultiBoolToBoolConverter" /> -->
+        <!-- <converters:MultiBoolToVisibilityVisibleValueConverter x:Key="MultiBoolToVisibilityVisibleConverter" /> -->
+
+        <!--  StringTo Converters  -->
+        <converters:StringNullOrEmptyToBoolValueConverter x:Key="StringNullOrEmptyToBoolConverter" />
+        <converters:StringNullOrEmptyToInverseBoolValueConverter x:Key="StringNullOrEmptyToInverseBoolConverter" />
+        <converters:StringNullOrEmptyToVisibilityCollapsedValueConverter x:Key="StringNullOrEmptyToVisibilityCollapsedConverter" />
+        <converters:StringNullOrEmptyToVisibilityVisibleValueConverter x:Key="StringNullOrEmptyToVisibilityVisibleConverter" />
+        <converters:StringToNullableIntValueConverter x:Key="StringToNullableIntConverter" />
+        <converters:ToLowerValueConverter x:Key="ToLowerConverter" />
+        <converters:ToUpperValueConverter x:Key="ToUpperConverter" />
+
+        <!--  NullTo Converters  -->
+        <converters:NullToVisibilityCollapsedValueConverter x:Key="NullToVisibilityCollapsedConverter" />
+        <converters:NullToVisibilityVisibleValueConverter x:Key="NullToVisibilityVisibleConverter" />
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel Margin="20">
+            <TextBlock
+                Margin="0,0,0,20"
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Value Converters" />
+
+            <TextBlock
+                Margin="0,0,0,20"
+                Text="This view demonstrates all value converters available in Atc.XamlToolkit.WinUI."
+                TextWrapping="Wrap" />
+
+            <!--  BoolTo Converters  -->
+            <Border
+                Margin="0,0,0,15"
+                Padding="15"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                BorderThickness="1">
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="BoolTo Converters" />
+
+                    <!--  BoolToInverseBoolValueConverter  -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock FontWeight="SemiBold" Text="BoolToInverseBoolValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Inverts a boolean value (true → false, false → true)" />
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="BoolInverseCheckBox" Content="Original Value" />
+                            <CheckBox
+                                Margin="20,0,0,0"
+                                Content="Inverted Value"
+                                IsChecked="{Binding IsChecked, ElementName=BoolInverseCheckBox, Converter={StaticResource BoolToInverseBoolConverter}}"
+                                IsEnabled="False" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!--  BoolToVisibilityCollapsedValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="BoolToVisibilityCollapsedValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts true → Collapsed, false → Visible" />
+                        <CheckBox x:Name="BoolCollapsedCheckBox" Content="Check to hide text" />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text is visible when checkbox is unchecked"
+                            Visibility="{Binding IsChecked, ElementName=BoolCollapsedCheckBox, Converter={StaticResource BoolToVisibilityCollapsedConverter}}" />
+                    </StackPanel>
+
+                    <!--  BoolToVisibilityVisibleValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="BoolToVisibilityVisibleValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts true → Visible, false → Collapsed" />
+                        <CheckBox x:Name="BoolVisibleCheckBox" Content="Check to show text" />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text is visible when checkbox is checked"
+                            Visibility="{Binding IsChecked, ElementName=BoolVisibleCheckBox, Converter={StaticResource BoolToVisibilityVisibleConverter}}" />
+                    </StackPanel>
+
+                    <!--  BoolToWidthValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="BoolToWidthValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts true → specified width, false → 0" />
+                        <CheckBox x:Name="BoolWidthCheckBox" Content="Check to show rectangle (width 200)" />
+                        <Rectangle
+                            Width="{Binding IsChecked, ElementName=BoolWidthCheckBox, Converter={StaticResource BoolToWidthConverter}, ConverterParameter=200}"
+                            Height="30"
+                            Margin="0,5,0,0"
+                            HorizontalAlignment="Left"
+                            Fill="{ThemeResource SystemAccentColor}" />
+                    </StackPanel>
+
+                    <!--  MultiBoolToBoolValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="MultiBoolToBoolValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Returns true only if all input booleans are true (AND logic)" />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Foreground="Orange"
+                            Text="⚠️ Note: WinUI 3 does not support MultiBinding in XAML. This converter must be used in code-behind."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <!--  MultiBoolToVisibilityVisibleValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="MultiBoolToVisibilityVisibleValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Shows element only if all input booleans are true" />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Foreground="Orange"
+                            Text="⚠️ Note: WinUI 3 does not support MultiBinding in XAML. This converter must be used in code-behind."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!--  StringTo Converters  -->
+            <Border
+                Margin="0,0,0,15"
+                Padding="15"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                BorderThickness="1">
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="StringTo Converters" />
+
+                    <!--  StringNullOrEmptyToBoolValueConverter  -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToBoolValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Returns true if string is null or empty" />
+                        <TextBox
+                            x:Name="StringEmptyTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Type something..." />
+                        <CheckBox
+                            Margin="0,5,0,0"
+                            Content="String is empty"
+                            IsChecked="{Binding Text, ElementName=StringEmptyTextBox, Converter={StaticResource StringNullOrEmptyToBoolConverter}, Mode=OneWay}"
+                            IsEnabled="False" />
+                    </StackPanel>
+
+                    <!--  StringNullOrEmptyToInverseBoolValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToInverseBoolValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Returns true if string is NOT null or empty" />
+                        <TextBox
+                            x:Name="StringNotEmptyTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Type something..." />
+                        <CheckBox
+                            Margin="0,5,0,0"
+                            Content="String has content"
+                            IsChecked="{Binding Text, ElementName=StringNotEmptyTextBox, Converter={StaticResource StringNullOrEmptyToInverseBoolConverter}, Mode=OneWay}"
+                            IsEnabled="False" />
+                    </StackPanel>
+
+                    <!--  StringNullOrEmptyToVisibilityCollapsedValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToVisibilityCollapsedValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Hides element when string is null or empty" />
+                        <TextBox
+                            x:Name="StringCollapsedTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Type to hide message..." />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text disappears when you type above"
+                            Visibility="{Binding Text, ElementName=StringCollapsedTextBox, Converter={StaticResource StringNullOrEmptyToVisibilityCollapsedConverter}}" />
+                    </StackPanel>
+
+                    <!--  StringNullOrEmptyToVisibilityVisibleValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="StringNullOrEmptyToVisibilityVisibleValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Shows element when string is null or empty" />
+                        <TextBox
+                            x:Name="StringVisibleTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Type to show message..." />
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text appears when you type above"
+                            Visibility="{Binding Text, ElementName=StringVisibleTextBox, Converter={StaticResource StringNullOrEmptyToVisibilityVisibleConverter}}" />
+                    </StackPanel>
+
+                    <!--  StringToNullableIntValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="StringToNullableIntValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts string to nullable int (for two-way binding)" />
+                        <TextBox
+                            x:Name="StringToIntTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Enter a number..." />
+                        <Slider
+                            Width="300"
+                            Margin="0,5,0,0"
+                            HorizontalAlignment="Left"
+                            Maximum="100"
+                            Minimum="0"
+                            Value="{Binding Text, ElementName=StringToIntTextBox, Converter={StaticResource StringToNullableIntConverter}, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <!--  ToLowerValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="ToLowerValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts string to lowercase" />
+                        <TextBox
+                            x:Name="ToLowerTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            Text="TRY TYPING IN UPPERCASE" />
+                        <TextBlock Margin="0,5,0,0">
+                            <Run Text="Lowercase: " />
+                            <Run FontWeight="Bold" Text="{Binding Text, ElementName=ToLowerTextBox, Converter={StaticResource ToLowerConverter}}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!--  ToUpperValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="ToUpperValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Converts string to uppercase" />
+                        <TextBox
+                            x:Name="ToUpperTextBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            Text="try typing in lowercase" />
+                        <TextBlock Margin="0,5,0,0">
+                            <Run Text="Uppercase: " />
+                            <Run FontWeight="Bold" Text="{Binding Text, ElementName=ToUpperTextBox, Converter={StaticResource ToUpperConverter}}" />
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!--  NullTo Converters  -->
+            <Border
+                Margin="0,0,0,15"
+                Padding="15"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                BorderThickness="1">
+                <StackPanel>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="NullTo Converters" />
+
+                    <!--  NullToVisibilityCollapsedValueConverter  -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock FontWeight="SemiBold" Text="NullToVisibilityCollapsedValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Hides element when value is null" />
+                        <ComboBox
+                            x:Name="NullCollapsedComboBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Select an item...">
+                            <ComboBoxItem Content="Option 1" />
+                            <ComboBoxItem Content="Option 2" />
+                            <ComboBoxItem Content="Option 3" />
+                        </ComboBox>
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text is hidden when no selection is made"
+                            Visibility="{Binding SelectedItem, ElementName=NullCollapsedComboBox, Converter={StaticResource NullToVisibilityCollapsedConverter}}" />
+                    </StackPanel>
+
+                    <!--  NullToVisibilityVisibleValueConverter  -->
+                    <StackPanel Margin="0,10,0,5">
+                        <TextBlock FontWeight="SemiBold" Text="NullToVisibilityVisibleValueConverter" />
+                        <TextBlock Margin="0,2,0,5" Text="Shows element when value is null" />
+                        <ComboBox
+                            x:Name="NullVisibleComboBox"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            PlaceholderText="Select an item...">
+                            <ComboBoxItem Content="Option A" />
+                            <ComboBoxItem Content="Option B" />
+                            <ComboBoxItem Content="Option C" />
+                        </ComboBox>
+                        <TextBlock
+                            Margin="0,5,0,0"
+                            Text="This text is shown when no selection is made (placeholder)"
+                            Visibility="{Binding SelectedItem, ElementName=NullVisibleComboBox, Converter={StaticResource NullToVisibilityVisibleConverter}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

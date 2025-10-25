@@ -1,4 +1,5 @@
 // ReSharper disable MergeIntoPattern
+// ReSharper disable InvertIf
 namespace Atc.XamlToolkit.SourceGenerators.Extensions.Builder;
 
 [SuppressMessage("Design", "CA1308:Teplace the call to 'ToLowerInvariant' with 'ToUpperInvariant'", Justification = "OK.")]
@@ -77,7 +78,7 @@ internal static class FrameworkElementBuilderExtensions
 
             if (propertiesWithCallbacks.Count > 0)
             {
-                var className = propertiesToGenerate.First().OwnerType;
+                var className = propertiesToGenerate[0].OwnerType;
                 GenerateAvaloniaStaticConstructor(builder, className, propertiesWithCallbacks);
             }
         }

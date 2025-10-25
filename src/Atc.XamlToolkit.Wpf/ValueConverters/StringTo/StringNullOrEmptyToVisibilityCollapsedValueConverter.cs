@@ -3,20 +3,20 @@ namespace Atc.XamlToolkit.ValueConverters;
 
 [ValueConversion(typeof(string), typeof(Visibility))]
 public sealed class StringNullOrEmptyToVisibilityCollapsedValueConverter :
-    ValueConverterBase<string, Visibility>,
+    ValueConverterBase<string?, Visibility>,
     System.Windows.Data.IValueConverter
 {
     public static readonly StringNullOrEmptyToVisibilityCollapsedValueConverter Instance = new();
 
     public override Visibility Convert(
-        string value,
+        string? value,
         object? parameter,
         CultureInfo culture)
         => value is null || string.IsNullOrEmpty(value)
             ? Visibility.Collapsed
             : Visibility.Visible;
 
-    public override string ConvertBack(
+    public override string? ConvertBack(
         Visibility value,
         object? parameter,
         CultureInfo culture)

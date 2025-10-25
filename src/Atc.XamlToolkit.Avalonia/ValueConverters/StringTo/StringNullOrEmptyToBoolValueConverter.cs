@@ -2,19 +2,19 @@
 namespace Atc.XamlToolkit.ValueConverters;
 
 public sealed class StringNullOrEmptyToBoolValueConverter :
-    ValueConverterBase<string, bool>,
+    ValueConverterBase<string?, bool>,
     Avalonia.Data.Converters.IValueConverter
 {
     public static readonly StringNullOrEmptyToBoolValueConverter Instance = new();
 
     public override bool Convert(
-        string value,
+        string? value,
         object? parameter,
         CultureInfo culture)
         => value is null ||
            string.IsNullOrEmpty(value);
 
-    public override string ConvertBack(
+    public override string? ConvertBack(
         bool value,
         object? parameter,
         CultureInfo culture)
