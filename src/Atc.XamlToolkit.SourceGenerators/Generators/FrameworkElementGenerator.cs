@@ -194,7 +194,13 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
 
         if (frameworkElementToGenerate.RoutedEventsToGenerate?.Count > 0)
         {
-            frameworkElementBuilder.GenerateRoutedEvents(frameworkElementToGenerate.RoutedEventsToGenerate);
+            // Routed events are only supported in WPF
+            // For WinUI and Avalonia, the [RoutedEvent] attribute is silently ignored
+            // as these platforms do not support the WPF RoutedEvent/EventManager pattern
+            if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.Wpf)
+            {
+                frameworkElementBuilder.GenerateRoutedEvents(frameworkElementToGenerate.RoutedEventsToGenerate);
+            }
         }
 
         if (frameworkElementToGenerate.RelayCommandsToGenerate?.Count > 0)

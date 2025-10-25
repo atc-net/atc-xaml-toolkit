@@ -377,8 +377,10 @@ All commands support:
 | `[DependencyProperty]` | WPF, WinUI | Auto-generate dependency properties |
 | `[StyledProperty]` | Avalonia | Auto-generate styled properties (Avalonia's equivalent to DependencyProperty) |
 | `[AttachedProperty]` | WPF, WinUI, Avalonia | Auto-generate attached properties |
-| `[RoutedEvent]` | WPF only | Auto-generate routed events |
+| `[RoutedEvent]` | WPF only | Auto-generate routed events (WPF's EventManager pattern not available in WinUI/Avalonia) |
 | `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty`, `InnerModel`, automatic validation attribute copying, and `[ComputedProperty]` support |
+
+> **Note on Routed Events:** Routed events are a WPF-exclusive feature that uses `EventManager.RegisterRoutedEvent()` and supports event bubbling/tunneling through the visual tree. WinUI 3 and Avalonia use different event systems and do not support custom routed events. See the [RoutedEvents documentation](docs/SourceGenerators/RoutedEvents.md) for detailed platform comparison.
 
 ### Value Converters
 
