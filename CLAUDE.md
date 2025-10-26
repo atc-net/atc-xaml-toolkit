@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **Atc.XamlToolkit** repository, a cross-platform MVVM toolkit for building WPF, WinUI 3, and Avalonia applications. It targets .NET 9 and includes source generators to eliminate boilerplate code.
 
+**Solution File:** The repository uses `Atc.XamlToolkit.slnx`, the new XML-based Visual Studio solution format introduced in Visual Studio 2022 17.11+. All dotnet CLI commands work normally with this format.
+
 ## Build Commands
 
 ```bash
@@ -18,6 +20,9 @@ dotnet build
 # Build in Release mode (warnings treated as errors)
 dotnet build -c Release
 
+# Build NuGet packages
+dotnet pack -c Release
+
 # Run all tests
 dotnet test
 
@@ -25,11 +30,16 @@ dotnet test
 dotnet test -c Release --no-build
 
 # Run tests for a specific project
-dotnet test ./test/Atc.XamlToolkit.Tests/
-dotnet test ./test/Atc.XamlToolkit.Wpf.Tests/
-dotnet test ./test/Atc.XamlToolkit.WinUI.Tests/
-dotnet test ./test/Atc.XamlToolkit.Avalonia.Tests/
-dotnet test ./test/Atc.XamlToolkit.SourceGenerators.Tests/
+dotnet test test/Atc.XamlToolkit.Tests/
+dotnet test test/Atc.XamlToolkit.Wpf.Tests/
+dotnet test test/Atc.XamlToolkit.WinUI.Tests/
+dotnet test test/Atc.XamlToolkit.Avalonia.Tests/
+dotnet test test/Atc.XamlToolkit.SourceGenerators.Tests/
+
+# Run sample applications (for testing/debugging)
+dotnet run --project sample/Atc.XamlToolkit.WpfSample/
+dotnet run --project sample/Atc.XamlToolkit.WinUISample/
+dotnet run --project sample/Atc.XamlToolkit.AvaloniaSample/
 ```
 
 ## Project Structure
@@ -237,6 +247,13 @@ When working on source generators:
    - Always check `XamlPlatform` enum when generating platform-specific code
    - Use conditional logic for features that differ between platforms (e.g., BooleanBoxes, callback registration)
    - Validate that WPF-only features (like RoutedEvent) don't generate code for other platforms
+
+8. **Viewing Generated Code**:
+   - Generated files are in `obj/[Configuration]/[TargetFramework]/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For WPF projects: `obj/Debug/net9.0-windows/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For WinUI projects: `obj/Debug/net9.0-windows10.0.19041.0/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For Avalonia projects: `obj/Debug/net9.0/generated/Atc.XamlToolkit.SourceGenerators/`
+   - After changes to source generators, run `dotnet build-server shutdown` to force regeneration
 
 ## Important Conventions
 
