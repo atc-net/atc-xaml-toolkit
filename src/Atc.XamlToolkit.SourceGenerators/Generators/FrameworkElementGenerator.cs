@@ -1,3 +1,4 @@
+// ReSharper disable ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 namespace Atc.XamlToolkit.SourceGenerators.Generators;
 
 /// <summary>
@@ -51,14 +52,116 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
     /// This method performs early filtering to optimize performance by checking:
     /// <list type="bullet">
     /// <item><description>The node is a partial class declaration (required for source generation)</description></item>
+    /// <item><description>The class name ends with "Attach" or "Behavior" (common patterns), OR</description></item>
+    /// <item><description>The class contains fields, properties, or methods that might have framework element attributes</description></item>
+    /// <item><description>The class has attribute lists that might contain DependencyProperty, AttachedProperty, StyledProperty, RoutedEvent, or RelayCommand attributes</description></item>
     /// </list>
     /// The semantic analysis will then check for fields/properties with attributes like
     /// AttachedProperty, DependencyProperty, RoutedEvent, or methods with RelayCommand.
     /// </remarks>
     private static bool IsSyntaxTarget(
         SyntaxNode syntaxNode)
-        => syntaxNode is ClassDeclarationSyntax classDeclaration &&
-           classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        // Must be partial (required for source generation)
+        if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        // Quick check: class names ending with common patterns
+        var className = classDeclaration.Identifier.Text;
+        if (className.EndsWith(NameConstants.Attach, StringComparison.Ordinal) ||
+            className.EndsWith(NameConstants.Behavior, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Check if class itself has framework element attributes (like [DependencyProperty<T>])
+        if (classDeclaration.AttributeLists.Count > 0 && HasRelevantAttribute(classDeclaration.AttributeLists))
+        {
+            return true;
+        }
+
+        // Check if class has any members with attributes
+        // This filters out empty partial classes or those without any attributed members
+        return classDeclaration.Members.Any(member => member switch
+        {
+            // Fields with attributes (for DependencyProperty, AttachedProperty, StyledProperty)
+            FieldDeclarationSyntax { AttributeLists.Count: > 0 } field =>
+                HasRelevantAttribute(field.AttributeLists),
+
+            // Properties with attributes (for DependencyProperty, AttachedProperty, StyledProperty)
+            PropertyDeclarationSyntax { AttributeLists.Count: > 0 } property =>
+                HasRelevantAttribute(property.AttributeLists),
+
+            // Methods with attributes (for RelayCommand, event handlers, callbacks)
+            MethodDeclarationSyntax { AttributeLists.Count: > 0 } method =>
+                HasRelevantAttribute(method.AttributeLists),
+
+            _ => false,
+        });
+    }
+
+    /// <summary>
+    /// Checks if the attribute lists contain any framework element-related attributes.
+    /// This performs a fast syntax-only check for attribute names.
+    /// </summary>
+    /// <remarks>
+    /// Platform-specific attributes (checked in the predicate, filtered in transform):
+    /// <list type="bullet">
+    /// <item><description><b>DependencyProperty</b> - WPF, WinUI (generates DependencyProperty)</description></item>
+    /// <item><description><b>AttachedProperty</b> - WPF, WinUI (generates attached DependencyProperty)</description></item>
+    /// <item><description><b>StyledProperty</b> - Avalonia only (generates StyledProperty, Avalonia's equivalent to DependencyProperty)</description></item>
+    /// <item><description><b>RoutedEvent</b> - WPF only (generates RoutedEvent via EventManager)</description></item>
+    /// <item><description><b>RelayCommand</b> - All platforms (generates IRelayCommand)</description></item>
+    /// </list>
+    /// Note: The predicate accepts all attributes; platform filtering happens in the transform phase
+    /// where SemanticModel is available to call GetXamlPlatform().
+    /// </remarks>
+    private static bool HasRelevantAttribute(
+        SyntaxList<AttributeListSyntax> attributeLists)
+    {
+        foreach (var attributeList in attributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                // Get the attribute name - for generic attributes like DependencyProperty<T>,
+                // we need to check the base identifier name
+                var attributeName = attribute.Name switch
+                {
+                    GenericNameSyntax genericName => genericName.Identifier.Text,
+                    _ => attribute.Name.ToString(),
+                };
+
+                // Check for framework element attributes (with or without "Attribute" suffix)
+                // Note: We check all attributes here; platform-specific filtering happens in GetSemanticTarget
+                if (attributeName is
+
+                    // WPF & WinUI: DependencyProperty for regular and attached properties
+                    NameConstants.DependencyProperty or NameConstants.DependencyPropertyAttribute or
+                    NameConstants.AttachedProperty or NameConstants.AttachedPropertyAttribute or
+
+                    // Avalonia only: StyledProperty (Avalonia's equivalent to DependencyProperty)
+                    NameConstants.StyledProperty or NameConstants.StyledPropertyAttribute or
+
+                    // WPF only: RoutedEvent
+                    NameConstants.RoutedEvent or NameConstants.RoutedEventAttribute or
+
+                    // All platforms: RelayCommand
+                    NameConstants.RelayCommand or NameConstants.RelayCommandAttribute)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Extracts the semantic target for code generation (transform phase).

@@ -1,4 +1,5 @@
 // ReSharper disable ConvertIfStatementToReturnStatement
+// ReSharper disable ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 namespace Atc.XamlToolkit.SourceGenerators.Generators;
 
 /// <summary>
@@ -54,13 +55,87 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
     /// <item><description>The node is a partial class declaration</description></item>
     /// <item><description>The class has attributes (looking for ObservableDtoViewModel attribute)</description></item>
     /// <item><description>The class has a base list (inherits from a base class)</description></item>
+    /// <item><description>The class specifically has the ObservableDtoViewModel attribute (syntax-only check)</description></item>
     /// </list>
     /// This avoids expensive semantic model operations on classes that won't generate code.
     /// </remarks>
     private static bool IsSyntaxTarget(
         SyntaxNode syntaxNode)
-        => syntaxNode is ClassDeclarationSyntax { BaseList: not null, AttributeLists.Count: > 0 } classDeclaration &&
-           classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        // Must be partial (required for source generation)
+        if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        // Must have a base list (inherits from a base class)
+        if (classDeclaration.BaseList is null)
+        {
+            return false;
+        }
+
+        // Accept 'if' has attributes (might have ObservableDtoViewModel attribute)
+        // For multi-file scenarios, some partial declarations might not have attributes
+        if (classDeclaration.AttributeLists.Count > 0 &&
+            HasObservableDtoViewModelAttribute(classDeclaration.AttributeLists))
+        {
+            return true;
+        }
+
+        // Also accept partials with base list but no attributes
+        // (the attribute might be on another partial declaration)
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if the attribute lists contain the ObservableDtoViewModel attribute.
+    /// This performs a fast syntax-only check for the attribute name.
+    /// </summary>
+    /// <remarks>
+    /// ObservableDtoViewModel attribute (platform-agnostic, works on WPF, WinUI, and Avalonia):
+    /// <list type="bullet">
+    /// <item><description><b>ObservableDtoViewModel</b> - Generates a ViewModel wrapper around a DTO class</description></item>
+    /// </list>
+    /// This attribute generates:
+    /// <list type="bullet">
+    /// <item><description>INotifyPropertyChanged implementation for all DTO properties</description></item>
+    /// <item><description>IsDirty tracking to detect changes from the original DTO</description></item>
+    /// <item><description>InnerModel property to access the underlying DTO</description></item>
+    /// <item><description>Optional validation support via DataAnnotations</description></item>
+    /// <item><description>Optional computed properties with dependency tracking</description></item>
+    /// </list>
+    /// </remarks>
+    private static bool HasObservableDtoViewModelAttribute(
+        SyntaxList<AttributeListSyntax> attributeLists)
+    {
+        foreach (var attributeList in attributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                // Get the attribute name - for generic attributes,
+                // we need to check the base identifier name
+                var attributeName = attribute.Name switch
+                {
+                    GenericNameSyntax genericName => genericName.Identifier.Text,
+                    _ => attribute.Name.ToString(),
+                };
+
+                // Check for ObservableDtoViewModel attribute (with or without "Attribute" suffix)
+                // Platform-agnostic: works across WPF, WinUI, and Avalonia
+                if (attributeName is NameConstants.ObservableDtoViewModel or NameConstants.ObservableDtoViewModelAttribute)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Extracts the semantic target for code generation (transform phase).
