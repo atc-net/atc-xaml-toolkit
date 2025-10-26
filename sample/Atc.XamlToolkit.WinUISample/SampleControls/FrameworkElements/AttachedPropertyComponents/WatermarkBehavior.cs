@@ -50,7 +50,8 @@ public static partial class WatermarkBehavior
         object sender,
         RoutedEventArgs e)
     {
-        if (sender is not TextBox textBox || !string.IsNullOrEmpty(textBox.Tag as string))
+        if (sender is not TextBox textBox ||
+            !string.IsNullOrEmpty(textBox.Tag as string))
         {
             return;
         }
@@ -73,7 +74,8 @@ public static partial class WatermarkBehavior
         object sender,
         TextChangedEventArgs e)
     {
-        if (sender is TextBox textBox && textBox.FocusState != FocusState.Unfocused)
+        if (sender is TextBox textBox &&
+            textBox.FocusState != FocusState.Unfocused)
         {
             // Mark that the user has entered text
             textBox.Tag = "UserText";
@@ -90,13 +92,15 @@ public static partial class WatermarkBehavior
             return;
         }
 
-        if (string.IsNullOrEmpty(textBox.Text) && textBox.FocusState == FocusState.Unfocused)
+        if (string.IsNullOrEmpty(textBox.Text) &&
+            textBox.FocusState == FocusState.Unfocused)
         {
             textBox.Text = watermark;
             textBox.Foreground = new SolidColorBrush(Colors.Gray);
             textBox.Tag = null; // Clear user text flag
         }
-        else if (textBox.Text == watermark && string.IsNullOrEmpty(textBox.Tag as string))
+        else if (textBox.Text == watermark &&
+                 string.IsNullOrEmpty(textBox.Tag as string))
         {
             textBox.Foreground = new SolidColorBrush(Colors.Gray);
         }
