@@ -7,6 +7,7 @@ internal static class NameConstants
     public const string AttachedProperty = nameof(AttachedProperty);
     public const string AttachedPropertyAttribute = nameof(AttachedPropertyAttribute);
     public const string AutoSetIsBusy = nameof(AutoSetIsBusy);
+    public const string AvaloniaObject = nameof(AvaloniaObject);
     public const string BeforeChangedCallback = nameof(BeforeChangedCallback);
     public const string Behavior = nameof(Behavior);
     public const string BroadcastOnChange = nameof(BroadcastOnChange);
@@ -55,6 +56,8 @@ internal static class NameConstants
     public const string ParameterValues = nameof(ParameterValues);
     public const string PropertyChangedCallback = nameof(PropertyChangedCallback);
     public const string PropertyName = nameof(PropertyName);
+    public const string Register = nameof(Register);
+    public const string RegisterAttached = nameof(RegisterAttached);
     public const string RelayCommand = nameof(RelayCommand);
     public const string RelayCommandAsync = nameof(RelayCommandAsync);
     public const string RelayCommandAttribute = nameof(RelayCommandAttribute);

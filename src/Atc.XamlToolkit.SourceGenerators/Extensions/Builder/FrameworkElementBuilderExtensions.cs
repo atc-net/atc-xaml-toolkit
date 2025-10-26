@@ -126,8 +126,8 @@ internal static class FrameworkElementBuilderExtensions
         XamlPlatform xamlPlatform)
     {
         var registerMethod = isAttached
-            ? "RegisterAttached"
-            : "Register";
+            ? NameConstants.RegisterAttached
+            : NameConstants.Register;
 
         // Platform-specific DependencyProperty type
         var dependencyPropertyType = xamlPlatform switch
@@ -148,7 +148,7 @@ internal static class FrameworkElementBuilderExtensions
                 : $"<{p.OwnerType.RemoveNullableSuffix()}, {p.Type.TrimNullableForTypeOf()}>";
 
             // For non-attached properties (StyledProperty), use AvaloniaProperty.Register, not StyledProperty<T>.Register
-            var registrationClass = "Avalonia.AvaloniaProperty";
+            const string registrationClass = "Avalonia.AvaloniaProperty";
 
             builder.AppendLine(
                 p.UseNewKeyword
@@ -285,24 +285,24 @@ internal static class FrameworkElementBuilderExtensions
         }
         else
         {
-            if (isWpf && p.HasAnyValidateValueCallback)
+            switch (isWpf)
             {
-                builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
-                builder.DecreaseIndent();
-                builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
-            }
-            else if (!isWpf)
-            {
-                // WinUI requires PropertyMetadata parameter even if empty
-                builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
-                builder.AppendLine("new PropertyMetadata(default));");
-                builder.DecreaseIndent();
-            }
-            else
-            {
-                // WPF without metadata
-                builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}));");
-                builder.DecreaseIndent();
+                case true when p.HasAnyValidateValueCallback:
+                    builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
+                    builder.DecreaseIndent();
+                    builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
+                    break;
+                case false:
+                    // WinUI requires PropertyMetadata parameter even if empty
+                    builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
+                    builder.AppendLine("new PropertyMetadata(default));");
+                    builder.DecreaseIndent();
+                    break;
+                default:
+                    // WPF without metadata
+                    builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}));");
+                    builder.DecreaseIndent();
+                    break;
             }
         }
     }
@@ -429,8 +429,8 @@ internal static class FrameworkElementBuilderExtensions
     {
         var elementType = xamlPlatform switch
         {
-            XamlPlatform.Avalonia => "AvaloniaObject",
-            _ => "DependencyObject", // WPF and WinUI
+            XamlPlatform.Avalonia => NameConstants.AvaloniaObject,
+            _ => NameConstants.DependencyObject, // WPF and WinUI
         };
 
         builder.AppendLine();
@@ -449,7 +449,18 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine($"public static {p.Type} Get{p.Name}({elementType} element)");
             builder.IncreaseIndent();
-            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
+
+            // For Avalonia with non-nullable reference/value types, add null-forgiving operator
+            if (xamlPlatform == XamlPlatform.Avalonia &&
+                !p.Type.EndsWith("?", StringComparison.Ordinal))
+            {
+                builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property)!;");
+            }
+            else
+            {
+                builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
+            }
+
             builder.DecreaseIndent();
 
             builder.AppendLine();
@@ -490,7 +501,18 @@ internal static class FrameworkElementBuilderExtensions
                     : $"public {p.Type} {p.Name}");
             builder.AppendLine("{");
             builder.IncreaseIndent();
-            builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
+
+            // For Avalonia with non-nullable reference/value types, add null-forgiving operator
+            if (xamlPlatform == XamlPlatform.Avalonia &&
+                !p.Type.EndsWith("?", StringComparison.Ordinal))
+            {
+                builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property)!;");
+            }
+            else
+            {
+                builder.AppendLine($"get => ({p.Type})GetValue({p.Name}Property);");
+            }
+
             if (!p.IsReadOnly)
             {
                 builder.AppendLine(
@@ -511,8 +533,8 @@ internal static class FrameworkElementBuilderExtensions
     {
         var elementType = xamlPlatform switch
         {
-            XamlPlatform.Avalonia => "AvaloniaObject",
-            _ => "DependencyObject", // WPF and WinUI
+            XamlPlatform.Avalonia => NameConstants.AvaloniaObject,
+            _ => NameConstants.DependencyObject, // WPF and WinUI
         };
 
         builder.AppendLine();
@@ -529,7 +551,18 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine($"public static {p.Type} Get{p.Name}({elementType} element)");
         builder.IncreaseIndent();
-        builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
+
+        // For Avalonia with non-nullable reference/value types, add null-forgiving operator
+        if (xamlPlatform == XamlPlatform.Avalonia &&
+            !p.Type.EndsWith("?", StringComparison.Ordinal))
+        {
+            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property)!;");
+        }
+        else
+        {
+            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
+        }
+
         if (!p.IsReadOnly)
         {
             builder.DecreaseIndent();
@@ -589,7 +622,8 @@ internal static class FrameworkElementBuilderExtensions
         //// Register<TOwner, TValue>(name, defaultValue)
         //// RegisterAttached<TOwner, THost, TValue>(name, defaultValue)
 
-        var hasDefaultValue = p.DefaultValue is not null && !"null".Equals(p.DefaultValue);
+        var hasDefaultValue = p.DefaultValue is not null &&
+                              !"null".Equals(p.DefaultValue);
 
         builder.AppendLine(hasDefaultValue ? $"defaultValue: {p.DefaultValue});" : ");");
 

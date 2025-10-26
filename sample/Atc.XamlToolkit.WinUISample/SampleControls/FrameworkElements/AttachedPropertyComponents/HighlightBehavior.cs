@@ -9,7 +9,7 @@ public static partial class HighlightBehavior
     private static bool isHighlightEnabled;
 
     [AttachedProperty(DefaultValue = "new SolidColorBrush(Colors.AliceBlue)")]
-    private static Brush originalBackground;
+    private static Brush? originalBackground;
 
     [AttachedProperty]
     private static double originalOpacity;
@@ -74,7 +74,7 @@ public static partial class HighlightBehavior
 
         // Restore original values
         var orgBackground = GetOriginalBackground(element);
-        if (element is Border or Panel)
+        if (element is Border or Panel && orgBackground is not null)
         {
             SetBackgroundBrush(element, orgBackground);
         }
