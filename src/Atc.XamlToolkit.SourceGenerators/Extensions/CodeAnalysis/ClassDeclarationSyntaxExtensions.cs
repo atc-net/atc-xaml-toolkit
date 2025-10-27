@@ -89,7 +89,8 @@ internal static class ClassDeclarationSyntaxExtensions
             }
 
             if (symbol?.Name.EndsWith(NameConstants.Attach, StringComparison.Ordinal) == true ||
-                symbol?.Name.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) == true)
+                symbol?.Name.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) == true ||
+                symbol?.Name.EndsWith(NameConstants.Helper, StringComparison.Ordinal) == true)
             {
                 return true;
             }

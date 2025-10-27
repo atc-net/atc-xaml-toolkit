@@ -36,6 +36,7 @@ internal static class NameConstants
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string Handler = nameof(Handler);
     public const string HandlerType = nameof(HandlerType);
+    public const string Helper = nameof(Helper);
     public const string IgnoreMethodNames = nameof(IgnoreMethodNames);
     public const string IgnorePropertyNames = nameof(IgnorePropertyNames);
     public const string IObservableObject = nameof(IObservableObject);

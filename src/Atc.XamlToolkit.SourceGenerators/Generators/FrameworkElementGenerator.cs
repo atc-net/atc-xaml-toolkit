@@ -52,7 +52,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
     /// This method performs early filtering to optimize performance by checking:
     /// <list type="bullet">
     /// <item><description>The node is a partial class declaration (required for source generation)</description></item>
-    /// <item><description>The class name ends with "Attach" or "Behavior" (common patterns), OR</description></item>
+    /// <item><description>The class name ends with "Attach", "Behavior", or "Helper" (common patterns), OR</description></item>
     /// <item><description>The class contains fields, properties, or methods that might have framework element attributes</description></item>
     /// <item><description>The class has attribute lists that might contain DependencyProperty, AttachedProperty, StyledProperty, RoutedEvent, or RelayCommand attributes</description></item>
     /// </list>
@@ -76,7 +76,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         // Quick check: class names ending with common patterns
         var className = classDeclaration.Identifier.Text;
         if (className.EndsWith(NameConstants.Attach, StringComparison.Ordinal) ||
-            className.EndsWith(NameConstants.Behavior, StringComparison.Ordinal))
+            className.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) ||
+            className.EndsWith(NameConstants.Helper, StringComparison.Ordinal))
         {
             return true;
         }
@@ -179,6 +180,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
     /// <item><description>FrameworkElement</description></item>
     /// <item><description>Class name ending with "Attach"</description></item>
     /// <item><description>Class name ending with "Behavior"</description></item>
+    /// <item><description>Class name ending with "Helper"</description></item>
     /// </list>
     /// </remarks>
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]

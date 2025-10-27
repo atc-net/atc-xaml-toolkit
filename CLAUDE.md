@@ -182,6 +182,14 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 - Source generators use `XamlPlatform` enum (Wpf, WinUI, Avalonia) to generate platform-appropriate code
 - Detection logic in `FrameworkElementInspector.GetXamlPlatform()` based on project references
 
+**Class Naming Requirements for FrameworkElementGenerator:**
+- Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must:
+  - Inherit from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
+  - Have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"**, OR
+  - Contain `[RoutedEvent]` attributes
+- This requirement is enforced by `HasAnythingAroundFrameworkElement()` in `ClassDeclarationSyntaxExtensions.cs`
+- Common patterns: `DragBehavior`, `WatermarkTextBoxBehavior`, `CheckBoxHelper`
+
 ## Code Style and Rules
 
 This repository uses the **ATC coding rules** (v1.0.0) defined in `.editorconfig`:
