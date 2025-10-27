@@ -4,6 +4,8 @@
 
 In WPF, WinUI 3, and Avalonia, **attached properties** are a type of dependency/styled property that allows properties to be defined in one class but used in another. They are widely used in scenarios like behaviors, layout configurations, and interactions where a property needs to be applied to multiple elements without modifying their class definitions. Traditionally, defining attached properties requires boilerplate code, but source generators can automate this process, reducing errors and improving maintainability.
 
+> **Important:** Classes using `[AttachedProperty]` must either inherit from `UserControl`, `DependencyObject`, or `FrameworkElement`, OR have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `WatermarkTextBoxBehavior`, `CheckBoxHelper`). This requirement ensures the source generator can properly detect and process your attached properties.
+
 ---
 
 ## 🚀 Defining an Attached Property

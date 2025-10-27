@@ -211,6 +211,8 @@ Eliminate boilerplate with powerful code generation:
 - **[AttachedProperty]** (WPF, WinUI 3 & Avalonia) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF only) - Auto-generate routed events
 
+> **Note:** Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must either inherit from `UserControl`/`DependencyObject`/`FrameworkElement`, or have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`).
+
 Learn more about each generator:
 
 - [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)

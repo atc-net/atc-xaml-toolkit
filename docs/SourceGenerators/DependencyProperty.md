@@ -6,6 +6,8 @@ In WPF and WinUI 3, **dependency properties** are a specialized type of property
 
 > **Note:** For Avalonia, use the `[StyledProperty]` attribute instead of `[DependencyProperty]`. The source generator will automatically create `StyledProperty<T>` registrations with the appropriate Avalonia-specific code.
 
+> **Important:** Classes using `[DependencyProperty]` or `[StyledProperty]` must either inherit from `UserControl`, `DependencyObject`, or `FrameworkElement`, OR have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`). This requirement ensures the source generator can properly detect and process your properties.
+
 ---
 
 ## 🚀 Setting Up Your First UserControl
