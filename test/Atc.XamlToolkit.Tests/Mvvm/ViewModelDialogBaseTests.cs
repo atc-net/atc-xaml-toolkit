@@ -7,7 +7,7 @@ public sealed class ViewModelDialogBaseTests
     [InlineData(true, true, "")]
     [InlineData(true, false, "IsBoolProperty")]
     [InlineData(true, false, "IsBoolPropertyWithExpression")]
-    [InlineData(true, false, "IsEnable")]
+    [InlineData(true, false, "IsEnabled")]
     [InlineData(true, false, "IsVisible")]
     [InlineData(true, false, "IsBusy")]
     [InlineData(true, false, "IsDirty")]

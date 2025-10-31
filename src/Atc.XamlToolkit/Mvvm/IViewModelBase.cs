@@ -9,7 +9,7 @@ public interface IViewModelBase : IObservableObject, ICleanup, INotifyDataErrorI
     /// <value>
     /// <see langword="true" /> if this instance is enabled; otherwise, <see langword="false" />.
     /// </value>
-    bool IsEnable { get; set; }
+    bool IsEnabled { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this instance is visible.
