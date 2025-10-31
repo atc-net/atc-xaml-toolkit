@@ -15,7 +15,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
 {
     private readonly Dictionary<string, List<string>> errors = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PropertyValidationMetadata> validationCache = new(StringComparer.Ordinal);
-    private bool isEnable;
+    private bool isEnabled;
     private bool isVisible;
     private bool isBusy;
     private bool isDirty;
@@ -45,17 +45,17 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
 
     /// <inheritdoc />
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool IsEnable
+    public bool IsEnabled
     {
-        get => isEnable;
+        get => isEnabled;
         set
         {
-            if (isEnable == value)
+            if (isEnabled == value)
             {
                 return;
             }
 
-            isEnable = value;
+            isEnabled = value;
             RaisePropertyChanged();
         }
     }
@@ -412,7 +412,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModelBase
         // Skip validation for special properties
         if (args.PropertyName
             is nameof(HasErrors)
-            or nameof(IsEnable)
+            or nameof(IsEnabled)
             or nameof(IsVisible)
             or nameof(IsBusy)
             or nameof(IsDirty)

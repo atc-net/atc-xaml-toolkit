@@ -136,7 +136,7 @@ public static partial class DragBehavior
 public static partial class DragBehavior
 {
     [AttachedProperty]
-    private static bool isDraggable
+    private static bool isDraggable;
 }
 ```
 
