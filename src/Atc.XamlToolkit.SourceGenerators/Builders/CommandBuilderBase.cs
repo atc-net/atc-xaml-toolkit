@@ -254,11 +254,13 @@ internal abstract class CommandBuilderBase : BuilderBase
         CommandBuilderBase builder,
         RelayCommandToGenerate[] commands)
     {
-        var commandsWithCancellation = commands
-            .Where(cmd => cmd.SupportsCancellation && cmd.UseTask)
+        // All async commands (IRelayCommandAsync) implement IDisposable,
+        // so we need to generate DisposeCommands() for all of them
+        var asyncCommands = commands
+            .Where(cmd => cmd.UseTask)
             .ToArray();
 
-        if (commandsWithCancellation.Length == 0)
+        if (asyncCommands.Length == 0)
         {
             return;
         }
@@ -269,7 +271,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine("{");
         builder.IncreaseIndent();
 
-        foreach (var cmd in commandsWithCancellation)
+        foreach (var cmd in asyncCommands)
         {
             var propName = cmd.GetCommandAsPropertyName();
             builder.AppendLine($"{propName}.Dispose();");

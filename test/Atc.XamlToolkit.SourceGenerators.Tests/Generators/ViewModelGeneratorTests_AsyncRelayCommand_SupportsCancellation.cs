@@ -728,10 +728,6 @@ public sealed partial class ViewModelGeneratorTests
 
                 private bool CanSearch(string query) => !string.IsNullOrEmpty(query);
 
-                /// <summary>
-                /// Helper method to dispose all async commands.
-                /// Call this from your ViewModel's Dispose() method.
-                /// </summary>
                 public void DisposeCommands()
                 {
                     SearchCommand.Dispose();
