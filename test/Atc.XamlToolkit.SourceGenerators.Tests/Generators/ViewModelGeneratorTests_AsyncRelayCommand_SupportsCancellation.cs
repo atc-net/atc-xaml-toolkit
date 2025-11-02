@@ -31,12 +31,20 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync((System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process);
+
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
 
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -78,14 +86,22 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
                     (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process,
                     CanProcess);
 
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -125,12 +141,20 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync<string>? searchCommand;
+                private IRelayCommand? searchCancelCommand;
 
                 public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>((System.Func<string, System.Threading.CancellationToken, System.Threading.Tasks.Task>)Search);
+
+                public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
 
                 public void CancelSearch()
                 {
                     SearchCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
                 }
             }
 
@@ -177,14 +201,22 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync<string>? searchCommand;
+                private IRelayCommand? searchCancelCommand;
 
                 public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>(
                     (System.Func<string, System.Threading.CancellationToken, System.Threading.Tasks.Task>)Search,
                     CanSearch);
 
+                public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
+
                 public void CancelSearch()
                 {
                     SearchCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
                 }
             }
 
@@ -224,13 +256,21 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
                     (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process);
 
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -272,14 +312,22 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
                     (System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process,
                     CanProcess);
 
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -319,12 +367,20 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync<int>? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync<int> ProcessCommand => processCommand ??= new RelayCommandAsync<int>((System.Func<int, System.Threading.CancellationToken, System.Threading.Tasks.Task>)Process);
+
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
 
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -364,12 +420,20 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
 
                 public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(async (ct) => await Process());
+
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
 
                 public void CancelProcess()
                 {
                     ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
                 }
             }
 
@@ -409,12 +473,482 @@ public sealed partial class ViewModelGeneratorTests
             public partial class TestViewModel
             {
                 private IRelayCommandAsync<string>? searchCommand;
+                private IRelayCommand? searchCancelCommand;
 
                 public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>(async (x, ct) => await Search(x));
+
+                public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
 
                 public void CancelSearch()
                 {
                     SearchCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
+                }
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void AsyncRelayCommand_SupportsCancellation_NoParameter_CancellationToken_AutoSetIsBusy()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+                private async Task Process(CancellationToken cancellationToken)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
+
+                public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
+                    async (CancellationToken cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await Process(cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    });
+
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
+                public void CancelProcess()
+                {
+                    ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
+                }
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void AsyncRelayCommand_SupportsCancellation_NoParameter_CanExecute_CancellationToken_AutoSetIsBusy()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(CanExecute = nameof(CanProcess), AutoSetIsBusy = true, SupportsCancellation = true)]
+                private async Task Process(CancellationToken cancellationToken)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                
+                private bool CanProcess() => true;
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommandAsync? processCommand;
+                private IRelayCommand? processCancelCommand;
+
+                public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
+                    async (CancellationToken cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await Process(cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    },
+                    CanProcess);
+
+                public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
+                public void CancelProcess()
+                {
+                    ProcessCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    ProcessCommand.Dispose();
+                }
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void AsyncRelayCommand_SupportsCancellation_ParameterString_CancellationToken_AutoSetIsBusy()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+                private async Task Search(string query, CancellationToken cancellationToken)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommandAsync<string>? searchCommand;
+                private IRelayCommand? searchCancelCommand;
+
+                public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>(
+                    async (query, cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await Search(query, cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    });
+
+                public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
+
+                public void CancelSearch()
+                {
+                    SearchCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
+                }
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void AsyncRelayCommand_SupportsCancellation_ParameterString_CanExecute_CancellationToken_AutoSetIsBusy()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(CanExecute = nameof(CanSearch), AutoSetIsBusy = true, SupportsCancellation = true)]
+                private async Task Search(string query, CancellationToken cancellationToken)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+
+                private bool CanSearch(string query) => !string.IsNullOrEmpty(query);
+
+                /// <summary>
+                /// Helper method to dispose all async commands.
+                /// Call this from your ViewModel's Dispose() method.
+                /// </summary>
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                private IRelayCommandAsync<string>? searchCommand;
+                private IRelayCommand? searchCancelCommand;
+
+                public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>(
+                    async (query, cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await Search(query, cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    },
+                    CanSearch);
+
+                public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
+
+                public void CancelSearch()
+                {
+                    SearchCommand.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    SearchCommand.Dispose();
+                }
+            }
+
+            #nullable disable
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
+    }
+
+    [Fact]
+    public void AsyncRelayCommand_AsyncCommandCancellationAndIsBusyViewModel_RenderingOrder()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace
+
+            public sealed partial class AsyncCommandCancellationAndIsBusyViewModel : ViewModelBase, IDisposable
+            {
+                [ObservableProperty] private string statusMessage = "Ready to start...";
+            
+                private bool CanDoStuff() => true;
+            
+                private bool CanDoStuff2() => true;
+            
+                [RelayCommand(
+                    CanExecute = nameof(CanDoStuff),
+                    AutoSetIsBusy = true,
+                    SupportsCancellation = true)]
+                private async Task DoStuff(
+                    CancellationToken cancellationToken)
+                {
+                    try
+                    {
+                        StatusMessage = "Starting first delay (5 seconds)...";
+            
+                        await Task.Delay(5_000, cancellationToken).ConfigureAwait(true);
+            
+                        StatusMessage = "First delay completed! Starting second delay (10 seconds)...";
+            
+                        await Task.Delay(10_000, cancellationToken).ConfigureAwait(true);
+            
+                        StatusMessage = "Both delays completed successfully!";
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        StatusMessage = "Task was cancelled!";
+                    }
+                }
+            
+                [RelayCommand(
+                    CanExecute = nameof(CanDoStuff2),
+                    AutoSetIsBusy = true,
+                    SupportsCancellation = true)]
+                private async Task DoStuff2(
+                    CancellationToken cancellationToken)
+                {
+                    try
+                    {
+                        StatusMessage = "Wait";
+            
+                        await Task.Delay(5_000, cancellationToken).ConfigureAwait(true);
+            
+                        StatusMessage = "Delay completed successfully!";
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        StatusMessage = "Task was cancelled!";
+                    }
+                }
+            
+                public void Dispose()
+                {
+                    DisposeCommands();
+                }
+            }
+            """;
+
+        const string expectedCode =
+            """
+            // <auto-generated>
+            #nullable enable
+            using Atc.XamlToolkit.Command;
+            
+            namespace TestNamespace;
+            
+            public partial class AsyncCommandCancellationAndIsBusyViewModel
+            {
+                private IRelayCommandAsync? doStuffCommand;
+                private IRelayCommand? doStuffCancelCommand;
+                private IRelayCommandAsync? doStuff2Command;
+                private IRelayCommand? doStuff2CancelCommand;
+
+                public IRelayCommandAsync DoStuffCommand => doStuffCommand ??= new RelayCommandAsync(
+                    async (CancellationToken cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await DoStuff(cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    },
+                    CanDoStuff);
+
+                public IRelayCommand DoStuffCancelCommand => doStuffCancelCommand ??= new RelayCommand(CancelDoStuff);
+
+                public IRelayCommandAsync DoStuff2Command => doStuff2Command ??= new RelayCommandAsync(
+                    async (CancellationToken cancellationToken) =>
+                    {
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
+
+                        try
+                        {
+                            await DoStuff2(cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
+                        }
+                    },
+                    CanDoStuff2);
+
+                public IRelayCommand DoStuff2CancelCommand => doStuff2CancelCommand ??= new RelayCommand(CancelDoStuff2);
+
+                public string StatusMessage
+                {
+                    get => statusMessage;
+                    set
+                    {
+                        if (statusMessage == value)
+                        {
+                            return;
+                        }
+
+                        statusMessage = value;
+                        RaisePropertyChanged(nameof(StatusMessage));
+                    }
+                }
+
+                public void CancelDoStuff()
+                {
+                    DoStuffCommand.Cancel();
+                }
+
+                public void CancelDoStuff2()
+                {
+                    DoStuff2Command.Cancel();
+                }
+
+                public void DisposeCommands()
+                {
+                    DoStuffCommand.Dispose();
+                    DoStuff2Command.Dispose();
                 }
             }
 

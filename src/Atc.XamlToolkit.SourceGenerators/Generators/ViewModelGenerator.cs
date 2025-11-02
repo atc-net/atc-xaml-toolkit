@@ -301,6 +301,8 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
 
         viewModelBuilder.GenerateProperties(viewModelToGenerate.PropertiesToGenerate);
 
+        viewModelBuilder.GenerateRelayCommandMethods(viewModelBuilder, viewModelToGenerate.RelayCommandsToGenerate);
+
         viewModelBuilder.GenerateEnd();
 
         var sourceText = viewModelBuilder.ToSourceText();

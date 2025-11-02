@@ -6,7 +6,8 @@ The `RelayCommandAsync` and `RelayCommandAsync<T>` classes now support cancellat
 
 - **Cancellation Token Support**: Pass a `CancellationToken` to your async command handlers
 - **Built-in Cancellation Management**: Commands automatically manage `CancellationTokenSource` lifecycle
-- **IDisposable Implementation**: Proper resource cleanup for cancellation tokens
+- **IDisposable Implementation**: Async command interfaces inherit from `IDisposable` for proper resource cleanup
+- **Source Generator Support**: Automatic generation of `DisposeCommands()` helper method for ViewModels with cancellable commands
 
 ## Basic Usage
 
@@ -29,10 +30,10 @@ public class MyViewModel : ObservableObject
         {
             // Check if cancellation was requested
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             // Simulate work
             await Task.Delay(100, cancellationToken);
-            
+
             // Update progress or data
             Progress = i;
         }
@@ -61,8 +62,8 @@ public class MyViewModel : ObservableObject
     private async Task SearchAsync(string query, CancellationToken cancellationToken)
     {
         // Perform search with cancellation support
-        var results = await _searchService.SearchAsync(query, cancellationToken);
-        
+        var results = await searchService.SearchAsync(query, cancellationToken);
+
         SearchResults = results;
     }
 
@@ -80,39 +81,39 @@ public class MyViewModel : ObservableObject
 ```csharp
 public class DownloadViewModel : ObservableObject, IDisposable
 {
-    private readonly IErrorHandler _errorHandler;
+    private readonly IErrorHandler errorHandler;
     public IRelayCommandAsync DownloadCommand { get; }
 
     public DownloadViewModel(IErrorHandler errorHandler)
     {
-        _errorHandler = errorHandler;
-        
+        this.errorHandler = errorHandler;
+
         DownloadCommand = new RelayCommandAsync(
             execute: DownloadFileAsync,
             canExecute: () => !DownloadCommand.IsExecuting,
-            errorHandler: _errorHandler);
+            errorHandler: this.errorHandler);
     }
 
     private async Task DownloadFileAsync(CancellationToken cancellationToken)
     {
         using var client = new HttpClient();
-        
+
         var response = await client.GetAsync(
-            "https://example.com/largefile.zip", 
+            "https://example.com/largefile.zip",
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-        
+
         response.EnsureSuccessStatusCode();
-        
+
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = File.Create("largefile.zip");
-        
+
         await stream.CopyToAsync(fileStream, cancellationToken);
     }
 
     public void Dispose()
     {
-        (DownloadCommand as IDisposable)?.Dispose();
+        DownloadCommand.Dispose();
     }
 }
 ```
@@ -122,13 +123,13 @@ public class DownloadViewModel : ObservableObject, IDisposable
 ```xml
 <Window>
     <StackPanel>
-        <Button Content="Start Download" 
+        <Button Content="Start Download"
                 Command="{Binding DownloadCommand}" />
-        
-        <Button Content="Cancel Download" 
+
+        <Button Content="Cancel Download"
                 Command="{Binding CancelDownloadCommand}" />
-        
-        <ProgressBar Value="{Binding Progress}" 
+
+        <ProgressBar Value="{Binding Progress}"
                      Maximum="100" />
     </StackPanel>
 </Window>
@@ -140,11 +141,11 @@ public class DownloadViewModel : ObservableObject
     public IRelayCommandAsync DownloadCommand { get; }
     public IRelayCommand CancelDownloadCommand { get; }
 
-    private int _progress;
+    private int progress;
     public int Progress
     {
-        get => _progress;
-        set => SetProperty(ref _progress, value);
+        get => progress;
+        set => SetProperty(ref progress, value);
     }
 
     public DownloadViewModel()
@@ -160,7 +161,7 @@ public class DownloadViewModel : ObservableObject
         for (int i = 0; i <= 100; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             await Task.Delay(50, cancellationToken);
             Progress = i;
         }
@@ -174,13 +175,13 @@ Existing commands without cancellation support continue to work as before. The n
 
 ```csharp
 // Old way (still works)
-var command1 = new RelayCommandAsync(async () => 
+var command1 = new RelayCommandAsync(async () =>
 {
     await Task.Delay(1000);
 });
 
 // New way with cancellation support
-var command2 = new RelayCommandAsync(async (cancellationToken) => 
+var command2 = new RelayCommandAsync(async (cancellationToken) =>
 {
     await Task.Delay(1000, cancellationToken);
 });
@@ -188,7 +189,7 @@ var command2 = new RelayCommandAsync(async (cancellationToken) =>
 
 ## Important Notes
 
-1. **IDisposable**: Commands now implement `IDisposable`. If you create commands directly (not through dependency injection), consider disposing them when no longer needed.
+1. **IDisposable**: `IRelayCommandAsync` and `IRelayCommandAsync<T>` now inherit from `IDisposable`. Dispose commands when the ViewModel is disposed to properly clean up `CancellationTokenSource` resources. The source generator automatically creates a `DisposeCommands()` helper method for ViewModels with cancellable commands.
 
 2. **Cancellation is Cooperative**: The async method must check the `CancellationToken` and respond to cancellation requests. Simply calling `Cancel()` doesn't forcibly stop the operation.
 
@@ -247,7 +248,7 @@ private async Task ProcessItemsAsync(CancellationToken cancellationToken)
     {
         // Check if cancellation was requested
         cancellationToken.ThrowIfCancellationRequested();
-        
+
         await ProcessItemAsync(item, cancellationToken);
     }
 }
@@ -302,7 +303,7 @@ private async Task ProcessDataAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
         }
-        
+
         ProcessItem(largeDataSet[i]);
     }
 }
@@ -324,7 +325,7 @@ public class MyViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        (LoadDataCommand as IDisposable)?.Dispose();
+        LoadDataCommand.Dispose();
     }
 
     private async Task LoadDataAsync(CancellationToken cancellationToken)
@@ -333,6 +334,26 @@ public class MyViewModel : ObservableObject, IDisposable
     }
 }
 ```
+
+**Note:** When using the source generator with `SupportsCancellation = true`, a `DisposeCommands()` helper method is automatically generated:
+
+```csharp
+public partial class MyViewModel : ViewModelBase, IDisposable
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    {
+        // Implementation
+    }
+
+    public void Dispose()
+    {
+        DisposeCommands(); // Generated helper method
+    }
+}
+```
+
+The generated `DisposeCommands()` method automatically disposes all async commands with cancellation support in your ViewModel.
 
 ### 4. Handle OperationCanceledException Gracefully
 
@@ -349,7 +370,7 @@ public class MyErrorHandler : IErrorHandler
             Debug.WriteLine("Operation was cancelled by user");
             return;
         }
-        
+
         // Show error dialog for other exceptions
         MessageBox.Show($"Error: {exception.Message}");
     }
@@ -376,18 +397,18 @@ Provide feedback during cancellable operations:
 private async Task ProcessLargeFileAsync(CancellationToken cancellationToken)
 {
     StatusMessage = "Processing file...";
-    
+
     try
     {
         for (int i = 0; i < 100; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             await ProcessChunkAsync(i, cancellationToken);
             Progress = i + 1;
             StatusMessage = $"Processing... {i + 1}%";
         }
-        
+
         StatusMessage = "Completed successfully";
     }
     catch (OperationCanceledException)
@@ -468,7 +489,7 @@ In XAML:
 ```csharp
 private async Task LoadDataAsync(CancellationToken cancellationToken)
 {
-    await Task.Run(async () => 
+    await Task.Run(async () =>
     {
         await legacyService.LoadDataAsync(); // No cancellation support
     }, cancellationToken);
@@ -495,7 +516,7 @@ private async Task LoadDataAsync(CancellationToken cancellationToken)
 {
     try
     {
-        await _service.LoadDataAsync(cancellationToken);
+        await service.LoadDataAsync(cancellationToken);
     }
     catch (OperationCanceledException)
     {
@@ -572,7 +593,7 @@ public partial class MyViewModel : ViewModelBase
     {
         await Task.Delay(1000, cancellationToken);
     }
-    
+
     // Generator creates:
     // - public IRelayCommandAsync LoadDataCommand { get; }
     // - Cancel method available: LoadDataCommand.Cancel()
@@ -592,7 +613,7 @@ public partial class MyViewModel : ViewModelBase
         // No CancellationToken parameter
         await Task.Delay(1000);
     }
-    
+
     // Generator creates:
     // - public IRelayCommandAsync ProcessCommand { get; }
     // - public void CancelProcess() => ProcessCommand.Cancel();
@@ -626,7 +647,7 @@ public partial class DownloadViewModel : ViewModelBase
             Progress = i;
         }
     }
-    
+
     // Use the generated command:
     // <Button Content="Download" Command="{Binding DownloadCommand}" />
     // <Button Content="Cancel" Command="{Binding DownloadCommand.CancelCommand}" />
@@ -642,17 +663,17 @@ public partial class SearchViewModel : ViewModelBase
     private async Task SearchAsync(string query)
     {
         // Your existing method without CancellationToken
-        var results = await _searchService.SearchAsync(query);
+        var results = await searchService.SearchAsync(query);
         SearchResults = results;
     }
-    
+
     // Generator creates CancelSearch() method for easy access
     public void ClearSearch()
     {
         CancelSearch(); // Generated method
         SearchResults = null;
     }
-    
+
     // XAML binding:
     // <Button Content="Search" Command="{Binding SearchCommand}" CommandParameter="{Binding QueryText}" />
     // <Button Content="Cancel" Click="ClearSearchButton_Click" />
@@ -664,20 +685,20 @@ public partial class SearchViewModel : ViewModelBase
 ```csharp
 public partial class DataViewModel : ViewModelBase
 {
-    private bool _hasConnection;
-    
+    private bool hasConnection;
+
     [RelayCommand(CanExecute = nameof(HasConnection), SupportsCancellation = true)]
     private async Task LoadAsync()
     {
-        await _service.LoadDataAsync();
+        await service.LoadDataAsync();
     }
-    
+
     public bool HasConnection
     {
-        get => _hasConnection;
+        get => hasConnection;
         set
         {
-            if (SetProperty(ref _hasConnection, value))
+            if (SetProperty(ref hasConnection, value))
             {
                 LoadCommand.NotifyCanExecuteChanged();
             }
@@ -685,6 +706,487 @@ public partial class DataViewModel : ViewModelBase
     }
 }
 ```
+
+### Combining with AutoSetIsBusy
+
+The most powerful combination is using `SupportsCancellation` with `AutoSetIsBusy`, which automatically manages the `IsBusy` property and enables cancellation. This combination also generates a dedicated cancel command for easy XAML binding.
+
+**Key features when combining both:**
+
+- ✅ **Automatic IsBusy management** - Sets `IsBusy = true` during execution, `false` when complete
+- ✅ **Thread-safe UI updates** - Uses `Dispatcher.InvokeAsyncIfRequired()` for cross-thread property updates
+- ✅ **Cancel command generation** - Creates `{CommandName}CancelCommand` property
+- ✅ **Cancel method generation** - Creates `Cancel{CommandName}()` method
+- ✅ **Proper exception handling** - `OperationCanceledException` is caught and handled silently
+
+#### Basic Example: No Parameters with CancellationToken
+
+```csharp
+public partial class DownloadViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string statusMessage = "Ready to start...";
+
+    [ObservableProperty]
+    private int progress;
+
+    [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task DownloadAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = "Starting download...";
+
+            for (int i = 0; i <= 100; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(50, cancellationToken);
+                Progress = i;
+                StatusMessage = $"Downloading... {i}%";
+            }
+
+            StatusMessage = "Download completed!";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Download cancelled!";
+        }
+    }
+
+    // Generator creates:
+    // - DownloadCommand (IRelayCommandAsync)
+    // - DownloadCancelCommand (IRelayCommand) for easy XAML binding
+    // - CancelDownload() method
+    // - Automatic IsBusy = true/false management with Dispatcher marshalling
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class DownloadViewModel
+{
+    private IRelayCommandAsync? downloadCommand;
+    private IRelayCommand? downloadCancelCommand;
+
+    public IRelayCommandAsync DownloadCommand => downloadCommand ??= new RelayCommandAsync(
+        async (CancellationToken cancellationToken) =>
+        {
+            await Application.Current.Dispatcher
+                .InvokeAsyncIfRequired(() => IsBusy = true)
+                .ConfigureAwait(false);
+
+            try
+            {
+                await DownloadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                await Application.Current.Dispatcher
+                    .InvokeAsyncIfRequired(() => IsBusy = false)
+                    .ConfigureAwait(false);
+            }
+        });
+
+    public IRelayCommand DownloadCancelCommand => downloadCancelCommand ??= new RelayCommand(CancelDownload);
+
+    public void CancelDownload()
+    {
+        DownloadCommand.Cancel();
+    }
+}
+```
+
+**XAML binding:**
+
+```xml
+<StackPanel>
+    <Button Content="Start Download" Command="{Binding DownloadCommand}" />
+    <Button Content="Cancel Download" Command="{Binding DownloadCancelCommand}" />
+
+    <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0" />
+    <ProgressBar Value="{Binding Progress}" Maximum="100" Height="20" />
+
+    <!-- IsBusy indicator -->
+    <TextBlock Text="Processing..."
+               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+#### Example with Parameter and CancellationToken
+
+When your command accepts a parameter, the generator creates the correct lambda signature with both the parameter and cancellation token:
+
+```csharp
+public partial class SearchViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string statusMessage = "Ready to search...";
+
+    [ObservableProperty]
+    private ObservableCollection<string> searchResults = new();
+
+    [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = $"Searching for '{query}'...";
+            SearchResults.Clear();
+
+            // Simulate search with delay
+            await Task.Delay(2000, cancellationToken);
+
+            // Simulate results
+            for (int i = 1; i <= 10; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(100, cancellationToken);
+                SearchResults.Add($"Result {i} for '{query}'");
+            }
+
+            StatusMessage = $"Found {SearchResults.Count} results";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Search cancelled";
+            SearchResults.Clear();
+        }
+    }
+
+    // Generator creates:
+    // - SearchCommand (IRelayCommandAsync<string>)
+    // - SearchCancelCommand (IRelayCommand)
+    // - CancelSearch() method
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class SearchViewModel
+{
+    private IRelayCommandAsync<string>? searchCommand;
+    private IRelayCommand? searchCancelCommand;
+
+    public IRelayCommandAsync<string> SearchCommand => searchCommand ??= new RelayCommandAsync<string>(
+        async (query, cancellationToken) =>
+        {
+            await Application.Current.Dispatcher
+                .InvokeAsyncIfRequired(() => IsBusy = true)
+                .ConfigureAwait(false);
+
+            try
+            {
+                await SearchAsync(query, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                await Application.Current.Dispatcher
+                    .InvokeAsyncIfRequired(() => IsBusy = false)
+                    .ConfigureAwait(false);
+            }
+        });
+
+    public IRelayCommand SearchCancelCommand => searchCancelCommand ??= new RelayCommand(CancelSearch);
+
+    public void CancelSearch()
+    {
+        SearchCommand.Cancel();
+    }
+}
+```
+
+**XAML binding:**
+
+```xml
+<StackPanel>
+    <TextBox x:Name="QueryTextBox" Text="{Binding QueryText, UpdateSourceTrigger=PropertyChanged}" />
+
+    <StackPanel Orientation="Horizontal">
+        <Button Content="Search"
+                Command="{Binding SearchCommand}"
+                CommandParameter="{Binding Text, ElementName=QueryTextBox}" />
+        <Button Content="Cancel" Command="{Binding SearchCancelCommand}" Margin="5,0,0,0" />
+    </StackPanel>
+
+    <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0" />
+    <ListBox ItemsSource="{Binding SearchResults}" Height="200" />
+</StackPanel>
+```
+
+#### Example with CanExecute + AutoSetIsBusy + SupportsCancellation
+
+All three features can be combined for full command control:
+
+```csharp
+public partial class DataProcessingViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private bool hasData;
+
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
+    [RelayCommand(CanExecute = nameof(CanProcess), AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task ProcessAsync(string input, CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = $"Processing '{input}'...";
+
+            for (int i = 0; i < 100; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(50, cancellationToken);
+                StatusMessage = $"Processing... {i}%";
+            }
+
+            StatusMessage = "Processing completed!";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Processing cancelled";
+        }
+    }
+
+    private bool CanProcess(string input) => HasData && !string.IsNullOrEmpty(input);
+
+    // Generator creates:
+    // - ProcessCommand (IRelayCommandAsync<string>) with CanExecute logic
+    // - ProcessCancelCommand (IRelayCommand)
+    // - CancelProcess() method
+    // - Automatic IsBusy management
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class DataProcessingViewModel
+{
+    private IRelayCommandAsync<string>? processCommand;
+    private IRelayCommand? processCancelCommand;
+
+    public IRelayCommandAsync<string> ProcessCommand => processCommand ??= new RelayCommandAsync<string>(
+        async (input, cancellationToken) =>
+        {
+            await Application.Current.Dispatcher
+                .InvokeAsyncIfRequired(() => IsBusy = true)
+                .ConfigureAwait(false);
+
+            try
+            {
+                await ProcessAsync(input, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                await Application.Current.Dispatcher
+                    .InvokeAsyncIfRequired(() => IsBusy = false)
+                    .ConfigureAwait(false);
+            }
+        },
+        CanProcess);
+
+    public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
+    public void CancelProcess()
+    {
+        ProcessCommand.Cancel();
+    }
+}
+```
+
+#### Example Without CancellationToken Parameter
+
+If your method doesn't have a `CancellationToken` parameter, the generator still creates a cancellable command by wrapping it:
+
+```csharp
+public partial class LegacyProcessingViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
+    [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task ProcessAsync()
+    {
+        StatusMessage = "Processing...";
+        await Task.Delay(5000);  // Note: No cancellation token
+        StatusMessage = "Completed!";
+    }
+
+    // Generator creates a wrapper that accepts CancellationToken but doesn't pass it
+    // Still generates cancel command and method
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class LegacyProcessingViewModel
+{
+    private IRelayCommandAsync? processCommand;
+    private IRelayCommand? processCancelCommand;
+
+    public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
+        async (CancellationToken cancellationToken) =>
+        {
+            await Application.Current.Dispatcher
+                .InvokeAsyncIfRequired(() => IsBusy = true)
+                .ConfigureAwait(false);
+
+            try
+            {
+                await ProcessAsync().ConfigureAwait(false);  // Original method without CT
+            }
+            finally
+            {
+                await Application.Current.Dispatcher
+                    .InvokeAsyncIfRequired(() => IsBusy = false)
+                    .ConfigureAwait(false);
+            }
+        });
+
+    public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
+    public void CancelProcess()
+    {
+        ProcessCommand.Cancel();
+    }
+}
+```
+
+**Note:** In this case, the command is cancellable, but the actual operation may not respect cancellation. For proper cancellation, update your method to accept and use a `CancellationToken`.
+
+### DisposeCommands() Helper Method
+
+When using the source generator with `SupportsCancellation = true`, a `DisposeCommands()` helper method is automatically generated. This method disposes all async commands with cancellation support, making resource cleanup simple and consistent.
+
+#### Generated DisposeCommands() Method
+
+The source generator creates a `DisposeCommands()` method that calls `Dispose()` on all cancellable async commands:
+
+```csharp
+public partial class MyViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task SaveAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+
+    // Generator creates:
+    // - LoadCommand (IRelayCommandAsync)
+    // - SaveCommand (IRelayCommandAsync)
+    // - DisposeCommands() method
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class MyViewModel
+{
+    private IRelayCommandAsync? loadCommand;
+    private IRelayCommand? loadCancelCommand;
+    private IRelayCommandAsync? saveCommand;
+    private IRelayCommand? saveCancelCommand;
+
+    public IRelayCommandAsync LoadCommand => loadCommand ??= new RelayCommandAsync(/*...*/);
+    public IRelayCommand LoadCancelCommand => loadCancelCommand ??= new RelayCommand(CancelLoad);
+
+    public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(/*...*/);
+    public IRelayCommand SaveCancelCommand => saveCancelCommand ??= new RelayCommand(CancelSave);
+
+    public void CancelLoad()
+    {
+        LoadCommand.Cancel();
+    }
+
+    public void CancelSave()
+    {
+        SaveCommand.Cancel();
+    }
+
+    public void DisposeCommands()
+    {
+        LoadCommand.Dispose();
+        SaveCommand.Dispose();
+    }
+}
+```
+
+#### Using DisposeCommands() in Your ViewModel
+
+Simply call `DisposeCommands()` from your ViewModel's `Dispose()` method:
+
+```csharp
+public partial class MyViewModel : ViewModelBase, IDisposable
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+
+    public void Dispose()
+    {
+        DisposeCommands(); // Automatically disposes all cancellable commands
+    }
+}
+```
+
+#### Benefits
+
+- ✅ **No manual disposal code** - The generator handles all command disposal
+- ✅ **Consistent API** - Same disposal pattern across all ViewModels
+- ✅ **No casting required** - Clean API without `(command as IDisposable)?.Dispose()`
+- ✅ **Automatically updated** - Adding new cancellable commands updates `DisposeCommands()` automatically
+- ✅ **Type-safe** - Only disposes commands that actually implement `IDisposable`
+
+#### Multiple Commands Example
+
+When you have multiple cancellable commands, `DisposeCommands()` disposes all of them:
+
+```csharp
+public partial class DashboardViewModel : ViewModelBase, IDisposable
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadUsersAsync(CancellationToken ct) { /*...*/ }
+
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadOrdersAsync(CancellationToken ct) { /*...*/ }
+
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadReportsAsync(CancellationToken ct) { /*...*/ }
+
+    public void Dispose()
+    {
+        DisposeCommands(); // Disposes LoadUsersCommand, LoadOrdersCommand, and LoadReportsCommand
+    }
+}
+```
+
+**Generated DisposeCommands() method:**
+
+```csharp
+public void DisposeCommands()
+{
+    LoadUsersCommand.Dispose();
+    LoadOrdersCommand.Dispose();
+    LoadReportsCommand.Dispose();
+}
+```
+
+#### Note
+
+The `DisposeCommands()` method is only generated when at least one command has `SupportsCancellation = true`. Commands without cancellation support don't need disposal and are not included.
 
 ### Combining with ExecuteOnBackgroundThread
 
@@ -695,7 +1197,7 @@ public partial class ProcessingViewModel : ViewModelBase
     private async Task ProcessLargeDataAsync(CancellationToken cancellationToken)
     {
         // Runs on background thread with cancellation support
-        await Task.Run(() => 
+        await Task.Run(() =>
         {
             for (int i = 0; i < 1000000; i++)
             {
@@ -704,9 +1206,10 @@ public partial class ProcessingViewModel : ViewModelBase
             }
         }, cancellationToken);
     }
-    
+
     // Generator creates:
     // - ProcessLargeDataCommand with background execution
+    // - ProcessLargeDataCancelCommand
     // - CancelProcessLargeData() method
 }
 ```
@@ -719,17 +1222,17 @@ public partial class ProcessingViewModel : ViewModelBase
 public class MyViewModel : ViewModelBase
 {
     public IRelayCommandAsync LoadDataCommand { get; }
-    
+
     public MyViewModel()
     {
         LoadDataCommand = new RelayCommandAsync(LoadDataAsync);
     }
-    
+
     private async Task LoadDataAsync(CancellationToken cancellationToken)
     {
         await Task.Delay(1000, cancellationToken);
     }
-    
+
     public void CancelLoad()
     {
         LoadDataCommand.Cancel();
@@ -747,7 +1250,7 @@ public partial class MyViewModel : ViewModelBase
     {
         await Task.Delay(1000, cancellationToken);
     }
-    
+
     // CancelLoadData() method is auto-generated
     // No constructor needed!
 }

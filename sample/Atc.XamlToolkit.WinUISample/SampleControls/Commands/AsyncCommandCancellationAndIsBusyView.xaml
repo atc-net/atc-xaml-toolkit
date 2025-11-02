@@ -1,0 +1,87 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Commands.AsyncCommandCancellationAndIsBusyView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:commands="using:Atc.XamlToolkit.WinUISample.SampleControls.Commands"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <commands:AsyncCommandCancellationAndIsBusyViewModel />
+    </UserControl.DataContext>
+
+    <Grid Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Title  -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="24"
+            FontWeight="Bold"
+            Text="Test Async Command Cancellation" />
+
+        <!--  DoStuff Task Section  -->
+        <Border
+            Grid.Row="2"
+            Padding="10"
+            BorderBrush="Gray"
+            BorderThickness="1">
+            <StackPanel Spacing="10">
+                <TextBlock
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Text="Test DoStuff Command with Cancellation" />
+
+                <TextBlock TextWrapping="Wrap">
+                    <Run Text="Click 'Start DoStuff' to begin a long-running task (5 seconds + 10 seconds = 15 seconds total)." />
+                    <LineBreak />
+                    <Run Text="Click 'Cancel DoStuff' after 3 seconds to test if both Task.Delay calls are properly cancelled." />
+                </TextBlock>
+
+                <Border
+                    Padding="10"
+                    BorderBrush="#FFCCCCCC"
+                    BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Margin="0,5,0,0">
+                            <Run Text="IsBusy: " />
+                            <Run FontWeight="Bold" Text="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="#FF0066CC"
+                            Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button
+                        Width="150"
+                        Height="35"
+                        Command="{x:Bind ViewModel.DoStuffCommand}"
+                        Content="Start DoStuff" />
+
+                    <Button
+                        Width="150"
+                        Height="35"
+                        Command="{x:Bind ViewModel.DoStuffCancelCommand}"
+                        Content="Cancel DoStuff" />
+                </StackPanel>
+
+                <TextBlock
+                    FontStyle="Italic"
+                    Foreground="#FF666666"
+                    TextWrapping="Wrap">
+                    <Run Text="Expected behavior: When you cancel after 3 seconds, the task should stop immediately and both Task.Delay calls should be cancelled." />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

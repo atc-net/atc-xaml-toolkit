@@ -34,6 +34,8 @@ This is a base libraries for building WPF, WinUI, or Avalonia application with t
 
 - **RelayCommand** / **`RelayCommand<T>`** - Synchronous commands with `CanExecute` support
 - **RelayCommandAsync** / **`RelayCommandAsync<T>`** - Async/await commands for responsive UIs with [cancellation token support](docs/Command/AsyncCommandCancellation.md)
+  - **IDisposable support** - Async command interfaces inherit from `IDisposable` for proper resource cleanup
+  - **Auto-generated DisposeCommands()** - Source generator creates helper method for disposing all cancellable commands
 - **Automatic CanExecute refresh** - Commands automatically update UI state
 - **Error handling support** - Built-in `IErrorHandler` interface for graceful error management
 
@@ -198,6 +200,7 @@ Eliminate boilerplate with powerful code generation:
 - **[ObservableProperty]** - Auto-generate properties with change notification
 - **[ComputedProperty]** - Auto-detect dependencies for computed properties and generate automatic notifications
 - **[RelayCommand]** - Auto-generate command properties from methods
+  - `SupportsCancellation = true` generates cancel methods and `DisposeCommands()` helper for proper resource cleanup
 - **[ObservableDtoViewModel]** - Auto-generate ViewModel wrappers for DTOs/POCOs with:
   - `IsDirty` tracking for change detection
   - `InnerModel` access to underlying DTO

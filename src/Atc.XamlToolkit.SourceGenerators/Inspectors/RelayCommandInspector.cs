@@ -96,10 +96,14 @@ internal static class RelayCommandInspector
         }
 
         List<string>? parameterTypes = null;
+        List<string>? parameterNames = null;
         if (methodSymbol.Parameters.Length > 0)
         {
             parameterTypes = methodSymbol.Parameters
                 .Select(parameterSymbol => parameterSymbol.Type.ToDisplayString())
+                .ToList();
+            parameterNames = methodSymbol.Parameters
+                .Select(parameterSymbol => parameterSymbol.Name)
                 .ToList();
         }
 
@@ -133,6 +137,7 @@ internal static class RelayCommandInspector
                 commandName,
                 methodSymbol.Name,
                 parameterTypes?.ToArray(),
+                parameterNames?.ToArray(),
                 parameterValues.Count == 0 ? null : parameterValues.ToArray(),
                 canExecuteName,
                 invertCanExecute,

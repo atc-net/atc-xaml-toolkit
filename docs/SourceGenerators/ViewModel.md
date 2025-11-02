@@ -243,9 +243,9 @@ public partial class UserViewModel : ViewModelBase
     private bool termsAccepted;
 
     [ComputedProperty]
-    public bool CanRegister => 
-        !string.IsNullOrWhiteSpace(Email) && 
-        !string.IsNullOrWhiteSpace(PhoneNumber) && 
+    public bool CanRegister =>
+        !string.IsNullOrWhiteSpace(Email) &&
+        !string.IsNullOrWhiteSpace(PhoneNumber) &&
         TermsAccepted;
 }
 ```
@@ -269,7 +269,7 @@ public partial class PersonViewModel : ViewModelBase
     public string FullName => $"{FirstName} {LastName}".Trim();
 
     [ComputedProperty]
-    public int? Age => BirthDate.HasValue 
+    public int? Age => BirthDate.HasValue
         ? (int?)((DateTime.Now - BirthDate.Value).TotalDays / 365.25)
         : null;
 }
@@ -277,9 +277,9 @@ public partial class PersonViewModel : ViewModelBase
 
 **Best Practices:**
 
-✅ **Use expression-bodied properties** - Keep computed properties simple and readable  
-✅ **Mark all computed properties** - Consistently use `[ComputedProperty]` for all derived properties  
-✅ **Keep logic simple** - Computed properties should be fast calculations, not heavy processing  
+✅ **Use expression-bodied properties** - Keep computed properties simple and readable
+✅ **Mark all computed properties** - Consistently use `[ComputedProperty]` for all derived properties
+✅ **Keep logic simple** - Computed properties should be fast calculations, not heavy processing
 ✅ **Combine with validation** - Use computed properties to derive `IsValid` or `CanSave` states
 
 **What's Analyzed:**
@@ -397,7 +397,7 @@ private string name;
 
 // Combine with other options
 [ObservableProperty(
-    UseIsDirty = true, 
+    UseIsDirty = true,
     DependentPropertyNames = [nameof(FullName)])]
 private string firstName;
 ```
@@ -454,12 +454,12 @@ public partial class CustomerEditViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
-        await repository.UpdateAsync(new CustomerDto 
-        { 
-            Email = Email, 
-            PhoneNumber = PhoneNumber 
+        await repository.UpdateAsync(new CustomerDto
+        {
+            Email = Email,
+            PhoneNumber = PhoneNumber
         });
-        
+
         IsDirty = false;  // Reset after save
     }
 
@@ -581,6 +581,7 @@ The `SupportsCancellation` property enables automatic cancellation token support
 **Key features:**
 
 - ✅ **Automatic Cancel method generation** - Generates a `Cancel{CommandName}()` method for each cancellable command
+- ✅ **Automatic DisposeCommands() generation** - Generates a helper method to dispose all cancellable commands
 - ✅ **Works with or without CancellationToken parameter** - Adapts based on your method signature
 - ✅ **Combines with other features** - Works with `CanExecute`, `ExecuteOnBackgroundThread`, and `AutoSetIsBusy`
 
@@ -674,10 +675,112 @@ private void CancelButton_Click(object sender, RoutedEventArgs e)
 - ✅ Always pass the `CancellationToken` to async operations inside your method
 - ✅ Provide a Cancel button in your UI for better user experience
 - ✅ Handle `OperationCanceledException` gracefully if needed
+- ✅ Call `DisposeCommands()` from your ViewModel's `Dispose()` method to clean up resources
 
 📖 For detailed information about cancellation token support, see the [Async Command Cancellation](../Command/AsyncCommandCancellation.md) guide.
 
+### 🧹 DisposeCommands() Helper Method
+
+When using `SupportsCancellation = true`, the source generator automatically creates a `DisposeCommands()` helper method that disposes all async commands with cancellation support. This provides a clean and consistent way to manage command lifecycle.
+
+**Key features:**
+
+- ✅ **Automatically generated** - Created when at least one command has `SupportsCancellation = true`
+- ✅ **Disposes all cancellable commands** - Calls `Dispose()` on every async command with cancellation support
+- ✅ **Clean API** - No casting required: `command.Dispose()` instead of `(command as IDisposable)?.Dispose()`
+- ✅ **Automatically updated** - Adding/removing cancellable commands updates the method automatically
+
+**Basic usage:**
+
+```csharp
+public partial class MyViewModel : ViewModelBase, IDisposable
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(1000, cancellationToken);
+    }
+
+    public void Dispose()
+    {
+        DisposeCommands(); // Automatically disposes LoadCommand
+    }
+}
+```
+
+**Generated code:**
+
+```csharp
+public partial class MyViewModel
+{
+    private IRelayCommandAsync? loadCommand;
+    private IRelayCommand? loadCancelCommand;
+
+    public IRelayCommandAsync LoadCommand => loadCommand ??= new RelayCommandAsync(/*...*/);
+    public IRelayCommand LoadCancelCommand => loadCancelCommand ??= new RelayCommand(CancelLoad);
+
+    public void CancelLoad()
+    {
+        LoadCommand.Cancel();
+    }
+
+    public void DisposeCommands()
+    {
+        LoadCommand.Dispose();
+    }
+}
+```
+
+**Multiple commands example:**
+
+When you have multiple cancellable commands, `DisposeCommands()` disposes all of them:
+
+```csharp
+public partial class DashboardViewModel : ViewModelBase, IDisposable
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadUsersAsync(CancellationToken ct) { /*...*/ }
+
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadOrdersAsync(CancellationToken ct) { /*...*/ }
+
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task LoadReportsAsync(CancellationToken ct) { /*...*/ }
+
+    public void Dispose()
+    {
+        DisposeCommands(); // Disposes all three commands
+    }
+}
+```
+
+**Generated `DisposeCommands()` method:**
+
+```csharp
+public void DisposeCommands()
+{
+    LoadUsersCommand.Dispose();
+    LoadOrdersCommand.Dispose();
+    LoadReportsCommand.Dispose();
+}
+```
+
+**Why dispose commands?**
+
+Async commands with cancellation support use a `CancellationTokenSource` internally. While the source is created and disposed for each execution, properly disposing the command ensures:
+
+- ✅ Any pending cancellation tokens are properly cleaned up
+- ✅ Resources are released when the ViewModel is no longer needed
+- ✅ Consistent disposal pattern across your application
+- ✅ Better memory management in long-running applications
+
+**Note:** The `DisposeCommands()` method is only generated when at least one command has `SupportsCancellation = true`. Commands without cancellation support don't implement `IDisposable` and are not included.
+
 ### ♿ Commands with auto set on IsBusy
+
+The `AutoSetIsBusy` property automatically manages the `IsBusy` property during command execution, providing visual feedback to users.
+
+**Basic usage:**
 
 ```csharp
 // Generates an RelayCommand and toggles IsBusy around a synchronous command execution
@@ -696,6 +799,236 @@ public async Task Save();
 [RelayCommand(CanExecute = nameof(CanSave), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
 public async Task Save();
 ```
+
+### 🔥 Combining AutoSetIsBusy with SupportsCancellation
+
+The most powerful feature combination is `AutoSetIsBusy + SupportsCancellation`, which provides:
+
+- ✅ **Automatic IsBusy management** - Sets `IsBusy = true` during execution, `false` when complete
+- ✅ **Thread-safe UI updates** - Uses `Dispatcher.InvokeAsyncIfRequired()` for cross-thread property updates
+- ✅ **Cancel command property** - Generates `{CommandName}CancelCommand` for easy XAML binding
+- ✅ **Cancel method** - Generates `Cancel{CommandName}()` method for programmatic cancellation
+- ✅ **Proper exception handling** - `OperationCanceledException` is caught and handled silently
+
+#### Example 1: Download with Progress and Cancellation
+
+```csharp
+public partial class DownloadViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string statusMessage = "Ready to start...";
+
+    [ObservableProperty]
+    private int progress;
+
+    [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task DownloadAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = "Starting download...";
+
+            for (int i = 0; i <= 100; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(50, cancellationToken);
+                Progress = i;
+                StatusMessage = $"Downloading... {i}%";
+            }
+
+            StatusMessage = "Download completed!";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Download cancelled!";
+        }
+    }
+
+    // Generated:
+    // - DownloadCommand (IRelayCommandAsync) with AutoSetIsBusy wrapper
+    // - DownloadCancelCommand (IRelayCommand) for easy binding
+    // - CancelDownload() method
+}
+```
+
+**XAML binding:**
+
+```xml
+<StackPanel>
+    <Button Content="Start Download" Command="{Binding DownloadCommand}" />
+    <Button Content="Cancel" Command="{Binding DownloadCancelCommand}" />
+
+    <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0" />
+    <ProgressBar Value="{Binding Progress}" Maximum="100" />
+
+    <TextBlock Text="Processing..."
+               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+#### Example 2: Search with Parameters and Cancellation
+
+```csharp
+public partial class SearchViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string statusMessage = "Ready to search...";
+
+    [ObservableProperty]
+    private ObservableCollection<string> searchResults = new();
+
+    [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+    private async Task SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = $"Searching for '{query}'...";
+            SearchResults.Clear();
+
+            await Task.Delay(2000, cancellationToken);
+
+            for (int i = 1; i <= 10; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(100, cancellationToken);
+                SearchResults.Add($"Result {i} for '{query}'");
+            }
+
+            StatusMessage = $"Found {SearchResults.Count} results";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Search cancelled";
+            SearchResults.Clear();
+        }
+    }
+
+    // Generated:
+    // - SearchCommand (IRelayCommandAsync<string>)
+    // - SearchCancelCommand (IRelayCommand)
+    // - CancelSearch() method
+}
+```
+
+**XAML binding with parameters:**
+
+```xml
+<StackPanel>
+    <TextBox x:Name="QueryTextBox" Text="{Binding QueryText, UpdateSourceTrigger=PropertyChanged}" />
+
+    <StackPanel Orientation="Horizontal">
+        <Button Content="Search"
+                Command="{Binding SearchCommand}"
+                CommandParameter="{Binding Text, ElementName=QueryTextBox}" />
+        <Button Content="Cancel" Command="{Binding SearchCancelCommand}" Margin="5,0,0,0" />
+    </StackPanel>
+
+    <TextBlock Text="{Binding StatusMessage}" Margin="0,10,0,0" />
+    <ListBox ItemsSource="{Binding SearchResults}" Height="200" />
+</StackPanel>
+```
+
+#### Example 3: Full Combination - CanExecute + AutoSetIsBusy + SupportsCancellation
+
+All three features work together seamlessly:
+
+```csharp
+public partial class DataProcessingViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private bool hasData;
+
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
+    [RelayCommand(
+        CanExecute = nameof(CanProcess),
+        AutoSetIsBusy = true,
+        SupportsCancellation = true)]
+    private async Task ProcessAsync(string input, CancellationToken cancellationToken)
+    {
+        try
+        {
+            StatusMessage = $"Processing '{input}'...";
+
+            for (int i = 0; i < 100; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(50, cancellationToken);
+                StatusMessage = $"Processing... {i}%";
+            }
+
+            StatusMessage = "Processing completed!";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Processing cancelled";
+        }
+    }
+
+    private bool CanProcess(string input) => HasData && !string.IsNullOrEmpty(input);
+
+    // Generated:
+    // - ProcessCommand (IRelayCommandAsync<string>) with CanExecute and AutoSetIsBusy
+    // - ProcessCancelCommand (IRelayCommand)
+    // - CancelProcess() method
+}
+```
+
+#### What Gets Generated?
+
+For a command with `AutoSetIsBusy = true, SupportsCancellation = true`:
+
+**Input:**
+```csharp
+[RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+private async Task ProcessAsync(CancellationToken cancellationToken)
+{
+    await Task.Delay(1000, cancellationToken);
+}
+```
+
+**Generated output:**
+```csharp
+private IRelayCommandAsync? processCommand;
+private IRelayCommand? processCancelCommand;
+
+public IRelayCommandAsync ProcessCommand => processCommand ??= new RelayCommandAsync(
+    async (CancellationToken cancellationToken) =>
+    {
+        await Application.Current.Dispatcher
+            .InvokeAsyncIfRequired(() => IsBusy = true)
+            .ConfigureAwait(false);
+
+        try
+        {
+            await ProcessAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await Application.Current.Dispatcher
+                .InvokeAsyncIfRequired(() => IsBusy = false)
+                .ConfigureAwait(false);
+        }
+    });
+
+public IRelayCommand ProcessCancelCommand => processCancelCommand ??= new RelayCommand(CancelProcess);
+
+public void CancelProcess()
+{
+    ProcessCommand.Cancel();
+}
+```
+
+**Key Benefits:**
+
+- ✅ **Single attribute** - No manual command creation, IsBusy management, or cancel method
+- ✅ **Type-safe** - Compiler-verified command parameters and cancellation token
+- ✅ **Thread-safe** - Dispatcher marshalling for UI property updates
+- ✅ **Testable** - Can call methods directly or through commands in unit tests
+- ✅ **XAML-friendly** - Cancel command property for easy button binding
+
+📖 For more detailed information and advanced scenarios, see the [Async Command Cancellation](../Command/AsyncCommandCancellation.md) guide.
 
 ---
 
@@ -939,7 +1272,7 @@ public override string ToString()
 
 **Note:** Records have a compiler-generated `ToString()`, which is **not** considered a custom implementation. The generator will create a property-listing `ToString()` for records unless you explicitly override it.
 
-### �🎯 Real-World Example: API Response Wrapper
+### 🎯 Real-World Example: API Response Wrapper
 
 ```csharp
 // API response DTO
@@ -1095,10 +1428,10 @@ public partial class PersonViewModel
 **Using proxy methods:**
 
 ```csharp
-var viewModel = new PersonViewModel(new Person 
-{ 
-    FirstName = "John", 
-    LastName = "Doe" 
+var viewModel = new PersonViewModel(new Person
+{
+    FirstName = "John",
+    LastName = "Doe"
 });
 
 // Call methods on the ViewModel, which delegates to the DTO
@@ -1148,7 +1481,7 @@ public class Person
 
 ```csharp
 [ObservableDtoViewModel(
-    typeof(Person), 
+    typeof(Person),
     IgnorePropertyNames = [nameof(Person.Age), nameof(Person.InternalId)])]
 public partial class PersonViewModel : ViewModelBase
 {
@@ -1222,7 +1555,7 @@ public class Person
 
 ```csharp
 [ObservableDtoViewModel(
-    typeof(Person), 
+    typeof(Person),
     IgnoreMethodNames = [nameof(Person.InternalCalculation)])]
 public partial class PersonViewModel : ViewModelBase
 {
@@ -1278,7 +1611,7 @@ public partial class PersonViewModel : ViewModelBase
 
 **Note:** Property and method names are matched using **case-sensitive** comparison. Use `nameof()` expressions to avoid typos.
 
-### � Accessing the Underlying DTO
+### Accessing the Underlying DTO
 
 The generated ViewModel automatically includes an `InnerModel` property that provides direct access to the wrapped DTO instance:
 
@@ -1289,20 +1622,20 @@ public partial class PersonViewModel : ViewModelBase
 }
 
 // Usage:
-var viewModel = new PersonViewModel(new Person 
-{ 
-    FirstName = "John", 
-    LastName = "Doe" 
+var viewModel = new PersonViewModel(new Person
+{
+    FirstName = "John",
+    LastName = "Doe"
 });
 
 // Access the underlying DTO
 Person dto = viewModel.InnerModel;
 
 // Pass to a service or repository
-await _personRepository.SaveAsync(viewModel.InnerModel);
+await personRepository.SaveAsync(viewModel.InnerModel);
 
 // Send via API
-var response = await _httpClient.PostAsJsonAsync("/api/persons", viewModel.InnerModel);
+var response = await httpClient.PostAsJsonAsync("/api/persons", viewModel.InnerModel);
 ```
 
 **Common use cases:**
@@ -1344,7 +1677,7 @@ public class PersonEditViewModel : ViewModelBase
 
         // Get the DTO and save it
         await repository.UpdateAsync(PersonViewModel.InnerModel);
-        
+
         MessageBox.Show("Person saved successfully!");
         IsDirty = false;
     }
@@ -1579,8 +1912,8 @@ public partial class CustomerEditViewModel : ViewModelBase
         }
 
         // Save the customer
-        await _customerRepository.SaveAsync(InnerModel);
-        
+        await customerRepository.SaveAsync(InnerModel);
+
         MessageBox.Show("Customer saved successfully!", "Success");
         IsDirty = false;
     }
@@ -1595,31 +1928,31 @@ public partial class CustomerEditViewModel : ViewModelBase
 <UserControl>
     <StackPanel Margin="10">
         <TextBlock Text="Customer Name *" />
-        <TextBox Text="{Binding Name, 
-                               UpdateSourceTrigger=PropertyChanged, 
+        <TextBox Text="{Binding Name,
+                               UpdateSourceTrigger=PropertyChanged,
                                ValidatesOnNotifyDataErrors=True}" />
 
         <TextBlock Text="Email *" Margin="0,10,0,0" />
-        <TextBox Text="{Binding Email, 
-                               UpdateSourceTrigger=PropertyChanged, 
+        <TextBox Text="{Binding Email,
+                               UpdateSourceTrigger=PropertyChanged,
                                ValidatesOnNotifyDataErrors=True}" />
 
         <TextBlock Text="Phone *" Margin="0,10,0,0" />
-        <TextBox Text="{Binding Phone, 
-                               UpdateSourceTrigger=PropertyChanged, 
+        <TextBox Text="{Binding Phone,
+                               UpdateSourceTrigger=PropertyChanged,
                                ValidatesOnNotifyDataErrors=True}" />
 
         <TextBlock Text="Age" Margin="0,10,0,0" />
-        <TextBox Text="{Binding Age, 
-                               UpdateSourceTrigger=PropertyChanged, 
+        <TextBox Text="{Binding Age,
+                               UpdateSourceTrigger=PropertyChanged,
                                ValidatesOnNotifyDataErrors=True}" />
 
         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-            <Button Content="Save" 
-                    Command="{Binding SaveCommand}" 
+            <Button Content="Save"
+                    Command="{Binding SaveCommand}"
                     Padding="20,5" />
-            <TextBlock Text="{Binding HasErrors}" 
-                       Margin="10,0,0,0" 
+            <TextBlock Text="{Binding HasErrors}"
+                       Margin="10,0,0,0"
                        VerticalAlignment="Center" />
         </StackPanel>
     </StackPanel>
@@ -2007,8 +2340,8 @@ public partial class CustomerEditViewModel : ViewModelBase
 In XAML:
 
 ```xml
-<TextBlock Text="*" Foreground="Red" 
-           Visibility="{Binding IsDirty, 
+<TextBlock Text="*" Foreground="Red"
+           Visibility="{Binding IsDirty,
                                Converter={StaticResource BoolToVisibilityConverter}}" />
 <Button Content="Save" Command="{Binding SaveCommand}" />
 ```
