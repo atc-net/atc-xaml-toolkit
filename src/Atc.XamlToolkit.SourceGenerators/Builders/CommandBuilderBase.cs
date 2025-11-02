@@ -26,8 +26,26 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine();
 
         AppendPublicProperties(builder, commands);
+    }
+
+    public virtual void GenerateRelayCommandMethods(
+        CommandBuilderBase builder,
+        IEnumerable<RelayCommandToGenerate>? relayCommandsToGenerate)
+    {
+        if (relayCommandsToGenerate is null)
+        {
+            return;
+        }
+
+        var commands = relayCommandsToGenerate.ToArray();
+        if (commands.Length == 0)
+        {
+            return;
+        }
 
         AppendCancelMethods(builder, commands);
+
+        AppendDisposeCommandsMethod(builder, commands);
     }
 
     private static void AppendPrivateBackingFields(
@@ -41,6 +59,13 @@ internal abstract class CommandBuilderBase : BuilderBase
             var fieldName = cmd.GetCommandAsFieldName();
 
             builder.AppendLine($"private {interfaceType}{generic}? {fieldName};");
+
+            // Also generate backing field for cancel command if supports cancellation
+            if (cmd.SupportsCancellation && cmd.UseTask)
+            {
+                var cancelFieldName = cmd.GetCommandAsFieldName().Replace("Command", "CancelCommand");
+                builder.AppendLine($"private IRelayCommand? {cancelFieldName};");
+            }
         }
     }
 
@@ -94,6 +119,17 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.AppendLine($"public {interfaceType}{generic} {propName} => {fieldName} ??= new {implementationType}{generic}({execExpr});");
             }
 
+            // If this command supports cancellation, append the cancel command property immediately after
+            if (cmd.SupportsCancellation && cmd.UseTask)
+            {
+                builder.AppendLine();
+                var methodName = cmd.CommandName.Replace("Command", string.Empty);
+                var cancelCommandPropName = propName.Replace("Command", "CancelCommand");
+                var cancelCommandFieldName = fieldName.Replace("Command", "CancelCommand");
+                var cancelMethodName = $"Cancel{methodName}";
+                builder.AppendLine($"public IRelayCommand {cancelCommandPropName} => {cancelCommandFieldName} ??= new RelayCommand({cancelMethodName});");
+            }
+
             if (i < commands.Length - 1)
             {
                 builder.AppendLine();
@@ -121,8 +157,10 @@ internal abstract class CommandBuilderBase : BuilderBase
             var cmd = commandsWithCancellation[i];
             var methodName = cmd.CommandName.Replace("Command", string.Empty);
             var propName = cmd.GetCommandAsPropertyName();
+            var cancelMethodName = $"Cancel{methodName}";
 
-            builder.AppendLine($"public void Cancel{methodName}()");
+            // Generate the cancel method
+            builder.AppendLine($"public void {cancelMethodName}()");
             builder.AppendLine("{");
             builder.IncreaseIndent();
             builder.AppendLine($"{propName}.Cancel();");
@@ -134,6 +172,35 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.AppendLine();
             }
         }
+    }
+
+    private static void AppendDisposeCommandsMethod(
+        CommandBuilderBase builder,
+        RelayCommandToGenerate[] commands)
+    {
+        var commandsWithCancellation = commands
+            .Where(cmd => cmd.SupportsCancellation && cmd.UseTask)
+            .ToArray();
+
+        if (commandsWithCancellation.Length == 0)
+        {
+            return;
+        }
+
+        builder.AppendLine();
+
+        builder.AppendLine("public void DisposeCommands()");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+
+        foreach (var cmd in commandsWithCancellation)
+        {
+            var propName = cmd.GetCommandAsPropertyName();
+            builder.AppendLine($"{propName}.Dispose();");
+        }
+
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
     }
 
     private static void AppendAutoSetIsBusyBlock(
@@ -155,6 +222,10 @@ internal abstract class CommandBuilderBase : BuilderBase
         var useAwait = false;
         var useDispatcherInvokeAsync = false;
         var useDispatcherInvoke = false;
+        var hasCancellationToken = cmd.HasParameterTypesOfCancellationToken();
+        var supportsCancellation = cmd.SupportsCancellation && hasCancellationToken;
+        var parameterNamesWithoutCt = cmd.GetParameterNamesWithoutCancellationToken();
+
         switch (cmd.UseTask)
         {
             case false:
@@ -166,6 +237,21 @@ internal abstract class CommandBuilderBase : BuilderBase
                 break;
             case true when execExprContainParameters:
                 builder.AppendLine("async x =>");
+                useAwait = true;
+                useDispatcherInvokeAsync = true;
+                break;
+            case true when supportsCancellation && parameterNamesWithoutCt.Length > 0:
+                // When AutoSetIsBusy + SupportsCancellation with parameters,
+                // the lambda must accept the parameters AND CancellationToken
+                var paramList = string.Join(", ", parameterNamesWithoutCt);
+                builder.AppendLine($"async ({paramList}, cancellationToken) =>");
+                useAwait = true;
+                useDispatcherInvokeAsync = true;
+                break;
+            case true when supportsCancellation:
+                // When AutoSetIsBusy + SupportsCancellation without parameters,
+                // the lambda must accept CancellationToken only
+                builder.AppendLine("async (CancellationToken cancellationToken) =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
@@ -185,13 +271,23 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         builder.AppendLine("{");
         builder.IncreaseIndent();
+
+        // For WinUI with dispatcher invocation, capture the DispatcherQueue once at the start
+        string? capturedDispatcherVar = null;
+        if ((useDispatcherInvokeAsync || useDispatcherInvoke) && builder.XamlPlatform == XamlPlatform.WinUI)
+        {
+            capturedDispatcherVar = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+            builder.AppendLine($"var {capturedDispatcherVar} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
+            builder.AppendLine();
+        }
+
         if (useDispatcherInvokeAsync)
         {
-            AppendDispatcherInvokeAsync(builder, "IsBusy = true");
+            AppendDispatcherInvokeAsync(builder, "IsBusy = true", capturedDispatcherVar);
         }
         else if (useDispatcherInvoke)
         {
-            AppendDispatcherInvoke(builder, "IsBusy = true");
+            AppendDispatcherInvoke(builder, "IsBusy = true", capturedDispatcherVar);
         }
         else
         {
@@ -251,11 +347,11 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.IncreaseIndent();
         if (useDispatcherInvokeAsync)
         {
-            AppendDispatcherInvokeAsync(builder, "IsBusy = false");
+            AppendDispatcherInvokeAsync(builder, "IsBusy = false", capturedDispatcherVar);
         }
         else if (useDispatcherInvoke)
         {
-            AppendDispatcherInvoke(builder, "IsBusy = false");
+            AppendDispatcherInvoke(builder, "IsBusy = false", capturedDispatcherVar);
         }
         else
         {
@@ -270,7 +366,8 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendDispatcherInvokeAsync(
         CommandBuilderBase builder,
-        string action)
+        string action,
+        string? capturedDispatcherVar = null)
     {
         switch (builder.XamlPlatform)
         {
@@ -282,11 +379,30 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.DecreaseIndent();
                 break;
             case XamlPlatform.WinUI:
-                builder.AppendLine("await Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()");
+                // Use the captured dispatcher variable if provided, otherwise get a new one
+                var varName = capturedDispatcherVar;
+                if (varName is null)
+                {
+                    varName = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+                    builder.AppendLine($"var {varName} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
+                }
+
+                builder.AppendLine($"if ({varName} is not null)");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"await {varName}");
                 builder.IncreaseIndent();
                 builder.AppendLine($".InvokeAsyncIfRequired(() => {action})");
                 builder.AppendLine(".ConfigureAwait(false);");
                 builder.DecreaseIndent();
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                builder.AppendLine("else");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"{action};");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
                 break;
             case XamlPlatform.Avalonia:
                 builder.AppendLine("await Avalonia.Threading.Dispatcher.UIThread");
@@ -299,7 +415,8 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendDispatcherInvoke(
         CommandBuilderBase builder,
-        string action)
+        string action,
+        string? capturedDispatcherVar = null)
     {
         switch (builder.XamlPlatform)
         {
@@ -307,7 +424,26 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.AppendLine($"Application.Current.Dispatcher.InvokeIfRequired(() => {action});");
                 break;
             case XamlPlatform.WinUI:
-                builder.AppendLine($"Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread().InvokeIfRequired(() => {action});");
+                // Use the captured dispatcher variable if provided, otherwise get a new one
+                var varName = capturedDispatcherVar;
+                if (varName is null)
+                {
+                    varName = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+                    builder.AppendLine($"var {varName} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
+                }
+
+                builder.AppendLine($"if ({varName} is not null)");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"{varName}.InvokeIfRequired(() => {action});");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                builder.AppendLine("else");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"{action};");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
                 break;
             case XamlPlatform.Avalonia:
                 builder.AppendLine($"Avalonia.Threading.Dispatcher.UIThread.Invoke(() => {action});");
@@ -459,9 +595,26 @@ internal abstract class CommandBuilderBase : BuilderBase
                         : $"Task.Run(() => {cmd.MethodName}{paramCall})";
                 }
 
+                // When both AutoSetIsBusy and SupportsCancellation are true,
+                // the lambda will provide the actual parameter names, so use them
+                if (cmd.SupportsCancellation && hasCt)
+                {
+                    var paramNames = cmd.GetParameterNamesWithoutCancellationToken();
+                    return $"{cmd.MethodName}({paramNames[0]}, cancellationToken)";
+                }
+
                 return hasCt
                     ? $"{cmd.MethodName}(x, {NameConstants.CancellationTokenNone})"
                     : $"{cmd.MethodName}(x)";
+            }
+
+            // When both AutoSetIsBusy and SupportsCancellation are true with multiple parameters,
+            // the lambda will provide the actual parameter names, so use them
+            if (cmd.SupportsCancellation && hasCt)
+            {
+                var paramNames = cmd.GetParameterNamesWithoutCancellationToken();
+                var paramList = string.Join(", ", paramNames);
+                return $"{cmd.MethodName}({paramList}, cancellationToken)";
             }
 
             var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
@@ -484,14 +637,20 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         if (cmd.UseTask)
         {
-            return hasCt
-                ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
-                : cmd.MethodName;
+            // When both AutoSetIsBusy and SupportsCancellation are true,
+            // the wrapper lambda will accept CancellationToken and pass it through
+            return cmd.SupportsCancellation && hasCt
+                ? $"{cmd.MethodName}(cancellationToken)"
+                : hasCt
+                    ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
+                    : cmd.MethodName;
         }
 
-        return hasCt
-            ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
-            : $"{cmd.MethodName}()";
+        return cmd.SupportsCancellation && hasCt
+            ? $"{cmd.MethodName}(cancellationToken)"
+            : hasCt
+                ? $"{cmd.MethodName}({NameConstants.CancellationTokenNone})"
+                : $"{cmd.MethodName}()";
     }
 
     private static string? BuildCanExecuteExpression(

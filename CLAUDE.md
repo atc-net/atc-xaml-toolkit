@@ -178,6 +178,14 @@ Each platform package (Wpf, WinUI, Avalonia) has:
    - Source generator automatically skips routed event generation for non-WPF platforms (see `FrameworkElementGenerator.cs:195-204`)
    - Use standard .NET events for WinUI and Avalonia instead
 
+4. **WinUI Threading and DispatcherQueue:**
+   - **Critical**: `DispatcherQueue.GetForCurrentThread()` returns `null` when called from non-UI threads
+   - Source generator captures DispatcherQueue **once at the start** of command execution (when on UI thread)
+   - The captured DispatcherQueue is reused in try/finally blocks for `AutoSetIsBusy` property updates
+   - This prevents `RPC_E_WRONG_THREAD` (0x8001010E) COM exceptions when PropertyChanged events trigger x:Bind updates
+   - Implementation in `CommandBuilderBase.cs`: `BuildExecuteExpressionForAutoSetIsBusy()` and `AppendDispatcherInvokeAsync()`
+   - WPF and Avalonia don't have this issue as their dispatchers handle cross-thread calls differently
+
 **Platform Detection:**
 - Source generators use `XamlPlatform` enum (Wpf, WinUI, Avalonia) to generate platform-appropriate code
 - Detection logic in `FrameworkElementInspector.GetXamlPlatform()` based on project references
@@ -283,7 +291,14 @@ ViewModels support DataAnnotations validation:
 Async commands support cancellation tokens:
 - `RelayCommandAsync` can accept a `CancellationToken` parameter
 - Commands automatically disable during execution
-- See `docs/Command/AsyncCommandCancellation.md` for details
+- `[RelayCommand(SupportsCancellation = true)]` generates cancel methods and cancel command properties
+- When combined with `AutoSetIsBusy = true`, generates:
+  - Automatic `IsBusy` property management with Dispatcher marshalling
+  - `{CommandName}CancelCommand` property for XAML binding
+  - `Cancel{CommandName}()` method for programmatic cancellation
+  - Thread-safe UI updates via `Dispatcher.InvokeAsyncIfRequired()`
+- Works with parameterized commands: generator creates correct lambda signatures (e.g., `async (query, cancellationToken) =>`)
+- See `docs/Command/AsyncCommandCancellation.md` for details and comprehensive examples
 
 ### ObservableDtoViewModel
 

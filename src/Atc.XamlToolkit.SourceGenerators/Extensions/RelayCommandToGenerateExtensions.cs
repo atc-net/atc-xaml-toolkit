@@ -57,6 +57,24 @@ internal static class RelayCommandToGenerateExtensions
             .ToArray();
     }
 
+    public static string[] GetParameterNamesWithoutCancellationToken(
+        this RelayCommandToGenerate relayCommandToGenerate)
+    {
+        var parameterTypes = relayCommandToGenerate.ParameterTypes ?? [];
+        var parameterNames = relayCommandToGenerate.ParameterNames ?? [];
+
+        var result = new List<string>();
+        for (var i = 0; i < parameterTypes.Length; i++)
+        {
+            if (!parameterTypes[i].EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
+            {
+                result.Add(parameterNames[i]);
+            }
+        }
+
+        return result.ToArray();
+    }
+
     public static string? GetParameterValuesAsCommaSeparated(
         this RelayCommandToGenerate relayCommandToGenerate)
         => relayCommandToGenerate.ParameterValues?.Length > 0

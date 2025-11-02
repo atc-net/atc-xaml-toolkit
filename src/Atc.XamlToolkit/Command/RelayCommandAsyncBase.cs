@@ -10,7 +10,7 @@ namespace Atc.XamlToolkit.Command;
 [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "OK")]
 [SuppressMessage("Naming", "CA1708:Identifiers should differ by more than case", Justification = "OK")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "OK")]
-public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
+public abstract class RelayCommandAsyncBase : IRelayCommandAsync
 {
     protected readonly Func<Task>? execute;
     protected readonly Func<CancellationToken, Task>? executeWithCancellation;
@@ -112,6 +112,12 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
     /// <inheritdoc />
     public bool CanExecute(object? parameter)
     {
+        // Cannot execute if already executing
+        if (isExecuting)
+        {
+            return false;
+        }
+
         return wfCanExecute is null ||
                ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
     }
@@ -132,6 +138,7 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
         }
 
         isExecuting = true;
+        RaiseCanExecuteChanged();
 
         // Create a new cancellation token source if we support cancellation
         if (executeWithCancellation is not null)
@@ -140,33 +147,28 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
             cancellationTokenSource = new CancellationTokenSource();
         }
 
-        if (errorHandler is null)
+        try
         {
             await ExecuteAsync(parameter).ConfigureAwait(true);
-            RaiseCanExecuteChanged();
-            isExecuting = false;
         }
-        else
+        catch (OperationCanceledException)
         {
-            try
+            // Cancellation is expected and not an error - just complete silently
+        }
+        catch (Exception ex) when (errorHandler is not null)
+        {
+            errorHandler.HandleError(ex);
+        }
+        finally
+        {
+            if (executeWithCancellation is not null)
             {
-                await ExecuteAsync(parameter).ConfigureAwait(true);
-                RaiseCanExecuteChanged();
-                isExecuting = false;
+                cancellationTokenSource?.Dispose();
+                cancellationTokenSource = null;
             }
-            catch (Exception ex)
-            {
-                errorHandler.HandleError(ex);
-                isExecuting = false;
-            }
-            finally
-            {
-                if (executeWithCancellation is not null)
-                {
-                    cancellationTokenSource?.Dispose();
-                    cancellationTokenSource = null;
-                }
-            }
+
+            isExecuting = false;
+            RaiseCanExecuteChanged();
         }
     }
 
@@ -177,26 +179,18 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, IDisposable
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task ExecuteAsync(object? parameter)
     {
-        if (CanExecute(parameter))
+        // Note: CanExecute is already checked in Execute() before calling this method
+        // We don't check it again here because isExecuting may be true at this point
+        if (executeWithCancellation is not null)
         {
-            if (executeWithCancellation is not null)
-            {
-                // Create cancellation token source if it doesn't exist
-                if (cancellationTokenSource is null)
-                {
-                    cancellationTokenSource = new CancellationTokenSource();
-                }
-
-                return executeWithCancellation(cancellationTokenSource.Token);
-            }
-
-            if (execute is not null)
-            {
-                return execute();
-            }
+            // Create cancellation token source if it doesn't exist
+            cancellationTokenSource ??= new CancellationTokenSource();
+            return executeWithCancellation(cancellationTokenSource.Token);
         }
 
-        return Task.CompletedTask;
+        return execute is not null
+            ? execute()
+            : Task.CompletedTask;
     }
 
     /// <summary>
