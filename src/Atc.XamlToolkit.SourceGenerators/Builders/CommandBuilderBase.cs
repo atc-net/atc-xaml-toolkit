@@ -1,4 +1,6 @@
 // ReSharper disable InvertIf
+// ReSharper disable StringLiteralTypo
+// ReSharper disable MergeIntoPattern
 namespace Atc.XamlToolkit.SourceGenerators.Builders;
 
 [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
@@ -88,7 +90,81 @@ internal abstract class CommandBuilderBase : BuilderBase
                                     cmd.ExecuteOnBackgroundThread ||
                                     cmd.AutoSetIsBusy;
 
-            if (appendAsMultiLine)
+            // For WinUI async commands, generate full properties with PropertyChanged subscription
+            var needsPropertyChangedSubscription = builder.XamlPlatform == XamlPlatform.WinUI && cmd.UseTask;
+
+            if (needsPropertyChangedSubscription)
+            {
+                // Generate full property with getter
+                builder.AppendLine($"public {interfaceType}{generic} {propName}");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine("get");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"if ({fieldName} == null)");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+
+                // Create command
+                if (appendAsMultiLine)
+                {
+                    builder.AppendLine($"{fieldName} = new {implementationType}{generic}(");
+                    builder.IncreaseIndent();
+
+                    if (cmd.AutoSetIsBusy)
+                    {
+                        AppendAutoSetIsBusyBlock(
+                            builder,
+                            cmd,
+                            execExpr,
+                            hasCan);
+                    }
+                    else
+                    {
+                        var suffix = hasCan ? "," : ");";
+                        builder.AppendLine($"{execExpr}{suffix}");
+                    }
+
+                    if (hasCan)
+                    {
+                        builder.AppendLine($"{canExecExpr});");
+                    }
+
+                    builder.DecreaseIndent();
+                }
+                else
+                {
+                    builder.AppendLine($"{fieldName} = new {implementationType}{generic}({execExpr});");
+                }
+
+                // Subscribe to PropertyChanged for x:Bind support
+                builder.AppendLine($"if ({fieldName} is INotifyPropertyChanged inpc)");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine("inpc.PropertyChanged += (s, e) =>");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine("if (e.PropertyName == \"IsExecuting\")");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"OnPropertyChanged(nameof({propName}));");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                builder.DecreaseIndent();
+                builder.AppendLine("};");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                builder.AppendLine($"return {fieldName};");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+            }
+            else if (appendAsMultiLine)
             {
                 builder.AppendLine($"public {interfaceType}{generic} {propName} => {fieldName} ??= new {implementationType}{generic}(");
                 builder.IncreaseIndent();

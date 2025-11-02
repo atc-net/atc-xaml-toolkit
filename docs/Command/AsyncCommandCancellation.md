@@ -1266,6 +1266,116 @@ public partial class MyViewModel : ViewModelBase
 | Need to bind cancel button in XAML | Optional (can use `CommandName.Cancel()` directly) |
 | Want consistent API across ViewModels | Yes |
 
+## Binding to IsExecuting Property
+
+All async commands expose an `IsExecuting` property that indicates whether the command is currently executing. This is useful for UI feedback, enabling/disabling buttons, and showing loading indicators.
+
+### Basic Binding (WPF/Avalonia)
+
+```xml
+<!-- WPF / Avalonia -->
+<StackPanel>
+    <Button Content="Start Operation" Command="{Binding DoStuffCommand}" />
+
+    <!-- Show execution status -->
+    <TextBlock>
+        <Run Text="IsExecuting: " />
+        <Run FontWeight="Bold" Text="{Binding DoStuffCommand.IsExecuting, Mode=OneWay}" />
+    </TextBlock>
+
+    <!-- Loading indicator -->
+    <ProgressBar IsIndeterminate="True"
+                 Visibility="{Binding DoStuffCommand.IsExecuting, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+### WinUI x:Bind Binding
+
+WinUI's compiled bindings (`x:Bind`) require special handling for nested property paths. The source generator automatically handles this for you:
+
+```xml
+<!-- WinUI -->
+<StackPanel>
+    <Button Content="Start Operation" Command="{x:Bind ViewModel.DoStuffCommand}" />
+
+    <!-- Show execution status -->
+    <TextBlock>
+        <Run Text="IsExecuting: " />
+        <Run FontWeight="Bold" Text="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}" />
+    </TextBlock>
+
+    <!-- Loading indicator -->
+    <ProgressRing IsActive="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}" />
+</StackPanel>
+```
+
+**How it works:**
+
+1. All async commands implement `INotifyPropertyChanged` and raise `PropertyChanged` when `IsExecuting` changes
+2. For WinUI, the source generator creates special command properties that re-raise `PropertyChanged` on the ViewModel when `IsExecuting` changes
+3. This allows `x:Bind` to detect changes in the nested property path `ViewModel.DoStuffCommand.IsExecuting`
+4. PropertyChanged events are automatically marshaled to the UI thread to prevent cross-thread exceptions
+
+### Using with Cancel Button
+
+```xml
+<!-- WPF -->
+<StackPanel Orientation="Horizontal">
+    <Button Content="Start" Command="{Binding DoStuffCommand}" />
+    <Button Content="Cancel" Command="{Binding DoStuffCancelCommand}"
+            Visibility="{Binding DoStuffCommand.IsExecuting, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+```xml
+<!-- WinUI -->
+<StackPanel Orientation="Horizontal" Spacing="10">
+    <Button Content="Start" Command="{x:Bind ViewModel.DoStuffCommand}" />
+    <Button Content="Cancel" Command="{x:Bind ViewModel.DoStuffCancelCommand}"
+            Visibility="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+### ViewModel Example
+
+```csharp
+public partial class MyViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true, AutoSetIsBusy = true)]
+    private async Task DoStuffAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(5000, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Task was cancelled
+        }
+    }
+
+    // Generator creates:
+    // - DoStuffCommand with IsExecuting property
+    // - DoStuffCancelCommand for XAML binding
+    // - CancelDoStuff() method
+    // - Automatic IsBusy = true/false management
+}
+```
+
+### Platform-Specific Implementation Notes
+
+**WPF & Avalonia:**
+- Standard `{Binding}` automatically subscribes to `INotifyPropertyChanged` on intermediate objects
+- No special handling required
+
+**WinUI:**
+- `x:Bind` only subscribes to PropertyChanged on the root ViewModel
+- Source generator creates full properties (not expression-bodied) that wire up PropertyChanged subscriptions
+- When `IsExecuting` changes, the ViewModel raises PropertyChanged for the command property name
+- PropertyChanged events are marshaled to the UI thread using `DispatcherQueue.TryEnqueue()`
+
+This ensures consistent behavior across all XAML platforms while optimizing for each platform's binding system.
+
 ## See Also
 
 - [RelayCommandAsync](RelayCommandAsync.md)

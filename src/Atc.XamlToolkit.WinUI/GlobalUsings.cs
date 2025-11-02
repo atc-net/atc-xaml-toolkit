@@ -1,11 +1,14 @@
 global using System.ComponentModel;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
+global using System.Runtime.CompilerServices;
+global using System.Runtime.InteropServices;
 global using System.Windows.Input;
 
 global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Data.Converters;
 global using Atc.XamlToolkit.Resolvers;
 
+global using Microsoft.UI.Dispatching;
 global using Microsoft.UI.Xaml;
 global using Microsoft.UI.Xaml.Input;

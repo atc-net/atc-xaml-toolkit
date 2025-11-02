@@ -11,7 +11,7 @@ namespace Atc.XamlToolkit.Command;
 [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "OK")]
 [SuppressMessage("Naming", "CA1708:Identifiers should differ by more than case", Justification = "OK")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "OK")]
-public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>
+public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyPropertyChanged
 {
     protected readonly Func<T, Task>? execute;
     protected readonly Func<T, CancellationToken, Task>? executeWithCancellation;
@@ -96,8 +96,22 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>
     /// </summary>
     public abstract event EventHandler? CanExecuteChanged;
 
+    /// <summary>
+    /// Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     /// <inheritdoc />
     public abstract void RaiseCanExecuteChanged();
+
+    /// <summary>
+    /// Raises the PropertyChanged event.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     /// <summary>
     /// Attempts to cancel the ongoing execution if supported. Base implementation is a no-op because
@@ -150,6 +164,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>
         }
 
         isExecuting = true;
+        OnPropertyChanged(nameof(IsExecuting));
         RaiseCanExecuteChanged();
 
         // Create a new cancellation token source if we support cancellation
@@ -181,6 +196,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>
             }
 
             isExecuting = false;
+            OnPropertyChanged(nameof(IsExecuting));
             RaiseCanExecuteChanged();
         }
     }

@@ -52,6 +52,11 @@
                             <Run Text="IsBusy: " />
                             <Run FontWeight="Bold" Text="{Binding IsBusy}" />
                         </TextBlock>
+                        <TextBlock Margin="0,5,0,0">
+                            <Run Text="IsExecuting: " />
+                            <Run FontWeight="Bold" Text="{Binding DoStuffCommand.IsExecuting}" />
+                        </TextBlock>
+
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"

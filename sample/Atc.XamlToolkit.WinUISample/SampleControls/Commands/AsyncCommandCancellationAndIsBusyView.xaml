@@ -53,6 +53,10 @@
                             <Run Text="IsBusy: " />
                             <Run FontWeight="Bold" Text="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
                         </TextBlock>
+                        <TextBlock Margin="0,5,0,0">
+                            <Run Text="IsExecuting: " />
+                            <Run FontWeight="Bold" Text="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}" />
+                        </TextBlock>
                         <TextBlock
                             FontSize="16"
                             FontWeight="SemiBold"

@@ -9,6 +9,8 @@ namespace Atc.XamlToolkit.Command;
 /// <typeparam name="T">The type of the command parameter.</typeparam>
 public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
 {
+    private readonly DispatcherQueue? dispatcherQueue;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayCommandAsync{T}"/> class that can always execute.
     /// </summary>
@@ -37,6 +39,15 @@ public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
             errorHandler,
             keepTargetAlive)
     {
+        try
+        {
+            dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        }
+        catch (COMException)
+        {
+            // In test environments or without WinUI runtime, this may fail - that's OK
+            // The PropertyChanged marshalling will handle null dispatcher gracefully
+        }
     }
 
     /// <summary>
@@ -67,6 +78,15 @@ public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
             errorHandler,
             keepTargetAlive)
     {
+        try
+        {
+            dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        }
+        catch (COMException)
+        {
+            // In test environments or without WinUI runtime, this may fail - that's OK
+            // The PropertyChanged marshalling will handle null dispatcher gracefully
+        }
     }
 
     /// <summary>
@@ -80,5 +100,35 @@ public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
     public override void RaiseCanExecuteChanged()
     {
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <inheritdoc />
+    protected override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        // Always marshal PropertyChanged to UI thread for WinUI x:Bind compatibility
+        DispatcherQueue? queue = null;
+        try
+        {
+            queue = DispatcherQueue.GetForCurrentThread() ?? dispatcherQueue;
+        }
+        catch (COMException)
+        {
+            // In test environments, GetForCurrentThread may fail
+            queue = dispatcherQueue;
+        }
+
+        if (queue is not null && !queue.HasThreadAccess)
+        {
+            // We're on a background thread, marshal to UI thread asynchronously
+            _ = queue.TryEnqueue(DispatcherQueuePriority.High, () =>
+            {
+                base.OnPropertyChanged(propertyName);
+            });
+        }
+        else
+        {
+            // Already on UI thread or no dispatcher available
+            base.OnPropertyChanged(propertyName);
+        }
     }
 }
