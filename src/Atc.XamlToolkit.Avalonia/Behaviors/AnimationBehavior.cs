@@ -4,6 +4,7 @@ namespace Atc.XamlToolkit.Behaviors;
 /// A behavior that provides simple animations for UI elements in Avalonia applications.
 /// Supports fade, slide, and scale animations triggered by property changes.
 /// </summary>
+[SuppressMessage("", "MA0015:The expression does not match a parameter", Justification = "OK")]
 public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 {
     /// <summary>

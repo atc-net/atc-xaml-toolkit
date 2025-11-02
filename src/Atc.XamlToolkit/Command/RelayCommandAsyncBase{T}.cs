@@ -142,6 +142,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     /// <inheritdoc />
     [SuppressMessage("AsyncUsage", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "OK - ICommand signature")]
     [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "OK - errorHandler will handle it")]
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public async void Execute(object? parameter)
     {
         var val = parameter;

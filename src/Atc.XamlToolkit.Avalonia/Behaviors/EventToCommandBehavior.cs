@@ -5,6 +5,7 @@ namespace Atc.XamlToolkit.Behaviors;
 /// <summary>
 /// Behavior that executes a command when a specified event is raised.
 /// </summary>
+[SuppressMessage("", "MA0015:The expression does not match a parameter", Justification = "OK")]
 public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalonia.Interactivity.Interactive>
 {
     /// <summary>

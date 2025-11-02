@@ -7,7 +7,7 @@ The `RelayCommandAsync` and `RelayCommandAsync<T>` classes now support cancellat
 - **Cancellation Token Support**: Pass a `CancellationToken` to your async command handlers
 - **Built-in Cancellation Management**: Commands automatically manage `CancellationTokenSource` lifecycle
 - **IDisposable Implementation**: Async command interfaces inherit from `IDisposable` for proper resource cleanup
-- **Source Generator Support**: Automatic generation of `DisposeCommands()` helper method for ViewModels with cancellable commands
+- **Source Generator Support**: Automatic generation of `DisposeCommands()` helper method for ViewModels with async commands
 
 ## Basic Usage
 
@@ -189,7 +189,7 @@ var command2 = new RelayCommandAsync(async (cancellationToken) =>
 
 ## Important Notes
 
-1. **IDisposable**: `IRelayCommandAsync` and `IRelayCommandAsync<T>` now inherit from `IDisposable`. Dispose commands when the ViewModel is disposed to properly clean up `CancellationTokenSource` resources. The source generator automatically creates a `DisposeCommands()` helper method for ViewModels with cancellable commands.
+1. **IDisposable**: `IRelayCommandAsync` and `IRelayCommandAsync<T>` now inherit from `IDisposable`. Dispose commands when the ViewModel is disposed to properly clean up `CancellationTokenSource` resources. The source generator automatically creates a `DisposeCommands()` helper method for ViewModels with async commands.
 
 2. **Cancellation is Cooperative**: The async method must check the `CancellationToken` and respond to cancellation requests. Simply calling `Cancel()` doesn't forcibly stop the operation.
 
@@ -335,12 +335,12 @@ public class MyViewModel : ObservableObject, IDisposable
 }
 ```
 
-**Note:** When using the source generator with `SupportsCancellation = true`, a `DisposeCommands()` helper method is automatically generated:
+**Note:** When using the source generator with async commands, a `DisposeCommands()` helper method is automatically generated:
 
 ```csharp
 public partial class MyViewModel : ViewModelBase, IDisposable
 {
-    [RelayCommand(SupportsCancellation = true)]
+    [RelayCommand]
     private async Task LoadDataAsync(CancellationToken cancellationToken)
     {
         // Implementation
@@ -353,7 +353,7 @@ public partial class MyViewModel : ViewModelBase, IDisposable
 }
 ```
 
-The generated `DisposeCommands()` method automatically disposes all async commands with cancellation support in your ViewModel.
+The generated `DisposeCommands()` method automatically disposes all async commands in your ViewModel.
 
 ### 4. Handle OperationCanceledException Gracefully
 
@@ -1060,25 +1060,25 @@ public partial class LegacyProcessingViewModel
 
 ### DisposeCommands() Helper Method
 
-When using the source generator with `SupportsCancellation = true`, a `DisposeCommands()` helper method is automatically generated. This method disposes all async commands with cancellation support, making resource cleanup simple and consistent.
+When using the source generator with async commands (those returning `Task`), a `DisposeCommands()` helper method is automatically generated. This method disposes all async commands, making resource cleanup simple and consistent.
 
 #### Generated DisposeCommands() Method
 
-The source generator creates a `DisposeCommands()` method that calls `Dispose()` on all cancellable async commands:
+The source generator creates a `DisposeCommands()` method that calls `Dispose()` on all async commands:
 
 ```csharp
 public partial class MyViewModel : ViewModelBase
 {
-    [RelayCommand(SupportsCancellation = true)]
+    [RelayCommand]
     private async Task LoadAsync(CancellationToken cancellationToken)
     {
         await Task.Delay(1000, cancellationToken);
     }
 
-    [RelayCommand(SupportsCancellation = true)]
-    private async Task SaveAsync(CancellationToken cancellationToken)
+    [RelayCommand]
+    private async Task SaveAsync()
     {
-        await Task.Delay(1000, cancellationToken);
+        await Task.Delay(1000);
     }
 
     // Generator creates:
@@ -1129,7 +1129,7 @@ Simply call `DisposeCommands()` from your ViewModel's `Dispose()` method:
 ```csharp
 public partial class MyViewModel : ViewModelBase, IDisposable
 {
-    [RelayCommand(SupportsCancellation = true)]
+    [RelayCommand]
     private async Task LoadAsync(CancellationToken cancellationToken)
     {
         await Task.Delay(1000, cancellationToken);
@@ -1137,7 +1137,7 @@ public partial class MyViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        DisposeCommands(); // Automatically disposes all cancellable commands
+        DisposeCommands(); // Automatically disposes all async commands
     }
 }
 ```
@@ -1147,28 +1147,28 @@ public partial class MyViewModel : ViewModelBase, IDisposable
 - ✅ **No manual disposal code** - The generator handles all command disposal
 - ✅ **Consistent API** - Same disposal pattern across all ViewModels
 - ✅ **No casting required** - Clean API without `(command as IDisposable)?.Dispose()`
-- ✅ **Automatically updated** - Adding new cancellable commands updates `DisposeCommands()` automatically
+- ✅ **Automatically updated** - Adding new async commands updates `DisposeCommands()` automatically
 - ✅ **Type-safe** - Only disposes commands that actually implement `IDisposable`
 
 #### Multiple Commands Example
 
-When you have multiple cancellable commands, `DisposeCommands()` disposes all of them:
+When you have multiple async commands, `DisposeCommands()` disposes all of them:
 
 ```csharp
 public partial class DashboardViewModel : ViewModelBase, IDisposable
 {
-    [RelayCommand(SupportsCancellation = true)]
+    [RelayCommand]
     private async Task LoadUsersAsync(CancellationToken ct) { /*...*/ }
 
-    [RelayCommand(SupportsCancellation = true)]
-    private async Task LoadOrdersAsync(CancellationToken ct) { /*...*/ }
+    [RelayCommand]
+    private async Task LoadOrdersAsync() { /*...*/ }
 
     [RelayCommand(SupportsCancellation = true)]
     private async Task LoadReportsAsync(CancellationToken ct) { /*...*/ }
 
     public void Dispose()
     {
-        DisposeCommands(); // Disposes LoadUsersCommand, LoadOrdersCommand, and LoadReportsCommand
+        DisposeCommands(); // Disposes all async commands: LoadUsersCommand, LoadOrdersCommand, and LoadReportsCommand
     }
 }
 ```
@@ -1186,7 +1186,7 @@ public void DisposeCommands()
 
 #### Note
 
-The `DisposeCommands()` method is only generated when at least one command has `SupportsCancellation = true`. Commands without cancellation support don't need disposal and are not included.
+The `DisposeCommands()` method is automatically generated when your ViewModel has at least one async command (those returning `Task`). All async commands implement `IDisposable` and are included in the disposal method, regardless of whether they support cancellation or not. Synchronous commands (non-async) are not included as they don't require disposal.
 
 ### Combining with ExecuteOnBackgroundThread
 

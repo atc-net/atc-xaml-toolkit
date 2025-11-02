@@ -5,6 +5,7 @@ namespace Atc.XamlToolkit.Behaviors;
 /// A behavior that enables custom keyboard navigation for UI elements in Avalonia applications.
 /// Supports arrow keys, Enter, Escape, and Tab navigation with customizable commands.
 /// </summary>
+[SuppressMessage("", "MA0015:The expression does not match a parameter", Justification = "OK")]
 public class KeyboardNavigationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 {
     /// <summary>
