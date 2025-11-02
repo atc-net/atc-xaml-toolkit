@@ -167,9 +167,15 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
         OnPropertyChanged(nameof(IsExecuting));
         RaiseCanExecuteChanged();
 
-        // Create a new cancellation token source if we support cancellation
+        // Always create a fresh cancellation token source if we support cancellation
+        // This ensures that a previously canceled token is never reused
         if (executeWithCancellation is not null)
         {
+            if (cancellationTokenSource is not null)
+            {
+                await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+            }
+
             cancellationTokenSource?.Dispose();
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -208,9 +214,11 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
         // We don't check it again here because isExecuting may be true at this point
         if (executeWithCancellation is not null)
         {
-            // Create cancellation token source if it doesn't exist
-            if (cancellationTokenSource is null)
+            // Create a fresh cancellation token source if it doesn't exist or is canceled
+            // This handles the case where ExecuteAsync() is called directly (not from Execute())
+            if (cancellationTokenSource is null || cancellationTokenSource.IsCancellationRequested)
             {
+                cancellationTokenSource?.Dispose();
                 cancellationTokenSource = new CancellationTokenSource();
             }
 
