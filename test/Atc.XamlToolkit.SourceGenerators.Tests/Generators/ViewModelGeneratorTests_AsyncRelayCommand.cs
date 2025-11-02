@@ -33,6 +33,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? saveCommand;
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(Save);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -73,6 +78,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? mySaveCommand;
 
                 public IRelayCommandAsync MySaveCommand => mySaveCommand ??= new RelayCommandAsync(Save);
+
+                public void DisposeCommands()
+                {
+                    MySaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -113,6 +123,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? saveCommand;
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(SaveHandler);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -152,6 +167,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? saveCommandX;
 
                 public IRelayCommandAsync SaveCommandX => saveCommandX ??= new RelayCommandAsync(SaveCommand);
+
+                public void DisposeCommands()
+                {
+                    SaveCommandX.Dispose();
+                }
             }
 
             #nullable disable
@@ -191,6 +211,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? saveCommand;
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(SaveCommandHandler);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -231,6 +256,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? saveCommand;
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(() => Save(CancellationToken.None));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -278,6 +308,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     Save,
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -325,6 +360,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     Save,
                     !CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -372,6 +412,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Save(CancellationToken.None),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -428,6 +473,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<(string, int, bool, Atc.Data.Models.LogItem)> SaveCommand => saveCommand ??= new RelayCommandAsync<(string, int, bool, Atc.Data.Models.LogItem)>(
                     x => Save(x.Item1, x.Item2, x.Item3, x.Item4, CancellationToken.None),
                     x => CanSave(x.Item1, x.Item2, x.Item3, x.Item4));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -468,6 +518,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync<string>? saveCommand;
 
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(Save);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -508,6 +563,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync<int>? saveCommand;
 
                 public IRelayCommandAsync<int> SaveCommand => saveCommand ??= new RelayCommandAsync<int>(Save);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -548,6 +608,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync<(LeftTopRightBottomType DirectionType, int StepMoves)>? saveCommand;
 
                 public IRelayCommandAsync<(LeftTopRightBottomType DirectionType, int StepMoves)> SaveCommand => saveCommand ??= new RelayCommandAsync<(LeftTopRightBottomType DirectionType, int StepMoves)>(Save);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -595,6 +660,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     Save,
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -637,6 +707,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Save(x, CancellationToken.None),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -684,6 +759,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<int> SaveCommand => saveCommand ??= new RelayCommandAsync<int>(
                     Save,
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -724,6 +804,11 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommandAsync? turnDirectionSingleCommand;
 
                 public IRelayCommandAsync TurnDirectionSingleCommand => turnDirectionSingleCommand ??= new RelayCommandAsync(() => TurnDirectionSingle(LeftTopRightBottomType.Left));
+
+                public void DisposeCommands()
+                {
+                    TurnDirectionSingleCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -776,6 +861,14 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync MyTestRightCommand => myTestRightCommand ??= new RelayCommandAsync(() => TurnDirectionSingle(LeftTopRightBottomType.Right));
 
                 public IRelayCommandAsync MyTestBottomCommand => myTestBottomCommand ??= new RelayCommandAsync(() => TurnDirectionSingle(LeftTopRightBottomType.Bottom));
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -828,6 +921,14 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync MyTestRightCommand => myTestRightCommand ??= new RelayCommandAsync(() => TurnDirectionSingle(LeftTopRightBottomType.Right, 1));
 
                 public IRelayCommandAsync MyTestBottomCommand => myTestBottomCommand ??= new RelayCommandAsync(() => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -920,6 +1021,14 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync MyTestBottomCommand => myTestBottomCommand ??= new RelayCommandAsync(
                     () => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1),
                     CanTurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -964,6 +1073,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     Save,
                     () => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1008,6 +1122,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     Save,
                     () => !CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1052,6 +1171,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Save(CancellationToken.None),
                     () => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1096,6 +1220,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     Save,
                     _ => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1154,6 +1283,11 @@ public sealed partial class ViewModelGeneratorTests
                         canSave = value;
                         RaisePropertyChanged(nameof(CanSave));
                     }
+                }
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
                 }
             }
 
@@ -1214,6 +1348,11 @@ public sealed partial class ViewModelGeneratorTests
                         RaisePropertyChanged(nameof(MyCanSave));
                     }
                 }
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1263,6 +1402,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<(string, int, bool, Atc.Data.Models.LogItem)> SaveCommand => saveCommand ??= new RelayCommandAsync<(string, int, bool, Atc.Data.Models.LogItem)>(
                     x => Save(x.Item1, x.Item2, x.Item3, x.Item4, CancellationToken.None),
                     x => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1304,6 +1448,11 @@ public sealed partial class ViewModelGeneratorTests
             
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Task.Run(Save));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1345,6 +1494,11 @@ public sealed partial class ViewModelGeneratorTests
             
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Task.Run(() => Save(CancellationToken.None)));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1387,6 +1541,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Task.Run(Save),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1429,6 +1588,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Task.Run(() => Save(CancellationToken.None)),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1470,6 +1634,11 @@ public sealed partial class ViewModelGeneratorTests
             
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Task.Run(() => Save(x)));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1511,6 +1680,11 @@ public sealed partial class ViewModelGeneratorTests
             
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Task.Run(() => Save(x, CancellationToken.None)));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1553,6 +1727,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Task.Run(() => Save(x)),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1595,6 +1774,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Task.Run(() => Save(x, CancellationToken.None)),
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1639,6 +1823,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     () => Task.Run(Save),
                     () => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1683,6 +1872,11 @@ public sealed partial class ViewModelGeneratorTests
                 public IRelayCommandAsync<string> SaveCommand => saveCommand ??= new RelayCommandAsync<string>(
                     x => Task.Run(() => Save(x)),
                     _ => CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1741,6 +1935,11 @@ public sealed partial class ViewModelGeneratorTests
                         canSave = value;
                         RaisePropertyChanged(nameof(CanSave));
                     }
+                }
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
                 }
             }
 
@@ -1801,6 +2000,11 @@ public sealed partial class ViewModelGeneratorTests
                         RaisePropertyChanged(nameof(MyCanSave));
                     }
                 }
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1860,6 +2064,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1917,6 +2126,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -1974,6 +2188,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2031,6 +2250,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2088,6 +2312,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2145,6 +2374,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2202,6 +2436,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2322,6 +2561,14 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2381,6 +2628,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2441,6 +2693,11 @@ public sealed partial class ViewModelGeneratorTests
                         }
                     },
                     CanSave);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2500,6 +2757,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2559,6 +2821,11 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2687,6 +2954,14 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2815,6 +3090,14 @@ public sealed partial class ViewModelGeneratorTests
                                 .ConfigureAwait(false);
                         }
                     });
+
+                public void DisposeCommands()
+                {
+                    MyTestLeftCommand.Dispose();
+                    MyTestTopCommand.Dispose();
+                    MyTestRightCommand.Dispose();
+                    MyTestBottomCommand.Dispose();
+                }
             }
 
             #nullable disable
@@ -2889,6 +3172,11 @@ public sealed partial class ViewModelGeneratorTests
                         }
                     },
                     x => CanSave(x.Item1, x.Item2, x.Item3, x.Item4));
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable
