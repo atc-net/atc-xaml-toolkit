@@ -1032,6 +1032,142 @@ public void CancelProcess()
 
 ---
 
+## 📊 Binding to IsExecuting Property
+
+All async commands generated with `[RelayCommand]` expose an `IsExecuting` property that indicates whether the command is currently executing. This property automatically implements `INotifyPropertyChanged` and updates the UI in real-time across all platforms (WPF, WinUI, Avalonia).
+
+### Basic Usage (WPF/Avalonia)
+
+```xml
+<!-- WPF / Avalonia - uses {Binding} -->
+<StackPanel>
+    <Button Content="Start Operation" Command="{Binding DoStuffCommand}" />
+
+    <!-- Show execution status -->
+    <TextBlock>
+        <Run Text="IsExecuting: " />
+        <Run FontWeight="Bold" Text="{Binding DoStuffCommand.IsExecuting, Mode=OneWay}" />
+    </TextBlock>
+
+    <!-- Loading indicator -->
+    <ProgressBar IsIndeterminate="True"
+                 Visibility="{Binding DoStuffCommand.IsExecuting, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+### WinUI Usage with x:Bind
+
+WinUI requires `x:Bind` for compiled bindings. The source generator automatically handles the complexity of nested property path bindings:
+
+```xml
+<!-- WinUI - uses {x:Bind} -->
+<StackPanel>
+    <Button Content="Start Operation" Command="{x:Bind ViewModel.DoStuffCommand}" />
+
+    <!-- Show execution status -->
+    <TextBlock>
+        <Run Text="IsExecuting: " />
+        <Run FontWeight="Bold" Text="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}" />
+    </TextBlock>
+
+    <!-- Loading indicator -->
+    <ProgressRing IsActive="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}" />
+</StackPanel>
+```
+
+### ViewModel Example
+
+```csharp
+public partial class MyViewModel : ViewModelBase
+{
+    [RelayCommand(SupportsCancellation = true)]
+    private async Task DoStuffAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(5000, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Task was cancelled
+        }
+    }
+
+    // Generator creates:
+    // - DoStuffCommand with IsExecuting property
+    // - DoStuffCancelCommand for XAML binding
+    // - CancelDoStuff() method
+}
+```
+
+### Show/Hide Cancel Button Based on Execution
+
+```xml
+<!-- WPF -->
+<StackPanel Orientation="Horizontal">
+    <Button Content="Start" Command="{Binding DoStuffCommand}" />
+    <Button Content="Cancel" Command="{Binding DoStuffCancelCommand}"
+            Visibility="{Binding DoStuffCommand.IsExecuting, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+```xml
+<!-- WinUI -->
+<StackPanel Orientation="Horizontal" Spacing="10">
+    <Button Content="Start" Command="{x:Bind ViewModel.DoStuffCommand}" />
+    <Button Content="Cancel" Command="{x:Bind ViewModel.DoStuffCancelCommand}"
+            Visibility="{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+</StackPanel>
+```
+
+### How It Works
+
+**WPF & Avalonia:**
+- Standard `{Binding}` automatically subscribes to `INotifyPropertyChanged` on intermediate objects
+- When `IsExecuting` changes, the UI updates automatically
+- No special handling required
+
+**WinUI:**
+- `x:Bind` compiled bindings only subscribe to PropertyChanged on the root ViewModel
+- The source generator creates full command properties (not expression-bodied) that wire up PropertyChanged subscriptions
+- When `IsExecuting` changes on the command, the ViewModel raises PropertyChanged for the command property name
+- This triggers x:Bind to re-evaluate the entire property path `ViewModel.DoStuffCommand.IsExecuting`
+- PropertyChanged events are automatically marshaled to the UI thread using `DispatcherQueue.TryEnqueue()`
+
+**Generated code for WinUI:**
+
+```csharp
+public IRelayCommandAsync DoStuffCommand
+{
+    get
+    {
+        if (doStuffCommand == null)
+        {
+            doStuffCommand = new RelayCommandAsync(...);
+
+            // Wire up PropertyChanged for x:Bind
+            if (doStuffCommand is INotifyPropertyChanged inpc)
+            {
+                inpc.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == "IsExecuting")
+                    {
+                        OnPropertyChanged(nameof(DoStuffCommand));
+                    }
+                };
+            }
+        }
+        return doStuffCommand;
+    }
+}
+```
+
+This ensures consistent `IsExecuting` binding behavior across all XAML platforms while optimizing for each platform's binding system.
+
+📖 For more examples and platform-specific details, see the [Async Command Cancellation](../Command/AsyncCommandCancellation.md#binding-to-isexecuting-property) guide.
+
+---
+
 ## 🎁 Wrapping DTOs with `ObservableDtoViewModel`
 
 The `ObservableDtoViewModel` attribute generates ViewModels that wrap Data Transfer Objects (DTOs) or POCOs, automatically creating properties that forward to the underlying DTO while implementing `INotifyPropertyChanged`.

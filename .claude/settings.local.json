@@ -5,7 +5,8 @@
       "Bash(dotnet test:*)",
       "Bash(dotnet build-server:*)",
       "Bash(dotnet clean:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

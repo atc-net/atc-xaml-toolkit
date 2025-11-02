@@ -186,6 +186,18 @@ Each platform package (Wpf, WinUI, Avalonia) has:
    - Implementation in `CommandBuilderBase.cs`: `BuildExecuteExpressionForAutoSetIsBusy()` and `AppendDispatcherInvokeAsync()`
    - WPF and Avalonia don't have this issue as their dispatchers handle cross-thread calls differently
 
+5. **IsExecuting Property Binding Support:**
+   - **All async commands now implement `INotifyPropertyChanged`** to support `IsExecuting` property bindings
+   - `RelayCommandAsyncBase` and `RelayCommandAsyncBase<T>` raise `PropertyChanged` when `IsExecuting` changes
+   - **WinUI-specific implementation**:
+     - `RelayCommandAsync` and `RelayCommandAsync<T>` override `OnPropertyChanged()` to marshal events to UI thread
+     - Uses `DispatcherQueue.TryEnqueue()` when called from background threads to prevent cross-thread exceptions
+     - **Critical for x:Bind**: WinUI's compiled bindings only subscribe to PropertyChanged on the root ViewModel
+     - Source generator creates special properties for WinUI async commands that re-raise PropertyChanged on the ViewModel when `IsExecuting` changes
+     - This allows `{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}` to work correctly
+   - **WPF/Avalonia**: Standard `{Binding}` automatically subscribes to intermediate objects in property paths
+   - Implementation: `CommandBuilderBase.cs:AppendPublicProperties()` generates full properties for WinUI async commands
+
 **Platform Detection:**
 - Source generators use `XamlPlatform` enum (Wpf, WinUI, Avalonia) to generate platform-appropriate code
 - Detection logic in `FrameworkElementInspector.GetXamlPlatform()` based on project references
