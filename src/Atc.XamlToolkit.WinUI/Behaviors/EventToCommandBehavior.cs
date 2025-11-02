@@ -3,6 +3,7 @@ namespace Atc.XamlToolkit.Behaviors;
 /// <summary>
 /// Behavior that executes a command when a specified event is raised.
 /// </summary>
+[SuppressMessage("", "MA0015:The expression does not match a parameter", Justification = "OK")]
 [Microsoft.UI.Xaml.Markup.ContentProperty(Name = nameof(Command))]
 public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<FrameworkElement>
 {

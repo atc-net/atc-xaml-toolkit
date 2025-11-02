@@ -4,6 +4,7 @@ namespace Atc.XamlToolkit.Behaviors;
 /// A behavior that manages focus for UI elements in Avalonia applications.
 /// Allows declarative focus control through XAML properties.
 /// </summary>
+[SuppressMessage("", "MA0015:The expression does not match a parameter", Justification = "OK")]
 public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 {
     /// <summary>
