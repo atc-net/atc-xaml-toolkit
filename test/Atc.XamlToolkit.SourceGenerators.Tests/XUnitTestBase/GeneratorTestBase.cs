@@ -1,4 +1,6 @@
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
+using TestResult = Atc.XUnit.TestResult;
+
 namespace Atc.XamlToolkit.SourceGenerators.Tests.XUnitTestBase;
 
 public abstract class GeneratorTestBase
