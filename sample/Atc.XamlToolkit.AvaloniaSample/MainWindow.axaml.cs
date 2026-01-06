@@ -2,7 +2,8 @@ namespace Atc.XamlToolkit.AvaloniaSample;
 
 public partial class MainWindow : Window
 {
-    private MainWindowViewModel GetViewModel() => (MainWindowViewModel)DataContext!;
+    private MainWindowViewModel GetViewModel()
+        => (MainWindowViewModel)DataContext!;
 
     public MainWindow()
     {

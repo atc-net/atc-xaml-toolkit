@@ -22,7 +22,9 @@ public class GenericMessage<T> : MessageBase
     /// </summary>
     /// <param name="sender">The message's sender.</param>
     /// <param name="content">The message content.</param>
-    public GenericMessage(object sender, T content)
+    public GenericMessage(
+        object sender,
+        T content)
         : base(sender)
     {
         Content = content;
@@ -34,7 +36,10 @@ public class GenericMessage<T> : MessageBase
     /// <param name="sender">The message's sender.</param>
     /// <param name="target">The message's target.</param>
     /// <param name="content">The message content.</param>
-    public GenericMessage(object sender, object target, T content)
+    public GenericMessage(
+        object sender,
+        object target,
+        T content)
         : base(sender, target)
     {
         Content = content;

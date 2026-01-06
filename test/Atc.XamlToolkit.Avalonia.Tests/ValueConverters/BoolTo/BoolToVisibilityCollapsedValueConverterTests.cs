@@ -8,7 +8,9 @@ public sealed class BoolToVisibilityCollapsedValueConverterTests
     [Theory]
     [InlineData(false, true)]
     [InlineData(true, false)]
-    public void Convert(bool expected, bool input)
+    public void Convert(
+        bool expected,
+        bool input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null!, parameter: null, culture: null!));
@@ -16,7 +18,9 @@ public sealed class BoolToVisibilityCollapsedValueConverterTests
     [Theory]
     [InlineData(true, false)]
     [InlineData(false, true)]
-    public void ConvertBack(bool expected, bool input)
+    public void ConvertBack(
+        bool expected,
+        bool input)
         => Assert.Equal(
             expected,
             converter.ConvertBack(input, targetType: null!, parameter: null, culture: null!));

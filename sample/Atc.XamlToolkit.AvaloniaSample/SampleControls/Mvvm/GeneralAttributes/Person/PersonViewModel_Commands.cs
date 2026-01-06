@@ -29,10 +29,7 @@ public partial class PersonViewModel
     }
 
     public bool CanSaveHandler()
-    {
-        // Use validation errors instead of manual checks
-        return !HasErrors;
-    }
+        => !HasErrors;
 
     [RelayCommand(CanExecute = nameof(CanSaveHandler))]
     public Task SaveHandler()
@@ -71,14 +68,18 @@ public partial class PersonViewModel
             var box = MessageBoxManager.GetMessageBoxStandard(
                 "Information",
                 "Long running work completed");
-            await box.ShowAsync().ConfigureAwait(true);
+            await box
+                .ShowAsync()
+                .ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
             var box = MessageBoxManager.GetMessageBoxStandard(
                 "Information",
                 "Long running work cancelled");
-            await box.ShowAsync().ConfigureAwait(true);
+            await box
+                .ShowAsync()
+                .ConfigureAwait(true);
         }
         finally
         {
@@ -89,7 +90,8 @@ public partial class PersonViewModel
         }
     }
 
-    public bool CanCancelLongRunningWork() => cancellationTokenSource is not null;
+    public bool CanCancelLongRunningWork()
+        => cancellationTokenSource is not null;
 
     [RelayCommand(CanExecute = nameof(CanCancelLongRunningWork))]
     public void CancelLongRunningWork()

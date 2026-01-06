@@ -10,7 +10,9 @@ public sealed class StringNullOrEmptyToVisibilityCollapsedValueConverterTests
     [InlineData(Visibility.Visible, "test")]
     [InlineData(Visibility.Visible, " ")]
     [InlineData(Visibility.Visible, "Hello World")]
-    public void Convert(Visibility expected, string input)
+    public void Convert(
+        Visibility expected,
+        string input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null, parameter: null, culture: null));

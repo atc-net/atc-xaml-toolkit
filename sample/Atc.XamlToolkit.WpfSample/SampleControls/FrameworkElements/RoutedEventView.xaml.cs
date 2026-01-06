@@ -11,14 +11,18 @@ public partial class RoutedEventView : UserControl
     }
 
     // Example 1: Simple routed event handlers
-    private void OnItemClickedAtBorder(object sender, RoutedEventArgs e)
+    private void OnItemClickedAtBorder(
+        object sender,
+        RoutedEventArgs e)
     {
         EventLogSimple.Text = $"[{DateTime.Now:HH:mm:ss.fff}] ItemClicked event bubbled up to Border container!\n" +
                               $"Source: {e.Source?.GetType().Name}\n" +
                               $"Handled by: Border";
     }
 
-    private void OnItemActionPerformed(object sender, RoutedEventComponents.ItemActionRoutedEventArgs e)
+    private void OnItemActionPerformed(
+        object sender,
+        RoutedEventComponents.ItemActionRoutedEventArgs e)
     {
         EventLogSimple.Text += $"\n\n[{DateTime.Now:HH:mm:ss.fff}] ItemActionPerformed event raised!\n" +
                                $"Action Type: {e.ActionType}\n" +
@@ -27,7 +31,9 @@ public partial class RoutedEventView : UserControl
     }
 
     // Example 2: Custom event handler type
-    private void OnValueIncremented(object sender, RoutedEventComponents.ValueChangedRoutedEventArgs e)
+    private void OnValueIncremented(
+        object sender,
+        RoutedEventComponents.ValueChangedRoutedEventArgs e)
     {
         ValueDisplay.Text = e.NewValue.ToString(GlobalizationConstants.EnglishCultureInfo);
         EventLogNumeric.Text = $"[{DateTime.Now:HH:mm:ss.fff}] ValueIncremented Event\n" +
@@ -37,7 +43,9 @@ public partial class RoutedEventView : UserControl
                                $"Source: {e.Source?.GetType().Name}";
     }
 
-    private void OnValueDecremented(object sender, RoutedEventComponents.ValueChangedRoutedEventArgs e)
+    private void OnValueDecremented(
+        object sender,
+        RoutedEventComponents.ValueChangedRoutedEventArgs e)
     {
         ValueDisplay.Text = e.NewValue.ToString(GlobalizationConstants.EnglishCultureInfo);
         EventLogNumeric.Text = $"[{DateTime.Now:HH:mm:ss.fff}] ValueDecremented Event\n" +
@@ -47,25 +55,33 @@ public partial class RoutedEventView : UserControl
                                $"Source: {e.Source?.GetType().Name}";
     }
 
-    private void IncrementButton_Click(object sender, RoutedEventArgs e)
+    private void IncrementButton_Click(
+        object sender,
+        RoutedEventArgs e)
     {
         NumericControl.Increment();
     }
 
-    private void DecrementButton_Click(object sender, RoutedEventArgs e)
+    private void DecrementButton_Click(
+        object sender,
+        RoutedEventArgs e)
     {
         NumericControl.Decrement();
     }
 
     // Example 3: Tunneling event handlers
-    private void OnPreviewItemClicked_Outer(object sender, RoutedEventArgs e)
+    private void OnPreviewItemClicked_Outer(
+        object sender,
+        RoutedEventArgs e)
     {
         EventLogTunnel.Text = $"[{DateTime.Now:HH:mm:ss.fff}] Step 1: PreviewItemClicked at OUTER Border (Tunneling down)\n" +
                               $"Source: {e.Source?.GetType().Name}\n" +
                               $"Current Handler: Outer Border";
     }
 
-    private void OnPreviewItemClicked_Inner(object sender, RoutedEventArgs e)
+    private void OnPreviewItemClicked_Inner(
+        object sender,
+        RoutedEventArgs e)
     {
         EventLogTunnel.Text += $"\n\n[{DateTime.Now:HH:mm:ss.fff}] Step 2: PreviewItemClicked at INNER Border (Tunneling down)\n" +
                                $"Source: {e.Source?.GetType().Name}\n" +

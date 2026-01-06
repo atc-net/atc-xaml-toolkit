@@ -14,7 +14,9 @@ public sealed class MultiBoolToVisibilityVisibleValueConverterTests
     [InlineData(true, nameof(AllTrue))]
     [InlineData(false, nameof(OneFalse))]
     [InlineData(true, nameof(Empty))]
-    public void Convert_AND_DefaultOperator(bool expected, string inputSetName)
+    public void Convert_AND_DefaultOperator(
+        bool expected,
+        string inputSetName)
     {
         // Arrange
         var input = GetInput(inputSetName);
@@ -31,7 +33,9 @@ public sealed class MultiBoolToVisibilityVisibleValueConverterTests
     [InlineData(true, nameof(OneFalse))]
     [InlineData(false, nameof(AllFalse))]
     [InlineData(false, nameof(Empty))]
-    public void Convert_OR_WithEnumParameter(bool expected, string inputSetName)
+    public void Convert_OR_WithEnumParameter(
+        bool expected,
+        string inputSetName)
     {
         // Arrange
         var input = GetInput(inputSetName);

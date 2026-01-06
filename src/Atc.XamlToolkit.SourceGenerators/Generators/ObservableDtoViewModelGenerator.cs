@@ -12,8 +12,7 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
     /// Initializes the source generator.
     /// </summary>
     /// <param name="context">The initialization context.</param>
-    public void Initialize(
-        IncrementalGeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         //// #if DEBUG
         ////         if (!System.Diagnostics.Debugger.IsAttached)
@@ -59,8 +58,7 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
     /// </list>
     /// This avoids expensive semantic model operations on classes that won't generate code.
     /// </remarks>
-    private static bool IsSyntaxTarget(
-        SyntaxNode syntaxNode)
+    private static bool IsSyntaxTarget(SyntaxNode syntaxNode)
     {
         if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
         {

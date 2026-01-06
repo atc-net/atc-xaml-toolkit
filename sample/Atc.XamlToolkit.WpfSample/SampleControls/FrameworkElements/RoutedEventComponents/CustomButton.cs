@@ -28,7 +28,9 @@ public partial class CustomButton : Button
     [RoutedEvent(HandlerType = typeof(ItemActionRoutedEventHandler))]
     private static readonly RoutedEvent itemActionPerformed;
 
-    private void OnClick(object sender, RoutedEventArgs e)
+    private void OnClick(
+        object sender,
+        RoutedEventArgs e)
     {
         // Raise the tunnel (preview) event first - it travels DOWN the visual tree
         RaiseEvent(new RoutedEventArgs(PreviewItemClickedEvent, this));

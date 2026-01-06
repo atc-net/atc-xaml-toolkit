@@ -21,8 +21,7 @@ public abstract class ObservableObject : IObservableObject
     }
 
     /// <inheritdoc />
-    public void RaisePropertyChanged<T>(
-        Expression<Func<T>> propertyExpression)
+    public void RaisePropertyChanged<T>(Expression<Func<T>> propertyExpression)
     {
         var handler = PropertyChanged;
         if (handler is null)
@@ -38,8 +37,7 @@ public abstract class ObservableObject : IObservableObject
     }
 
     /// <inheritdoc />
-    public void VerifyPropertyName(
-        string? propertyName)
+    public void VerifyPropertyName(string? propertyName)
     {
         var info = GetType().GetTypeInfo();
         if (string.IsNullOrEmpty(propertyName) ||
@@ -139,7 +137,5 @@ public abstract class ObservableObject : IObservableObject
         ref T field,
         T newValue,
         [CallerMemberName] string? propertyName = null)
-    {
-        return Set(propertyName, ref field, newValue);
-    }
+        => Set(propertyName, ref field, newValue);
 }

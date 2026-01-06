@@ -105,7 +105,8 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
     /// Raises the PropertyChanged event.
     /// </summary>
     /// <param name="propertyName">The name of the property that changed.</param>
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    protected virtual void OnPropertyChanged(
+        [CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
@@ -161,7 +162,9 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
         {
             if (cancellationTokenSource is not null)
             {
-                await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+                await cancellationTokenSource
+                    .CancelAsync()
+                    .ConfigureAwait(false);
             }
 
             cancellationTokenSource?.Dispose();

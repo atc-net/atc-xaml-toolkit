@@ -7,5 +7,6 @@ public sealed partial class AsyncCommandCancellationAndIsBusyView
         InitializeComponent();
     }
 
-    public AsyncCommandCancellationAndIsBusyViewModel ViewModel => (AsyncCommandCancellationAndIsBusyViewModel)DataContext;
+    public AsyncCommandCancellationAndIsBusyViewModel ViewModel
+        => (AsyncCommandCancellationAndIsBusyViewModel)DataContext;
 }

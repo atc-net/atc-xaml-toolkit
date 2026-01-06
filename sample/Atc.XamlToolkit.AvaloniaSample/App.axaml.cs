@@ -11,7 +11,8 @@ public partial class App : Application
 
     public App()
     {
-        host = Host.CreateDefaultBuilder()
+        host = Host
+            .CreateDefaultBuilder()
             .ConfigureLogging(logging =>
             {
                 logging.AddDebug();

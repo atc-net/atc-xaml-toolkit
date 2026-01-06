@@ -23,8 +23,7 @@ public sealed partial class AzureTenantManagerViewModel : ViewModelBase
     private bool CanLogin() => !IsSignedIn && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanLogin))]
-    private async Task Login(
-        CancellationToken cancellationToken)
+    private async Task Login(CancellationToken cancellationToken)
     {
         IsBusy = true;
 
@@ -39,8 +38,7 @@ public sealed partial class AzureTenantManagerViewModel : ViewModelBase
     private bool CanLogout() => IsSignedIn && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanLogout))]
-    private async Task Logout(
-        CancellationToken cancellationToken)
+    private async Task Logout(CancellationToken cancellationToken)
     {
         IsBusy = true;
 

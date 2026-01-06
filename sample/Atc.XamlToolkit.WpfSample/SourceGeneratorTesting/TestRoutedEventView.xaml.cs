@@ -21,7 +21,9 @@ public partial class TestRoutedEventView
 
 [SuppressMessage("", "CA1003", Justification = "OK.")]
 [SuppressMessage("", "CA1711", Justification = "OK.")]
-public delegate void NumericBoxChangedRoutedEventHandler(object sender, NumericBoxChangedRoutedEventArgs args);
+public delegate void NumericBoxChangedRoutedEventHandler(
+    object sender,
+    NumericBoxChangedRoutedEventArgs args);
 
 [SuppressMessage("", "SA1402", Justification = "OK.")]
 public sealed class NumericBoxChangedRoutedEventArgs(

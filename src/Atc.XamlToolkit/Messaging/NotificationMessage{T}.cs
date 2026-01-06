@@ -13,7 +13,9 @@ public sealed class NotificationMessage<T> : GenericMessage<T>
     /// <param name="content">A value to be passed to recipient(s).</param>
     /// <param name="notification">A string containing any arbitrary message to be
     /// passed to recipient(s)</param>
-    public NotificationMessage(T content, string notification)
+    public NotificationMessage(
+        T content,
+        string notification)
         : base(content)
     {
         Notification = notification;
@@ -26,7 +28,10 @@ public sealed class NotificationMessage<T> : GenericMessage<T>
     /// <param name="content">A value to be passed to recipient(s).</param>
     /// <param name="notification">A string containing any arbitrary message to be
     /// passed to recipient(s)</param>
-    public NotificationMessage(object sender, T content, string notification)
+    public NotificationMessage(
+        object sender,
+        T content,
+        string notification)
         : base(sender, content)
     {
         Notification = notification;
@@ -42,7 +47,11 @@ public sealed class NotificationMessage<T> : GenericMessage<T>
     /// <param name="content">A value to be passed to recipient(s).</param>
     /// <param name="notification">A string containing any arbitrary message to be
     /// passed to recipient(s)</param>
-    public NotificationMessage(object sender, object target, T content, string notification)
+    public NotificationMessage(
+        object sender,
+        object target,
+        T content,
+        string notification)
         : base(sender, target, content)
     {
         Notification = notification;

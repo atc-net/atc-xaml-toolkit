@@ -177,7 +177,9 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         base.OnDetaching();
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(
+        object sender,
+        RoutedEventArgs e)
     {
         // Set focus to the element when it's loaded so keyboard events work immediately
         if (AssociatedObject is not null)
@@ -186,7 +188,9 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         }
     }
 
-    private void OnGotFocus(object sender, RoutedEventArgs e)
+    private void OnGotFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         // Ensure keyboard focus is set when the element gets focus
         if (AssociatedObject is not null)
@@ -195,7 +199,9 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         }
     }
 
-    private void OnKeyDown(object sender, KeyRoutedEventArgs e)
+    private void OnKeyDown(
+        object sender,
+        KeyRoutedEventArgs e)
     {
         if (!IsEnabled)
         {

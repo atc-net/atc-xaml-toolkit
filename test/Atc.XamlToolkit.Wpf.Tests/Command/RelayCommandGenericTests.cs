@@ -10,7 +10,10 @@ public sealed class RelayCommandGenericTests
     [InlineData(1, false, 1)]
     [InlineData(2, false, 2)]
     [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
-    public void RaiseCanExecuteChanged(int expected, bool canExecute, int registerOnChangeCount)
+    public void RaiseCanExecuteChanged(
+        int expected,
+        bool canExecute,
+        int registerOnChangeCount)
     {
         // Arrange
         var canExecuteChangedCalled = 0;
@@ -36,7 +39,9 @@ public sealed class RelayCommandGenericTests
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, false)]
-    public void CanExecute(bool expected, bool canExecute)
+    public void CanExecute(
+        bool expected,
+        bool canExecute)
     {
         // Arrange
         var command = new RelayCommand<string>(_ => { }, _ => canExecute);
@@ -53,7 +58,10 @@ public sealed class RelayCommandGenericTests
     [InlineData("Not executed", false, null)]
     [InlineData("Executed", true, 42)]
     [InlineData("Not executed", false, 42)]
-    public void Execute(string expected, bool canExecute, object? parameter)
+    public void Execute(
+        string expected,
+        bool canExecute,
+        object? parameter)
     {
         // Arrange
         var actual = "Not executed";

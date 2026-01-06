@@ -12,8 +12,7 @@ public sealed partial class AsyncCommandCancellationAndIsBusyViewModel : ViewMod
         CanExecute = nameof(CanDoStuff),
         AutoSetIsBusy = true,
         SupportsCancellation = true)]
-    private async Task DoStuff(
-        CancellationToken cancellationToken)
+    private async Task DoStuff(CancellationToken cancellationToken)
     {
         try
         {

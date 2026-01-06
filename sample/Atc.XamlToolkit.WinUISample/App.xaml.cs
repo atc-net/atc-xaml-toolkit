@@ -14,15 +14,14 @@ public partial class App : Application
     [SuppressMessage("Usage", "CA1024:Use properties where appropriate", Justification = "OK")]
     [SupportedOSPlatform("windows10.0.17763.0")]
     public static XamlRoot? GetMainWindowXamlRoot()
-    {
-        return MainWindow?.Content?.XamlRoot;
-    }
+        => MainWindow?.Content?.XamlRoot;
 
     public App()
     {
         InitializeComponent();
 
-        host = Host.CreateDefaultBuilder()
+        host = Host
+            .CreateDefaultBuilder()
             .ConfigureLogging(logging =>
             {
                 logging.AddDebug();
@@ -41,8 +40,8 @@ public partial class App : Application
     [SuppressMessage("Reliability", "CS4014:Because this call is not awaited, execution of the current method continues before the call is completed", Justification = "Fire and forget")]
     [SuppressMessage("Performance", "MA0134:Observe result of async calls", Justification = "Fire and forget")]
     [SuppressMessage("Usage", "VSTHRD110:Observe result of async calls", Justification = "Fire and forget")]
-    protected override async void OnLaunched(
-        LaunchActivatedEventArgs args)
+    [SuppressMessage("AsyncUsage", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "override method - Task is not possible")]
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         await host
             .StartAsync()
@@ -58,8 +57,10 @@ public partial class App : Application
     }
 
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Event handler")]
+    [SuppressMessage("AsyncUsage", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "override method - Task is not possible")]
     private async void OnWindowClosed(
-        object sender, WindowEventArgs args)
+        object sender,
+        WindowEventArgs args)
     {
         await host
             .StopAsync()

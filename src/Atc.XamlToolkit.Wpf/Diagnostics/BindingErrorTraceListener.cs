@@ -22,7 +22,9 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     /// </summary>
     /// <param name="level">The level.</param>
     /// <param name="options">The options.</param>
-    public static void StartTrace(SourceLevels level = SourceLevels.Error, TraceOptions options = TraceOptions.None)
+    public static void StartTrace(
+        SourceLevels level = SourceLevels.Error,
+        TraceOptions options = TraceOptions.None)
     {
         if (listener is null)
         {

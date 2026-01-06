@@ -41,13 +41,18 @@ public partial class PersonViewModel : ViewModelBase
     public string FullName => $"{FirstName} {LastName}";
 
     // Error message properties for UI binding
-    public string FirstNameError => GetErrors(nameof(FirstName)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string FirstNameError
+        => GetErrors(nameof(FirstName)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string LastNameError => GetErrors(nameof(LastName)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string LastNameError
+        => GetErrors(nameof(LastName)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string AgeError => GetErrors(nameof(Age)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string AgeError
+        => GetErrors(nameof(Age)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string EmailError => GetErrors(nameof(Email)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string EmailError
+        => GetErrors(nameof(Email)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string ThePropertyError => GetErrors(nameof(TheProperty)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string ThePropertyError
+        => GetErrors(nameof(TheProperty)).Cast<string>().FirstOrDefault() ?? string.Empty;
 }

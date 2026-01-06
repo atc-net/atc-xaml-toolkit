@@ -11,7 +11,9 @@ public sealed class ToLowerValueConverterTests
     [InlineData("hello world", "hello world")]
     [InlineData("123", "123")]
     [InlineData("", "")]
-    public void Convert(string expected, string input)
+    public void Convert(
+        string expected,
+        string input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null, parameter: null, language: null));

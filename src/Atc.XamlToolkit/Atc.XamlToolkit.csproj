@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Title>Atc.XamlToolkit</Title>
     <PackageId>Atc.XamlToolkit</PackageId>
     <PackageTags>xaml;mvvm;relaycommand;ui-toolkit</PackageTags>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc" Version="3.0.4" />
+    <PackageReference Include="Atc" Version="3.0.16" />
   </ItemGroup>
 
 </Project>

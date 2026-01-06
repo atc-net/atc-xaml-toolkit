@@ -18,26 +18,34 @@ public interface IMainWindowViewModelBase : IViewModelBase
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The event data.</param>
-    void OnLoaded(object sender, RoutedEventArgs e);
+    void OnLoaded(
+        object sender,
+        RoutedEventArgs e);
 
     /// <summary>
     /// Called when the window is closing.
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The cancel event data.</param>
-    void OnClosing(object sender, CancelEventArgs e);
+    void OnClosing(
+        object sender,
+        CancelEventArgs e);
 
     /// <summary>
     /// Called when a key is pressed down.
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The key event data.</param>
-    void OnKeyDown(object sender, KeyRoutedEventArgs e);
+    void OnKeyDown(
+        object sender,
+        KeyRoutedEventArgs e);
 
     /// <summary>
     /// Called when a key is released.
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The key event data.</param>
-    void OnKeyUp(object sender, KeyRoutedEventArgs e);
+    void OnKeyUp(
+        object sender,
+        KeyRoutedEventArgs e);
 }

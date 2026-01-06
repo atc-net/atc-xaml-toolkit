@@ -97,7 +97,8 @@ public class RelayCommandAsync : RelayCommandAsyncBase
     }
 
     /// <inheritdoc />
-    protected override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    protected override void OnPropertyChanged(
+        [CallerMemberName] string? propertyName = null)
     {
         // Always marshal PropertyChanged to UI thread for WinUI x:Bind compatibility
         DispatcherQueue? queue = null;

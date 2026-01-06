@@ -59,8 +59,7 @@ public static class StringExtensions
         "ImageLocation",
     };
 
-    public static string EnsureNameofContent(
-        this string value)
+    public static string EnsureNameofContent(this string value)
     {
         if (value is null)
         {
@@ -83,8 +82,7 @@ public static class StringExtensions
         return value;
     }
 
-    public static string EnsureTypeofContent(
-        this string value)
+    public static string EnsureTypeofContent(this string value)
     {
         if (value is null)
         {
@@ -107,8 +105,7 @@ public static class StringExtensions
         return value;
     }
 
-    public static string EnsureFirstCharacterToUpper(
-        this string value)
+    public static string EnsureFirstCharacterToUpper(this string value)
     {
         if (value is null)
         {
@@ -123,8 +120,7 @@ public static class StringExtensions
         };
     }
 
-    public static string EnsureFirstCharacterToLower(
-        this string value)
+    public static string EnsureFirstCharacterToLower(this string value)
     {
         if (value is null)
         {
@@ -139,8 +135,7 @@ public static class StringExtensions
         };
     }
 
-    public static string EnsureCSharpAliasIfNeeded(
-        this string typeName)
+    public static string EnsureCSharpAliasIfNeeded(this string typeName)
     {
         if (string.IsNullOrWhiteSpace(typeName))
         {
@@ -163,8 +158,7 @@ public static class StringExtensions
             : simplified;
     }
 
-    public static string ExtractInnerContent(
-        this string value)
+    public static string ExtractInnerContent(this string value)
     {
         if (value is null)
         {
@@ -208,8 +202,7 @@ public static class StringExtensions
         return result;
     }
 
-    public static string RemoveTaskDotRun(
-        this string value)
+    public static string RemoveTaskDotRun(this string value)
     {
         if (string.IsNullOrEmpty(value) ||
             !value.StartsWith("Task.Run(", StringComparison.Ordinal))
@@ -222,8 +215,7 @@ public static class StringExtensions
         return value;
     }
 
-    public static string RemoveNullableSuffix(
-        this string value)
+    public static string RemoveNullableSuffix(this string value)
     {
         if (string.IsNullOrEmpty(value) ||
             !value.EndsWith("?", StringComparison.Ordinal))
@@ -234,8 +226,7 @@ public static class StringExtensions
         return value.Substring(0, value.Length - 1);
     }
 
-    public static string RemovePrefixFromField(
-        this string fieldName)
+    public static string RemovePrefixFromField(this string fieldName)
     {
         if (fieldName is null)
         {
@@ -254,8 +245,7 @@ public static class StringExtensions
         return fieldName;
     }
 
-    public static bool IsKnownValueType(
-        this string value)
+    public static bool IsKnownValueType(this string value)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -272,8 +262,7 @@ public static class StringExtensions
         return KnownValueTypes.Contains(value.RemoveNullableSuffix());
     }
 
-    public static string TrimNullableForTypeOf(
-        this string typeName)
+    public static string TrimNullableForTypeOf(this string typeName)
     {
         if (string.IsNullOrEmpty(typeName) ||
             !typeName.EndsWith("?", StringComparison.Ordinal))
@@ -289,8 +278,7 @@ public static class StringExtensions
             : core;
     }
 
-    private static string RemoveOuterBrackets(
-        string value)
+    private static string RemoveOuterBrackets(string value)
     {
         if (value.StartsWith("[", StringComparison.Ordinal) &&
             value.EndsWith("]", StringComparison.Ordinal))
@@ -301,8 +289,7 @@ public static class StringExtensions
         return value;
     }
 
-    private static string EnsureCSharpAliasIfNeededParse(
-        string typeName)
+    private static string EnsureCSharpAliasIfNeededParse(string typeName)
     {
         // Nullable<T>
         if (typeName.StartsWith("System.Nullable<", StringComparison.Ordinal) ||
@@ -330,8 +317,7 @@ public static class StringExtensions
         return EnsureCSharpAliasIfNeededSimplifyToken(typeName);
     }
 
-    private static string EnsureCSharpAliasIfNeededSimplifyToken(
-        string token)
+    private static string EnsureCSharpAliasIfNeededSimplifyToken(string token)
     {
         var lastDot = token.LastIndexOf('.');
 
@@ -344,8 +330,7 @@ public static class StringExtensions
             : core;
     }
 
-    private static string ExtractParameterString(
-        string value)
+    private static string ExtractParameterString(string value)
     {
         var startIndex = value.IndexOf('(');
         if (startIndex < 0)
@@ -390,8 +375,13 @@ public static class StringExtensions
             var eqIndex = trimmedArg.IndexOf('=');
             if (eqIndex > 0)
             {
-                var key = trimmedArg.Substring(0, eqIndex).Trim();
-                var value = trimmedArg.Substring(eqIndex + 1).Trim();
+                var key = trimmedArg
+                    .Substring(0, eqIndex)
+                    .Trim();
+
+                var value = trimmedArg
+                    .Substring(eqIndex + 1)
+                    .Trim();
 
                 value = StripQuotes(value);
 
@@ -425,8 +415,8 @@ public static class StringExtensions
         }
     }
 
-    private static List<string> SplitArguments(
-        string value)
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
+    private static List<string> SplitArguments(string value)
     {
         var args = new List<string>();
         var currentArg = new StringBuilder();
@@ -467,7 +457,10 @@ public static class StringExtensions
 
             if (c == ',' && bracketCount == 0 && !inQuotes)
             {
-                args.Add(currentArg.ToString().Trim());
+                args.Add(
+                    currentArg
+                        .ToString()
+                        .Trim());
                 currentArg.Clear();
             }
             else
@@ -478,14 +471,16 @@ public static class StringExtensions
 
         if (currentArg.Length > 0)
         {
-            args.Add(currentArg.ToString().Trim());
+            args.Add(
+                currentArg
+                    .ToString()
+                    .Trim());
         }
 
         return args;
     }
 
-    private static string StripQuotes(
-        string value)
+    private static string StripQuotes(string value)
     {
         if ((value.StartsWith("\"", StringComparison.Ordinal) && value.EndsWith("\"", StringComparison.Ordinal)) ||
             (value.StartsWith("'", StringComparison.Ordinal) && value.EndsWith("'", StringComparison.Ordinal)))
@@ -518,7 +513,9 @@ public static class StringExtensions
             {
                 try
                 {
-                    type = asm.GetTypes().FirstOrDefault(t => t.Name == value);
+                    type = asm
+                        .GetTypes()
+                        .FirstOrDefault(t => t.Name == value);
                     if (type is not null)
                     {
                         break;

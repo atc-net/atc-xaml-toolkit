@@ -13,7 +13,10 @@ public sealed class MainWindowViewModelBaseTests
     [InlineData(true, false, "IsDirty")]
     [InlineData(true, false, "IsSelected")]
     [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
-    public void RaisePropertyChanged(bool expected, bool expectedAsEmpty, string? propertyName)
+    public void RaisePropertyChanged(
+        bool expected,
+        bool expectedAsEmpty,
+        string? propertyName)
     {
         // Arrange
         var sut = new TestMainWindowViewModelBase();

@@ -153,7 +153,9 @@ public class KeyboardNavigationBehavior : Avalonia.Xaml.Interactivity.Behavior<C
         base.OnDetaching();
     }
 
-    private void OnAttachedToVisualTree(object? sender, EventArgs e)
+    private void OnAttachedToVisualTree(
+        object? sender,
+        EventArgs e)
     {
         // Set focus to the element when it's loaded so keyboard events work immediately
         if (AssociatedObject is not null && AssociatedObject.Focusable)
@@ -162,13 +164,17 @@ public class KeyboardNavigationBehavior : Avalonia.Xaml.Interactivity.Behavior<C
         }
     }
 
-    private void OnGotFocus(object? sender, GotFocusEventArgs e)
+    private void OnGotFocus(
+        object? sender,
+        GotFocusEventArgs e)
     {
         // Ensure keyboard focus is set when the element gets focus
         AssociatedObject?.Focus();
     }
 
-    private void OnKeyDown(object? sender, KeyEventArgs e)
+    private void OnKeyDown(
+        object? sender,
+        KeyEventArgs e)
     {
         if (!IsNavigationEnabled)
         {

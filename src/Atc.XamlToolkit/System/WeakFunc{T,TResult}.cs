@@ -18,7 +18,9 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     /// <param name="keepTargetAlive">If true, the target of the Action will
     /// be kept as a hard reference, which might cause a memory leak. You should only set this
     /// parameter to true if the action is using closures.</param>
-    public WeakFunc(Func<T, TResult>? func, bool keepTargetAlive = false)
+    public WeakFunc(
+        Func<T, TResult>? func,
+        bool keepTargetAlive = false)
         : this(func?.Target, func, keepTargetAlive)
     {
     }
@@ -32,7 +34,10 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     /// be kept as a hard reference, which might cause a memory leak. You should only set this
     /// parameter to true if the action is using closures.</param>
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1", Justification = "Method should fail with an exception if func is null.")]
-    public WeakFunc(object? target, Func<T, TResult>? func, bool keepTargetAlive = false)
+    public WeakFunc(
+        object? target,
+        Func<T, TResult>? func,
+        bool keepTargetAlive = false)
     {
         if (func!.Method.IsStatic)
         {

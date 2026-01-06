@@ -5,7 +5,10 @@ namespace Atc.XamlToolkit.WpfSample.Models;
 /// </summary>
 public class SampleViewItem
 {
-    public SampleViewItem(string name, string? relativePath = null, Type? viewType = null)
+    public SampleViewItem(
+        string name,
+        string? relativePath = null,
+        Type? viewType = null)
     {
         Name = name;
         RelativePath = relativePath;

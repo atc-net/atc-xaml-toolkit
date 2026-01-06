@@ -163,7 +163,9 @@ public class KeyboardNavigationBehavior : Microsoft.Xaml.Behaviors.Behavior<Fram
         }
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(
+        object sender,
+        RoutedEventArgs e)
     {
         // Set focus to the element when it's loaded so keyboard events work immediately
         if (AssociatedObject is not null && AssociatedObject.Focusable)
@@ -172,7 +174,9 @@ public class KeyboardNavigationBehavior : Microsoft.Xaml.Behaviors.Behavior<Fram
         }
     }
 
-    private void OnGotFocus(object sender, RoutedEventArgs e)
+    private void OnGotFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         // Ensure keyboard focus is set when the element gets focus
         if (AssociatedObject is not null)
@@ -194,7 +198,9 @@ public class KeyboardNavigationBehavior : Microsoft.Xaml.Behaviors.Behavior<Fram
         base.OnDetaching();
     }
 
-    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    private void OnPreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
     {
         if (!IsEnabled)
         {

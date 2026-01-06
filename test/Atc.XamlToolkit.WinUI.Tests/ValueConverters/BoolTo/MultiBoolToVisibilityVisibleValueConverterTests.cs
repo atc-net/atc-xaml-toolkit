@@ -13,7 +13,9 @@ public sealed class MultiBoolToVisibilityVisibleValueConverterTests
     [Theory]
     [InlineData(Visibility.Visible, nameof(AllTrue))]
     [InlineData(Visibility.Collapsed, nameof(OneFalse))]
-    public void Convert_AND_DefaultOperator(Visibility expected, string inputSetName)
+    public void Convert_AND_DefaultOperator(
+        Visibility expected,
+        string inputSetName)
     {
         // Arrange
         var input = GetInput(inputSetName);
@@ -30,7 +32,9 @@ public sealed class MultiBoolToVisibilityVisibleValueConverterTests
     [InlineData(Visibility.Visible, nameof(OneFalse))]
     [InlineData(Visibility.Collapsed, nameof(AllFalse))]
     [InlineData(Visibility.Collapsed, nameof(Empty))]
-    public void Convert_OR_WithEnumParameter(Visibility expected, string inputSetName)
+    public void Convert_OR_WithEnumParameter(
+        Visibility expected,
+        string inputSetName)
     {
         // Arrange
         var input = GetInput(inputSetName);

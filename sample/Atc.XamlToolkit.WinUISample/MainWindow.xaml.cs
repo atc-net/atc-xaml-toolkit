@@ -3,7 +3,8 @@ namespace Atc.XamlToolkit.WinUISample;
 
 public sealed partial class MainWindow : Window
 {
-    private MainWindowViewModel GetViewModel() => (MainWindowViewModel)((FrameworkElement)Content).DataContext!;
+    private MainWindowViewModel GetViewModel()
+        => (MainWindowViewModel)((FrameworkElement)Content).DataContext!;
 
     public MainWindowViewModel ViewModel { get; }
 
@@ -26,8 +27,7 @@ public sealed partial class MainWindow : Window
         PopulateTreeView();
     }
 
-    public MainWindow(
-        MainWindowViewModel viewModel)
+    public MainWindow(MainWindowViewModel viewModel)
         : this()
     {
         ViewModel = viewModel;
@@ -109,8 +109,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static TreeViewNode CreateTreeViewNode(
-        SampleViewItem item)
+    private static TreeViewNode CreateTreeViewNode(SampleViewItem item)
     {
         var node = new TreeViewNode
         {
@@ -126,8 +125,7 @@ public sealed partial class MainWindow : Window
         return node;
     }
 
-    private SampleViewItem? FindSampleViewItemByNode(
-        TreeViewNode node)
+    private SampleViewItem? FindSampleViewItemByNode(TreeViewNode node)
     {
         // Build path from root to this node
         var path = new List<string>();

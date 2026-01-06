@@ -46,17 +46,22 @@ public sealed partial class AsyncCommandCancellationViewModel : ViewModelBase
 
     // Cancel commands for XAML binding
     [RelayCommand(CanExecute = nameof(CanCancelTask))]
-    private void CancelTask() => CancelStartLongRunningTaskAsync();
+    private void CancelTask()
+        => CancelStartLongRunningTaskAsync();
 
     [RelayCommand(CanExecute = nameof(CanCancelDownload))]
-    private void CancelDownload() => CancelStartDownloadAsync();
+    private void CancelDownload()
+        => CancelStartDownloadAsync();
 
-    private bool CanCancelTask() => StartLongRunningTaskAsyncCommand.IsExecuting;
+    private bool CanCancelTask()
+        => StartLongRunningTaskAsyncCommand.IsExecuting;
 
-    private bool CanCancelDownload() => StartDownloadAsyncCommand.IsExecuting;
+    private bool CanCancelDownload()
+        => StartDownloadAsyncCommand.IsExecuting;
 
     [RelayCommand(SupportsCancellation = true)]
-    private async Task StartLongRunningTaskAsync(CancellationToken cancellationToken)
+    private async Task StartLongRunningTaskAsync(
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -93,7 +98,9 @@ public sealed partial class AsyncCommandCancellationViewModel : ViewModelBase
     }
 
     [RelayCommand(SupportsCancellation = true)]
-    private async Task SearchAsync(string query, CancellationToken cancellationToken)
+    private async Task SearchAsync(
+        string query,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(query))
         {

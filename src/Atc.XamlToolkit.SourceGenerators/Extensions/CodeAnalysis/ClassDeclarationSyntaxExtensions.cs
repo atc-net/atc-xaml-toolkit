@@ -6,7 +6,9 @@ internal static class ClassDeclarationSyntaxExtensions
         this ClassDeclarationSyntax classDeclaration)
     {
         // Check for file-scoped namespace declaration (C# 10+)
-        var fileScopedNamespace = classDeclaration.SyntaxTree.GetRoot()
+        var fileScopedNamespace = classDeclaration
+            .SyntaxTree
+            .GetRoot()
             .DescendantNodes()
             .OfType<FileScopedNamespaceDeclarationSyntax>()
             .FirstOrDefault();
@@ -17,7 +19,8 @@ internal static class ClassDeclarationSyntaxExtensions
         }
 
         // Check for traditional namespace declaration
-        var namespaceDeclaration = classDeclaration.Ancestors()
+        var namespaceDeclaration = classDeclaration
+            .Ancestors()
             .OfType<NamespaceDeclarationSyntax>()
             .FirstOrDefault();
 

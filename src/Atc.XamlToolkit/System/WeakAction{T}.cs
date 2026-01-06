@@ -16,7 +16,9 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
     /// <param name="action">The action that will be associated to this instance.</param>
     /// <param name="keepTargetAlive">If true, the target of the Action will
     /// be kept as a hard reference, which might cause a memory leak.</param>
-    public WeakAction(Action<T>? action, bool keepTargetAlive = false)
+    public WeakAction(
+        Action<T>? action,
+        bool keepTargetAlive = false)
         : this(action?.Target, action, keepTargetAlive)
     {
     }
@@ -28,7 +30,10 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
     /// <param name="action">The action that will be associated to this instance.</param>
     /// <param name="keepTargetAlive">If true, the target of the Action will
     /// be kept as a hard reference, which might cause a memory leak.</param>
-    public WeakAction(object? target, Action<T>? action, bool keepTargetAlive = false)
+    public WeakAction(
+        object? target,
+        Action<T>? action,
+        bool keepTargetAlive = false)
     {
         ArgumentNullException.ThrowIfNull(action);
 

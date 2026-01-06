@@ -101,7 +101,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
         DetachHandler();
     }
 
-    private static void OnEventNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnEventNameChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is not EventToCommandBehavior behavior || behavior.AssociatedObject is null)
         {
@@ -122,7 +124,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
             return;
         }
 
-        eventInfo = AssociatedObject.GetType().GetEvent(EventName);
+        eventInfo = AssociatedObject
+            .GetType()
+            .GetEvent(EventName);
         if (eventInfo is null)
         {
             throw new InvalidOperationException($"Event '{EventName}' not found on type '{AssociatedObject.GetType().Name}'");
@@ -145,7 +149,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
         eventInfo = null;
     }
 
-    private void OnEventRaised(object? sender, EventArgs e)
+    private void OnEventRaised(
+        object? sender,
+        EventArgs e)
     {
         if (Command?.CanExecute(GetCommandParameter(e)) == true)
         {

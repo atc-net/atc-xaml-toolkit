@@ -45,61 +45,75 @@ public sealed partial class TestRelayCommandViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void RelayCommandNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(AutoSetIsBusy = true)]
-    public void RelayCommandAutoSetIsBusyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandAutoSetIsBusyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty))]
-    public void RelayCommandCanExecutePropertyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandCanExecutePropertyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), AutoSetIsBusy = true)]
-    public void RelayCommandCanExecutePropertyAutoSetIsBusyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandCanExecutePropertyAutoSetIsBusyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethod))]
-    public void RelayCommandCanExecuteMethodNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandCanExecuteMethodNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethod), AutoSetIsBusy = true)]
-    public void RelayCommandCanExecuteMethodAutoSetIsBusyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandCanExecuteMethodAutoSetIsBusyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty))]
-    public void RelayCommandCanExecutePropertyParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandCanExecutePropertyParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), AutoSetIsBusy = true)]
-    public void RelayCommandCanExecutePropertyAutoSetIsBusyParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandCanExecutePropertyAutoSetIsBusyParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethodParameterString))]
-    public void RelayCommandCanExecuteMethodParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandCanExecuteMethodParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethodParameterString), AutoSetIsBusy = true)]
-    public void RelayCommandCanExecuteMethodAutoSetIsBusyParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandCanExecuteMethodAutoSetIsBusyParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
@@ -117,13 +131,15 @@ public sealed partial class TestRelayCommandViewModel : ViewModelBase
     }
 
     [RelayCommand(ExecuteOnBackgroundThread = true)]
-    public void RelayCommandExecuteOnBackgroundThreadNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
-    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
@@ -153,49 +169,61 @@ public sealed partial class TestRelayCommandViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), ExecuteOnBackgroundThread = true)]
-    public void RelayCommandExecuteOnBackgroundThreadCanExecutePropertyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadCanExecutePropertyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
-    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecutePropertyNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecutePropertyNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethod), ExecuteOnBackgroundThread = true)]
-    public void RelayCommandExecuteOnBackgroundThreadCanExecuteMethodNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadCanExecuteMethodNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethod), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
-    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecuteMethodNoParameterCancellationToken(CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecuteMethodNoParameterCancellationToken(
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), ExecuteOnBackgroundThread = true)]
-    public void RelayCommandExecuteOnBackgroundThreadCanExecutePropertyParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadCanExecutePropertyParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteProperty), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
-    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecutePropertyParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecutePropertyParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethodParameterString), ExecuteOnBackgroundThread = true)]
-    public void RelayCommandExecuteOnBackgroundThreadCanExecuteMethodParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadCanExecuteMethodParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteMethodParameterString), ExecuteOnBackgroundThread = true, AutoSetIsBusy = true)]
-    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecuteMethodParameterStringCancellationToken(string val, CancellationToken cancellationToken)
+    public void RelayCommandExecuteOnBackgroundThreadAutoSetIsBusyCanExecuteMethodParameterStringCancellationToken(
+        string val,
+        CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }

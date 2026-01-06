@@ -12,7 +12,10 @@ public sealed class RelayCommandAsyncTests
     [InlineData(1, false, 1)]
     [InlineData(2, false, 2)]
     [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
-    public void RaiseCanExecuteChanged(int expected, bool canExecute, int registerOnChangeCount)
+    public void RaiseCanExecuteChanged(
+        int expected,
+        bool canExecute,
+        int registerOnChangeCount)
     {
         // Arrange
         var canExecuteChangedCalled = 0;
@@ -40,7 +43,10 @@ public sealed class RelayCommandAsyncTests
     [InlineData(false, false, null)]
     [InlineData(true, true, 42)]
     [InlineData(false, false, 42)]
-    public void CanExecute(bool expected, bool canExecute, object? parameter)
+    public void CanExecute(
+        bool expected,
+        bool canExecute,
+        object? parameter)
     {
         // Arrange
         using var command = new RelayCommandAsync(MyTask, () => canExecute);
@@ -57,7 +63,10 @@ public sealed class RelayCommandAsyncTests
     [InlineData("Not executed", false, null)]
     [InlineData("Executed", true, 42)]
     [InlineData("Not executed", false, 42)]
-    public async Task Execute(string expected, bool canExecute, object? parameter)
+    public async Task Execute(
+        string expected,
+        bool canExecute,
+        object? parameter)
     {
         // Arrange
         var actual = "Not executed";
@@ -72,14 +81,14 @@ public sealed class RelayCommandAsyncTests
     }
 
     private static Task MyTask()
-    {
-        return Task.Delay(1);
-    }
+        => Task.Delay(1);
 
     [SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "OK.")]
     [SuppressMessage("Major Code Smell", "S1172:Unused method parameters should be removed", Justification = "OK.")]
     [SuppressMessage("Major Code Smell", "S1854:Unused assignments should be removed", Justification = "OK.")]
-    private static Task MyTask(ref string actual, ref string expected)
+    private static Task MyTask(
+        ref string actual,
+        ref string expected)
     {
         actual = expected;
         return Task.Delay(1);

@@ -110,7 +110,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         base.OnDetaching();
     }
 
-    private void OnBehaviorPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void OnBehaviorPropertyChanged(
+        object? sender,
+        AvaloniaPropertyChangedEventArgs e)
     {
         if (e.Property == IsFocusedProperty)
         {
@@ -135,7 +137,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         }
     }
 
-    private void OnAttachedToVisualTree(object? sender, EventArgs e)
+    private void OnAttachedToVisualTree(
+        object? sender,
+        EventArgs e)
     {
         if (HasInitialFocus)
         {
@@ -143,7 +147,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         }
     }
 
-    private void OnGotFocus(object? sender, GotFocusEventArgs e)
+    private void OnGotFocus(
+        object? sender,
+        GotFocusEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = true;
@@ -158,7 +164,9 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         }
     }
 
-    private void OnLostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnLostFocus(
+        object? sender,
+        Avalonia.Interactivity.RoutedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = false;

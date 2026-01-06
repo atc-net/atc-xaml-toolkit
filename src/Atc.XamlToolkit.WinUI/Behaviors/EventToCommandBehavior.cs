@@ -100,7 +100,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
         DetachHandler();
     }
 
-    private static void OnEventNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnEventNameChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is not EventToCommandBehavior behavior || behavior.AssociatedObject is null)
         {
@@ -120,7 +122,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
             return;
         }
 
-        eventInfo = AssociatedObject.GetType().GetEvent(EventName);
+        eventInfo = AssociatedObject
+            .GetType()
+            .GetEvent(EventName);
         if (eventInfo is null)
         {
             throw new InvalidOperationException($"Event '{EventName}' not found on type '{AssociatedObject.GetType().Name}'");
@@ -139,7 +143,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
         var parameters = invokeMethod.GetParameters();
 
         // Create parameters for the lambda expression
-        var parameterExpressions = parameters.Select(p => System.Linq.Expressions.Expression.Parameter(p.ParameterType, p.Name)).ToArray();
+        var parameterExpressions = parameters
+            .Select(p => System.Linq.Expressions.Expression.Parameter(p.ParameterType, p.Name))
+            .ToArray();
 
         // Get the method to call
         var targetMethod = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;

@@ -13,7 +13,9 @@ public sealed class NullToVisibilityVisibleValueConverterTests
     [InlineData(false, 42)]
     [InlineData(false, false)]
     [InlineData(false, true)]
-    public void Convert(bool expected, object? input)
+    public void Convert(
+        bool expected,
+        object? input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null!, parameter: null, culture: null!));

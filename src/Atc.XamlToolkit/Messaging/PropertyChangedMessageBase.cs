@@ -14,7 +14,9 @@ public abstract class PropertyChangedMessageBase : MessageBase
     /// </summary>
     /// <param name="sender">The message's sender.</param>
     /// <param name="propertyName">The name of the property that changed.</param>
-    protected PropertyChangedMessageBase(object sender, string propertyName)
+    protected PropertyChangedMessageBase(
+        object sender,
+        string propertyName)
         : base(sender)
     {
         PropertyName = propertyName;
@@ -28,7 +30,10 @@ public abstract class PropertyChangedMessageBase : MessageBase
     /// to give an indication as to whom the message was intended for. Of course
     /// this is only an indication, amd may be null.</param>
     /// <param name="propertyName">The name of the property that changed.</param>
-    protected PropertyChangedMessageBase(object sender, object target, string propertyName)
+    protected PropertyChangedMessageBase(
+        object sender,
+        object target,
+        string propertyName)
         : base(sender, target)
     {
         PropertyName = propertyName;

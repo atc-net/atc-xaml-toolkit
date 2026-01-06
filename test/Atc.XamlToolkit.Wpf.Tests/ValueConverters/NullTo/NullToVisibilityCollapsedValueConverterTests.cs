@@ -13,7 +13,9 @@ public sealed class NullToVisibilityCollapsedValueConverterTests
     [InlineData(Visibility.Visible, 42)]
     [InlineData(Visibility.Visible, false)]
     [InlineData(Visibility.Visible, true)]
-    public void Convert(Visibility expected, object? input)
+    public void Convert(
+        Visibility expected,
+        object? input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null, parameter: null, culture: null));

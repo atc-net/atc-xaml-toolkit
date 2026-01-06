@@ -1,7 +1,5 @@
 namespace Atc.XamlToolkit.WinUI.Tests.Resolvers;
 
-using Atc.XamlToolkit.Resolvers;
-
 public sealed class BooleanOperatorTypeResolverTests
 {
     /// <summary>

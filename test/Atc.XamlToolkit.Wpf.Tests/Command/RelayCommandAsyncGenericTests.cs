@@ -2,6 +2,7 @@
 // ReSharper disable UnusedParameter.Local
 namespace Atc.XamlToolkit.Wpf.Tests.Command;
 
+[SuppressMessage("AsyncUsage", "AsyncFixer06:Task<T> to Task conversion silently discards result", Justification = "OK - Tests")]
 public sealed class RelayCommandAsyncGenericTests
 {
     [Theory]
@@ -12,7 +13,10 @@ public sealed class RelayCommandAsyncGenericTests
     [InlineData(1, false, 1)]
     [InlineData(2, false, 2)]
     [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
-    public void RaiseCanExecuteChanged(int expected, bool canExecute, int registerOnChangeCount)
+    public void RaiseCanExecuteChanged(
+        int expected,
+        bool canExecute,
+        int registerOnChangeCount)
     {
         // Arrange
         var canExecuteChangedCalled = 0;
@@ -38,7 +42,9 @@ public sealed class RelayCommandAsyncGenericTests
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, false)]
-    public void CanExecute(bool expected, bool canExecute)
+    public void CanExecute(
+        bool expected,
+        bool canExecute)
     {
         // Arrange
         using var command = new RelayCommandAsync<string>(_ => MyTask(), _ => canExecute);
@@ -55,7 +61,10 @@ public sealed class RelayCommandAsyncGenericTests
     [InlineData("Not executed", false, null)]
     [InlineData("Executed", true, 42)]
     [InlineData("Not executed", false, 42)]
-    public async Task Execute(string expected, bool canExecute, object? parameter)
+    public async Task Execute(
+        string expected,
+        bool canExecute,
+        object? parameter)
     {
         // Arrange
         var actual = "Not executed";
@@ -80,7 +89,9 @@ public sealed class RelayCommandAsyncGenericTests
     [SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "OK.")]
     [SuppressMessage("Major Code Smell", "S1172:Unused method parameters should be removed", Justification = "OK.")]
     [SuppressMessage("Major Code Smell", "S1854:Unused assignments should be removed", Justification = "OK.")]
-    private static async Task<string> MyTask(string expected, OpDelegate callback)
+    private static async Task<string> MyTask(
+        string expected,
+        OpDelegate callback)
     {
         await Task.Delay(1);
         callback(expected);
