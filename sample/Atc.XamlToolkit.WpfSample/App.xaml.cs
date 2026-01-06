@@ -8,7 +8,8 @@ public partial class App
 
     public App()
     {
-        host = Host.CreateDefaultBuilder()
+        host = Host
+            .CreateDefaultBuilder()
             .ConfigureLogging(logging =>
             {
                 logging
@@ -23,8 +24,7 @@ public partial class App
             .Build();
     }
 
-    protected override void OnStartup(
-        StartupEventArgs e)
+    protected override void OnStartup(StartupEventArgs e)
     {
         ArgumentNullException.ThrowIfNull(e);
 

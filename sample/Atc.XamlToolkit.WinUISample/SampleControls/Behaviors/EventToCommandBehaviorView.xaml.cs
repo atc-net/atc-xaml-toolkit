@@ -7,5 +7,6 @@ public sealed partial class EventToCommandBehaviorView
         InitializeComponent();
     }
 
-    public EventToCommandBehaviorViewModel ViewModel => (EventToCommandBehaviorViewModel)DataContext;
+    public EventToCommandBehaviorViewModel ViewModel
+        => (EventToCommandBehaviorViewModel)DataContext;
 }

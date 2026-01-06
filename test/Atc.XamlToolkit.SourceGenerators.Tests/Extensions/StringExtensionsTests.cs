@@ -7,7 +7,9 @@ public sealed class StringExtensionsTests
     [InlineData("string?", "string")]
     [InlineData("IList<string>", "IList<string>")]
     [InlineData("IList<string>?", "IList<string>")]
-    public void RemoveNullableSuffix(string input, string expected)
+    public void RemoveNullableSuffix(
+        string input,
+        string expected)
     {
         var result = input.RemoveNullableSuffix();
         Assert.Equal(expected, result);
@@ -19,7 +21,9 @@ public sealed class StringExtensionsTests
     [InlineData("fieldName", "fieldName")]
     [InlineData("m_", "")]
     [InlineData("_", "")]
-    public void StripPrefixFromField_WorksCorrectly(string input, string expected)
+    public void StripPrefixFromField_WorksCorrectly(
+        string input,
+        string expected)
     {
         var result = input.RemovePrefixFromField();
         Assert.Equal(expected, result);

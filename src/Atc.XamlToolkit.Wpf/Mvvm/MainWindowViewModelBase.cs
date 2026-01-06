@@ -27,7 +27,8 @@ public class MainWindowViewModelBase : ViewModelBase, IMainWindowViewModelBase
     }
 
     /// <inheritdoc />
-    public ICommand ApplicationExitCommand => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
+    public ICommand ApplicationExitCommand
+        => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
 
     /// <inheritdoc />
     public void OnLoaded(

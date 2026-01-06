@@ -10,7 +10,9 @@ public sealed class StringToNullableIntValueConverterTests
     [InlineData("123", 123)]
     [InlineData("-456", -456)]
     [InlineData("0", 0)]
-    public void Convert(string expected, int? input)
+    public void Convert(
+        string expected,
+        int? input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null, parameter: null, culture: null));
@@ -21,7 +23,9 @@ public sealed class StringToNullableIntValueConverterTests
     [InlineData(123, "123")]
     [InlineData(-456, "-456")]
     [InlineData(0, "0")]
-    public void ConvertBack(int? expected, string? input)
+    public void ConvertBack(
+        int? expected,
+        string? input)
         => Assert.Equal(
             expected,
             converter.ConvertBack(input, targetType: null, parameter: null, culture: null));

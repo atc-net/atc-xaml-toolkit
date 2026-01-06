@@ -95,7 +95,10 @@ internal static class FrameworkElementInspectorHelper
 
         propertyName = propertyName.EnsureFirstCharacterToUpper();
 
-        var type = fieldSymbol.Type.ToDisplayString().EnsureCSharpAliasIfNeeded();
+        var type = fieldSymbol
+            .Type
+            .ToDisplayString()
+            .EnsureCSharpAliasIfNeeded();
 
         var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
 

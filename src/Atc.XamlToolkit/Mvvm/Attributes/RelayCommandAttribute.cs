@@ -19,8 +19,7 @@ public sealed class RelayCommandAttribute : Attribute
     /// Initializes a new instance of the <see cref="RelayCommandAttribute"/> class.
     /// </summary>
     /// <param name="commandName">The name of the relay command to generate</param>
-    public RelayCommandAttribute(
-        string commandName)
+    public RelayCommandAttribute(string commandName)
     {
         CommandName = commandName;
     }

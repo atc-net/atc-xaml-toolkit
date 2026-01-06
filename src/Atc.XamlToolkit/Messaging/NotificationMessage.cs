@@ -25,7 +25,9 @@ public class NotificationMessage : MessageBase
     /// <param name="sender">The message's sender.</param>
     /// <param name="notification">A string containing any arbitrary message to be
     /// passed to recipient(s)</param>
-    public NotificationMessage(object sender, string notification)
+    public NotificationMessage(
+        object sender,
+        string notification)
         : base(sender)
     {
         Notification = notification;
@@ -40,7 +42,10 @@ public class NotificationMessage : MessageBase
     /// this is only an indication, amd may be null.</param>
     /// <param name="notification">A string containing any arbitrary message to be
     /// passed to recipient(s)</param>
-    public NotificationMessage(object sender, object target, string notification)
+    public NotificationMessage(
+        object sender,
+        object target,
+        string notification)
         : base(sender, target)
     {
         Notification = notification;

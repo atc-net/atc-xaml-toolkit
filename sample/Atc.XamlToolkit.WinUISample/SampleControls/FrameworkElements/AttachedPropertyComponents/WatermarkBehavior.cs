@@ -82,8 +82,7 @@ public static partial class WatermarkBehavior
         }
     }
 
-    private static void UpdateWatermark(
-        TextBox textBox)
+    private static void UpdateWatermark(TextBox textBox)
     {
         var watermark = GetWatermark(textBox);
 

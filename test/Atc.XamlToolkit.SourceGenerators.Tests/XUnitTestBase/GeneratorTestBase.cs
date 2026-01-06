@@ -11,7 +11,9 @@ public abstract class GeneratorTestBase
     {
         System.Reflection.Assembly.Load("Atc.XamlToolkit.SourceGenerators");
 
-        metadataReferences = AppDomain.CurrentDomain.GetAssemblies()
+        metadataReferences = AppDomain
+            .CurrentDomain
+            .GetAssemblies()
             .Where(a => !a.IsDynamic)
             .Select(a => MetadataReference.CreateFromFile(a.Location))
             .ToArray<MetadataReference>();
@@ -109,8 +111,7 @@ public abstract class GeneratorTestBase
         TestResultHelper.AssertOnTestResults(testResults);
     }
 
-    private static Compilation CreateCompilation(
-        params string[] sources)
+    private static Compilation CreateCompilation(params string[] sources)
     {
         var syntaxTrees = sources
             .Select(source => CSharpSyntaxTree.ParseText(source))

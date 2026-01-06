@@ -26,8 +26,13 @@ internal sealed class ViewModelToGenerate(
                 return false;
             }
 
-            var names = RelayCommandsToGenerate.Select(x => x.CommandName).ToArray();
-            return names.Length != names.Distinct(StringComparer.Ordinal).Count();
+            var names = RelayCommandsToGenerate
+                .Select(x => x.CommandName)
+                .ToArray();
+
+            return names.Length != names
+                .Distinct(StringComparer.Ordinal)
+                .Count();
         }
     }
 

@@ -40,8 +40,7 @@ internal abstract class BuilderBase
         isFirstMember = false;
     }
 
-    public void AppendLine(
-        string line)
+    public void AppendLine(string line)
     {
         if (wasLastCallAppendLine)
         {
@@ -58,8 +57,7 @@ internal abstract class BuilderBase
         wasLastCallAppendLine = true;
     }
 
-    public void Append(
-        string stringToAppend)
+    public void Append(string stringToAppend)
     {
         if (wasLastCallAppendLine)
         {

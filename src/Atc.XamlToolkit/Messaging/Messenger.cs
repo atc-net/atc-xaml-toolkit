@@ -54,19 +54,31 @@ public class Messenger : IMessenger
     }
 
     /// <inheritdoc />
-    public virtual void Register<TMessage>(object recipient, Action<TMessage> action, bool keepTargetAlive = false)
+    public virtual void Register<TMessage>(
+        object recipient,
+        Action<TMessage> action,
+        bool keepTargetAlive = false)
     {
         Register(recipient, token: null, receiveDerivedMessagesToo: false, action, keepTargetAlive);
     }
 
     /// <inheritdoc />
-    public virtual void Register<TMessage>(object recipient, object? token, Action<TMessage> action, bool keepTargetAlive = false)
+    public virtual void Register<TMessage>(
+        object recipient,
+        object? token,
+        Action<TMessage> action,
+        bool keepTargetAlive = false)
     {
         Register(recipient, token, receiveDerivedMessagesToo: false, action, keepTargetAlive);
     }
 
     /// <inheritdoc />
-    public virtual void Register<TMessage>(object recipient, object? token, bool receiveDerivedMessagesToo, Action<TMessage> action, bool keepTargetAlive = false)
+    public virtual void Register<TMessage>(
+        object recipient,
+        object? token,
+        bool receiveDerivedMessagesToo,
+        Action<TMessage> action,
+        bool keepTargetAlive = false)
     {
         lock (registerLock)
         {
@@ -106,7 +118,11 @@ public class Messenger : IMessenger
     }
 
     /// <inheritdoc />
-    public virtual void Register<TMessage>(object recipient, bool receiveDerivedMessagesToo, Action<TMessage> action, bool keepTargetAlive = false)
+    public virtual void Register<TMessage>(
+        object recipient,
+        bool receiveDerivedMessagesToo,
+        Action<TMessage> action,
+        bool keepTargetAlive = false)
     {
         Register(recipient, token: null, receiveDerivedMessagesToo, action, keepTargetAlive);
     }
@@ -124,7 +140,9 @@ public class Messenger : IMessenger
     }
 
     /// <inheritdoc />
-    public virtual void Send<TMessage>(TMessage message, object token)
+    public virtual void Send<TMessage>(
+        TMessage message,
+        object token)
     {
         SendToTargetOrType(message, messageTargetType: null, token);
     }
@@ -143,19 +161,26 @@ public class Messenger : IMessenger
     }
 
     /// <inheritdoc />
-    public virtual void UnRegister<TMessage>(object recipient, object token)
+    public virtual void UnRegister<TMessage>(
+        object recipient,
+        object token)
     {
         UnRegister<TMessage>(recipient, token, action: null);
     }
 
     /// <inheritdoc />
-    public virtual void UnRegister<TMessage>(object recipient, Action<TMessage> action)
+    public virtual void UnRegister<TMessage>(
+        object recipient,
+        Action<TMessage> action)
     {
         UnRegister(recipient, token: null, action);
     }
 
     /// <inheritdoc />
-    public virtual void UnRegister<TMessage>(object recipient, object? token, Action<TMessage>? action)
+    public virtual void UnRegister<TMessage>(
+        object recipient,
+        object? token,
+        Action<TMessage>? action)
     {
         UnRegisterFromLists(recipient, token, action, recipientsStrictAction);
         UnRegisterFromLists(recipient, token, action, recipientsOfSubclassesAction);
@@ -224,7 +249,8 @@ public class Messenger : IMessenger
         isCleanupRegistered = false;
     }
 
-    private static void CleanupList(IDictionary<Type, List<WeakActionAndToken>>? lists)
+    private static void CleanupList(
+        IDictionary<Type, List<WeakActionAndToken>>? lists)
     {
         if (lists is null)
         {
@@ -272,7 +298,9 @@ public class Messenger : IMessenger
         // Clone to protect from people registering in a "receive message" method
         // Correction Messaging BL0004.007
         var list = weakActionsAndTokens.ToList();
-        var listClone = list.Take(list.Count).ToList();
+        var listClone = list
+            .Take(list.Count)
+            .ToList();
 
         foreach (var item in listClone)
         {
@@ -291,7 +319,9 @@ public class Messenger : IMessenger
     }
 
     [SuppressMessage("Major Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions", Justification = "OK.")]
-    private static void UnRegisterFromLists(object? recipient, Dictionary<Type, List<WeakActionAndToken>>? lists)
+    private static void UnRegisterFromLists(
+        object? recipient,
+        Dictionary<Type, List<WeakActionAndToken>>? lists)
     {
         if (recipient is null
             || lists is null
@@ -353,12 +383,18 @@ public class Messenger : IMessenger
         }
     }
 
-    private void SendToTargetOrType<TMessage>(TMessage message, Type? messageTargetType, object? token)
+    private void SendToTargetOrType<TMessage>(
+        TMessage message,
+        Type? messageTargetType,
+        object? token)
     {
         var messageType = typeof(TMessage);
 
         List<WeakActionAndToken>? list = null;
-        var listClone = recipientsOfSubclassesAction.Keys.Take(recipientsOfSubclassesAction.Count).ToList();
+        var listClone = recipientsOfSubclassesAction
+            .Keys
+            .Take(recipientsOfSubclassesAction.Count)
+            .ToList();
         foreach (var type in listClone)
         {
             if (messageType == type
@@ -367,7 +403,9 @@ public class Messenger : IMessenger
             {
                 lock (recipientsOfSubclassesAction)
                 {
-                    list = recipientsOfSubclassesAction[type].Take(recipientsOfSubclassesAction[type].Count).ToList();
+                    list = recipientsOfSubclassesAction[type]
+                        .Take(recipientsOfSubclassesAction[type].Count)
+                        .ToList();
                 }
             }
 

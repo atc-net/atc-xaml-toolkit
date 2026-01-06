@@ -65,7 +65,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             // Also generate backing field for cancel command if supports cancellation
             if (cmd.SupportsCancellation && cmd.UseTask)
             {
-                var cancelFieldName = cmd.GetCommandAsFieldName().Replace("Command", "CancelCommand");
+                var cancelFieldName = cmd
+                    .GetCommandAsFieldName()
+                    .Replace("Command", "CancelCommand");
                 builder.AppendLine($"private IRelayCommand? {cancelFieldName};");
             }
         }
@@ -529,13 +531,10 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
     }
 
-    private static string BuildExecuteExpression(
-        RelayCommandToGenerate cmd)
-    {
-        return cmd.AutoSetIsBusy
+    private static string BuildExecuteExpression(RelayCommandToGenerate cmd)
+        => cmd.AutoSetIsBusy
             ? BuildExecuteExpressionForAutoSetIsBusy(cmd)
             : BuildExecuteExpressionForNoAutoSetIsBusy(cmd);
-    }
 
     private static string BuildExecuteExpressionForNoAutoSetIsBusy(
         RelayCommandToGenerate cmd)
@@ -731,8 +730,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 : $"{cmd.MethodName}()";
     }
 
-    private static string? BuildCanExecuteExpression(
-        RelayCommandToGenerate cmd)
+    private static string? BuildCanExecuteExpression(RelayCommandToGenerate cmd)
     {
         if (string.IsNullOrWhiteSpace(cmd.CanExecuteName))
         {

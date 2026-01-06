@@ -24,7 +24,9 @@ public class MessageBase
     /// <param name="target">The message's intended target. This parameter can be used
     /// to give an indication as to whom the message was intended for. Of course
     /// this is only an indication, amd may be null.</param>
-    public MessageBase(object sender, object target)
+    public MessageBase(
+        object sender,
+        object target)
         : this(sender)
     {
         Target = target;

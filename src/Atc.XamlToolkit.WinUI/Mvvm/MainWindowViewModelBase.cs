@@ -11,10 +11,13 @@ namespace Atc.XamlToolkit.Mvvm
         protected virtual int ApplicationExitCode => 0;
 
         /// <inheritdoc />
-        public ICommand ApplicationExitCommand => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
+        public ICommand ApplicationExitCommand
+            => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
 
         /// <inheritdoc />
-        public void OnLoaded(object sender, RoutedEventArgs e)
+        public void OnLoaded(
+            object sender,
+            RoutedEventArgs e)
         {
             if (sender is not Window window)
             {
@@ -51,7 +54,9 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public void OnKeyDown(object sender, KeyRoutedEventArgs e)
+        public void OnKeyDown(
+            object sender,
+            KeyRoutedEventArgs e)
         {
             ArgumentNullException.ThrowIfNull(e);
 
@@ -84,7 +89,9 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public void OnKeyUp(object sender, KeyRoutedEventArgs e)
+        public void OnKeyUp(
+            object sender,
+            KeyRoutedEventArgs e)
         {
             // Method intentionally left empty.
         }

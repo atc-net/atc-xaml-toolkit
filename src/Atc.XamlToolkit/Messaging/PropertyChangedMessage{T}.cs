@@ -17,7 +17,11 @@ public sealed class PropertyChangedMessage<T> : PropertyChangedMessageBase
     /// <param name="propertyName">The name of the property that changed.</param>
     /// <param name="oldValue">The property's value before the change occurred.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    public PropertyChangedMessage(object sender, string propertyName, T oldValue, T newValue)
+    public PropertyChangedMessage(
+        object sender,
+        string propertyName,
+        T oldValue,
+        T newValue)
         : base(sender, propertyName)
     {
         OldValue = oldValue;
@@ -30,7 +34,10 @@ public sealed class PropertyChangedMessage<T> : PropertyChangedMessageBase
     /// <param name="propertyName">The name of the property that changed.</param>
     /// <param name="oldValue">The property's value before the change occurred.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    public PropertyChangedMessage(string propertyName, T oldValue, T newValue)
+    public PropertyChangedMessage(
+        string propertyName,
+        T oldValue,
+        T newValue)
         : base(propertyName)
     {
         OldValue = oldValue;
@@ -47,7 +54,12 @@ public sealed class PropertyChangedMessage<T> : PropertyChangedMessageBase
     /// <param name="oldValue">The property's value before the change occurred.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
     /// <param name="propertyName">The name of the property that changed.</param>
-    public PropertyChangedMessage(object sender, object target, string propertyName, T oldValue, T newValue)
+    public PropertyChangedMessage(
+        object sender,
+        object target,
+        string propertyName,
+        T oldValue,
+        T newValue)
         : base(sender, target, propertyName)
     {
         OldValue = oldValue;

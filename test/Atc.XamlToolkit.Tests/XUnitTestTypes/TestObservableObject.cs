@@ -31,12 +31,14 @@ internal sealed class TestObservableObject : ObservableObject
     public bool IsBoolPropertyWithSet
     {
         get => isBoolPropertyWithSet;
-        set => _ = Set("IsBoolPropertyWithSet", ref isBoolPropertyWithSet, value);
+        set
+            => _ = Set("IsBoolPropertyWithSet", ref isBoolPropertyWithSet, value);
     }
 
     public bool IsBoolPropertyWithSetAndExpression
     {
         get => isBoolPropertyWithSetAndExpression;
-        set => _ = Set(() => IsBoolPropertyWithSetAndExpression, ref isBoolPropertyWithSetAndExpression, value);
+        set
+            => _ = Set(() => IsBoolPropertyWithSetAndExpression, ref isBoolPropertyWithSetAndExpression, value);
     }
 }

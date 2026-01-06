@@ -2,8 +2,7 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 
 internal static class NameSyntaxExtensions
 {
-    public static string GetSimpleAttributeName(
-        this NameSyntax nameSyntax)
+    public static string GetSimpleAttributeName(this NameSyntax nameSyntax)
         => nameSyntax switch
         {
             QualifiedNameSyntax qns => qns.Right.Identifier.Text,

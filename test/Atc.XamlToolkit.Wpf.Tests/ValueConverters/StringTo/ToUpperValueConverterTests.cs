@@ -12,7 +12,9 @@ public sealed class ToUpperValueConverterTests
     [InlineData("HELLO", "HELLO")]
     [InlineData("HELLO WORLD", "hello world")]
     [InlineData("123", "123")]
-    public void Convert(string expected, string input)
+    public void Convert(
+        string expected,
+        string input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null, parameter: null, culture: null));

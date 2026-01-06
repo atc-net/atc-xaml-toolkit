@@ -18,13 +18,18 @@ public partial class PersonViewModel : ViewModelBase
         PropertyChanged += OnPropertyChangedToError;
 
     // Error message properties for UI binding
-    public string FirstNameError => GetErrors(nameof(FirstName)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string FirstNameError
+        => GetErrors(nameof(FirstName)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string LastNameError => GetErrors(nameof(LastName)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string LastNameError
+        => GetErrors(nameof(LastName)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    public string AgeError => GetErrors(nameof(Age)).Cast<string>().FirstOrDefault() ?? string.Empty;
+    public string AgeError
+        => GetErrors(nameof(Age)).Cast<string>().FirstOrDefault() ?? string.Empty;
 
-    private void OnPropertyChangedToError(object? sender, PropertyChangedEventArgs e)
+    private void OnPropertyChangedToError(
+        object? sender,
+        PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {

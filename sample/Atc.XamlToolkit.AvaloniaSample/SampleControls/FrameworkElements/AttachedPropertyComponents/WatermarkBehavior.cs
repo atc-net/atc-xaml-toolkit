@@ -82,8 +82,7 @@ public partial class WatermarkBehavior : AvaloniaObject
         }
     }
 
-    private static void UpdateWatermark(
-        TextBox textBox)
+    private static void UpdateWatermark(TextBox textBox)
     {
         var watermark = GetWatermark(textBox);
 

@@ -86,8 +86,7 @@ public static partial class HighlightBehavior
             : 1.0; // Default if not set
     }
 
-    private static Brush GetBackgroundBrush(
-        FrameworkElement element)
+    private static Brush GetBackgroundBrush(FrameworkElement element)
         => element switch
         {
             Control control => control.Background,

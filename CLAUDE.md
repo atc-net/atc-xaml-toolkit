@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the **Atc.XamlToolkit** repository, a cross-platform MVVM toolkit for building WPF, WinUI 3, and Avalonia applications. It targets .NET 9 and includes source generators to eliminate boilerplate code.
+This is the **Atc.XamlToolkit** repository, a cross-platform MVVM toolkit for building WPF, WinUI 3, and Avalonia applications. It targets .NET 10 (C# 14) and includes source generators to eliminate boilerplate code.
 
 **Solution File:** The repository uses `Atc.XamlToolkit.slnx`, the new XML-based Visual Studio solution format introduced in Visual Studio 2022 17.11+. All dotnet CLI commands work normally with this format.
 
@@ -214,7 +214,7 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 
 This repository uses the **ATC coding rules** (v1.0.0) defined in `.editorconfig`:
 
-- **C# 13.0** with **nullable reference types enabled**
+- **C# 14.0** with **nullable reference types enabled**
 - **File-scoped namespaces** (IDE0160)
 - **var** for all types (IDE0007/IDE0008)
 - **Expression-bodied members** preferred
@@ -227,7 +227,7 @@ This repository uses the **ATC coding rules** (v1.0.0) defined in `.editorconfig
 
 **Analyzer Configuration:**
 - Warnings are treated as errors in Release builds
-- Multiple analyzers active: AsyncFixer, Asyncify, Meziantou, StyleCop, SonarAnalyzer
+- Multiple analyzers active: Atc.Analyzer, AsyncFixer, Asyncify, Meziantou, StyleCop, SonarAnalyzer
 - AnalysisLevel: latest-All
 - EnforceCodeStyleInBuild: true
 
@@ -239,11 +239,12 @@ This repository uses the **ATC coding rules** (v1.0.0) defined in `.editorconfig
 
 ## Testing
 
-- **Test Framework**: xUnit with Xunit.StaFact for UI thread tests
+- **Test Framework**: xUnit v3 with Xunit.StaFact for UI thread tests
+- **Test Runner**: Microsoft.Testing.Platform (configured in `global.json`)
 - **Mocking**: NSubstitute
 - **Assertions**: FluentAssertions
-- **Test Data**: AutoFixture with AutoFixture.Xunit2
-- **Coverage**: coverlet.collector
+- **Test Data**: AutoFixture with AutoFixture.Xunit3
+- **Coverage**: Microsoft.Testing.Extensions.CodeCoverage
 - Tests for source generators use `Microsoft.CodeAnalysis.CSharp` to verify generated code
 
 ## Source Generator Development
@@ -269,7 +270,7 @@ When working on source generators:
    - Inspectors: `src/Atc.XamlToolkit.SourceGenerators/Inspectors/`
    - Builders: `src/Atc.XamlToolkit.SourceGenerators/Extensions/Builder/`
    - Models: `src/Atc.XamlToolkit.SourceGenerators/Models/`
-   - Generated code appears in `obj/Debug/net9.0[-windows]/generated/Atc.XamlToolkit.SourceGenerators/`
+   - Generated code appears in `obj/Debug/net10.0[-windows]/generated/Atc.XamlToolkit.SourceGenerators/`
 
 7. **Platform-Aware Generation**:
    - Always check `XamlPlatform` enum when generating platform-specific code
@@ -278,9 +279,9 @@ When working on source generators:
 
 8. **Viewing Generated Code**:
    - Generated files are in `obj/[Configuration]/[TargetFramework]/generated/Atc.XamlToolkit.SourceGenerators/`
-   - For WPF projects: `obj/Debug/net9.0-windows/generated/Atc.XamlToolkit.SourceGenerators/`
-   - For WinUI projects: `obj/Debug/net9.0-windows10.0.19041.0/generated/Atc.XamlToolkit.SourceGenerators/`
-   - For Avalonia projects: `obj/Debug/net9.0/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For WPF projects: `obj/Debug/net10.0-windows/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For WinUI projects: `obj/Debug/net10.0-windows10.0.19041.0/generated/Atc.XamlToolkit.SourceGenerators/`
+   - For Avalonia projects: `obj/Debug/net10.0/generated/Atc.XamlToolkit.SourceGenerators/`
    - After changes to source generators, run `dotnet build-server shutdown` to force regeneration
 
 ## Important Conventions

@@ -114,7 +114,9 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
         base.OnDetaching();
     }
 
-    private static void OnIsFocusedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIsFocusedChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is FocusBehavior behavior && !behavior.isUpdatingFocus && e.NewValue is bool isFocused && isFocused)
         {
@@ -122,7 +124,9 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
         }
     }
 
-    private static void OnFocusTriggerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnFocusTriggerChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is FocusBehavior behavior && e.NewValue is not null)
         {
@@ -130,7 +134,9 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
         }
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(
+        object sender,
+        RoutedEventArgs e)
     {
         if (HasInitialFocus)
         {
@@ -138,7 +144,9 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
         }
     }
 
-    private void OnGotFocus(object sender, RoutedEventArgs e)
+    private void OnGotFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = true;
@@ -150,7 +158,9 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
         }
     }
 
-    private void OnLostFocus(object sender, RoutedEventArgs e)
+    private void OnLostFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = false;

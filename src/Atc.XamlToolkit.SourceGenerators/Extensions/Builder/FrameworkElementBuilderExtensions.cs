@@ -413,7 +413,11 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine("coerceValueCallback: null,");
             }
 
-            builder.Append($"isAnimationProhibited: {p.IsAnimationProhibited.Value.ToString().ToLowerInvariant()}");
+            var isAnimationProhibited = p.IsAnimationProhibited
+                .Value
+                .ToString()
+                .ToLowerInvariant();
+            builder.Append($"isAnimationProhibited: {isAnimationProhibited}");
         }
 
         builder.AppendLine(

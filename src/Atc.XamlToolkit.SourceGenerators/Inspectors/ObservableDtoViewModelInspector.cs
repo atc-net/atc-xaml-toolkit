@@ -184,7 +184,9 @@ internal static class ObservableDtoViewModelInspector
         if (typeofValue!.StartsWith("typeof(", StringComparison.Ordinal) &&
             typeofValue.EndsWith(")", StringComparison.Ordinal))
         {
-            return typeofValue.Substring(7, typeofValue.Length - 8).Trim();
+            return typeofValue
+                .Substring(7, typeofValue.Length - 8)
+                .Trim();
         }
 
         // If it's just "Person", return as-is
@@ -392,8 +394,7 @@ internal static class ObservableDtoViewModelInspector
         return result;
     }
 
-    private static bool HasCustomToString(
-        INamedTypeSymbol typeSymbol)
+    private static bool HasCustomToString(INamedTypeSymbol typeSymbol)
     {
         // Check if the type has a ToString method override
         var toStringMethod = typeSymbol

@@ -12,8 +12,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     /// Initializes the source generator.
     /// </summary>
     /// <param name="context">The initialization context.</param>
-    public void Initialize(
-        IncrementalGeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         ////#if DEBUG
         ////        if (!System.Diagnostics.Debugger.IsAttached)
@@ -59,8 +58,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     /// The semantic analysis will then check for fields/properties with ObservableProperty attribute
     /// or methods with RelayCommand attribute.
     /// </remarks>
-    private static bool IsSyntaxTarget(
-        SyntaxNode syntaxNode)
+    private static bool IsSyntaxTarget(SyntaxNode syntaxNode)
     {
         if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
         {

@@ -34,10 +34,7 @@ public partial class PersonViewModel
     }
 
     public bool CanSaveHandler()
-    {
-        // Use validation errors instead of manual checks
-        return !HasErrors;
-    }
+        => !HasErrors;
 
     [RelayCommand(CanExecute = nameof(CanSaveHandler))]
     [SupportedOSPlatform("windows10.0.17763.0")]
@@ -110,7 +107,8 @@ public partial class PersonViewModel
         }
     }
 
-    public bool CanCancelLongRunningWork() => cancellationTokenSource is not null;
+    public bool CanCancelLongRunningWork()
+        => cancellationTokenSource is not null;
 
     [RelayCommand(CanExecute = nameof(CanCancelLongRunningWork))]
     public void CancelLongRunningWork()

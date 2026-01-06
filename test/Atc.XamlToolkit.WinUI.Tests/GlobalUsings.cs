@@ -5,6 +5,7 @@ global using System.Globalization;
 global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Helpers;
 global using Atc.XamlToolkit.Mvvm;
+global using Atc.XamlToolkit.Resolvers;
 global using Atc.XamlToolkit.ValueConverters;
 global using Atc.XamlToolkit.WinUI.Tests.XUnitTestTypes;
 

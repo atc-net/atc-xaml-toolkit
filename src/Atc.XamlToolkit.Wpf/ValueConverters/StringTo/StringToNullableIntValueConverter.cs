@@ -83,7 +83,10 @@ public sealed class StringToNullableIntValueConverter :
         }
 
         // Filter out non-numeric characters (keep digits and minus sign)
-        var filteredValue = new string(stringValue.Where(c => char.IsDigit(c) || c == '-').ToArray());
+        var filteredValue = new string(
+            stringValue
+                .Where(c => char.IsDigit(c) || c == '-')
+                .ToArray());
 
         // ConvertBack with the filtered value
         return ConvertBack(filteredValue, parameter, culture);

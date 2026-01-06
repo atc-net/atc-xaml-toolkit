@@ -20,7 +20,9 @@ public sealed class NotificationMessageAction<TCallbackParameter> : Notification
     /// <param name="callback">The callback method that can be executed
     /// by the recipient to notify the sender that the message has been
     /// processed.</param>
-    public NotificationMessageAction(string notification, Action<TCallbackParameter> callback)
+    public NotificationMessageAction(
+        string notification,
+        Action<TCallbackParameter> callback)
         : base(notification, callback)
     {
     }
@@ -35,7 +37,10 @@ public sealed class NotificationMessageAction<TCallbackParameter> : Notification
     /// <param name="callback">The callback method that can be executed
     /// by the recipient to notify the sender that the message has been
     /// processed.</param>
-    public NotificationMessageAction(object sender, string notification, Action<TCallbackParameter> callback)
+    public NotificationMessageAction(
+        object sender,
+        string notification,
+        Action<TCallbackParameter> callback)
         : base(sender, notification, callback)
     {
     }

@@ -130,7 +130,9 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         }
     }
 
-    private void OnAttachedToVisualTree(object? sender, EventArgs e)
+    private void OnAttachedToVisualTree(
+        object? sender,
+        EventArgs e)
     {
         if (AutoStart)
         {
@@ -240,7 +242,10 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         _ = animation.RunAsync(AssociatedObject);
     }
 
-    private void AnimateSlideIn(TimeSpan duration, double fromX, double fromY)
+    private void AnimateSlideIn(
+        TimeSpan duration,
+        double fromX,
+        double fromY)
     {
         ArgumentNullException.ThrowIfNull(AssociatedObject);
 
@@ -308,7 +313,10 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         });
     }
 
-    private void AnimateScale(TimeSpan duration, double from, double to)
+    private void AnimateScale(
+        TimeSpan duration,
+        double from,
+        double to)
     {
         ArgumentNullException.ThrowIfNull(AssociatedObject);
 
@@ -330,9 +338,11 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         _ = animation.RunAsync(AssociatedObject);
     }
 
-    private static Animation CreateScaleAnimation(TimeSpan duration, double from, double to)
-    {
-        return new Animation
+    private static Animation CreateScaleAnimation(
+        TimeSpan duration,
+        double from,
+        double to)
+        => new()
         {
             Duration = duration,
             Easing = new CubicEaseOut(),
@@ -375,5 +385,4 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
                 },
             },
         };
-    }
 }

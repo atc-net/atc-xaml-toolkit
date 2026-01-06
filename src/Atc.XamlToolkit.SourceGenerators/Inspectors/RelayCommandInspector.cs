@@ -92,7 +92,10 @@ internal static class RelayCommandInspector
         }
         else if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValues, out var parameterValuesValue))
         {
-            parameterValues.AddRange(parameterValuesValue!.Split(',').Select(x => x.Trim()));
+            parameterValues.AddRange(
+                parameterValuesValue!
+                    .Split(',')
+                    .Select(x => x.Trim()));
         }
 
         List<string>? parameterTypes = null;

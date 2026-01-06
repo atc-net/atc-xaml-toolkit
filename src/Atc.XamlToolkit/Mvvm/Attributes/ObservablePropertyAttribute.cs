@@ -20,8 +20,7 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// Initializes a new instance of the <see cref="ObservablePropertyAttribute"/> class.
     /// </summary>
     /// <param name="propertyName">The name of the property to generate</param>
-    public ObservablePropertyAttribute(
-        string propertyName)
+    public ObservablePropertyAttribute(string propertyName)
     {
         PropertyName = propertyName;
     }

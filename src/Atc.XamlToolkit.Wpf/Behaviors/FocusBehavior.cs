@@ -115,7 +115,9 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
         base.OnDetaching();
     }
 
-    private static void OnIsFocusedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIsFocusedChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is not FocusBehavior behavior || behavior.isUpdatingFocus || e.NewValue is not bool isFocused || !isFocused)
         {
@@ -125,7 +127,9 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
         behavior.SetFocus();
     }
 
-    private static void OnFocusTriggerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnFocusTriggerChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is FocusBehavior behavior && e.NewValue is not null)
         {
@@ -133,7 +137,9 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
         }
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(
+        object sender,
+        RoutedEventArgs e)
     {
         if (HasInitialFocus)
         {
@@ -141,7 +147,9 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
         }
     }
 
-    private void OnGotFocus(object sender, RoutedEventArgs e)
+    private void OnGotFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = true;
@@ -153,7 +161,9 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
         }
     }
 
-    private void OnLostFocus(object sender, RoutedEventArgs e)
+    private void OnLostFocus(
+        object sender,
+        RoutedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = false;

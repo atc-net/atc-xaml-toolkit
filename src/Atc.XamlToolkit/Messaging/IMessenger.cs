@@ -146,7 +146,9 @@ public interface IMessenger
     /// use a token when registering (or who used a different token) will not
     /// get the message. Similarly, messages sent without any token, or with a different
     /// token, will not be delivered to that recipient.</param>
-    void Send<TMessage>(TMessage message, object token);
+    void Send<TMessage>(
+        TMessage message,
+        object token);
 
     /// <summary>
     /// UnRegisters a message recipient completely. After this method
@@ -176,7 +178,9 @@ public interface IMessenger
     /// <param name="token">The token for which the recipient must be unregistered.</param>
     /// <typeparam name="TMessage">The type of messages that the recipient wants
     /// to un-register from.</typeparam>
-    void UnRegister<TMessage>(object recipient, object token);
+    void UnRegister<TMessage>(
+        object recipient,
+        object token);
 
     /// <summary>
     /// UnRegister a message recipient for a given type of messages and for
@@ -190,7 +194,9 @@ public interface IMessenger
     /// <param name="recipient">The recipient that must be unregistered.</param>
     /// <param name="action">The action that must be unregistered for
     /// the recipient and for the message type TMessage.</param>
-    void UnRegister<TMessage>(object recipient, Action<TMessage> action);
+    void UnRegister<TMessage>(
+        object recipient,
+        Action<TMessage> action);
 
     /// <summary>
     /// UnRegister a message recipient for a given type of messages, for
@@ -205,5 +211,8 @@ public interface IMessenger
     /// <param name="token">The token for which the recipient must be unregistered.</param>
     /// <param name="action">The action that must be unregistered for
     /// the recipient and for the message type TMessage.</param>
-    void UnRegister<TMessage>(object recipient, object token, Action<TMessage> action);
+    void UnRegister<TMessage>(
+        object recipient,
+        object token,
+        Action<TMessage> action);
 }

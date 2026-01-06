@@ -28,10 +28,13 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public ICommand ApplicationExitCommand => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
+        public ICommand ApplicationExitCommand
+            => applicationExitCommand ??= new RelayCommand(ApplicationExitCommandHandler);
 
         /// <inheritdoc />
-        public void OnLoaded(object sender, EventArgs e)
+        public void OnLoaded(
+            object sender,
+            EventArgs e)
         {
             if (sender is Control control &&
                 Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
@@ -59,7 +62,9 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public void OnKeyDown(object sender, KeyEventArgs e)
+        public void OnKeyDown(
+            object sender,
+            KeyEventArgs e)
         {
             ArgumentNullException.ThrowIfNull(e);
 
@@ -75,7 +80,9 @@ namespace Atc.XamlToolkit.Mvvm
         }
 
         /// <inheritdoc />
-        public void OnKeyUp(object sender, KeyEventArgs e)
+        public void OnKeyUp(
+            object sender,
+            KeyEventArgs e)
         {
             // Method intentionally left empty.
         }

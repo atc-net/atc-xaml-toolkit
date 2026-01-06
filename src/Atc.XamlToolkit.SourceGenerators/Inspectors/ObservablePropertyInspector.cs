@@ -80,7 +80,9 @@ internal static class ObservablePropertyInspector
             propertyNamesToInvalidate.AddRange(
                 dependentPropertiesValue!
                     .Split(',')
-                    .Select(x => x.Trim().ExtractInnerContent()));
+                    .Select(x => x
+                        .Trim()
+                        .ExtractInnerContent()));
         }
         else
         {

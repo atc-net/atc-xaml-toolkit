@@ -323,8 +323,7 @@ internal static class ObjectExtensions
         return strDefaultValue;
     }
 
-    public static string? EnsureNoNameof(
-        this object? value)
+    public static string? EnsureNoNameof(this object? value)
     {
         if (value is null ||
             !value.ToString().StartsWith("nameof", StringComparison.Ordinal))
@@ -338,8 +337,7 @@ internal static class ObjectExtensions
             .Replace(")", string.Empty);
     }
 
-    public static string? EnsureNameof(
-        this object? value)
+    public static string? EnsureNameof(this object? value)
     {
         if (value is null ||
             value.ToString().Contains("nameof"))

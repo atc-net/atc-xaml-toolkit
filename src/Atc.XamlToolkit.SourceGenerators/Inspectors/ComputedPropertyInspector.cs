@@ -60,6 +60,7 @@ internal static class ComputedPropertyInspector
     /// <param name="classSymbol">The containing class symbol.</param>
     /// <param name="observableProperties">The list of observable properties that will be generated.</param>
     /// <returns>A collection of property names this property depends on.</returns>
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static ICollection<string> AnalyzePropertyDependencies(
         IPropertySymbol propertySymbol,
         INamedTypeSymbol classSymbol,
@@ -96,19 +97,24 @@ internal static class ComputedPropertyInspector
 
         if (propertySyntax.ExpressionBody is not null)
         {
-            var identifierNodes = propertySyntax.ExpressionBody.DescendantNodes()
+            var identifierNodes = propertySyntax
+                .ExpressionBody
+                .DescendantNodes()
                 .OfType<IdentifierNameSyntax>();
 
             identifiers.AddRange(identifierNodes.Select(id => id.Identifier.ValueText));
         }
-        else if (propertySyntax.AccessorList is not null)
+        else
         {
-            var getter = propertySyntax.AccessorList.Accessors
+            var getter = propertySyntax
+                .AccessorList?
+                .Accessors
                 .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
 
-            if (getter is not null)
+            if (getter != null)
             {
-                var identifierNodes = getter.DescendantNodes()
+                var identifierNodes = getter
+                    .DescendantNodes()
                     .OfType<IdentifierNameSyntax>();
 
                 identifiers.AddRange(identifierNodes.Select(id => id.Identifier.ValueText));

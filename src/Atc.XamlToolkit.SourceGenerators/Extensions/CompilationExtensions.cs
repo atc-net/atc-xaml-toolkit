@@ -8,8 +8,7 @@ internal static class CompilationExtensions
     /// </summary>
     /// <param name="compilation">The compilation to analyze.</param>
     /// <returns>The detected XAML platform.</returns>
-    public static XamlPlatform GetXamlPlatform(
-        this Compilation compilation)
+    public static XamlPlatform GetXamlPlatform(this Compilation compilation)
     {
         // Check for WinUI
         var hasWinUI = compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.DependencyProperty") is not null ||

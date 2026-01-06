@@ -49,10 +49,8 @@ public abstract class RelayCommandBase : IRelayCommand
 
     /// <inheritdoc />
     public bool CanExecute(object? parameter)
-    {
-        return wfCanExecute is null ||
-               ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
-    }
+        => wfCanExecute is null ||
+           ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
 
     /// <inheritdoc />
     public void Execute(object? parameter)

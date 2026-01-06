@@ -10,7 +10,9 @@ public sealed class StringNullOrEmptyToBoolValueConverterTests
     [InlineData(false, "test")]
     [InlineData(false, " ")]
     [InlineData(false, "Hello World")]
-    public void Convert(bool expected, string input)
+    public void Convert(
+        bool expected,
+        string input)
         => Assert.Equal(
             expected,
             converter.Convert(input, targetType: null!, parameter: null, culture: null!));

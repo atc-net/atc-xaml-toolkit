@@ -87,7 +87,8 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
 
     /// <inheritdoc/>
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1", Justification = "Method should fail with an exception if func is null.")]
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    protected override void OnPropertyChanged(
+        AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
@@ -110,7 +111,9 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
             return;
         }
 
-        eventInfo = AssociatedObject.GetType().GetEvent(EventName);
+        eventInfo = AssociatedObject
+            .GetType()
+            .GetEvent(EventName);
         if (eventInfo is null)
         {
             throw new InvalidOperationException($"Event '{EventName}' not found on type '{AssociatedObject.GetType().Name}'");
@@ -133,7 +136,9 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
         }
     }
 
-    private void OnEventRaised(object? sender, EventArgs e)
+    private void OnEventRaised(
+        object? sender,
+        EventArgs e)
     {
         if (Command?.CanExecute(GetCommandParameter(e)) == true)
         {

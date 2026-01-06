@@ -100,7 +100,9 @@ public sealed class AnimationBehavior : Microsoft.Xaml.Interactivity.Behavior<Fr
         base.OnDetaching();
     }
 
-    private static void OnAnimationTriggerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnAnimationTriggerChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is AnimationBehavior behavior && e.NewValue is not null)
         {
@@ -108,7 +110,9 @@ public sealed class AnimationBehavior : Microsoft.Xaml.Interactivity.Behavior<Fr
         }
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(
+        object sender,
+        RoutedEventArgs e)
     {
         if (AutoStart)
         {
@@ -196,7 +200,10 @@ public sealed class AnimationBehavior : Microsoft.Xaml.Interactivity.Behavior<Fr
         storyboard.Begin();
     }
 
-    private void AnimateSlideIn(TimeSpan duration, double fromX, double fromY)
+    private void AnimateSlideIn(
+        TimeSpan duration,
+        double fromX,
+        double fromY)
     {
         if (AssociatedObject.RenderTransform is not Microsoft.UI.Xaml.Media.TranslateTransform translateTransform)
         {
@@ -246,7 +253,10 @@ public sealed class AnimationBehavior : Microsoft.Xaml.Interactivity.Behavior<Fr
         storyboard.Begin();
     }
 
-    private void AnimateScale(TimeSpan duration, double from, double to)
+    private void AnimateScale(
+        TimeSpan duration,
+        double from,
+        double to)
     {
         if (AssociatedObject.RenderTransform is not Microsoft.UI.Xaml.Media.ScaleTransform scaleTransform)
         {

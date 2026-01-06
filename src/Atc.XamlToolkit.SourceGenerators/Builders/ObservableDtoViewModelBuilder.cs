@@ -58,11 +58,21 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         // Generate InitializeValidation call if any validation is enabled
         if (viewModelToGenerate.EnableValidationOnPropertyChanged || viewModelToGenerate.EnableValidationOnInit)
         {
+            var validateOnPropertyChanged = viewModelToGenerate
+                .EnableValidationOnPropertyChanged
+                .ToString()
+                .ToLowerInvariant();
+
+            var validateAllPropertiesOnInit = viewModelToGenerate
+                .EnableValidationOnInit
+                .ToString()
+                .ToLowerInvariant();
+
             AppendLine();
             AppendLine("InitializeValidation(");
             IncreaseIndent();
-            AppendLine($"validateOnPropertyChanged: {viewModelToGenerate.EnableValidationOnPropertyChanged.ToString().ToLowerInvariant()},");
-            AppendLine($"validateAllPropertiesOnInit: {viewModelToGenerate.EnableValidationOnInit.ToString().ToLowerInvariant()});");
+            AppendLine($"validateOnPropertyChanged: {validateOnPropertyChanged},");
+            AppendLine($"validateAllPropertiesOnInit: {validateAllPropertiesOnInit});");
             DecreaseIndent();
         }
 
@@ -599,8 +609,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         AppendLine("}");
     }
 
-    private void GenerateCallbackInlineCode(
-        string value)
+    private void GenerateCallbackInlineCode(string value)
     {
         if (value.StartsWith("nameof(", StringComparison.Ordinal) &&
             value.EndsWith(")", StringComparison.Ordinal))
@@ -614,8 +623,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         }
     }
 
-    private void GenerateCallbackInlineCodeHelper(
-        string valueContent)
+    private void GenerateCallbackInlineCodeHelper(string valueContent)
     {
         var sa = valueContent.Split([';'], StringSplitOptions.RemoveEmptyEntries);
         foreach (var s in sa)

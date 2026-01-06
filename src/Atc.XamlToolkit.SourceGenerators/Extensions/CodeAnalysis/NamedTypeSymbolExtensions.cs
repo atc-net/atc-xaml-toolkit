@@ -96,7 +96,9 @@ internal static class NamedTypeSymbolExtensions
                         or SyntaxKind.MultiLineDocumentationCommentTrivia)
                     {
                         // Get the full text of the documentation comment
-                        var commentText = trivia.ToFullString().Trim();
+                        var commentText = trivia
+                            .ToFullString()
+                            .Trim();
                         if (!string.IsNullOrWhiteSpace(commentText))
                         {
                             documentationComments.Add(commentText);

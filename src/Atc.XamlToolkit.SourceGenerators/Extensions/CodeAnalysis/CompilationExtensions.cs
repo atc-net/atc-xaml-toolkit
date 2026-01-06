@@ -10,7 +10,9 @@ internal static class CompilationExtensions
         var targetNamespace = classSymbol.ContainingNamespace.ToDisplayString();
 
         return compilation.SyntaxTrees
-            .SelectMany(tree => tree.GetRoot().DescendantNodes())
+            .SelectMany(tree => tree
+                .GetRoot()
+                .DescendantNodes())
             .OfType<ClassDeclarationSyntax>()
             .Where(c => c.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
                         c.Identifier.Text == classSymbol.Name &&

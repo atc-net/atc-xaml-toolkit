@@ -18,7 +18,9 @@ public class NotificationMessageWithCallback : NotificationMessage
     /// <param name="callback">The callback method that can be executed
     /// by the recipient to notify the sender that the message has been
     /// processed.</param>
-    public NotificationMessageWithCallback(string notification, Delegate callback)
+    public NotificationMessageWithCallback(
+        string notification,
+        Delegate callback)
         : base(notification)
     {
         this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -33,7 +35,10 @@ public class NotificationMessageWithCallback : NotificationMessage
     /// <param name="callback">The callback method that can be executed
     /// by the recipient to notify the sender that the message has been
     /// processed.</param>
-    public NotificationMessageWithCallback(object sender, string notification, Delegate callback)
+    public NotificationMessageWithCallback(
+        object sender,
+        string notification,
+        Delegate callback)
         : base(sender, notification)
     {
         this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -51,7 +56,11 @@ public class NotificationMessageWithCallback : NotificationMessage
     /// <param name="callback">The callback method that can be executed
     /// by the recipient to notify the sender that the message has been
     /// processed.</param>
-    public NotificationMessageWithCallback(object sender, object target, string notification, Delegate callback)
+    public NotificationMessageWithCallback(
+        object sender,
+        object target,
+        string notification,
+        Delegate callback)
         : base(sender, target, notification)
     {
         this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -65,7 +74,5 @@ public class NotificationMessageWithCallback : NotificationMessage
     /// be passed to the callback method.</param>
     /// <returns>The object returned by the callback method.</returns>
     public virtual object? Execute(params object[] arguments)
-    {
-        return callback.DynamicInvoke(arguments);
-    }
+        => callback.DynamicInvoke(arguments);
 }
