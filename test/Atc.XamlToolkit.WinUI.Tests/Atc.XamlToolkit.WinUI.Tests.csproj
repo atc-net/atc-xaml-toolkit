@@ -11,7 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.1" />
+    <PackageReference Update="Atc.Analyzer" Version="0.1.19" />
+    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
   </ItemGroup>
 
 </Project>

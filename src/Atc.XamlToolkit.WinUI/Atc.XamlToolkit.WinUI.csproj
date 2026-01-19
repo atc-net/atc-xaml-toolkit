@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +42,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Atc.Analyzer" Version="0.1.19" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.102" />
   </ItemGroup>
 
 </Project>
