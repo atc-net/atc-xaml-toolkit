@@ -9,7 +9,7 @@ internal static class SimpleTypeFactory
         => type switch
         {
             // Primitive types
-            "bool" => xamlPlatform == XamlPlatform.Avalonia ? "false" : "BooleanBoxes.FalseBox",
+            "bool" => xamlPlatform == XamlPlatform.Avalonia ? "false" : "Atc.XamlToolkit.BooleanBoxes.FalseBox",
             "byte" => "(byte)0",
             "sbyte" => "(sbyte)0",
             "char" => "'\\0'",
