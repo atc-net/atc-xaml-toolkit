@@ -64,8 +64,8 @@ internal static class ObjectExtensions
                 {
                     strDefaultValue = strDefaultValue.ToLowerInvariant() switch
                     {
-                        "true" => "BooleanBoxes.TrueBox",
-                        "false" => "BooleanBoxes.FalseBox",
+                        "true" => "Atc.XamlToolkit.BooleanBoxes.TrueBox",
+                        "false" => "Atc.XamlToolkit.BooleanBoxes.FalseBox",
                         _ => strDefaultValue,
                     };
                 }
