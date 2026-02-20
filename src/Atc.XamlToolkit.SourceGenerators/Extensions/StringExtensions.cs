@@ -112,12 +112,14 @@ public static class StringExtensions
             throw new ArgumentNullException(nameof(value));
         }
 
-        return value.Length switch
+        if (value.Length == 0 || char.IsUpper(value[0]))
         {
-            0 => value,
-            1 => value.ToUpperInvariant(),
-            _ => char.ToUpperInvariant(value[0]) + value.Substring(1),
-        };
+            return value;
+        }
+
+        var chars = value.ToCharArray();
+        chars[0] = char.ToUpperInvariant(chars[0]);
+        return new string(chars);
     }
 
     public static string EnsureFirstCharacterToLower(this string value)
@@ -127,12 +129,14 @@ public static class StringExtensions
             throw new ArgumentNullException(nameof(value));
         }
 
-        return value.Length switch
+        if (value.Length == 0 || char.IsLower(value[0]))
         {
-            0 => value,
-            1 => value.ToLowerInvariant(),
-            _ => char.ToLowerInvariant(value[0]) + value.Substring(1),
-        };
+            return value;
+        }
+
+        var chars = value.ToCharArray();
+        chars[0] = char.ToLowerInvariant(chars[0]);
+        return new string(chars);
     }
 
     public static string EnsureCSharpAliasIfNeeded(this string typeName)
@@ -271,9 +275,14 @@ public static class StringExtensions
         }
 
         var core = typeName.Substring(0, typeName.Length - 1); // chop '?'
-        return KnownValueTypes.Contains(core) ||
-               IsTypeEnum(core) ||
-               IsTypeStruct(core)
+
+        // Keep the '?' for known value types (they need Nullable<T> in typeof)
+        // For unknown types, strip the '?' since they are likely reference types
+        // where '?' is just a nullability annotation, not Nullable<T>.
+        // Note: We intentionally avoid runtime reflection (Type.GetType / AppDomain scanning)
+        // because source generators run inside the compiler process where loaded assemblies
+        // don't correspond to the target compilation's type system.
+        return KnownValueTypes.Contains(core)
             ? typeName
             : core;
     }
@@ -489,49 +498,5 @@ public static class StringExtensions
         }
 
         return value;
-    }
-
-    private static bool IsTypeEnum(string value)
-    {
-        var type = ResolveType(value);
-        return type?.IsEnum == true;
-    }
-
-    private static bool IsTypeStruct(string value)
-    {
-        var type = ResolveType(value);
-        return type is { IsValueType: true, IsEnum: false };
-    }
-
-    private static Type? ResolveType(string value)
-    {
-        var type = Type.GetType(value, throwOnError: false);
-
-        if (type is null && value.IndexOf('.') < 0)
-        {
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                try
-                {
-                    type = asm
-                        .GetTypes()
-                        .FirstOrDefault(t => t.Name == value);
-                    if (type is not null)
-                    {
-                        break;
-                    }
-                }
-                catch (System.Reflection.ReflectionTypeLoadException ex)
-                {
-                    type = ex.Types.FirstOrDefault(t => t?.Name == value);
-                    if (type is not null)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return type;
     }
 }

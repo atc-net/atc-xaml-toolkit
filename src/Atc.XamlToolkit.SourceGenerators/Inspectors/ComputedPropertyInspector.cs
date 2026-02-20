@@ -10,15 +10,15 @@ internal static class ComputedPropertyInspector
     /// and determines which properties they depend on.
     /// </summary>
     /// <param name="classSymbol">The class symbol to inspect.</param>
+    /// <param name="memberSymbols">The pre-fetched members of the class symbol.</param>
     /// <param name="observableProperties">The list of observable properties that will be generated.</param>
     /// <returns>A list of computed properties with their dependencies.</returns>
     public static List<ComputedPropertyToGenerate> Inspect(
         INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols,
         List<ObservablePropertyToGenerate>? observableProperties = null)
     {
         var result = new List<ComputedPropertyToGenerate>();
-
-        var memberSymbols = classSymbol.GetMembers();
 
         foreach (var memberSymbol in memberSymbols)
         {
@@ -40,7 +40,7 @@ internal static class ComputedPropertyInspector
             }
 
             // Analyze the property to find dependencies
-            var dependentProperties = AnalyzePropertyDependencies(propertySymbol, classSymbol, observableProperties);
+            var dependentProperties = AnalyzePropertyDependencies(propertySymbol, memberSymbols, observableProperties);
 
             if (dependentProperties.Count > 0)
             {
@@ -57,19 +57,19 @@ internal static class ComputedPropertyInspector
     /// Analyzes a property to find which other properties it depends on.
     /// </summary>
     /// <param name="propertySymbol">The property to analyze.</param>
-    /// <param name="classSymbol">The containing class symbol.</param>
+    /// <param name="memberSymbols">The pre-fetched members of the containing class.</param>
     /// <param name="observableProperties">The list of observable properties that will be generated.</param>
     /// <returns>A collection of property names this property depends on.</returns>
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static ICollection<string> AnalyzePropertyDependencies(
         IPropertySymbol propertySymbol,
-        INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols,
         List<ObservablePropertyToGenerate>? observableProperties)
     {
         var dependencies = new HashSet<string>(StringComparer.Ordinal);
 
         var allProperties = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
+        foreach (var member in memberSymbols)
         {
             if (member is IPropertySymbol prop && prop.Name != propertySymbol.Name)
             {
@@ -130,5 +130,35 @@ internal static class ComputedPropertyInspector
         }
 
         return dependencies;
+    }
+
+    /// <summary>
+    /// Links computed properties to observable properties by adding them to the PropertyNamesToInvalidate list.
+    /// </summary>
+    /// <param name="observableProperties">The list of observable properties.</param>
+    /// <param name="computedProperties">The list of computed properties.</param>
+    public static void LinkToObservableProperties(
+        List<ObservablePropertyToGenerate>? observableProperties,
+        List<ComputedPropertyToGenerate> computedProperties)
+    {
+        if (observableProperties is null)
+        {
+            return;
+        }
+
+        foreach (var observableProperty in observableProperties)
+        {
+            foreach (var computedProperty in computedProperties)
+            {
+                if (computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
+                {
+                    observableProperty.PropertyNamesToInvalidate ??= [];
+                    if (!observableProperty.PropertyNamesToInvalidate.Contains(computedProperty.Name, StringComparer.Ordinal))
+                    {
+                        observableProperty.PropertyNamesToInvalidate.Add(computedProperty.Name);
+                    }
+                }
+            }
+        }
     }
 }

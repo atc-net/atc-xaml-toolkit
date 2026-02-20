@@ -6,9 +6,12 @@ internal static class FrameworkElementInspector
         XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol)
     {
+        var memberSymbols = classSymbol.GetMembers();
+
         var attachedPropertiesToGenerate = DependencyPropertyInspector<AttachedPropertyToGenerate>.Inspect(
             xamlPlatform,
             classSymbol,
+            memberSymbols,
             NameConstants.AttachedPropertyAttribute,
             NameConstants.AttachedProperty);
 
@@ -24,12 +27,13 @@ internal static class FrameworkElementInspector
         var dependencyPropertiesToGenerate = DependencyPropertyInspector<DependencyPropertyToGenerate>.Inspect(
             xamlPlatform,
             classSymbol,
+            memberSymbols,
             dependencyPropertyAttributeName,
             dependencyPropertyName);
 
-        var routedEventsToGenerate = RoutedEventInspector.Inspect(classSymbol);
+        var routedEventsToGenerate = RoutedEventInspector.Inspect(classSymbol, memberSymbols);
 
-        var relayCommandsToGenerate = RelayCommandInspector.Inspect(classSymbol);
+        var relayCommandsToGenerate = RelayCommandInspector.Inspect(classSymbol, memberSymbols);
 
         return new FrameworkElementInspectorResult(
             classSymbol.IsStatic,

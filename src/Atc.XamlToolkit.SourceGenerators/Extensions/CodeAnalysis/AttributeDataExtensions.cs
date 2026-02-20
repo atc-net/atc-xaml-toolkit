@@ -118,6 +118,9 @@ internal static class AttributeDataExtensions
             }
         }
 
+        // Cache the syntax fallback so it's computed at most once per attribute
+        IDictionary<string, string?>? syntaxFallback = null;
+
         foreach (var arg in attributeData.NamedArguments)
         {
             if (arg.Value.Kind == TypedConstantKind.Array)
@@ -146,9 +149,8 @@ internal static class AttributeDataExtensions
                 if (arg.Value.Kind == TypedConstantKind.Enum)
                 {
                     // Syntax check for enum - since arg.Value.Value will be an integer
-                    var dictionary = attributeData.SyntaxExtractConstructorArgumentValues();
-                    if (dictionary is not null &&
-                        dictionary.TryGetValue(arg.Key, out var value))
+                    syntaxFallback ??= attributeData.SyntaxExtractConstructorArgumentValues();
+                    if (syntaxFallback.TryGetValue(arg.Key, out var value))
                     {
                         result.Add(
                             arg.Key,
@@ -159,9 +161,8 @@ internal static class AttributeDataExtensions
                 {
                     if (arg is { Key: NameConstants.DefaultValue, Value.Kind: TypedConstantKind.Error })
                     {
-                        var dictionary = attributeData.SyntaxExtractConstructorArgumentValues();
-                        if (dictionary is not null &&
-                            dictionary.TryGetValue(arg.Key, out var value))
+                        syntaxFallback ??= attributeData.SyntaxExtractConstructorArgumentValues();
+                        if (syntaxFallback.TryGetValue(arg.Key, out var value))
                         {
                             result.Add(
                                 arg.Key,

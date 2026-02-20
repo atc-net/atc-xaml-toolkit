@@ -104,10 +104,11 @@ internal static class ObservableDtoViewModelInspector
 
         var computedProperties = ComputedPropertyInspector.Inspect(
             viewModelClassSymbol,
+            viewModelClassSymbol.GetMembers(),
             allProperties);
 
         // Link computed properties to custom observable properties only
-        LinkComputedPropertiesToObservableProperties(
+        ComputedPropertyInspector.LinkToObservableProperties(
             viewModelInspectorResult.PropertiesToGenerate,
             computedProperties);
 
@@ -123,36 +124,6 @@ internal static class ObservableDtoViewModelInspector
             viewModelInspectorResult.PropertiesToGenerate,
             viewModelInspectorResult.RelayCommandsToGenerate,
             computedProperties);
-    }
-
-    /// <summary>
-    /// Links computed properties to observable properties by adding them to the PropertyNamesToInvalidate list.
-    /// </summary>
-    /// <param name="observableProperties">The list of observable properties.</param>
-    /// <param name="computedProperties">The list of computed properties.</param>
-    private static void LinkComputedPropertiesToObservableProperties(
-        List<ObservablePropertyToGenerate>? observableProperties,
-        List<ComputedPropertyToGenerate> computedProperties)
-    {
-        if (observableProperties is null)
-        {
-            return;
-        }
-
-        foreach (var observableProperty in observableProperties)
-        {
-            foreach (var computedProperty in computedProperties)
-            {
-                if (computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
-                {
-                    observableProperty.PropertyNamesToInvalidate ??= [];
-                    if (!observableProperty.PropertyNamesToInvalidate.Contains(computedProperty.Name, StringComparer.Ordinal))
-                    {
-                        observableProperty.PropertyNamesToInvalidate.Add(computedProperty.Name);
-                    }
-                }
-            }
-        }
     }
 
     private static INamedTypeSymbol? ExtractDtoTypeFromSyntax(
@@ -210,41 +181,15 @@ internal static class ObservableDtoViewModelInspector
             return typeSymbol;
         }
 
-        // If that doesn't work, search through all assemblies
-        // This handles cases where the type is in the source being compiled
-        foreach (var syntaxTree in compilation.SyntaxTrees)
+        // Use the indexed GetSymbolsWithName API instead of scanning all syntax trees.
+        // This is significantly faster for large projects as it uses the compiler's
+        // internal name index rather than walking every syntax node.
+        var candidateName = typeName!;
+        foreach (var symbol in compilation.GetSymbolsWithName(candidateName, SymbolFilter.Type))
         {
-            var semanticModel = compilation.GetSemanticModel(syntaxTree);
-            var root = syntaxTree.GetRoot();
-
-            // Look for class declarations with matching name
-            var classDeclaration = root
-                .DescendantNodes()
-                .OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(c => c.Identifier.Text == typeName);
-
-            if (classDeclaration is not null)
+            if (symbol is INamedTypeSymbol namedType)
             {
-                var symbol = semanticModel.GetDeclaredSymbol(classDeclaration);
-                if (symbol is not null)
-                {
-                    return symbol;
-                }
-            }
-
-            // Look for record declarations with matching name
-            var recordDeclaration = root
-                .DescendantNodes()
-                .OfType<RecordDeclarationSyntax>()
-                .FirstOrDefault(r => r.Identifier.Text == typeName);
-
-            if (recordDeclaration is not null)
-            {
-                var symbol = semanticModel.GetDeclaredSymbol(recordDeclaration);
-                if (symbol is not null)
-                {
-                    return symbol;
-                }
+                return namedType;
             }
         }
 

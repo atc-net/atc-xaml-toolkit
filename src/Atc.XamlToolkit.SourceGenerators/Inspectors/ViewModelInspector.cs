@@ -6,15 +6,20 @@ internal static class ViewModelInspector
         INamedTypeSymbol viewModelClassSymbol,
         bool inheritFromViewModel)
     {
+        var memberSymbols = viewModelClassSymbol.GetMembers();
+
         var propertiesToGenerate = ObservablePropertyInspector.Inspect(
             viewModelClassSymbol,
+            memberSymbols,
             inheritFromViewModel);
 
         var relayCommandsToGenerate = RelayCommandInspector.Inspect(
-            viewModelClassSymbol);
+            viewModelClassSymbol,
+            memberSymbols);
 
         var computedPropertiesToGenerate = ComputedPropertyInspector.Inspect(
             viewModelClassSymbol,
+            memberSymbols,
             propertiesToGenerate);
 
         return new ViewModelInspectorResult(

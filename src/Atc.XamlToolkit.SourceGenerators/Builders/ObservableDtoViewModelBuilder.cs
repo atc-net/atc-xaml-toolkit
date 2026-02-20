@@ -183,8 +183,8 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
         AppendLine();
 
-        var commands = viewModelToGenerate.CustomCommands.ToArray();
-        for (var i = 0; i < commands.Length; i++)
+        var commands = viewModelToGenerate.CustomCommands;
+        for (var i = 0; i < commands.Count; i++)
         {
             var cmd = commands[i];
             var interfaceType = cmd.GetInterfaceType();

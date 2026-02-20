@@ -8,51 +8,39 @@ internal abstract class CommandBuilderBase : BuilderBase
 {
     public virtual void GenerateRelayCommands(
         CommandBuilderBase builder,
-        IEnumerable<RelayCommandToGenerate>? relayCommandsToGenerate)
+        IList<RelayCommandToGenerate>? relayCommandsToGenerate)
     {
-        if (relayCommandsToGenerate is null)
-        {
-            return;
-        }
-
-        var commands = relayCommandsToGenerate.ToArray();
-        if (commands.Length == 0)
+        if (relayCommandsToGenerate is null || relayCommandsToGenerate.Count == 0)
         {
             return;
         }
 
         builder.AppendLineBeforeMember();
 
-        AppendPrivateBackingFields(builder, commands);
+        AppendPrivateBackingFields(builder, relayCommandsToGenerate);
 
         builder.AppendLine();
 
-        AppendPublicProperties(builder, commands);
+        AppendPublicProperties(builder, relayCommandsToGenerate);
     }
 
     public virtual void GenerateRelayCommandMethods(
         CommandBuilderBase builder,
-        IEnumerable<RelayCommandToGenerate>? relayCommandsToGenerate)
+        IList<RelayCommandToGenerate>? relayCommandsToGenerate)
     {
-        if (relayCommandsToGenerate is null)
+        if (relayCommandsToGenerate is null || relayCommandsToGenerate.Count == 0)
         {
             return;
         }
 
-        var commands = relayCommandsToGenerate.ToArray();
-        if (commands.Length == 0)
-        {
-            return;
-        }
+        AppendCancelMethods(builder, relayCommandsToGenerate);
 
-        AppendCancelMethods(builder, commands);
-
-        AppendDisposeCommandsMethod(builder, commands);
+        AppendDisposeCommandsMethod(builder, relayCommandsToGenerate);
     }
 
     private static void AppendPrivateBackingFields(
         CommandBuilderBase builder,
-        RelayCommandToGenerate[] commands)
+        IList<RelayCommandToGenerate> commands)
     {
         foreach (var cmd in commands)
         {
@@ -75,9 +63,9 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendPublicProperties(
         CommandBuilderBase builder,
-        RelayCommandToGenerate[] commands)
+        IList<RelayCommandToGenerate> commands)
     {
-        for (var i = 0; i < commands.Length; i++)
+        for (var i = 0; i < commands.Count; i++)
         {
             var cmd = commands[i];
             var interfaceType = cmd.GetInterfaceType();
@@ -208,7 +196,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 builder.AppendLine($"public IRelayCommand {cancelCommandPropName} => {cancelCommandFieldName} ??= new RelayCommand({cancelMethodName});");
             }
 
-            if (i < commands.Length - 1)
+            if (i < commands.Count - 1)
             {
                 builder.AppendLine();
             }
@@ -217,22 +205,26 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendCancelMethods(
         CommandBuilderBase builder,
-        RelayCommandToGenerate[] commands)
+        IList<RelayCommandToGenerate> commands)
     {
-        var commandsWithCancellation = commands
-            .Where(cmd => cmd.SupportsCancellation && cmd.UseTask)
-            .ToArray();
-
-        if (commandsWithCancellation.Length == 0)
+        var first = true;
+        foreach (var cmd in commands)
         {
-            return;
-        }
+            if (!cmd.SupportsCancellation || !cmd.UseTask)
+            {
+                continue;
+            }
 
-        builder.AppendLine();
+            if (first)
+            {
+                builder.AppendLine();
+                first = false;
+            }
+            else
+            {
+                builder.AppendLine();
+            }
 
-        for (var i = 0; i < commandsWithCancellation.Length; i++)
-        {
-            var cmd = commandsWithCancellation[i];
             var methodName = cmd.CommandName.Replace("Command", string.Empty);
             var propName = cmd.GetCommandAsPropertyName();
             var cancelMethodName = $"Cancel{methodName}";
@@ -244,25 +236,26 @@ internal abstract class CommandBuilderBase : BuilderBase
             builder.AppendLine($"{propName}.Cancel();");
             builder.DecreaseIndent();
             builder.AppendLine("}");
-
-            if (i < commandsWithCancellation.Length - 1)
-            {
-                builder.AppendLine();
-            }
         }
     }
 
     private static void AppendDisposeCommandsMethod(
         CommandBuilderBase builder,
-        RelayCommandToGenerate[] commands)
+        IList<RelayCommandToGenerate> commands)
     {
         // All async commands (IRelayCommandAsync) implement IDisposable,
         // so we need to generate DisposeCommands() for all of them
-        var asyncCommands = commands
-            .Where(cmd => cmd.UseTask)
-            .ToArray();
+        var hasAsyncCommands = false;
+        foreach (var cmd in commands)
+        {
+            if (cmd.UseTask)
+            {
+                hasAsyncCommands = true;
+                break;
+            }
+        }
 
-        if (asyncCommands.Length == 0)
+        if (!hasAsyncCommands)
         {
             return;
         }
@@ -273,8 +266,13 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine("{");
         builder.IncreaseIndent();
 
-        foreach (var cmd in asyncCommands)
+        foreach (var cmd in commands)
         {
+            if (!cmd.UseTask)
+            {
+                continue;
+            }
+
             var propName = cmd.GetCommandAsPropertyName();
             builder.AppendLine($"{propName}.Dispose();");
         }
@@ -356,7 +354,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         string? capturedDispatcherVar = null;
         if ((useDispatcherInvokeAsync || useDispatcherInvoke) && builder.XamlPlatform == XamlPlatform.WinUI)
         {
-            capturedDispatcherVar = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+            capturedDispatcherVar = builder.GetUniqueVariableName("dispatcherQueue");
             builder.AppendLine($"var {capturedDispatcherVar} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
             builder.AppendLine();
         }
@@ -463,7 +461,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 var varName = capturedDispatcherVar;
                 if (varName is null)
                 {
-                    varName = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+                    varName = builder.GetUniqueVariableName("dispatcherQueue");
                     builder.AppendLine($"var {varName} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
                 }
 
@@ -508,7 +506,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                 var varName = capturedDispatcherVar;
                 if (varName is null)
                 {
-                    varName = $"dispatcherQueue{Guid.NewGuid():N}".Substring(0, 20);
+                    varName = builder.GetUniqueVariableName("dispatcherQueue");
                     builder.AppendLine($"var {varName} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
                 }
 

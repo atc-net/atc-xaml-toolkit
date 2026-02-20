@@ -77,17 +77,11 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             return false;
         }
 
-        // Accept 'if' has attributes (might have ObservableDtoViewModel attribute)
-        // For multi-file scenarios, some partial declarations might not have attributes
-        if (classDeclaration.AttributeLists.Count > 0 &&
-            HasObservableDtoViewModelAttribute(classDeclaration.AttributeLists))
-        {
-            return true;
-        }
-
-        // Also accept partials with base list but no attributes
-        // (the attribute might be on another partial declaration)
-        return true;
+        // Must have the ObservableDtoViewModel attribute on this declaration
+        // For multi-file partial classes, only the declaration with the attribute
+        // needs to pass the predicate; the semantic phase will discover all partials.
+        return classDeclaration.AttributeLists.Count > 0 &&
+               HasObservableDtoViewModelAttribute(classDeclaration.AttributeLists);
     }
 
     /// <summary>
