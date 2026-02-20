@@ -40,6 +40,94 @@ public sealed class StringExtensionsTests
         Assert.Equal(expected, result);
     }
 
+    [Theory]
+    [InlineData("hello", "Hello")]
+    [InlineData("Hello", "Hello")]
+    [InlineData("a", "A")]
+    [InlineData("A", "A")]
+    [InlineData("", "")]
+    [InlineData("myProperty", "MyProperty")]
+    [InlineData("123numeric", "123numeric")]
+    public void EnsureFirstCharacterToUpper_WorksCorrectly(
+        string input,
+        string expected)
+    {
+        var result = Atc.XamlToolkit.SourceGenerators.Extensions.StringExtensions.EnsureFirstCharacterToUpper(input);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void EnsureFirstCharacterToUpper_NullInput_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Atc.XamlToolkit.SourceGenerators.Extensions.StringExtensions.EnsureFirstCharacterToUpper(null!));
+    }
+
+    [Theory]
+    [InlineData("Hello", "hello")]
+    [InlineData("hello", "hello")]
+    [InlineData("A", "a")]
+    [InlineData("a", "a")]
+    [InlineData("", "")]
+    [InlineData("MyProperty", "myProperty")]
+    [InlineData("123numeric", "123numeric")]
+    public void EnsureFirstCharacterToLower_WorksCorrectly(
+        string input,
+        string expected)
+    {
+        var result = Atc.XamlToolkit.SourceGenerators.Extensions.StringExtensions.EnsureFirstCharacterToLower(input);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void EnsureFirstCharacterToLower_NullInput_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Atc.XamlToolkit.SourceGenerators.Extensions.StringExtensions.EnsureFirstCharacterToLower(null!));
+    }
+
+    [Theory]
+    [InlineData("string", "string")]
+    [InlineData("string?", "string")]
+    [InlineData("int", "int")]
+    [InlineData("int?", "int?")]
+    [InlineData("bool?", "bool?")]
+    [InlineData("Guid?", "Guid?")]
+    [InlineData("DateTime?", "DateTime?")]
+    [InlineData("MyCustomClass?", "MyCustomClass")]
+    [InlineData("SomeRefType?", "SomeRefType")]
+    [InlineData("Thickness?", "Thickness?")]
+    [InlineData("", "")]
+    public void TrimNullableForTypeOf_WorksCorrectly(
+        string input,
+        string expected)
+    {
+        var result = input.TrimNullableForTypeOf();
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("bool", true)]
+    [InlineData("int", true)]
+    [InlineData("double", true)]
+    [InlineData("Guid", true)]
+    [InlineData("DateTime", true)]
+    [InlineData("Thickness", true)]
+    [InlineData("Color", true)]
+    [InlineData("HorizontalAlignment", true)]
+    [InlineData("string", false)]
+    [InlineData("MyCustomClass", false)]
+    [InlineData("object", false)]
+    [InlineData("", false)]
+    [InlineData("IList<int>", true)]
+    [InlineData("IList<string>", false)]
+    [InlineData("bool?", true)]
+    public void IsKnownValueType_WorksCorrectly(
+        string input,
+        bool expected)
+    {
+        var result = input.IsKnownValueType();
+        Assert.Equal(expected, result);
+    }
+
     public static IEnumerable<object[]> GetExtractAttributeConstructorParametersTestData()
     {
         yield return [
