@@ -10,9 +10,4 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.WinUI\Atc.XamlToolkit.WinUI.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Atc.Analyzer" Version="0.1.19" />
-    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
-  </ItemGroup>
-
 </Project>
