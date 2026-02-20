@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Atc" Version="3.0.16" />
-    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Atc" Version="3.0.18" />
+    <PackageReference Include="Avalonia" Version="11.3.12" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.3.0.6" />
   </ItemGroup>
 
@@ -27,11 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Atc.Analyzer" Version="0.1.19" />
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.102" />
   </ItemGroup>
 
 </Project>
