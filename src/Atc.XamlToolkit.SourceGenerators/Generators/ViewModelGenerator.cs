@@ -240,7 +240,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             return null;
         }
 
-        LinkComputedPropertiesToObservableProperties(allObservableProperties, allComputedProperties);
+        ComputedPropertyInspector.LinkToObservableProperties(allObservableProperties, allComputedProperties);
 
         var viewModelToGenerate = new ViewModelToGenerate(
             namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
@@ -253,31 +253,6 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         };
 
         return viewModelToGenerate;
-    }
-
-    /// <summary>
-    /// Links computed properties to observable properties by adding them to the PropertyNamesToInvalidate list.
-    /// </summary>
-    /// <param name="observableProperties">The list of observable properties.</param>
-    /// <param name="computedProperties">The list of computed properties.</param>
-    private static void LinkComputedPropertiesToObservableProperties(
-        List<ObservablePropertyToGenerate> observableProperties,
-        List<ComputedPropertyToGenerate> computedProperties)
-    {
-        foreach (var observableProperty in observableProperties)
-        {
-            foreach (var computedProperty in computedProperties)
-            {
-                if (computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
-                {
-                    observableProperty.PropertyNamesToInvalidate ??= [];
-                    if (!observableProperty.PropertyNamesToInvalidate.Contains(computedProperty.Name, StringComparer.Ordinal))
-                    {
-                        observableProperty.PropertyNamesToInvalidate.Add(computedProperty.Name);
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>

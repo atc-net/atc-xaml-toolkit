@@ -3,11 +3,10 @@ namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 internal static class RoutedEventInspector
 {
     public static List<RoutedEventToGenerate> Inspect(
-        INamedTypeSymbol classSymbol)
+        INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols)
     {
         var result = new List<RoutedEventToGenerate>();
-
-        var memberSymbols = classSymbol.GetMembers();
 
         foreach (var memberSymbol in memberSymbols)
         {

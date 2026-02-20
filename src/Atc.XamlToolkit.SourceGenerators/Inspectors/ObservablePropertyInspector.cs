@@ -5,11 +5,10 @@ internal static class ObservablePropertyInspector
 {
     public static List<ObservablePropertyToGenerate> Inspect(
         INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols,
         bool inheritFromViewModel)
     {
         var result = new List<ObservablePropertyToGenerate>();
-
-        var memberSymbols = classSymbol.GetMembers();
 
         foreach (var memberSymbol in memberSymbols)
         {
@@ -130,21 +129,21 @@ internal static class ObservablePropertyInspector
 
         var useIsDirty = fieldPropertyAttribute.ExtractUseIsDirtyValue(inheritFromViewModel, defaultValue: false);
 
-        var notifyPropertyChangedForAttributes = fieldSymbolAttributes
-            .Where(x => x.AttributeClass?.Name
-                is NameConstants.NotifyPropertyChangedForAttribute
-                or NameConstants.NotifyPropertyChangedFor)
-            .ToList();
-
-        if (notifyPropertyChangedForAttributes.Count > 0)
+        foreach (var attr in fieldSymbolAttributes)
         {
+            if (attr.AttributeClass?.Name
+                is not NameConstants.NotifyPropertyChangedForAttribute
+                and not NameConstants.NotifyPropertyChangedFor)
+            {
+                continue;
+            }
+
             propertyNamesToInvalidate ??= [];
 
-            foreach (var notifyPropertyChangedForAttribute in notifyPropertyChangedForAttributes)
+            var argumentValues = attr.ExtractConstructorArgumentValues();
+            foreach (var argumentValue in argumentValues)
             {
-                var argumentValues = notifyPropertyChangedForAttribute.ExtractConstructorArgumentValues();
-                foreach (var argumentValue in argumentValues
-                             .Where(parameter => !propertyNamesToInvalidate.Contains(parameter.Value!, StringComparer.Ordinal)))
+                if (!propertyNamesToInvalidate.Contains(argumentValue.Value!, StringComparer.Ordinal))
                 {
                     propertyNamesToInvalidate.Add(argumentValue.Value!);
                 }

@@ -6,6 +6,7 @@ internal static class DependencyPropertyInspector<T>
     public static List<T> Inspect(
         XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols,
         string primaryAttributeName,
         string secondaryAttributeName)
     {
@@ -13,7 +14,7 @@ internal static class DependencyPropertyInspector<T>
 
         properties.AddRange(InspectFromClass(xamlPlatform, classSymbol, primaryAttributeName, secondaryAttributeName));
 
-        var propertyToGenerates = InspectFromFields(xamlPlatform, classSymbol, primaryAttributeName, secondaryAttributeName);
+        var propertyToGenerates = InspectFromFields(xamlPlatform, classSymbol, memberSymbols, primaryAttributeName, secondaryAttributeName);
 
         if (properties.Count == 0)
         {
@@ -54,12 +55,13 @@ internal static class DependencyPropertyInspector<T>
     private static IEnumerable<T> InspectFromFields(
         XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols,
         string primaryAttributeName,
         string secondaryAttributeName)
     {
         var properties = new List<T>();
 
-        foreach (var memberSymbol in classSymbol.GetMembers())
+        foreach (var memberSymbol in memberSymbols)
         {
             if (memberSymbol is not IFieldSymbol fieldSymbol)
             {

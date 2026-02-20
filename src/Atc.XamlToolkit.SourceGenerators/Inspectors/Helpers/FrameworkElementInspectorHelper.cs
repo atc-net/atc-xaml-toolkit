@@ -53,8 +53,7 @@ internal static class FrameworkElementInspectorHelper
                 ref defaultValue);
 
             propertiesToGenerate.Add(
-                (T)Activator.CreateInstance(
-                    typeof(T),
+                BaseFrameworkElementPropertyToGenerate.Create<T>(
                     classSymbol.IsStatic,
                     ownerType,
                     propertyName,
@@ -69,7 +68,7 @@ internal static class FrameworkElementInspectorHelper
                     defaultUpdateSourceTrigger,
                     isAnimationProhibited,
                     category,
-                    description)!);
+                    description));
         }
 
         return propertiesToGenerate;
@@ -118,25 +117,22 @@ internal static class FrameworkElementInspectorHelper
             out var description,
             ref defaultValue);
 
-        var propertyToGenerate = (T)Activator.CreateInstance(
-                typeof(T),
-                classSymbol.IsStatic,
-                ownerType,
-                propertyName,
-                type,
-                fieldSymbol.IsReadOnly,
-                useNewKeyword,
-                defaultValue,
-                propertyChangedCallback,
-                coerceValueCallback,
-                validateValueCallback,
-                flags,
-                defaultUpdateSourceTrigger,
-                isAnimationProhibited,
-                category,
-                description);
-
-        return propertyToGenerate;
+        return BaseFrameworkElementPropertyToGenerate.Create<T>(
+            classSymbol.IsStatic,
+            ownerType,
+            propertyName,
+            type,
+            fieldSymbol.IsReadOnly,
+            useNewKeyword,
+            defaultValue,
+            propertyChangedCallback,
+            coerceValueCallback,
+            validateValueCallback,
+            flags,
+            defaultUpdateSourceTrigger,
+            isAnimationProhibited,
+            category,
+            description);
     }
 
     private static void Extract(

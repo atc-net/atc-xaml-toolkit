@@ -58,6 +58,67 @@ internal abstract class BaseFrameworkElementPropertyToGenerate(
     public bool HasAnyValidateValueCallback
         => ValidateValueCallback is not null;
 
+    public static T Create<T>(
+        bool isOwnerTypeStatic,
+        string ownerType,
+        string name,
+        string type,
+        bool isReadOnly,
+        bool useNewKeyword,
+        object? defaultValue,
+        string? propertyChangedCallback,
+        string? coerceValueCallback,
+        string? validateValueCallback,
+        string? flags,
+        string? defaultUpdateSourceTrigger,
+        bool? isAnimationProhibited,
+        string? category,
+        string? description)
+        where T : BaseFrameworkElementPropertyToGenerate
+    {
+        BaseFrameworkElementPropertyToGenerate result;
+        if (typeof(T) == typeof(AttachedPropertyToGenerate))
+        {
+            result = new AttachedPropertyToGenerate(
+                isOwnerTypeStatic,
+                ownerType,
+                name,
+                type,
+                isReadOnly,
+                useNewKeyword,
+                defaultValue,
+                propertyChangedCallback,
+                coerceValueCallback,
+                validateValueCallback,
+                flags,
+                defaultUpdateSourceTrigger,
+                isAnimationProhibited,
+                category,
+                description);
+        }
+        else
+        {
+            result = new DependencyPropertyToGenerate(
+                isOwnerTypeStatic,
+                ownerType,
+                name,
+                type,
+                isReadOnly,
+                useNewKeyword,
+                defaultValue,
+                propertyChangedCallback,
+                coerceValueCallback,
+                validateValueCallback,
+                flags,
+                defaultUpdateSourceTrigger,
+                isAnimationProhibited,
+                category,
+                description);
+        }
+
+        return (T)result;
+    }
+
     public override string ToString()
         => $"{nameof(OwnerType)}: {OwnerType}, {nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(DefaultValue)}: {DefaultValue}, {nameof(PropertyChangedCallback)}: {PropertyChangedCallback}, {nameof(CoerceValueCallback)}: {CoerceValueCallback}, {nameof(ValidateValueCallback)}: {ValidateValueCallback}, {nameof(Flags)}: {Flags}, {nameof(DefaultUpdateSourceTrigger)}: {DefaultUpdateSourceTrigger}, {nameof(IsAnimationProhibited)}: {IsAnimationProhibited}, {nameof(Category)}: {Category}, {nameof(Description)}: {Description}";
 }

@@ -3,11 +3,10 @@ namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
 internal static class RelayCommandInspector
 {
     public static List<RelayCommandToGenerate> Inspect(
-        INamedTypeSymbol classSymbol)
+        INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> memberSymbols)
     {
         var result = new List<RelayCommandToGenerate>();
-
-        var memberSymbols = classSymbol.GetMembers();
 
         foreach (var memberSymbol in memberSymbols)
         {
@@ -16,24 +15,19 @@ internal static class RelayCommandInspector
                 continue;
             }
 
-            var relayCommandAttributes = methodSymbol
-                .GetAttributes()
-                .Where(attr => attr.AttributeClass?.Name
-                    is NameConstants.RelayCommandAttribute
-                    or NameConstants.RelayCommand)
-                .ToList();
-
-            if (relayCommandAttributes.Count == 0)
+            foreach (var attr in methodSymbol.GetAttributes())
             {
-                continue;
-            }
+                if (attr.AttributeClass?.Name
+                    is not NameConstants.RelayCommandAttribute
+                    and not NameConstants.RelayCommand)
+                {
+                    continue;
+                }
 
-            foreach (var relayCommandAttribute in relayCommandAttributes)
-            {
                 AppendRelayCommandToGenerate(
                     methodSymbol,
                     memberSymbols,
-                    relayCommandAttribute,
+                    attr,
                     result);
             }
         }
