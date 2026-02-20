@@ -193,12 +193,25 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             return null;
         }
 
-        var allPartialDeclarations = context
-            .SemanticModel
-            .Compilation
-            .GetAllPartialClassDeclarations(classSymbol);
+        // Skip if an earlier partial declaration already qualifies via IsSyntaxTarget,
+        // so only the first qualifying declaration triggers the full semantic analysis.
+        foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
+        {
+            if (declRef.SyntaxTree == classDeclarationSyntax.SyntaxTree &&
+                declRef.Span == classDeclarationSyntax.Span)
+            {
+                break;
+            }
 
-        if (!allPartialDeclarations.HasAnythingAroundFrameworkElement(context))
+            if (IsSyntaxTarget(declRef.GetSyntax()))
+            {
+                return null;
+            }
+        }
+
+        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
+
+        if (!classSymbol.HasAnythingAroundFrameworkElement())
         {
             return null;
         }

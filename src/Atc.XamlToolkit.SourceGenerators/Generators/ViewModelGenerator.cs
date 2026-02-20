@@ -157,7 +157,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     /// <param name="context">The generator syntax context.</param>
     /// <returns>A ViewModelToGenerate object if valid; otherwise, null.</returns>
     /// <remarks>
-    /// This method uses <c>HasBaseClassFromList</c> to ensure the ViewModel inherits
+    /// This method uses <c>CheckBaseClasses</c> to ensure the ViewModel inherits
     /// from a valid base class. This check is necessary to correctly identify ViewModels
     /// even if their base class is defined in another file.
     ///
@@ -181,12 +181,25 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             return null;
         }
 
-        var allPartialDeclarations = context
-            .SemanticModel
-            .Compilation
-            .GetAllPartialClassDeclarations(classSymbol);
+        // Skip if an earlier partial declaration already qualifies via IsSyntaxTarget,
+        // so only the first qualifying declaration triggers the full semantic analysis.
+        foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
+        {
+            if (declRef.SyntaxTree == classDeclarationSyntax.SyntaxTree &&
+                declRef.Span == classDeclarationSyntax.Span)
+            {
+                break;
+            }
 
-        var (hasAnyBase, inheritFromViewModel) = allPartialDeclarations.CheckBaseClasses(context);
+            if (IsSyntaxTarget(declRef.GetSyntax()))
+            {
+                return null;
+            }
+        }
+
+        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
+
+        var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
 
         if (!hasAnyBase)
         {
@@ -221,7 +234,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 allComputedProperties);
         }
 
-        if (allObservableProperties.Count == 00 &&
+        if (allObservableProperties.Count == 0 &&
             allRelayCommands.Count == 0)
         {
             return null;
