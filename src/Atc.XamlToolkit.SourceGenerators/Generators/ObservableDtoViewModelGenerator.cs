@@ -140,6 +140,7 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
     /// </summary>
     /// <param name="context">The generator syntax context.</param>
     /// <returns>An ObservableDtoViewModelToGenerate object if valid; otherwise, null.</returns>
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static ObservableDtoViewModelToGenerate? GetSemanticTarget(
         GeneratorSyntaxContext context)
     {
@@ -151,18 +152,29 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
             return null;
         }
 
+        // Skip if an earlier partial declaration already qualifies via IsSyntaxTarget,
+        // so only the first qualifying declaration triggers the full semantic analysis.
+        foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
+        {
+            if (declRef.SyntaxTree == classDeclarationSyntax.SyntaxTree &&
+                declRef.Span == classDeclarationSyntax.Span)
+            {
+                break;
+            }
+
+            if (IsSyntaxTarget(declRef.GetSyntax()))
+            {
+                return null;
+            }
+        }
+
         var hasAttribute = classSymbol.HasObservableDtoViewModelAttribute();
         if (!hasAttribute)
         {
             return null;
         }
 
-        var allPartialDeclarations = context
-            .SemanticModel
-            .Compilation
-            .GetAllPartialClassDeclarations(classSymbol);
-
-        var (hasAnyBase, inheritFromViewModel) = allPartialDeclarations.CheckBaseClasses(context);
+        var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
 
         if (!hasAnyBase)
         {

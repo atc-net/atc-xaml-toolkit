@@ -43,8 +43,8 @@ internal static class NamedTypeSymbolExtensions
                                         primaryConstructorParameters.Contains(p.Name);
 
                 var isReadOnly = p.SetMethod is null;
-                var attributes = ExtractPropertyAttributes(p);
-                var documentationComments = ExtractPropertyDocumentationComments(p);
+                var attributes = p.ExtractPropertyAttributes();
+                var documentationComments = p.ExtractPropertyDocumentationComments();
 
                 return new DtoPropertyInfo(
                     p.Name,
@@ -55,62 +55,6 @@ internal static class NamedTypeSymbolExtensions
                     documentationComments);
             })
             .ToList();
-    }
-
-    public static List<string> ExtractPropertyAttributes(
-        IPropertySymbol propertySymbol)
-    {
-        var attributes = new List<string>();
-        foreach (var syntaxRef in propertySymbol.DeclaringSyntaxReferences)
-        {
-            var syntax = syntaxRef.GetSyntax();
-            if (syntax is PropertyDeclarationSyntax propertyDeclaration)
-            {
-                foreach (var attributeList in propertyDeclaration.AttributeLists)
-                {
-                    foreach (var attribute in attributeList.Attributes)
-                    {
-                        attributes.Add(attribute.ToString());
-                    }
-                }
-            }
-        }
-
-        return attributes;
-    }
-
-    public static List<string>? ExtractPropertyDocumentationComments(
-        IPropertySymbol propertySymbol)
-    {
-        var documentationComments = new List<string>();
-        foreach (var syntaxRef in propertySymbol.DeclaringSyntaxReferences)
-        {
-            var syntax = syntaxRef.GetSyntax();
-            if (syntax is PropertyDeclarationSyntax propertyDeclaration)
-            {
-                // Get leading trivia which contains documentation comments
-                var leadingTrivia = propertyDeclaration.GetLeadingTrivia();
-                foreach (var trivia in leadingTrivia)
-                {
-                    if (trivia.Kind() is SyntaxKind.SingleLineDocumentationCommentTrivia
-                        or SyntaxKind.MultiLineDocumentationCommentTrivia)
-                    {
-                        // Get the full text of the documentation comment
-                        var commentText = trivia
-                            .ToFullString()
-                            .Trim();
-                        if (!string.IsNullOrWhiteSpace(commentText))
-                        {
-                            documentationComments.Add(commentText);
-                        }
-                    }
-                }
-            }
-        }
-
-        return documentationComments.Count > 0
-            ? documentationComments
-            : null;
     }
 
     public static List<DtoMethodInfo> ExtractMethods(
@@ -199,5 +143,73 @@ internal static class NamedTypeSymbolExtensions
         }
 
         return false;
+    }
+
+    [SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "OK")]
+    public static IList<ClassDeclarationSyntax> GetAllPartialClassDeclarations(
+        this INamedTypeSymbol classSymbol)
+        => classSymbol
+            .DeclaringSyntaxReferences
+            .Select(r => r.GetSyntax())
+            .OfType<ClassDeclarationSyntax>()
+            .ToList();
+
+    /// <summary>
+    /// Checks if the class symbol inherits from ViewModelBase or ObservableObject.
+    /// Since all partial declarations resolve to the same type symbol, checking
+    /// inheritance once is sufficient.
+    /// </summary>
+    /// <param name="classSymbol">The class symbol to check.</param>
+    /// <returns>
+    /// A tuple containing:
+    /// - HasAnyBase: True if the class inherits from any valid base class
+    /// - HasViewModelBase: True if the class inherits from ViewModelBase, MainWindowViewModelBase, or ViewModelDialogBase
+    /// </returns>
+    public static (bool HasAnyBase, bool HasViewModelBase) CheckBaseClasses(
+        this INamedTypeSymbol classSymbol)
+    {
+        if (classSymbol.InheritsFrom(
+                NameConstants.ViewModelBase,
+                NameConstants.MainWindowViewModelBase,
+                NameConstants.ViewModelDialogBase))
+        {
+            return (true, true);
+        }
+
+        return classSymbol.InheritsFrom(NameConstants.ObservableObject)
+            ? (true, false)
+            : (false, false);
+    }
+
+    /// <summary>
+    /// Checks if the class symbol is a valid framework element target for source generation.
+    /// This checks inheritance, naming conventions, and the presence of RoutedEvent attributes.
+    /// </summary>
+    /// <param name="classSymbol">The class symbol to check.</param>
+    /// <returns>True if the class is a valid framework element target; otherwise, false.</returns>
+    public static bool HasAnythingAroundFrameworkElement(
+        this INamedTypeSymbol classSymbol)
+    {
+        if (classSymbol.InheritsFrom(
+                NameConstants.UserControl,
+                NameConstants.DependencyObject,
+                NameConstants.FrameworkElement))
+        {
+            return true;
+        }
+
+        if (classSymbol.Name.EndsWith(NameConstants.Attach, StringComparison.Ordinal) ||
+            classSymbol.Name.EndsWith(NameConstants.Behavior, StringComparison.Ordinal) ||
+            classSymbol.Name.EndsWith(NameConstants.Helper, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Symbol-based check replaces SyntaxTree.ToString().Contains("[RoutedEvent")
+        return classSymbol.GetMembers()
+            .Any(m => m.GetAttributes()
+                .Any(a => a.AttributeClass?.Name
+                    is NameConstants.RoutedEventAttribute
+                    or NameConstants.RoutedEvent));
     }
 }
