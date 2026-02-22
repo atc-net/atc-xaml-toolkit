@@ -4,7 +4,7 @@ namespace Atc.XamlToolkit.Metadata;
 /// Specifies whether a property should be visible in dynamic property editors.
 /// Use <c>[PropertyBrowsable(false)]</c> to explicitly hide a property that would otherwise be included.
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public sealed class PropertyBrowsableAttribute : Attribute
 {
     /// <summary>

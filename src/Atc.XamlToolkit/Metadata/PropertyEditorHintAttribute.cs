@@ -4,7 +4,7 @@ namespace Atc.XamlToolkit.Metadata;
 /// Specifies a hint to the UI editor about which control type to use for editing a property,
 /// overriding the default control selection based on the property's type.
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public sealed class PropertyEditorHintAttribute : Attribute
 {
     /// <summary>
