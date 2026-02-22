@@ -27,8 +27,4 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.Wpf\Atc.XamlToolkit.Wpf.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Atc.Analyzer" Version="0.1.22" />
-  </ItemGroup>
-
 </Project>

@@ -43,13 +43,11 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260209005" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.SourceGenerators\Atc.XamlToolkit.SourceGenerators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\..\src\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.WinUI\Atc.XamlToolkit.WinUI.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="Atc.Analyzer" Version="0.1.22" />
   </ItemGroup>
 
   <!--
