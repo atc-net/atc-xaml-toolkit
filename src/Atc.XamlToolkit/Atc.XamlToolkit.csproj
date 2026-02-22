@@ -17,4 +17,9 @@
     <PackageReference Include="Atc" Version="3.0.18" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\Atc.XamlToolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Atc.XamlToolkit.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Remove="_._" />
+  </ItemGroup>
+
 </Project>
