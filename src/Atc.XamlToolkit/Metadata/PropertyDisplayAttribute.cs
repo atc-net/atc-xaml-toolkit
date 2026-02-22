@@ -5,7 +5,7 @@ namespace Atc.XamlToolkit.Metadata;
 /// Specifies display metadata for a property, including its friendly name, group, sort order, and description.
 /// Properties without this attribute are excluded from dynamic property editors (opt-in model).
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification = "GroupName and Order are intentionally settable as both positional and named parameters.")]
 public sealed class PropertyDisplayAttribute : Attribute
 {

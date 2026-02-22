@@ -4,7 +4,7 @@ namespace Atc.XamlToolkit.Metadata;
 /// Specifies the valid numeric range and optional step increment for a property.
 /// All values are stored as <see cref="double"/> internally.
 /// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public sealed class PropertyRangeAttribute : Attribute
 {
     /// <summary>
