@@ -34,8 +34,4 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.Avalonia\Atc.XamlToolkit.Avalonia.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Atc.Analyzer" Version="0.1.22" />
-  </ItemGroup>
-
 </Project>
