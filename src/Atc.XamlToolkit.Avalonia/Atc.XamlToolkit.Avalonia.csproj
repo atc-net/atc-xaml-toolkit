@@ -21,11 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Atc.XamlToolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Atc.XamlToolkit.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Remove="_._" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
   </ItemGroup>
 
