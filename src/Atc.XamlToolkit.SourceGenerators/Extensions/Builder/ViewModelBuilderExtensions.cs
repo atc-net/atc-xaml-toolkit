@@ -11,9 +11,15 @@ internal static class ViewModelBuilderExtensions
         builder.AppendLine("#nullable enable");
         if (viewModelToGenerate.RelayCommandsToGenerate?.Count > 0)
         {
+            // Add platform-specific using directives for dispatcher extension methods
+            if (builder.XamlPlatform == XamlPlatform.Wpf &&
+                viewModelToGenerate.RelayCommandsToGenerate.Any(c => c.AutoSetIsBusy))
+            {
+                builder.AppendLine("using System.Windows.Threading;");
+            }
+
             builder.AppendLine("using Atc.XamlToolkit.Command;");
 
-            // Add platform-specific using directives for dispatcher extension methods
             if (builder.XamlPlatform == XamlPlatform.WinUI)
             {
                 builder.AppendLine("using Microsoft.UI.Dispatching;");
