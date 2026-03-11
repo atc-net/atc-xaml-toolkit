@@ -442,7 +442,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine(hasCan ? "}," : "});");
     }
 
-    private static void AppendDispatcherInvokeAsync(
+    protected static void AppendDispatcherInvokeAsync(
         CommandBuilderBase builder,
         string action,
         string? capturedDispatcherVar = null)
@@ -491,7 +491,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
     }
 
-    private static void AppendDispatcherInvoke(
+    protected static void AppendDispatcherInvoke(
         CommandBuilderBase builder,
         string action,
         string? capturedDispatcherVar = null)

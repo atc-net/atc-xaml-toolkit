@@ -11,7 +11,18 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         // Add using for commands if needed
         if (viewModelToGenerate.CustomCommands.Count > 0)
         {
+            if (XamlPlatform == XamlPlatform.Wpf &&
+                viewModelToGenerate.CustomCommands.Any(c => c.AutoSetIsBusy))
+            {
+                AppendLine("using System.Windows.Threading;");
+            }
+
             AppendLine("using Atc.XamlToolkit.Command;");
+
+            if (XamlPlatform == XamlPlatform.WinUI)
+            {
+                AppendLine("using Microsoft.UI.Dispatching;");
+            }
         }
 
         AppendLine();
@@ -408,17 +419,23 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
         builder.AppendLine("{");
         builder.IncreaseIndent();
+
+        // For WinUI with dispatcher invocation, capture the DispatcherQueue once at the start
+        string? capturedDispatcherVar = null;
+        if ((useDispatcherInvokeAsync || useDispatcherInvoke) && builder.XamlPlatform == XamlPlatform.WinUI)
+        {
+            capturedDispatcherVar = builder.GetUniqueVariableName("dispatcherQueue");
+            builder.AppendLine($"var {capturedDispatcherVar} = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();");
+            builder.AppendLine();
+        }
+
         if (useDispatcherInvokeAsync)
         {
-            builder.AppendLine("await Application.Current.Dispatcher");
-            builder.IncreaseIndent();
-            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = true)");
-            builder.AppendLine(".ConfigureAwait(false);");
-            builder.DecreaseIndent();
+            AppendDispatcherInvokeAsync(builder, "IsBusy = true", capturedDispatcherVar);
         }
         else if (useDispatcherInvoke)
         {
-            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);");
+            AppendDispatcherInvoke(builder, "IsBusy = true", capturedDispatcherVar);
         }
         else
         {
@@ -478,15 +495,11 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         builder.IncreaseIndent();
         if (useDispatcherInvokeAsync)
         {
-            builder.AppendLine("await Application.Current.Dispatcher");
-            builder.IncreaseIndent();
-            builder.AppendLine(".InvokeAsyncIfRequired(() => IsBusy = false)");
-            builder.AppendLine(".ConfigureAwait(false);");
-            builder.DecreaseIndent();
+            AppendDispatcherInvokeAsync(builder, "IsBusy = false", capturedDispatcherVar);
         }
         else if (useDispatcherInvoke)
         {
-            builder.AppendLine("Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);");
+            AppendDispatcherInvoke(builder, "IsBusy = false", capturedDispatcherVar);
         }
         else
         {

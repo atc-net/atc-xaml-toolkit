@@ -15,7 +15,18 @@ internal static class FrameworkElementBuilderExtensions
 
         if (frameworkElementToGenerate.RelayCommandsToGenerate?.Count > 0)
         {
+            if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.Wpf &&
+                frameworkElementToGenerate.RelayCommandsToGenerate.Any(c => c.AutoSetIsBusy))
+            {
+                builder.AppendLine("using System.Windows.Threading;");
+            }
+
             builder.AppendLine("using Atc.XamlToolkit.Command;");
+
+            if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.WinUI)
+            {
+                builder.AppendLine("using Microsoft.UI.Dispatching;");
+            }
         }
 
         // Only WPF supports UpdateSourceTrigger
