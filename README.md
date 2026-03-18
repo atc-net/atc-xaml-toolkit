@@ -252,6 +252,17 @@ Learn more about each generator:
 - **WeakAction/WeakFunc** - Memory-leak prevention for event handlers and callbacks
 - **PropertyDefaultValueConstants** - Shared default values for common property types
 
+### 🖌️ XAML Styling Engine
+
+- **XamlStylerService** - Full-featured XAML formatter and styler
+  - 🔀 Attribute reordering with configurable rules
+  - 📐 Indentation and element formatting
+  - 🧩 Markup extension parsing (hand-written parser — zero external dependencies, no Irony)
+  - ⚙️ Per-project `Settings.XamlStyler` config file discovery
+  - 🔤 BOM-preserving file I/O
+- **Compliant** with [Xavalon/XamlStyler](https://github.com/Xavalon/XamlStyler) — drop-in compatible with existing `Settings.XamlStyler` configuration files
+- **Multi-target** — `netstandard2.0` + `net10.0` for broad compatibility
+
 ### 🔧 Utilities
 
 - **DesignModeHelper** - Detect design-time vs runtime for better designer experience
@@ -280,6 +291,12 @@ dotnet add package Atc.XamlToolkit.WinUI
 
 ```powershell
 dotnet add package Atc.XamlToolkit.Avalonia
+```
+
+**For XAML Styling (standalone formatter):**
+
+```powershell
+dotnet add package Atc.XamlToolkit.XamlStyler
 ```
 
 ### Basic Usage
@@ -321,6 +338,7 @@ public partial class MainViewModel : ViewModelBase
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Wpf.svg?label=Atc.XamlToolkit.Wpf&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Wpf)                | RelayCommand, MainWindowViewModelBase for WPF       | Atc.XamlToolkit.SourceGenerators       |
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.WinUI.svg?label=Atc.XamlToolkit.WinUI&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.WinUI)          | RelayCommand, MainWindowViewModelBase for WinUI     | Atc.XamlToolkit                        |
 | [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.Avalonia.svg?label=Atc.XamlToolkit.Avalonia&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.Avalonia) | RelayCommand, MainWindowViewModelBase for Avalonia  | Atc.XamlToolkit                        |
+| [![NuGet Version](https://img.shields.io/nuget/v/Atc.XamlToolkit.XamlStyler.svg?label=Atc.XamlToolkit.XamlStyler&logo=nuget&style=for-the-badge)](https://www.nuget.org/packages/Atc.XamlToolkit.XamlStyler) | XAML styling and formatting engine | None |
 
 ## 📚 Documentation
 
@@ -335,6 +353,10 @@ public partial class MainViewModel : ViewModelBase
 - [Messaging System](docs/Messaging/Readme.md) - Decoupled communication between components
 - [Behaviors](docs/Behaviors/Readme.md) - EventToCommandBehavior and declarative behaviors
 - [Source Generators](docs/SourceGenerators/ViewModel.md) - Eliminate boilerplate code
+
+### XAML Styling
+
+- [XAML Styling Engine](#️-xaml-styling-engine) - Format and style XAML files programmatically
 
 ### Advanced Topics
 
@@ -453,9 +475,29 @@ All commands support:
 | `MultiValueConverterBase` | Base class for multi-value converters |
 | `IErrorHandler` | Centralized error handling |
 
+### XAML Styling Engine
+
+| Component | Description |
+|-----------|-------------|
+| `XamlStylerService` | Format XAML documents or files in-place |
+| `XamlStylerOptions` | Configure formatting rules; loads `Settings.XamlStyler` files |
+| `MarkupExtensionParser` | Hand-written parser for `{Binding}`, `{StaticResource}`, etc. |
+
+```csharp
+using Atc.XamlToolkit.XamlStyler;
+
+// Format a XAML file in-place
+var options = new XamlStylerOptions();
+var service = new XamlStylerService(options);
+
+bool wasModified = service.StyleFile("Views/MainWindow.xaml");
+```
+
+The engine is compatible with existing `Settings.XamlStyler` configuration files from [Xavalon/XamlStyler](https://github.com/Xavalon/XamlStyler). Place a `Settings.XamlStyler` file in your project or solution root to customize formatting rules.
+
 ## 🌟 Why Choose Atc.XamlToolkit?
 
-- ✅ **Modern** - Built for .NET 9 with latest C# features
+- ✅ **Modern** - Built for .NET 10 with latest C# features
 - ✅ **Cross-platform** - Supports WPF, WinUI 3, and Avalonia
 - ✅ **High Performance** - Optimized for minimal allocations
 - ✅ **Source Generators** - Eliminate boilerplate code
