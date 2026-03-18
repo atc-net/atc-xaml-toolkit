@@ -1,0 +1,24 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Collections.ObjectModel;
+global using System.Diagnostics;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Globalization;
+global using System.IO;
+global using System.Linq;
+global using System.Reflection;
+global using System.Text;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using System.Text.RegularExpressions;
+global using System.Xml;
+global using System.Xml.Linq;
+
+global using Atc.XamlToolkit.XamlStyler.DocumentManipulation;
+global using Atc.XamlToolkit.XamlStyler.DocumentProcessors;
+global using Atc.XamlToolkit.XamlStyler.Extensions;
+global using Atc.XamlToolkit.XamlStyler.MarkupExtensions.Formatter;
+global using Atc.XamlToolkit.XamlStyler.MarkupExtensions.Parser;
+global using Atc.XamlToolkit.XamlStyler.Model;
+global using Atc.XamlToolkit.XamlStyler.Options;
+global using Atc.XamlToolkit.XamlStyler.Services;

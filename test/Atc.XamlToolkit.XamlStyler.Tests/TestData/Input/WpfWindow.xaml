@@ -1,0 +1,14 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Title="Main Window"      Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0"  Text="Header"   FontSize="24" FontWeight="Bold" Margin="10" HorizontalAlignment="Center" />
+        <StackPanel Grid.Row="1" Orientation="Vertical"   Margin="10,5,10,5">
+            <Button Content="Click Me" Width="120"    Height="40" Margin="5" Command="{Binding ClickCommand}" />
+            <TextBox Text="{Binding UserInput, Mode=TwoWay}" Width="200" Margin="5" />
+            <CheckBox Content="Enable Feature" IsChecked="{Binding IsEnabled}" Margin="5" />
+        </StackPanel>
+    </Grid>
+</Window>
