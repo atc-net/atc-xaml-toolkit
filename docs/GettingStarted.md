@@ -277,8 +277,7 @@ public partial class PersonViewModel : ViewModelBase
 ```csharp
 public partial class PersonViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    [ObservableProperty(DependentCommandNames = [nameof(SaveCommand)])]
     private bool hasChanges;
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -541,12 +540,10 @@ public partial class DataViewModel : ViewModelBase
 ```csharp
 public partial class FormViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+    [ObservableProperty(DependentCommandNames = [nameof(SubmitCommand)])]
     private string email;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+    [ObservableProperty(DependentCommandNames = [nameof(SubmitCommand)])]
     private string password;
 
     [RelayCommand(CanExecute = nameof(CanSubmit))]
@@ -572,10 +569,7 @@ public partial class MasterDetailViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Customer> customers = new();
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedCustomer))]
-    [NotifyCanExecuteChangedFor(nameof(EditCommand))]
-    [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
+    [ObservableProperty(DependentPropertyNames = [nameof(HasSelectedCustomer)], DependentCommandNames = [nameof(EditCommand), nameof(DeleteCommand)])]
     private Customer? selectedCustomer;
 
     public bool HasSelectedCustomer => SelectedCustomer != null;

@@ -313,11 +313,13 @@ public partial class MyControl
 
 For Avalonia, use the `[StyledProperty]` attribute with field-level declaration:
 
+> **Tip:** We recommend moving toolkit usings (e.g. `using Atc.XamlToolkit.Controls.Attributes;`) into your `GlobalUsings.cs` file so they don't need to be repeated in every file.
+
 ```csharp
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Atc.XamlToolkit.Mvvm.Attributes;
+using Atc.XamlToolkit.Controls.Attributes;
 
 namespace MyApp.Controls;
 
