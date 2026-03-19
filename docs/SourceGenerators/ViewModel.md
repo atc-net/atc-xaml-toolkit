@@ -1,6 +1,6 @@
 # ⚙️ ViewModel with Source Generation
 
-The **Atc.Wpf Source Generators** simplify ViewModel development by reducing boilerplate code for properties and commands. With attributes like `ObservableProperty` and `RelayCommand`, you can focus on business logic while automatically handling property change notifications and command implementations.
+The **Atc.XamlToolkit Source Generators** simplify ViewModel development by reducing boilerplate code for properties and commands. With attributes like `ObservableProperty` and `RelayCommand`, you can focus on business logic while automatically handling property change notifications and command implementations.
 
 ---
 
@@ -10,7 +10,11 @@ The **Atc.Wpf Source Generators** simplify ViewModel development by reducing boi
 
 Let's start by defining a ViewModel using source generators.
 
+> **Tip:** We recommend moving toolkit usings (e.g. `using Atc.XamlToolkit.Mvvm;`) into your `GlobalUsings.cs` file so they don't need to be repeated in every file.
+
 ```csharp
+using Atc.XamlToolkit.Mvvm;
+
 public partial class TestViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -74,7 +78,7 @@ private string name;
 private string name;
 
 // Generates a property named "MyName" and notifies ApplyCommand and SaveCommand
-[ObservableProperty(nameof(MyName), DependentCommandNames = [nameof(ApplyCommand) nameof(SaveCommand)])]
+[ObservableProperty(nameof(MyName), DependentCommandNames = [nameof(ApplyCommand), nameof(SaveCommand)])]
 private string name;
 ```
 
@@ -2591,11 +2595,11 @@ private bool CanSave() => !string.IsNullOrEmpty(Name);
 - ✔️ **Use async commands** for better UI responsiveness.
 - ✔️ **Improve performance** by leveraging `CanExecute` for commands.
 
-### 🚀 Why Use Atc.Wpf Source Generators?
+### 🚀 Why Use Atc.XamlToolkit Source Generators?
 
 - ✅ **Reduces boilerplate** – Write less code, get more done.
 - ✅ **Improves maintainability** – Focus on business logic instead of plumbing.
-- ✅ **Enhances MVVM architecture** – Ensures best practices in WPF development.
+- ✅ **Enhances MVVM architecture** – Ensures best practices in XAML development.
 
 ---
 

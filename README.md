@@ -1,10 +1,10 @@
-# ATC.Net WPF, WinUI, and Avalonia
+# Atc.XamlToolkit
 
-This is a base libraries for building WPF, WinUI, or Avalonia application with the MVVM design pattern.
+This is a base library for building WPF, WinUI, or Avalonia applications with the MVVM design pattern.
 
 ## 📑 Table of Contents
 
-- [ATC.Net WPF, WinUI, and Avalonia](#atcnet-wpf-winui-and-avalonia)
+- [Atc.XamlToolkit](#atcxamltoolkit)
   - [📑 Table of Contents](#-table-of-contents)
   - [🎁 Key Features](#-key-features)
     - [🏗️ MVVM Foundation](#️-mvvm-foundation)
@@ -31,7 +31,7 @@ This is a base libraries for building WPF, WinUI, or Avalonia application with t
     - [Get Started](#get-started)
     - [Core Concepts](#core-concepts)
     - [Advanced Topics](#advanced-topics)
-    - [Platform-Specific (WPF Only)](#platform-specific-wpf-only)
+    - [Platform-Specific (Framework Elements)](#platform-specific-framework-elements)
     - [Source Generator Examples](#source-generator-examples)
   - [🎯 Complete Feature List](#-complete-feature-list)
     - [Core MVVM Components](#core-mvvm-components)
@@ -364,11 +364,11 @@ public partial class MainViewModel : ViewModelBase
 - [Performance Optimizations](docs/Performance/Readme.md) - BooleanBoxes, WeakAction, and more
 - [Utilities and Helpers](docs/Utilities/Readme.md) - DesignModeHelper, base classes, and utilities
 
-### Platform-Specific (WPF Only)
+### Platform-Specific (Framework Elements)
 
-- [Dependency Properties](docs/SourceGenerators/DependencyProperty.md) - Auto-generate dependency properties
-- [Attached Properties](docs/SourceGenerators/AttachedProperty.md) - Auto-generate attached properties
-- [Routed Events](docs/SourceGenerators/RoutedEvents.md) - Auto-generate routed events
+- [Dependency Properties](docs/SourceGenerators/DependencyProperty.md) - Auto-generate dependency properties (WPF & WinUI)
+- [Attached Properties](docs/SourceGenerators/AttachedProperty.md) - Auto-generate attached properties (WPF, WinUI & Avalonia)
+- [Routed Events](docs/SourceGenerators/RoutedEvents.md) - Auto-generate routed events (WPF only)
 
 ### Source Generator Examples
 

@@ -650,7 +650,7 @@ public partial class DownloadViewModel : ViewModelBase
 
     // Use the generated command:
     // <Button Content="Download" Command="{Binding DownloadCommand}" />
-    // <Button Content="Cancel" Command="{Binding DownloadCommand.CancelCommand}" />
+    // <Button Content="Cancel" Command="{Binding DownloadCancelCommand}" />
 }
 ```
 
