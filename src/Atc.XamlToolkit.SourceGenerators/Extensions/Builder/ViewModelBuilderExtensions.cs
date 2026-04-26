@@ -126,6 +126,16 @@ internal static class ViewModelBuilderExtensions
         var nameofName = p.Name.EnsureNameofContent();
 
         builder.AppendLine($"{p.BackingFieldName} = value;");
+
+        // [NotifyDataErrorInfo] — validate inline so listeners reading
+        // HasErrors after the PropertyChanged event see the up-to-date
+        // error state. ValidateProperty does not throw on invalid values;
+        // it stores errors and raises ErrorsChanged.
+        if (p.ValidatesOnChange)
+        {
+            builder.AppendLine($"ValidateProperty(value, {nameofName});");
+        }
+
         if (p.GeneratePartialHooks)
         {
             builder.AppendLine($"On{p.Name}Changed(value);");

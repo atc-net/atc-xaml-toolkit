@@ -80,6 +80,37 @@ public sealed class ObservableValidatorTests
         sut.Should().NotBeAssignableTo<ViewModelBase>();
     }
 
+    [Fact]
+    public void ValidateProperty_BuildsValidationCacheLazily_WithoutInitializeValidationCall()
+    {
+        // Pin the lazy-init contract: callers using [NotifyDataErrorInfo]
+        // — which emits inline ValidateProperty(...) calls in the setter —
+        // must not need to invoke InitializeValidation() to opt in.
+        // The cache builds itself on first ValidateProperty invocation.
+        var sut = new TestLazyValidator();
+
+        sut.SetFirstNameDirect("A"); // invalid (< 2 chars)
+
+        sut.HasErrors.Should().BeTrue();
+        sut.GetErrors(nameof(TestLazyValidator.FirstName)).Cast<string>()
+            .Should().Contain(e => e.Contains("at least 2 characters", StringComparison.Ordinal));
+    }
+
+    private sealed class TestLazyValidator : ObservableValidator
+    {
+        private string firstName = string.Empty;
+
+        [Required(ErrorMessage = "First name is required")]
+        [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+        public string FirstName => firstName;
+
+        public void SetFirstNameDirect(string value)
+        {
+            firstName = value;
+            ValidateProperty(value, nameof(FirstName));
+        }
+    }
+
     private sealed class TestPersonValidator : ObservableValidator
     {
         private string firstName = string.Empty;

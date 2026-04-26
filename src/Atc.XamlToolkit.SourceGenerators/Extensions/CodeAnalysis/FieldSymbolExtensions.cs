@@ -69,7 +69,9 @@ internal static class FieldSymbolExtensions
                         or NameConstants.NotifyPropertyChangedForAttribute
                         or NameConstants.NotifyPropertyChangedFor
                         or NameConstants.NotifyCanExecuteChangedForAttribute
-                        or NameConstants.NotifyCanExecuteChangedFor)
+                        or NameConstants.NotifyCanExecuteChangedFor
+                        or NameConstants.NotifyDataErrorInfoAttribute
+                        or NameConstants.NotifyDataErrorInfo)
                     {
                         continue;
                     }

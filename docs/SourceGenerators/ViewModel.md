@@ -549,6 +549,52 @@ public partial class CustomerEditViewModel : ViewModelBase
 
 **Note:** Your ViewModel must have an `IsDirty` property for this feature to work. `ViewModelBase` includes this property by default.
 
+### ✅ Inline Validation with `[NotifyDataErrorInfo]`
+
+`[NotifyDataErrorInfo]` is a **field-level companion attribute** for `[ObservableProperty]`. When present, the generator emits a call to `ValidateProperty(value, nameof(PropertyName))` inside the setter, **right after the field assignment and before `RaisePropertyChanged` fires**. The result: any listener that reacts to the property-changed event sees `HasErrors` already updated.
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+using Atc.XamlToolkit.Mvvm;
+
+public partial class CustomerViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [Required(ErrorMessage = "First name is required")]
+    [MinLength(2, ErrorMessage = "First name must be at least 2 characters long")]
+    private string firstName = string.Empty;
+}
+```
+
+**Generated setter:**
+
+```csharp
+public string FirstName
+{
+    get => firstName;
+    set
+    {
+        if (firstName == value)
+        {
+            return;
+        }
+
+        firstName = value;
+        ValidateProperty(value, nameof(FirstName));
+        RaisePropertyChanged(nameof(FirstName));
+    }
+}
+```
+
+**Inheritance requirement.** The class must transitively derive from `ObservableValidator` — typically through `ViewModelBase`, but any direct `ObservableValidator` subclass works. If the requirement isn't met, the generator surfaces diagnostic [`AtcXamlToolkit0009`](Readme.md#diagnostics) instead of producing code that fails to compile.
+
+**No `InitializeValidation()` call required.** The validation metadata cache lazy-builds on the first call to `ValidateProperty`. You only need to call `InitializeValidation()` when you want auto-validation on every `PropertyChanged` event (regardless of `[NotifyDataErrorInfo]`) or to validate everything at construction time.
+
+**Combining with `InitializeValidation(validateOnPropertyChanged: true)`.** Supported, but each setter validates twice (once inline from `[NotifyDataErrorInfo]`, once from the `PropertyChanged` handler). The behaviour is correct; the cost is negligible (cached metadata lookup). Pick one or the other if you prefer minimal work per setter.
+
+**Why the inline call.** Without `[NotifyDataErrorInfo]`, code that listens to `PropertyChanged` and immediately reads `HasErrors` may see *stale* error state — the validator hasn't seen the new value yet. With `[NotifyDataErrorInfo]`, the validation runs *before* the change notification, so listeners always see the post-change error state.
+
 ## ⚡ Attributes for `RelayCommand` Source-Generation
 
 The `RelayCommand` attribute generates `IRelayCommand` properties, eliminating manual command setup.

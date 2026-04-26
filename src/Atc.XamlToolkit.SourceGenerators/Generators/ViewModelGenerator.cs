@@ -187,6 +187,33 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                     ExecuteINotifyPropertyChanged(spc, target);
                 }
             });
+
+        // Pipeline 8: validate [NotifyDataErrorInfo] inheritance requirement.
+        // The generator emits ValidateProperty(...) in the setter, which only
+        // exists on ObservableValidator (and ViewModelBase via inheritance).
+        // Surface a diagnostic up-front so the user gets a friendly message
+        // instead of CS0103 inside the generated file.
+        var notifyDataErrorInfoDiagnostics = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsClassWithNotifyDataErrorInfoUsage(syntaxNode),
+                transform: static (context, _) => GetNotifyDataErrorInfoDiagnostics(context))
+            .Where(static diagnostics => diagnostics is { Count: > 0 })
+            .WithTrackingName("ViewModelGenerator.NotifyDataErrorInfoDiagnostics");
+
+        context.RegisterSourceOutput(
+            notifyDataErrorInfoDiagnostics,
+            static (spc, diagnostics) =>
+            {
+                if (diagnostics is null)
+                {
+                    return;
+                }
+
+                foreach (var diagnostic in diagnostics)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
     }
 
     private static bool IsMissingPartialTarget(SyntaxNode syntaxNode)
@@ -331,7 +358,10 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                     NameConstants.NotifyPropertyChangedFor or NameConstants.NotifyPropertyChangedForAttribute or
 
                     // Specifies additional commands whose CanExecute should re-evaluate on change
-                    NameConstants.NotifyCanExecuteChangedFor or NameConstants.NotifyCanExecuteChangedForAttribute)
+                    NameConstants.NotifyCanExecuteChangedFor or NameConstants.NotifyCanExecuteChangedForAttribute or
+
+                    // Opts the setter into inline validation via ObservableValidator.ValidateProperty
+                    NameConstants.NotifyDataErrorInfo or NameConstants.NotifyDataErrorInfoAttribute)
                 {
                     return true;
                 }
@@ -1435,6 +1465,125 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         context.AddSource(
             $"{target.ClassName}.INotifyPropertyChanged.g.cs",
             SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+
+    private static bool IsClassWithNotifyDataErrorInfoUsage(
+        SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration ||
+                fieldDeclaration.AttributeLists.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is
+                        NameConstants.NotifyDataErrorInfo or
+                        NameConstants.NotifyDataErrorInfoAttribute)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all fields with [NotifyDataErrorInfo].")]
+    private static List<Diagnostic>? GetNotifyDataErrorInfoDiagnostics(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+        if (classSymbol is null)
+        {
+            return null;
+        }
+
+        // ObservableValidator and the framework base classes that derive
+        // from it (ViewModelBase, MainWindowViewModelBase, ViewModelDialogBase)
+        // all provide the protected ValidateProperty method the generator
+        // emits. Match by the framework's own type names — the user's
+        // compilation may not have a metadata reference to the runtime
+        // assembly, in which case the symbol's BaseType.BaseType chain is
+        // not walkable past the first hop.
+        if (classSymbol.InheritsFrom(
+                NameConstants.ObservableValidator,
+                NameConstants.ViewModelBase,
+                NameConstants.MainWindowViewModelBase,
+                NameConstants.ViewModelDialogBase))
+        {
+            return null;
+        }
+
+        List<Diagnostic>? diagnostics = null;
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration)
+            {
+                continue;
+            }
+
+            var hasNotifyDataErrorInfo = false;
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is
+                        NameConstants.NotifyDataErrorInfo or
+                        NameConstants.NotifyDataErrorInfoAttribute)
+                    {
+                        hasNotifyDataErrorInfo = true;
+                        break;
+                    }
+                }
+
+                if (hasNotifyDataErrorInfo)
+                {
+                    break;
+                }
+            }
+
+            if (!hasNotifyDataErrorInfo)
+            {
+                continue;
+            }
+
+            foreach (var variable in fieldDeclaration.Declaration.Variables)
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateNotifyDataErrorInfoRequiresObservableValidator(
+                    variable.Identifier.Text,
+                    classSymbol.Name,
+                    variable.Identifier.GetLocation()));
+            }
+        }
+
+        return diagnostics;
     }
 
     [SuppressMessage("Naming", "S101:Types should be named in PascalCase", Justification = "Name intentionally mirrors the System.ComponentModel.INotifyPropertyChanged interface for symmetry with the public attribute.")]

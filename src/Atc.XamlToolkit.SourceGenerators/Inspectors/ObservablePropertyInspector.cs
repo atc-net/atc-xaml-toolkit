@@ -189,6 +189,21 @@ internal static class ObservablePropertyInspector
                 : commandNamesToInvalidate.Concat(extraCommandNames).Distinct(StringComparer.Ordinal).ToArray();
         }
 
+        // [NotifyDataErrorInfo] — companion attribute that opts the setter
+        // into inline validation. The generator emits a ValidateProperty(...)
+        // call after the field assignment in the setter.
+        var validatesOnChange = false;
+        foreach (var attr in fieldSymbolAttributes)
+        {
+            if (attr.AttributeClass?.Name
+                is NameConstants.NotifyDataErrorInfoAttribute
+                or NameConstants.NotifyDataErrorInfo)
+            {
+                validatesOnChange = true;
+                break;
+            }
+        }
+
         var customAttributes = fieldSymbol.ExtractCustomAttributes();
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
@@ -207,6 +222,7 @@ internal static class ObservablePropertyInspector
                 UseIsDirty = useIsDirty,
                 IsRequired = isRequired,
                 GeneratePartialHooks = generatePartialHooks,
+                ValidatesOnChange = validatesOnChange,
                 CustomAttributes = customAttributes,
                 DocumentationComments = documentationComments,
             });

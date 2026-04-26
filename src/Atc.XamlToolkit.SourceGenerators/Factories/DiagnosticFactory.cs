@@ -73,6 +73,16 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "Two or more [ComputedProperty] getters mutually reference each other. Because the generator only wires invalidation through observable-property setters, the computed properties don't trigger update loops, but evaluating any of them at runtime will recurse infinitely until the stack overflows.");
 
+    private static readonly DiagnosticDescriptor NotifyDataErrorInfoRequiresObservableValidatorDescriptor =
+        new(
+            id: "AtcXamlToolkit0009",
+            title: "[NotifyDataErrorInfo] requires ObservableValidator inheritance",
+            messageFormat: "Field '{0}' is decorated with [NotifyDataErrorInfo] but its containing class '{1}' does not inherit from ObservableValidator (directly or via ViewModelBase). The generated setter will fail to compile because ValidateProperty is not available. Change the base class to ObservableValidator or ViewModelBase, or remove [NotifyDataErrorInfo].",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "[NotifyDataErrorInfo] makes the generated property setter call ObservableValidator.ValidateProperty(...) inline. ValidateProperty is a protected member of ObservableValidator (and is inherited by ViewModelBase). Classes that derive from ObservableObject directly, or that use the [INotifyPropertyChanged] class-level attribute without ObservableValidator inheritance, do not have ValidateProperty in scope and will produce a confusing CS0103 inside the generated file.");
+
     public static Diagnostic CreateContainsDuplicateNamesForRelayCommand()
         => Diagnostic.Create(
             new DiagnosticDescriptor(
@@ -136,4 +146,14 @@ internal static class DiagnosticFactory
             location,
             propertyName,
             cyclePath);
+
+    public static Diagnostic CreateNotifyDataErrorInfoRequiresObservableValidator(
+        string fieldName,
+        string className,
+        Location location)
+        => Diagnostic.Create(
+            NotifyDataErrorInfoRequiresObservableValidatorDescriptor,
+            location,
+            fieldName,
+            className);
 }

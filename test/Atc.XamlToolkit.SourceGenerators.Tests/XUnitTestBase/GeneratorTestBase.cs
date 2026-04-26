@@ -11,6 +11,13 @@ public abstract class GeneratorTestBase
     {
         System.Reflection.Assembly.Load("Atc.XamlToolkit.SourceGenerators");
 
+        // Force-load the runtime library so Atc.XamlToolkit.Mvvm.* types
+        // (ObservableValidator, ViewModelBase, ObservableObject, …) appear
+        // in the test AppDomain and are resolvable as metadata references.
+        // Without this, semantic checks like InheritsFrom() can't walk the
+        // base-type chain past first-hop user-declared bases.
+        System.Reflection.Assembly.Load("Atc.XamlToolkit");
+
         metadataReferences = AppDomain
             .CurrentDomain
             .GetAssemblies()
