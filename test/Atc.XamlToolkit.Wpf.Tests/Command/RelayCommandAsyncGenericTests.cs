@@ -78,6 +78,47 @@ public sealed class RelayCommandAsyncGenericTests
         Assert.Equal(expected, actual);
     }
 
+    [Fact]
+    public void Execute_DoesNotThrow_WhenParameterCannotBeConverted()
+    {
+        // Regression: Convert.ChangeType used to throw OverflowException /
+        // FormatException / InvalidCastException uncaught from inside the
+        // async void Execute, propagating to AppDomain.UnhandledException
+        // and risking a crash because there is no awaiter.
+        var executed = false;
+        using var command = new RelayCommandAsync<int>(
+            _ =>
+            {
+                executed = true;
+                return Task.CompletedTask;
+            });
+
+        // ulong.MaxValue overflows int — Convert.ChangeType throws OverflowException.
+        var act = () => ((ICommand)command).Execute(ulong.MaxValue);
+
+        act.Should().NotThrow();
+        executed.Should().BeFalse("execution must be skipped when parameter conversion fails");
+    }
+
+    [Fact]
+    public void Execute_RoutesConversionError_ThroughErrorHandler()
+    {
+        var handled = (Exception?)null;
+        var errorHandler = Substitute.For<IErrorHandler>();
+        errorHandler
+            .When(x => x.HandleError(Arg.Any<Exception>()))
+            .Do(call => handled = call.Arg<Exception>());
+
+        using var command = new RelayCommandAsync<int>(
+            _ => Task.CompletedTask,
+            errorHandler: errorHandler);
+
+        ((ICommand)command).Execute(ulong.MaxValue);
+
+        handled.Should().NotBeNull();
+        handled.Should().BeOfType<OverflowException>();
+    }
+
     private delegate void OpDelegate(string op);
 
     private static async Task<string> MyTask()

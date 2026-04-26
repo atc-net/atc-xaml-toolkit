@@ -78,7 +78,25 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
             parameter.GetType() != typeof(T) &&
             parameter is IConvertible)
         {
-            val = Convert.ChangeType(parameter, typeof(T), provider: null);
+            // Convert.ChangeType throws on overflow / format / unsupported casts.
+            // Treat a failed conversion as "cannot execute" rather than letting
+            // the throw propagate up through the binding system.
+            try
+            {
+                val = Convert.ChangeType(parameter, typeof(T), provider: null);
+            }
+            catch (InvalidCastException)
+            {
+                return;
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            catch (OverflowException)
+            {
+                return;
+            }
         }
 
         if (!CanExecute(val) ||

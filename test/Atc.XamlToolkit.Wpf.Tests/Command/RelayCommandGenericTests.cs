@@ -74,4 +74,33 @@ public sealed class RelayCommandGenericTests
         // Assert
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void Execute_DoesNotThrow_WhenParameterCannotBeConverted()
+    {
+        // Regression: Convert.ChangeType used to throw OverflowException /
+        // FormatException / InvalidCastException uncaught from inside
+        // Execute, propagating up through the binding system.
+        var executed = false;
+        var command = new RelayCommand<int>(_ => executed = true);
+
+        // ulong.MaxValue overflows int — Convert.ChangeType throws OverflowException.
+        var act = () => command.Execute(ulong.MaxValue);
+
+        act.Should().NotThrow();
+        executed.Should().BeFalse("execution must be skipped when parameter conversion fails");
+    }
+
+    [Fact]
+    public void Execute_DoesNotThrow_WhenParameterFormatIsInvalid()
+    {
+        var executed = false;
+        var command = new RelayCommand<int>(_ => executed = true);
+
+        // "not a number" cannot be converted to int — Convert.ChangeType throws FormatException.
+        var act = () => command.Execute("not a number");
+
+        act.Should().NotThrow();
+        executed.Should().BeFalse();
+    }
 }

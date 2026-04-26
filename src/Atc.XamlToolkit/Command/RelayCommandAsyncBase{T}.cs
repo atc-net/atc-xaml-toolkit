@@ -152,7 +152,30 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             parameter.GetType() != typeof(T) &&
             parameter is IConvertible)
         {
-            val = Convert.ChangeType(parameter, typeof(T), provider: null);
+            // Convert.ChangeType throws on overflow / format / unsupported casts.
+            // Without this guard the throw escapes from async void and can crash
+            // the process (no AppDomain handler for fire-and-forget continuations).
+            try
+            {
+                val = Convert.ChangeType(parameter, typeof(T), provider: null);
+            }
+            catch (Exception ex) when (errorHandler is not null)
+            {
+                errorHandler.HandleError(ex);
+                return;
+            }
+            catch (InvalidCastException)
+            {
+                return;
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            catch (OverflowException)
+            {
+                return;
+            }
         }
 
         if (isExecuting || !CanExecute(val))
