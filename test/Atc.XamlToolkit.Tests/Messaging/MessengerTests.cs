@@ -193,6 +193,94 @@ public sealed class MessengerTests
         recipient.ReceivedMessages.Should().HaveCount(1, "the second send must not reach the unregistered recipient");
     }
 
+    [Fact]
+    public void Send_DispatchesToAllRegisteredHandlersForMessageType()
+    {
+        var messenger = new Messenger();
+        var receiverA = new object();
+        var receiverB = new object();
+        var receiverC = new object();
+        var hitsA = 0;
+        var hitsB = 0;
+        var hitsC = 0;
+
+        messenger.Register<DerivedMessage>(receiverA, _ => hitsA++);
+        messenger.Register<DerivedMessage>(receiverB, _ => hitsB++);
+        messenger.Register<DerivedMessage>(receiverC, _ => hitsC++);
+
+        messenger.Send(new DerivedMessage());
+
+        (hitsA, hitsB, hitsC).Should().Be((1, 1, 1));
+    }
+
+    [Fact]
+    public void UnRegister_TargetingOneRecipient_LeavesOtherSubscriptionsIntact()
+    {
+        var messenger = new Messenger();
+        var alpha = new object();
+        var beta = new object();
+        var alphaHits = 0;
+        var betaHits = 0;
+
+        messenger.Register<DerivedMessage>(alpha, _ => alphaHits++);
+        messenger.Register<DerivedMessage>(beta, _ => betaHits++);
+
+        messenger.UnRegister<DerivedMessage>(alpha);
+        messenger.Send(new DerivedMessage());
+
+        alphaHits.Should().Be(0, "unregistered recipient must not receive further messages");
+        betaHits.Should().Be(1, "other recipients must remain subscribed");
+    }
+
+    [Fact]
+    public void Send_WithToken_FiltersByToken_ForActionBasedRegistrations()
+    {
+        // Mirrors IRecipient_Register_WithToken_FiltersByToken but for the
+        // Action<T>-based registration path.
+        var messenger = new Messenger();
+        var receiver = new object();
+        var tokenA = new object();
+        var tokenB = new object();
+        var hitsA = 0;
+        var hitsB = 0;
+
+        messenger.Register<DerivedMessage>(receiver, tokenA, _ => hitsA++);
+        messenger.Register<DerivedMessage>(receiver, tokenB, _ => hitsB++);
+
+        messenger.Send(new DerivedMessage(), tokenA);
+
+        hitsA.Should().Be(1);
+        hitsB.Should().Be(0, "send is scoped to tokenA — tokenB subscribers must not fire");
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void Send_DoesNotInvokeHandler_ForGarbageCollectedRecipient()
+    {
+        var messenger = new Messenger();
+        var hits = 0;
+
+        // Local helper keeps the recipient out of the calling stack frame so
+        // GC can collect it once the helper returns.
+        RegisterShortLivedHandler(messenger, () => hits++);
+        ForceFullGarbageCollection();
+
+        messenger.Send(new DerivedMessage());
+
+        hits.Should().Be(0, "the registered recipient was collected — its handler must not fire");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void RegisterShortLivedHandler(
+        Messenger messenger,
+        Action onMessage)
+    {
+        var recipient = new object();
+        messenger.Register<DerivedMessage>(recipient, _ => onMessage());
+
+        // recipient leaves scope — eligible for GC.
+    }
+
     private sealed class DerivedMessage;
 
     private sealed class UnrelatedMessage;
@@ -201,7 +289,10 @@ public sealed class MessengerTests
     {
         public List<DerivedMessage> ReceivedMessages { get; } = [];
 
-        public void Receive(DerivedMessage message) => ReceivedMessages.Add(message);
+        public void Receive(DerivedMessage message)
+        {
+            ReceivedMessages.Add(message);
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
