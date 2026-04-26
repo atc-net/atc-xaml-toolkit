@@ -147,6 +147,27 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// <b>Null pass-through.</b> When <paramref name="parameter"/> is <see langword="null"/>
+    /// and <typeparamref name="T"/> is a reference type, the async <c>execute</c> delegate
+    /// is invoked with <see langword="null"/>. The .NET runtime cannot distinguish between
+    /// <c>T</c> and <c>T?</c> at runtime (both resolve to the same <see cref="Type"/>), so
+    /// the toolkit cannot conditionally skip execution based on declared nullability — guard
+    /// the parameter inside your delegate if a null value is unsafe.
+    /// </para>
+    /// <para>
+    /// When <typeparamref name="T"/> is a value type, a null parameter is replaced with
+    /// <c>default(T)</c> before the delegate runs.
+    /// </para>
+    /// <para>
+    /// Parameter conversion (<see cref="Convert.ChangeType(object?, Type)"/>) failures and
+    /// exceptions thrown by the async body are routed to the registered
+    /// <see cref="IErrorHandler"/>. <see cref="OperationCanceledException"/> is silently
+    /// swallowed (cancellation is the success path). See
+    /// <c>docs/Command/ErrorHandling.md</c> for the full contract.
+    /// </para>
+    /// </remarks>
     [SuppressMessage("AsyncUsage", "AsyncFixer03:Fire-and-forget async-void methods or delegates", Justification = "OK - ICommand signature")]
     [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "OK - errorHandler will handle it")]
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]

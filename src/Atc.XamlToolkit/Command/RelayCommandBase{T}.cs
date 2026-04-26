@@ -70,6 +70,26 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// <b>Null pass-through.</b> When <paramref name="parameter"/> is <see langword="null"/>
+    /// and <typeparamref name="T"/> is a reference type, the <c>execute</c> delegate is
+    /// invoked with <see langword="null"/>. The .NET runtime cannot distinguish between
+    /// <c>T</c> and <c>T?</c> at runtime (both resolve to the same <see cref="Type"/>), so
+    /// the toolkit cannot conditionally skip execution based on declared nullability — guard
+    /// the parameter inside your delegate if a null value is unsafe.
+    /// </para>
+    /// <para>
+    /// When <typeparamref name="T"/> is a value type, a null parameter is replaced with
+    /// <c>default(T)</c> before the delegate runs.
+    /// </para>
+    /// <para>
+    /// Parameter conversion (`Convert.ChangeType`) failures (<see cref="InvalidCastException"/>,
+    /// <see cref="FormatException"/>, <see cref="OverflowException"/>) are caught and the
+    /// command becomes a no-op. The async sibling additionally routes the conversion
+    /// exception through a registered <see cref="IErrorHandler"/>.
+    /// </para>
+    /// </remarks>
     public void Execute(object? parameter)
     {
         var val = parameter;
