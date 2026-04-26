@@ -57,6 +57,17 @@ If a change to a generator doesn't show up, run `dotnet build-server shutdown` t
 - **`[ComputedProperty]` recompute** — dependencies are inferred from the getter expression at compile time. If you reach into another object (`Customer.Address.City`), the generator only sees `Customer`; raise `RaisePropertyChanged(nameof(YourComputedProp))` manually for transitive changes.
 - **`[RoutedEvent]` on non-WPF** — silently skipped; if you need the same source file to compile across platforms, that's by design. If you need event semantics on WinUI/Avalonia, declare a normal CLR event.
 
+## Diagnostics
+
+The generator surfaces these diagnostics at compile time so common misuses are caught up front instead of silently producing nothing.
+
+| Id | Severity | When it fires | What to fix |
+|---|---|---|---|
+| `AtcXamlToolkit0001` | Warning | Two `[RelayCommand]` methods in the same view model resolve to the same generated command name. | Pass an explicit `commandName` to the second attribute, or rename the method. |
+| `AtcXamlToolkit0002` | Warning | A class contains `[ObservableProperty]`, `[RelayCommand]`, `[ComputedProperty]`, or `[INotifyPropertyChanged]` but is not declared `partial`. | Add the `partial` keyword to the class declaration. |
+| `AtcXamlToolkit0003` | Warning | `[ObservableProperty]` is on a field that is not `private` (e.g., `public`, `internal`, `protected`). The generator silently skips non-private fields. | Mark the field `private`. |
+| `AtcXamlToolkit0004` | Warning | `[ObservableProperty]` is on a PascalCase field (e.g., `private string Name;`). The generator silently skips PascalCase fields because the inferred property name would collide. | Rename the field to camelCase (`name`). |
+
 ## Cross-references
 
 - [`ViewModelBase` and validation](../Mvvm/Readme.md)

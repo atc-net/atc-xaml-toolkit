@@ -82,6 +82,113 @@ public sealed partial class ViewModelGeneratorTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableProperty_OnPublicField_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                public string name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0003");
+    }
+
+    [Fact]
+    public void ObservableProperty_OnInternalField_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                internal string name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0003");
+    }
+
+    [Fact]
+    public void ObservableProperty_OnPascalCaseField_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string Name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0004");
+    }
+
+    [Fact]
+    public void ObservableProperty_OnMultiVariableDeclaration_FlagsOnlyOffendingVariables()
+    {
+        // Pin the per-variable diagnostic behaviour — the attribute can decorate
+        // a multi-variable field declaration; only the variables that actually
+        // violate naming should be flagged.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string firstName, LastName;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        var pascalCaseDiagnostics = diagnostics
+            .Where(d => d.Id == "AtcXamlToolkit0004")
+            .ToList();
+
+        Assert.Single(pascalCaseDiagnostics);
+        Assert.Contains(
+            "LastName",
+            pascalCaseDiagnostics[0].GetMessage(System.Globalization.CultureInfo.InvariantCulture),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ObservableProperty_OnValidPrivateCamelCaseField_DoesNotEmitFieldDiagnostics()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0003");
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0004");
+    }
+
+    [Fact]
     public void NonPartial_WithoutGeneratorAttributes_DoesNotEmitMissingPartialDiagnostic()
     {
         const string inputCode =
