@@ -43,6 +43,95 @@ The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia
 
 ---
 
+## 🪟 MainWindowViewModelBase
+
+`MainWindowViewModelBase` extends `ViewModelBase` with the lifecycle and chrome glue that almost every desktop app needs: a Loaded hook that auto-maximises when the window is at least as large as the screen, a Closing hook that drives orderly shutdown, an F11 fullscreen toggle, and an `ApplicationExitCommand` for menu / button binding. Each platform package ships its own implementation behind a shared interface (`IMainWindowViewModelBase`).
+
+### Lifecycle hooks (all platforms)
+
+| Member | When to wire | Default behavior |
+|---|---|---|
+| `OnLoaded(sender, e)` | `Loaded` (WPF / Avalonia) or `Activated` / `Loaded` (WinUI 3) | Auto-maximises if the host element is at least as large as the primary screen's working area. |
+| `OnClosing(sender, e)` | `Closing` (WPF / Avalonia) or `Closed` (WinUI 3) | Shuts down the application using the protected `ApplicationExitCode` (override to set a non-zero code). |
+| `OnKeyDown(sender, e)` | `KeyDown` on the window or root element | Toggles fullscreen on **F11**. Override and call `base.OnKeyDown` first to add more shortcuts. |
+| `OnKeyUp(sender, e)` | `KeyUp` on the window or root element | No-op extension point. |
+| `ApplicationExitCommand` | Bind to a Close / Exit menu item | Invokes `OnClosing`. |
+
+### Platform differences at a glance
+
+| | WPF | WinUI 3 | Avalonia |
+|---|---|---|---|
+| `WindowState` property on the VM | ✅ `System.Windows.WindowState` | ❌ — chrome state is on `AppWindow.Presenter` (`OverlappedPresenter`) | ✅ `Avalonia.Controls.WindowState` |
+| Shutdown call | `Application.Current.Shutdown(exitCode)` | `Application.Current.Exit()` (exit code ignored by the platform) | `IClassicDesktopStyleApplicationLifetime.TryShutdown(exitCode)` |
+| F11 implementation | Sets `WindowState = Maximized/Normal` | `OverlappedPresenter.Maximize()` / `Restore()` via `WindowNative.GetWindowHandle` | Sets `WindowState = Maximized/Normal` |
+| Auto-maximise check on Loaded | Compares against `SystemParameters.PrimaryScreenWidth/Height` | Compares against the primary `DisplayArea.WorkArea` | Compares against `Screens.Primary.WorkingArea` |
+
+### WPF example
+
+```csharp
+public class MainWindowViewModel : MainWindowViewModelBase
+{
+    protected override int ApplicationExitCode => 0;
+
+    // Add your top-level commands and properties here.
+}
+```
+
+```xml
+<Window x:Class="MyApp.MainWindow"
+        WindowState="{Binding WindowState, Mode=TwoWay}"
+        Loaded="MainWindow_OnLoaded"
+        Closing="MainWindow_OnClosing"
+        KeyDown="MainWindow_OnKeyDown"
+        KeyUp="MainWindow_OnKeyUp">
+    ...
+</Window>
+```
+
+```csharp
+private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
+    => ((MainWindowViewModel)DataContext).OnLoaded(sender, e);
+
+private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+    => ((MainWindowViewModel)DataContext).OnClosing(sender, e);
+
+private void MainWindow_OnKeyDown(object sender, KeyEventArgs e)
+    => ((MainWindowViewModel)DataContext).OnKeyDown(sender, e);
+
+private void MainWindow_OnKeyUp(object sender, KeyEventArgs e)
+    => ((MainWindowViewModel)DataContext).OnKeyUp(sender, e);
+```
+
+### WinUI 3 notes
+
+- WinUI 3 has no `Window.WindowState` property; chrome state lives on `AppWindow.Presenter`. `MainWindowViewModelBase` resolves the `AppWindow` from the `Window` via `WindowNative.GetWindowHandle` + `Win32Interop.GetWindowIdFromWindow`, so the sender passed to `OnLoaded` / `OnKeyDown` **must** be the `Window` (or an element inside one) for the auto-maximise and F11 features to work.
+- `Window.Closed` uses `WindowEventArgs`, not `CancelEventArgs`. Bridge it in your wiring code: construct a `new CancelEventArgs()` and forward to `OnClosing` (the platform won't honour `Cancel = true` from `Closed`, but the contract is preserved for cross-platform code).
+- See the [WinUI threading remarks on `RelayCommandAsync`](../Command/Readme.md) for how `IsExecuting` bindings work with `x:Bind` on async commands.
+
+### Avalonia example
+
+```csharp
+public class MainWindowViewModel : MainWindowViewModelBase
+{
+    protected override int ApplicationExitCode => 0;
+}
+```
+
+```xml
+<Window xmlns="https://github.com/avaloniaui"
+        x:Class="MyApp.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        WindowState="{Binding WindowState, Mode=TwoWay}">
+    <Window.KeyBindings>
+        ...
+    </Window.KeyBindings>
+</Window>
+```
+
+Wire `Loaded`, `Closing`, `KeyDown`, `KeyUp` from code-behind exactly like WPF (the event signature differs — `OnLoaded` takes `EventArgs` instead of `RoutedEventArgs`).
+
+---
+
 ## ✅ Form Validation with Data Annotations
 
 The `ViewModelBase` class implements `INotifyDataErrorInfo`, providing built-in support for validation using **Data Annotation attributes** from `System.ComponentModel.DataAnnotations`.
