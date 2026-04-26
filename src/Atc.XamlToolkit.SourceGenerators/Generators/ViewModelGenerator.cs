@@ -199,7 +199,10 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                     NameConstants.RelayCommand or NameConstants.RelayCommandAttribute or
 
                     // Specifies additional properties to notify on change
-                    NameConstants.NotifyPropertyChangedFor or NameConstants.NotifyPropertyChangedForAttribute)
+                    NameConstants.NotifyPropertyChangedFor or NameConstants.NotifyPropertyChangedForAttribute or
+
+                    // Specifies additional commands whose CanExecute should re-evaluate on change
+                    NameConstants.NotifyCanExecuteChangedFor or NameConstants.NotifyCanExecuteChangedForAttribute)
                 {
                     return true;
                 }

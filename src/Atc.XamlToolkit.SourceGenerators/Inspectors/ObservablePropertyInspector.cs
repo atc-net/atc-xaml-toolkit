@@ -150,6 +150,37 @@ internal static class ObservablePropertyInspector
             }
         }
 
+        // [NotifyCanExecuteChangedFor("FooCommand")] — companion attribute that
+        // augments the existing DependentCommandNames list.
+        List<string>? extraCommandNames = null;
+        foreach (var attr in fieldSymbolAttributes)
+        {
+            if (attr.AttributeClass?.Name
+                is not NameConstants.NotifyCanExecuteChangedForAttribute
+                and not NameConstants.NotifyCanExecuteChangedFor)
+            {
+                continue;
+            }
+
+            extraCommandNames ??= [];
+
+            var argumentValues = attr.ExtractConstructorArgumentValues();
+            foreach (var argumentValue in argumentValues)
+            {
+                if (!extraCommandNames.Contains(argumentValue.Value!, StringComparer.Ordinal))
+                {
+                    extraCommandNames.Add(argumentValue.Value!);
+                }
+            }
+        }
+
+        if (extraCommandNames is not null)
+        {
+            commandNamesToInvalidate = commandNamesToInvalidate is null
+                ? extraCommandNames.ToArray()
+                : commandNamesToInvalidate.Concat(extraCommandNames).Distinct(StringComparer.Ordinal).ToArray();
+        }
+
         var customAttributes = fieldSymbol.ExtractCustomAttributes();
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
