@@ -43,6 +43,62 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                     Execute(spc, source);
                 }
             });
+
+        // Surface a diagnostic on classes that contain [ObservableProperty] /
+        // [RelayCommand] / [ComputedProperty] but are NOT declared partial — the
+        // generator silently skips them today, which is hard to diagnose for
+        // first-time users.
+        var missingPartialClasses = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsMissingPartialTarget(syntaxNode),
+                transform: static (context, _) => GetMissingPartialDiagnostic(context))
+            .Where(static d => d is not null)
+            .WithTrackingName("ViewModelGenerator.MissingPartialDiagnostic");
+
+        context.RegisterSourceOutput(
+            missingPartialClasses,
+            static (spc, diagnostic) =>
+            {
+                if (diagnostic is not null)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+    }
+
+    private static bool IsMissingPartialTarget(SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        // Only flag classes that are NOT partial.
+        if (classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        // …but DO have at least one member tagged with one of the generator-relevant attributes.
+        return classDeclaration.Members.Any(member => member switch
+        {
+            FieldDeclarationSyntax { AttributeLists.Count: > 0 } field =>
+                HasRelevantAttribute(field.AttributeLists),
+            PropertyDeclarationSyntax { AttributeLists.Count: > 0 } property =>
+                HasRelevantAttribute(property.AttributeLists),
+            MethodDeclarationSyntax { AttributeLists.Count: > 0 } method =>
+                HasRelevantAttribute(method.AttributeLists),
+            _ => false,
+        });
+    }
+
+    private static Diagnostic? GetMissingPartialDiagnostic(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        return DiagnosticFactory.CreateMissingPartialKeyword(
+            classDeclaration.Identifier.Text,
+            classDeclaration.Identifier.GetLocation());
     }
 
     /// <summary>
