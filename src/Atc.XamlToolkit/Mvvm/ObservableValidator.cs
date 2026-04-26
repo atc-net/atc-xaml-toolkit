@@ -159,6 +159,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// </remarks>
     protected bool ValidateAllProperties()
     {
+        EnsureValidationCacheBuilt();
+
         errors.Clear();
         var isValid = true;
 

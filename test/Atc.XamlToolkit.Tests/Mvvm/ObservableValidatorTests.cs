@@ -81,6 +81,36 @@ public sealed class ObservableValidatorTests
     }
 
     [Fact]
+    public void ValidateAllProperties_DiscoversValidationAttributes_OnPrivateBackingField()
+    {
+        // Source-generated [ObservableProperty] places validation attributes on
+        // the camelCase private backing field. ObservableValidator's metadata
+        // builder must look there when nothing is on the public property.
+        var sut = new TestSourceGeneratedStyleValidator();
+
+        sut.RunValidateAllProperties().Should().BeFalse(
+            "validation attributes on the camelCase backing field must be discovered");
+
+        sut.HasErrors.Should().BeTrue();
+        sut.GetErrors(nameof(TestSourceGeneratedStyleValidator.FirstName)).Cast<string>()
+            .Should().Contain(e => e.Contains("required", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void ValidateProperty_DiscoversValidationAttributes_OnPrivateBackingField()
+    {
+        // Same shape as above but exercising the per-property path that
+        // [NotifyDataErrorInfo]-generated setters take at runtime.
+        var sut = new TestSourceGeneratedStyleValidator();
+
+        sut.SetFirstName("A"); // < 2 chars
+
+        sut.HasErrors.Should().BeTrue();
+        sut.GetErrors(nameof(TestSourceGeneratedStyleValidator.FirstName)).Cast<string>()
+            .Should().Contain(e => e.Contains("at least 2 characters", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void ValidateProperty_BuildsValidationCacheLazily_WithoutInitializeValidationCall()
     {
         // Pin the lazy-init contract: callers using [NotifyDataErrorInfo]
@@ -109,6 +139,40 @@ public sealed class ObservableValidatorTests
             firstName = value;
             ValidateProperty(value, nameof(FirstName));
         }
+    }
+
+    [SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed", Justification = "Test type — validation attributes are discovered via reflection on the private camelCase backing field.")]
+    private sealed class TestSourceGeneratedStyleValidator : ObservableValidator
+    {
+        // Validation attributes intentionally on the camelCase private field
+        // — this mirrors what the [ObservableProperty] generator emits.
+        [Required(ErrorMessage = "First name is required")]
+        [MinLength(2, ErrorMessage = "First name must be at least 2 characters")]
+        private string firstName = string.Empty;
+
+        public string FirstName
+        {
+            get => firstName;
+            set
+            {
+                if (firstName == value)
+                {
+                    return;
+                }
+
+                firstName = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public void SetFirstName(string value)
+        {
+            FirstName = value;
+            ValidateProperty(value, nameof(FirstName));
+        }
+
+        public bool RunValidateAllProperties()
+            => ValidateAllProperties();
     }
 
     private sealed class TestPersonValidator : ObservableValidator
