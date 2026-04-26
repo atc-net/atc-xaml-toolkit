@@ -75,6 +75,45 @@ The generator surfaces these diagnostics at compile time so common misuses are c
 | `AtcXamlToolkit0008` | Warning | Two or more `[ComputedProperty]` getters mutually reference each other (`A => B + 1` and `B => A + 1`, or any longer cycle). The generator's incremental invalidation graph doesn't trigger an update loop, but evaluating any of them at runtime infinitely recurses until the stack overflows. The diagnostic message includes the shortest cycle path. | Break the cycle by extracting shared computation into a non-computed helper, or by making one of the properties an `[ObservableProperty]`-backed value. |
 | `AtcXamlToolkit0009` | Warning | `[NotifyDataErrorInfo]` is on a field whose containing class doesn't transitively derive from `ObservableValidator` (the only base type that exposes the protected `ValidateProperty` method the generator calls in the setter). Combinations like `[INotifyPropertyChanged]` (plain class) + `[NotifyDataErrorInfo]` would otherwise produce an opaque `CS0103: name 'ValidateProperty' does not exist` inside the generated file. | Change the base class to `ObservableValidator` or `ViewModelBase`, or remove `[NotifyDataErrorInfo]`. |
 
+## Architecture & decisions
+
+A small set of decisions about the diagnostics infrastructure — surfaced here so they don't have to be re-derived from git history.
+
+### Where the diagnostics live
+
+Toolkit-specific diagnostics — every `AtcXamlToolkit####` ID — ship from `Atc.XamlToolkit.SourceGenerators`. They're not in the external [`Atc.Analyzer`](https://www.nuget.org/packages/Atc.Analyzer) package, and they won't be:
+
+- These diagnostics *only* make sense in the presence of toolkit attributes (`[ObservableProperty]`, `[RelayCommand]`, `[ComputedProperty]`, `[NotifyDataErrorInfo]`, `[INotifyPropertyChanged]`, …). Outside this package they describe nothing.
+- `Atc.Analyzer` ships general C#/style rules (ATC1xx / ATC2xx) that apply across all .NET projects. Mixing toolkit-domain rules into it would force consumers to either accept domain-specific noise on unrelated projects, or maintain rule-suppression baselines per project type.
+- Versioning is cleaner: a diagnostic can ship in the same release as the feature it guards. No cross-package coordination.
+
+### Diagnostic ID convention
+
+`AtcXamlToolkit####`, where `####` is a zero-padded sequential 4-digit suffix. Reserve a fresh ID at the time you add the diagnostic descriptor in `DiagnosticFactory.cs`; never recycle an ID, even if the diagnostic is later removed (consumers have suppressions in `.editorconfig` keyed to the ID).
+
+The ID range is exclusive to this toolkit. There is no shared registry to consult — local uniqueness inside `DiagnosticFactory` is enough.
+
+### How to add a new diagnostic
+
+The existing pipelines in `ViewModelGenerator.cs` are the template. The pattern is:
+
+1. Add a `DiagnosticDescriptor` to `DiagnosticFactory.cs` with the new ID and a `Create<NewName>` factory method.
+2. Add a `SyntaxProvider` pipeline in `ViewModelGenerator.Initialize` consisting of a `predicate` (cheap syntax-shape filter — keep this purely syntactic, no semantic-model use) and a `transform` (semantic check that returns the diagnostic, or a list of them, or null).
+3. Register the pipeline output via `context.RegisterSourceOutput(...)` and call `spc.ReportDiagnostic(...)` per emitted diagnostic.
+4. Document it in the table above with severity, when-it-fires, and how-to-fix.
+5. Add positive + negative tests in `ViewModelGeneratorTests.cs` that assert by `d.Id == "AtcXamlToolkit####"`.
+
+### Code-fix providers (deferred)
+
+Code-fix providers (the IDE light-bulb that *applies* a fix when a diagnostic fires) are deferred until there's user demand. The blocker isn't engineering — it's testing infrastructure: the standard `Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>` expects a `DiagnosticAnalyzer` as the first type parameter, not a source generator. Source-generator-emitted diagnostics flow through a different pipeline.
+
+Two paths around this once we want the feature:
+
+1. Ship a parallel `DiagnosticAnalyzer` that re-detects all 9 conditions, just to plug into the standard verifier. Real cost: every detection pipeline lives in two places.
+2. Build a custom test harness on top of the existing `RunGenerator` infrastructure that feeds diagnostics into the code-fix engine manually.
+
+Either is workable. Neither is justified by the build-time-warning UX we already ship — every existing diagnostic message names the fix in plain language.
+
 ## Cross-references
 
 - [`ViewModelBase` and validation](../Mvvm/Readme.md)
