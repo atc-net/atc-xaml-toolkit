@@ -1,0 +1,123 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.Validation.LoginView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:validation="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Mvvm.Validation"
+    d:DesignHeight="500"
+    d:DesignWidth="700"
+    x:DataType="validation:LoginViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <validation:LoginViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="10" RowDefinitions="Auto,10,Auto,10,Auto">
+
+        <!--  Header  -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="Form validation demo (manual InitializeValidation path)" />
+            <TextBlock
+                Opacity="0.7"
+                Text="LoginViewModel inherits ViewModelBase, declares fields with DataAnnotations, and calls InitializeValidation(validateOnPropertyChanged: true) in its constructor. Each keystroke re-runs validation; Submit is gated on HasErrors."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!--  Form  -->
+        <Grid
+            Grid.Row="2"
+            ColumnDefinitions="100,280,*"
+            RowDefinitions="Auto,5,Auto,5,Auto,10,Auto">
+
+            <!--  Username  -->
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Username *" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Username, Mode=TwoWay}" />
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{Binding UsernameError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Email  -->
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Email *" />
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Email, Mode=TwoWay}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{Binding EmailError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Password  -->
+            <TextBlock
+                Grid.Row="4"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Password *" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Password, Mode=TwoWay}" />
+            <TextBlock
+                Grid.Row="4"
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{Binding PasswordError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Submit / Reset  -->
+            <StackPanel
+                Grid.Row="6"
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    MinWidth="100"
+                    Padding="10,5"
+                    Command="{Binding SubmitCommand}"
+                    Content="Submit" />
+                <Button
+                    MinWidth="100"
+                    Padding="10,5"
+                    Command="{Binding ResetCommand}"
+                    Content="Reset" />
+            </StackPanel>
+        </Grid>
+
+        <!--  Status  -->
+        <Border
+            Grid.Row="4"
+            Padding="10"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="1"
+            CornerRadius="3">
+            <StackPanel Spacing="4">
+                <TextBlock>
+                    <Run Text="Has Errors: " />
+                    <Run FontWeight="Bold" Text="{Binding HasErrors, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock>
+                    <Run Text="Last submitted username: " />
+                    <Run FontWeight="Bold" Text="{Binding LastSubmittedUsername, Mode=OneWay, TargetNullValue='(none yet)'}" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
