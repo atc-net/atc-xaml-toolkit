@@ -92,7 +92,32 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 }
             });
 
-        // Pipeline 4: classes annotated with [INotifyPropertyChanged] — emit the
+        // Pipeline 4: validate [NotifyPropertyChangedFor("X")] references.
+        // Catches typos and renames that today produce a confusing
+        // 'CS0103: name X does not exist' inside the generated file.
+        var notifyForRefDiagnostics = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsClassWithNotifyPropertyChangedForUsage(syntaxNode),
+                transform: static (context, _) => GetNotifyPropertyChangedForDiagnostics(context))
+            .Where(static diagnostics => diagnostics is { Count: > 0 })
+            .WithTrackingName("ViewModelGenerator.NotifyPropertyChangedForDiagnostics");
+
+        context.RegisterSourceOutput(
+            notifyForRefDiagnostics,
+            static (spc, diagnostics) =>
+            {
+                if (diagnostics is null)
+                {
+                    return;
+                }
+
+                foreach (var diagnostic in diagnostics)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+
+        // Pipeline 5: classes annotated with [INotifyPropertyChanged] — emit the
         // INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set<T>)
         // so the class can act as its own INPC source without inheriting from
         // ObservableObject. Compatible with [ObservableProperty] on the same class.
@@ -491,6 +516,206 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         }
 
         return diagnostics;
+    }
+
+    private static bool IsClassWithNotifyPropertyChangedForUsage(
+        SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration ||
+                fieldDeclaration.AttributeLists.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is
+                        NameConstants.NotifyPropertyChangedFor or
+                        NameConstants.NotifyPropertyChangedForAttribute)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all fields with [NotifyPropertyChangedFor].")]
+    private static List<Diagnostic>? GetNotifyPropertyChangedForDiagnostics(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+        if (classSymbol is null)
+        {
+            return null;
+        }
+
+        // Build the set of property names that will exist on the final type:
+        //   1. Declared properties (across all partial halves)
+        //   2. Properties to be generated from [ObservableProperty] fields
+        var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var member in classSymbol.GetMembers())
+        {
+            if (member is IPropertySymbol propertySymbol)
+            {
+                knownPropertyNames.Add(propertySymbol.Name);
+                continue;
+            }
+
+            if (member is IFieldSymbol fieldSymbol &&
+                FieldHasObservablePropertyAttribute(fieldSymbol))
+            {
+                knownPropertyNames.Add(GetGeneratedPropertyName(fieldSymbol));
+            }
+        }
+
+        List<Diagnostic>? diagnostics = null;
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is not (
+                        NameConstants.NotifyPropertyChangedFor or
+                        NameConstants.NotifyPropertyChangedForAttribute))
+                    {
+                        continue;
+                    }
+
+                    if (attribute.ArgumentList is null)
+                    {
+                        continue;
+                    }
+
+                    var fieldName = fieldDeclaration.Declaration.Variables
+                        .FirstOrDefault()?.Identifier.Text
+                        ?? string.Empty;
+
+                    foreach (var argument in attribute.ArgumentList.Arguments)
+                    {
+                        var referencedName = ExtractAttributeStringArgument(argument);
+                        if (referencedName is null)
+                        {
+                            continue;
+                        }
+
+                        if (knownPropertyNames.Contains(referencedName))
+                        {
+                            continue;
+                        }
+
+                        diagnostics ??= [];
+                        diagnostics.Add(DiagnosticFactory.CreateNotifyPropertyChangedForNonExistentTarget(
+                            fieldName,
+                            referencedName,
+                            argument.GetLocation()));
+                    }
+                }
+            }
+        }
+
+        return diagnostics;
+    }
+
+    private static bool FieldHasObservablePropertyAttribute(
+        IFieldSymbol fieldSymbol)
+    {
+        foreach (var attribute in fieldSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.ObservableProperty
+                or NameConstants.ObservablePropertyAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string GetGeneratedPropertyName(IFieldSymbol fieldSymbol)
+    {
+        // Honour an explicit PropertyName argument on the [ObservableProperty]
+        // attribute when present; otherwise derive from the camelCase field
+        // name (matches ObservablePropertyInspector behaviour).
+        foreach (var attribute in fieldSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name is not (
+                NameConstants.ObservableProperty
+                or NameConstants.ObservablePropertyAttribute))
+            {
+                continue;
+            }
+
+            if (attribute.ConstructorArguments.Length > 0 &&
+                attribute.ConstructorArguments[0].Value is string explicitName &&
+                !string.IsNullOrEmpty(explicitName))
+            {
+                return explicitName!.EnsureFirstCharacterToUpper();
+            }
+        }
+
+        return fieldSymbol.Name
+            .RemovePrefixFromField()
+            .EnsureFirstCharacterToUpper();
+    }
+
+    private static string? ExtractAttributeStringArgument(
+        AttributeArgumentSyntax argument)
+    {
+        // Either a literal string ("Foo") or a nameof(Foo) expression.
+        if (argument.Expression is LiteralExpressionSyntax literal &&
+            literal.IsKind(SyntaxKind.StringLiteralExpression))
+        {
+            return literal.Token.ValueText;
+        }
+
+        if (argument.Expression is not InvocationExpressionSyntax invocation)
+        {
+            return null;
+        }
+
+        if (invocation.Expression is not IdentifierNameSyntax invokedName ||
+            invokedName.Identifier.Text != "nameof" ||
+            invocation.ArgumentList.Arguments.Count != 1)
+        {
+            return null;
+        }
+
+        return invocation.ArgumentList.Arguments[0].Expression is IdentifierNameSyntax id
+            ? id.Identifier.Text
+            : null;
     }
 
     private static bool ClassHasINotifyPropertyChangedAttribute(
