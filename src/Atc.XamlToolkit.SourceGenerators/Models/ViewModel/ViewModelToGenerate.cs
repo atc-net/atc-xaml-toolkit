@@ -1,33 +1,26 @@
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.SourceGenerators.Models.ViewModel;
 
-internal sealed class ViewModelToGenerate(
-    string namespaceName,
-    string className,
-    string accessModifier)
-    : GenerateBase(
-        namespaceName,
-        className,
-        accessModifier,
-        isStatic: false)
+internal sealed record ViewModelToGenerate(
+    string NamespaceName,
+    string ClassName,
+    string? ClassAccessModifier,
+    XamlPlatform XamlPlatform,
+    EquatableArray<ObservablePropertyToGenerate> PropertiesToGenerate,
+    EquatableArray<RelayCommandToGenerate> RelayCommandsToGenerate)
+    : GenerateBase(NamespaceName, ClassName, ClassAccessModifier, IsStatic: false)
 {
-    public XamlPlatform XamlPlatform { get; set; } = XamlPlatform.Wpf;
-
-    public IList<ObservablePropertyToGenerate>? PropertiesToGenerate { get; set; }
-
-    public IList<RelayCommandToGenerate>? RelayCommandsToGenerate { get; set; }
-
     public bool ContainsRelayCommandNameDuplicates
     {
         get
         {
-            if (RelayCommandsToGenerate is null)
+            if (RelayCommandsToGenerate.IsEmpty)
             {
                 return false;
             }
 
             var names = RelayCommandsToGenerate
-                .Select(x => x.CommandName)
+                .Select(static x => x.CommandName)
                 .ToArray();
 
             return names.Length != names
@@ -35,7 +28,4 @@ internal sealed class ViewModelToGenerate(
                 .Count();
         }
     }
-
-    public override string ToString()
-        => $"{base.ToString()}, {nameof(PropertiesToGenerate)}.Count: {PropertiesToGenerate?.Count}, {nameof(RelayCommandsToGenerate)}.Count: {RelayCommandsToGenerate?.Count}";
 }

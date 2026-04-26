@@ -466,14 +466,12 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         ComputedPropertyInspector.LinkToObservableProperties(allObservableProperties, allComputedProperties);
 
         var viewModelToGenerate = new ViewModelToGenerate(
-            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
-            className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier())
-        {
-            XamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform(),
-            PropertiesToGenerate = allObservableProperties,
-            RelayCommandsToGenerate = allRelayCommands,
-        };
+            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            ClassName: classSymbol.Name,
+            ClassAccessModifier: classSymbol.GetAccessModifier(),
+            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform(),
+            PropertiesToGenerate: new EquatableArray<ObservablePropertyToGenerate>(allObservableProperties.ToArray()),
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
 
         return viewModelToGenerate;
     }

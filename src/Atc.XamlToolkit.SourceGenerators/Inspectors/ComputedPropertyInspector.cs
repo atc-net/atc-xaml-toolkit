@@ -44,9 +44,16 @@ internal static class ComputedPropertyInspector
 
             if (dependentProperties.Count > 0)
             {
+                // Sort for deterministic content-equality across compilations —
+                // the dependency set comes from a HashSet whose iteration order
+                // is unspecified, which would defeat the EquatableArray cache.
+                var sorted = dependentProperties
+                    .OrderBy(static x => x, StringComparer.Ordinal)
+                    .ToArray();
+
                 result.Add(new ComputedPropertyToGenerate(
                     propertySymbol.Name,
-                    dependentProperties));
+                    new EquatableArray<string>(sorted)));
             }
         }
 
@@ -146,19 +153,41 @@ internal static class ComputedPropertyInspector
             return;
         }
 
+        // EquatableArray<string> is immutable, so we accumulate the new
+        // invalidation set in a List<string> per observable property and
+        // assign the snapshot back as a new EquatableArray once we know the
+        // final shape.
         foreach (var observableProperty in observableProperties)
         {
+            List<string>? appended = null;
+            var existing = observableProperty.PropertyNamesToInvalidate;
+
             foreach (var computedProperty in computedProperties)
             {
-                if (computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
+                if (!computedProperty.DependentPropertyNames.Contains(observableProperty.Name, StringComparer.Ordinal))
                 {
-                    observableProperty.PropertyNamesToInvalidate ??= [];
-                    if (!observableProperty.PropertyNamesToInvalidate.Contains(computedProperty.Name, StringComparer.Ordinal))
-                    {
-                        observableProperty.PropertyNamesToInvalidate.Add(computedProperty.Name);
-                    }
+                    continue;
+                }
+
+                if (existing.Contains(computedProperty.Name, StringComparer.Ordinal))
+                {
+                    continue;
+                }
+
+                appended ??= [];
+                if (!appended.Contains(computedProperty.Name, StringComparer.Ordinal))
+                {
+                    appended.Add(computedProperty.Name);
                 }
             }
+
+            if (appended is null)
+            {
+                continue;
+            }
+
+            var combined = existing.AsArray().Concat(appended).ToArray();
+            observableProperty.PropertyNamesToInvalidate = new EquatableArray<string>(combined);
         }
     }
 }

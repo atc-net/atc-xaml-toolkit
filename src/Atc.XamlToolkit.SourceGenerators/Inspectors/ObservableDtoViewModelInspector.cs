@@ -92,8 +92,8 @@ internal static class ObservableDtoViewModelInspector
                 allProperties.Add(new ObservablePropertyToGenerate(
                     property.Name,
                     property.Type,
-                    backingFieldName: string.Empty,
-                    isReadOnly: false));
+                    BackingFieldName: string.Empty,
+                    IsReadOnly: false));
             }
         }
 

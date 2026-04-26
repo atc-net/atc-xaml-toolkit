@@ -30,7 +30,7 @@ public class ViewModelGeneratorTests_IncrementalCaching : GeneratorTestBase
         }
         """;
 
-    [Fact(Skip = "Pinned for Phase 32d — currently fails because models lack value equality. Will be unskipped once composite models become records with EquatableArray<T> collections.")]
+    [Fact]
     public void ViewModelGenerator_OnUnchangedInput_CachesSemanticTarget()
     {
         var result = RunGeneratorIncremental<ViewModelGenerator>(Source);
@@ -38,7 +38,7 @@ public class ViewModelGeneratorTests_IncrementalCaching : GeneratorTestBase
         AssertTrackedStepIsCached(result, "ViewModelGenerator.SemanticTarget");
     }
 
-    [Fact(Skip = "Pinned for Phase 32d — currently fails because models lack value equality.")]
+    [Fact]
     public void ViewModelGenerator_OnUnchangedInput_CachesDeduplicated()
     {
         var result = RunGeneratorIncremental<ViewModelGenerator>(Source);

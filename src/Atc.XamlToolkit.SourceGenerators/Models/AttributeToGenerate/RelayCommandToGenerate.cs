@@ -1,47 +1,17 @@
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.SourceGenerators.Models.ToGenerate;
 
-internal sealed class RelayCommandToGenerate(
-    string commandName,
-    string methodName,
-    string[]? parameterTypes,
-    string[]? parameterNames,
-    string[]? parameterValues,
-    string? canExecuteName,
-    bool invertCanExecute,
-    bool usePropertyForCanExecute,
-    bool isAsync,
-    bool useTask,
-    bool executeOnBackgroundThread,
-    bool autoSetIsBusy,
-    bool supportsCancellation)
-{
-    public string CommandName { get; } = commandName;
-
-    public string MethodName { get; } = methodName;
-
-    public string[]? ParameterTypes { get; } = parameterTypes;
-
-    public string[]? ParameterNames { get; } = parameterNames;
-
-    public string[]? ParameterValues { get; } = parameterValues;
-
-    public string? CanExecuteName { get; } = canExecuteName;
-
-    public bool InvertCanExecute { get; } = invertCanExecute;
-
-    public bool UsePropertyForCanExecute { get; } = usePropertyForCanExecute;
-
-    public bool IsAsync { get; } = isAsync;
-
-    public bool UseTask { get; } = useTask;
-
-    public bool ExecuteOnBackgroundThread { get; } = executeOnBackgroundThread;
-
-    public bool AutoSetIsBusy { get; } = autoSetIsBusy;
-
-    public bool SupportsCancellation { get; } = supportsCancellation;
-
-    public override string ToString()
-        => $"{nameof(CommandName)}: {CommandName}, {nameof(MethodName)}: {MethodName}, {nameof(ParameterTypes)}.Count: {ParameterTypes?.Length}, {nameof(ParameterNames)}.Count: {ParameterNames?.Length}, {nameof(ParameterValues)}.Count: {ParameterValues?.Length}, {nameof(CanExecuteName)}: {CanExecuteName}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(UsePropertyForCanExecute)}: {UsePropertyForCanExecute}, {nameof(IsAsync)}: {IsAsync}, {nameof(UseTask)}: {UseTask}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}, {nameof(SupportsCancellation)}: {SupportsCancellation}";
-}
+internal sealed record RelayCommandToGenerate(
+    string CommandName,
+    string MethodName,
+    EquatableArray<string> ParameterTypes,
+    EquatableArray<string> ParameterNames,
+    EquatableArray<string> ParameterValues,
+    string? CanExecuteName,
+    bool InvertCanExecute,
+    bool UsePropertyForCanExecute,
+    bool IsAsync,
+    bool UseTask,
+    bool ExecuteOnBackgroundThread,
+    bool AutoSetIsBusy,
+    bool SupportsCancellation);

@@ -7,7 +7,7 @@ public sealed class ComputedPropertyInspectorTests
     {
         var computed = new List<ComputedPropertyToGenerate>
         {
-            new("FullName", new List<string> { "FirstName", "LastName" }),
+            new("FullName", new EquatableArray<string>(["FirstName", "LastName"])),
         };
 
         var exception = Record.Exception(() =>
@@ -27,14 +27,14 @@ public sealed class ComputedPropertyInspectorTests
 
         var computed = new List<ComputedPropertyToGenerate>
         {
-            new("FullName", new List<string> { "FirstName", "LastName" }),
+            new("FullName", new EquatableArray<string>(["FirstName", "LastName"])),
         };
 
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
 
-        Assert.NotNull(observables[0].PropertyNamesToInvalidate);
+        Assert.False(observables[0].PropertyNamesToInvalidate.IsEmpty);
         Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate);
-        Assert.NotNull(observables[1].PropertyNamesToInvalidate);
+        Assert.False(observables[1].PropertyNamesToInvalidate.IsEmpty);
         Assert.Contains("FullName", observables[1].PropertyNamesToInvalidate);
     }
 
@@ -48,12 +48,12 @@ public sealed class ComputedPropertyInspectorTests
 
         var computed = new List<ComputedPropertyToGenerate>
         {
-            new("FullName", new List<string> { "FirstName", "LastName" }),
+            new("FullName", new EquatableArray<string>(["FirstName", "LastName"])),
         };
 
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
 
-        Assert.Null(observables[0].PropertyNamesToInvalidate);
+        Assert.True(observables[0].PropertyNamesToInvalidate.IsEmpty);
     }
 
     [Fact]
@@ -66,14 +66,14 @@ public sealed class ComputedPropertyInspectorTests
 
         var computed = new List<ComputedPropertyToGenerate>
         {
-            new("FullName", new List<string> { "FirstName" }),
+            new("FullName", new EquatableArray<string>(["FirstName"])),
         };
 
         // Link twice
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
 
-        Assert.NotNull(observables[0].PropertyNamesToInvalidate);
+        Assert.False(observables[0].PropertyNamesToInvalidate.IsEmpty);
         Assert.Single(observables[0].PropertyNamesToInvalidate);
     }
 
@@ -87,13 +87,13 @@ public sealed class ComputedPropertyInspectorTests
 
         var computed = new List<ComputedPropertyToGenerate>
         {
-            new("FullName", new List<string> { "FirstName", "LastName" }),
-            new("Initials", new List<string> { "FirstName", "LastName" }),
+            new("FullName", new EquatableArray<string>(["FirstName", "LastName"])),
+            new("Initials", new EquatableArray<string>(["FirstName", "LastName"])),
         };
 
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
 
-        Assert.NotNull(observables[0].PropertyNamesToInvalidate);
+        Assert.False(observables[0].PropertyNamesToInvalidate.IsEmpty);
         Assert.Equal(2, observables[0].PropertyNamesToInvalidate.Count);
         Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate);
         Assert.Contains("Initials", observables[0].PropertyNamesToInvalidate);

@@ -263,17 +263,15 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         }
 
         var frameworkElementToGenerate = new FrameworkElementToGenerate(
-            xamlPlatform: xamlPlatform,
-            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
-            className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier(),
-            isStatic: isStatic)
-        {
-            AttachedPropertiesToGenerate = allAttachedProperties,
-            DependencyPropertiesToGenerate = allDependencyProperties,
-            RoutedEventsToGenerate = allRoutedEvents,
-            RelayCommandsToGenerate = allRelayCommands,
-        };
+            XamlPlatform: xamlPlatform,
+            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            ClassName: classSymbol.Name,
+            ClassAccessModifier: classSymbol.GetAccessModifier(),
+            IsStatic: isStatic,
+            AttachedPropertiesToGenerate: new EquatableArray<AttachedPropertyToGenerate>(allAttachedProperties.ToArray()),
+            DependencyPropertiesToGenerate: new EquatableArray<DependencyPropertyToGenerate>(allDependencyProperties.ToArray()),
+            RoutedEventsToGenerate: new EquatableArray<RoutedEventToGenerate>(allRoutedEvents.ToArray()),
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
 
         return frameworkElementToGenerate;
     }
@@ -296,21 +294,21 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
 
         frameworkElementBuilder.GenerateStart(frameworkElementToGenerate);
 
-        if (frameworkElementToGenerate.AttachedPropertiesToGenerate?.Count > 0)
+        if (frameworkElementToGenerate.AttachedPropertiesToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateAttachedProperties(
                 frameworkElementToGenerate.XamlPlatform,
                 frameworkElementToGenerate.AttachedPropertiesToGenerate);
         }
 
-        if (frameworkElementToGenerate.DependencyPropertiesToGenerate?.Count > 0)
+        if (frameworkElementToGenerate.DependencyPropertiesToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateDependencyProperties(
                 frameworkElementToGenerate.XamlPlatform,
                 frameworkElementToGenerate.DependencyPropertiesToGenerate);
         }
 
-        if (frameworkElementToGenerate.RoutedEventsToGenerate?.Count > 0 &&
+        if (frameworkElementToGenerate.RoutedEventsToGenerate.Count > 0 &&
             frameworkElementToGenerate.XamlPlatform == XamlPlatform.Wpf)
         {
             // Routed events are only supported in WPF
@@ -319,7 +317,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             frameworkElementBuilder.GenerateRoutedEvents(frameworkElementToGenerate.RoutedEventsToGenerate);
         }
 
-        if (frameworkElementToGenerate.RelayCommandsToGenerate?.Count > 0)
+        if (frameworkElementToGenerate.RelayCommandsToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateRelayCommands(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
         }

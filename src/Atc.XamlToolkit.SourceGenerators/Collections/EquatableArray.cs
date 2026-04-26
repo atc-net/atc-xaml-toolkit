@@ -28,6 +28,8 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, Syst
 
     public int Count => array?.Length ?? 0;
 
+    public int Length => array?.Length ?? 0;
+
     public bool IsEmpty => array is null || array.Length == 0;
 
     public T this[int index] => array![index];

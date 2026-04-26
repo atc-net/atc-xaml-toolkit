@@ -6,6 +6,7 @@ global using System.Text;
 global using System.Text.RegularExpressions;
 
 global using Atc.XamlToolkit.SourceGenerators.Builders;
+global using Atc.XamlToolkit.SourceGenerators.Collections;
 global using Atc.XamlToolkit.SourceGenerators.Extensions;
 global using Atc.XamlToolkit.SourceGenerators.Extensions.Builder;
 global using Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;

@@ -1,23 +1,15 @@
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.SourceGenerators.Models.ToGenerate;
 
-internal sealed class ObservablePropertyToGenerate(
-    string name,
-    string type,
-    string backingFieldName,
-    bool isReadOnly)
+internal sealed record ObservablePropertyToGenerate(
+    string Name,
+    string Type,
+    string BackingFieldName,
+    bool IsReadOnly)
 {
-    public string Name { get; } = name;
+    public EquatableArray<string> PropertyNamesToInvalidate { get; set; } = EquatableArray<string>.Empty;
 
-    public string Type { get; } = type;
-
-    public string BackingFieldName { get; } = backingFieldName;
-
-    public bool IsReadOnly { get; } = isReadOnly;
-
-    public ICollection<string>? PropertyNamesToInvalidate { get; set; }
-
-    public ICollection<string>? CommandNamesToInvalidate { get; set; }
+    public EquatableArray<string> CommandNamesToInvalidate { get; set; } = EquatableArray<string>.Empty;
 
     public string? BeforeChangedCallback { get; set; }
 
@@ -33,10 +25,7 @@ internal sealed class ObservablePropertyToGenerate(
 
     public bool ValidatesOnChange { get; set; }
 
-    public List<string>? CustomAttributes { get; set; }
+    public EquatableArray<string> CustomAttributes { get; set; } = EquatableArray<string>.Empty;
 
-    public List<string>? DocumentationComments { get; set; }
-
-    public override string ToString()
-        => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(BackingFieldName)}: {BackingFieldName}, {nameof(PropertyNamesToInvalidate)}.Count: {PropertyNamesToInvalidate?.Count}, {nameof(CommandNamesToInvalidate)}.Count: {CommandNamesToInvalidate?.Count}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(IsRequired)}: {IsRequired}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}, {nameof(ValidatesOnChange)}: {ValidatesOnChange}";
+    public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
 }

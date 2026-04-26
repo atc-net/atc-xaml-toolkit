@@ -1,59 +1,20 @@
 // ReSharper disable CheckNamespace
 namespace Atc.XamlToolkit.SourceGenerators.Models.ObservableDtoViewModel;
 
-internal sealed class ObservableDtoViewModelToGenerate : GenerateBase
-{
-    public ObservableDtoViewModelToGenerate(
-        string namespaceName,
-        string className,
-        string accessModifier,
-        string dtoTypeName,
-        bool isDtoRecord,
-        bool hasCustomToString,
-        bool useIsDirty,
-        bool enableValidationOnPropertyChanged,
-        bool enableValidationOnInit,
-        List<DtoPropertyInfo> properties,
-        List<DtoMethodInfo> methods,
-        List<ObservablePropertyToGenerate> customProperties,
-        List<RelayCommandToGenerate> customCommands,
-        List<ComputedPropertyToGenerate> computedProperties)
-        : base(namespaceName, className, accessModifier, isStatic: false)
-    {
-        DtoTypeName = dtoTypeName;
-        IsDtoRecord = isDtoRecord;
-        HasCustomToString = hasCustomToString;
-        UseIsDirty = useIsDirty;
-        EnableValidationOnPropertyChanged = enableValidationOnPropertyChanged;
-        EnableValidationOnInit = enableValidationOnInit;
-        Properties = properties;
-        Methods = methods;
-        CustomProperties = customProperties;
-        CustomCommands = customCommands;
-        ComputedProperties = computedProperties;
-    }
-
-    public XamlPlatform XamlPlatform { get; set; } = XamlPlatform.Wpf;
-
-    public string DtoTypeName { get; }
-
-    public bool IsDtoRecord { get; }
-
-    public bool HasCustomToString { get; }
-
-    public bool UseIsDirty { get; }
-
-    public bool EnableValidationOnPropertyChanged { get; }
-
-    public bool EnableValidationOnInit { get; }
-
-    public List<DtoPropertyInfo> Properties { get; }
-
-    public List<DtoMethodInfo> Methods { get; }
-
-    public List<ObservablePropertyToGenerate> CustomProperties { get; }
-
-    public List<RelayCommandToGenerate> CustomCommands { get; }
-
-    public List<ComputedPropertyToGenerate> ComputedProperties { get; }
-}
+internal sealed record ObservableDtoViewModelToGenerate(
+    string NamespaceName,
+    string ClassName,
+    string? ClassAccessModifier,
+    string DtoTypeName,
+    bool IsDtoRecord,
+    bool HasCustomToString,
+    bool UseIsDirty,
+    bool EnableValidationOnPropertyChanged,
+    bool EnableValidationOnInit,
+    EquatableArray<DtoPropertyInfo> Properties,
+    EquatableArray<DtoMethodInfo> Methods,
+    EquatableArray<ObservablePropertyToGenerate> CustomProperties,
+    EquatableArray<RelayCommandToGenerate> CustomCommands,
+    EquatableArray<ComputedPropertyToGenerate> ComputedProperties,
+    XamlPlatform XamlPlatform)
+    : GenerateBase(NamespaceName, ClassName, ClassAccessModifier, IsStatic: false);

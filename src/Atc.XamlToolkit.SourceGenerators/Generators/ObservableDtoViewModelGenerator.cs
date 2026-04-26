@@ -188,23 +188,21 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
         }
 
         return new ObservableDtoViewModelToGenerate(
-            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
-            className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier(),
-            dtoTypeName: result.DtoTypeName!,
-            isDtoRecord: result.IsDtoRecord,
-            hasCustomToString: result.HasCustomToString,
-            useIsDirty: result.UseIsDirty,
-            enableValidationOnPropertyChanged: result.EnableValidationOnPropertyChanged,
-            enableValidationOnInit: result.EnableValidationOnInit,
-            properties: result.Properties,
-            methods: result.Methods,
-            customProperties: result.CustomProperties,
-            customCommands: result.CustomCommands,
-            computedProperties: result.ComputedProperties)
-        {
-            XamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform(),
-        };
+            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            ClassName: classSymbol.Name,
+            ClassAccessModifier: classSymbol.GetAccessModifier(),
+            DtoTypeName: result.DtoTypeName!,
+            IsDtoRecord: result.IsDtoRecord,
+            HasCustomToString: result.HasCustomToString,
+            UseIsDirty: result.UseIsDirty,
+            EnableValidationOnPropertyChanged: result.EnableValidationOnPropertyChanged,
+            EnableValidationOnInit: result.EnableValidationOnInit,
+            Properties: new EquatableArray<DtoPropertyInfo>(result.Properties.ToArray()),
+            Methods: new EquatableArray<DtoMethodInfo>(result.Methods.ToArray()),
+            CustomProperties: new EquatableArray<ObservablePropertyToGenerate>(result.CustomProperties.ToArray()),
+            CustomCommands: new EquatableArray<RelayCommandToGenerate>(result.CustomCommands.ToArray()),
+            ComputedProperties: new EquatableArray<ComputedPropertyToGenerate>(result.ComputedProperties.ToArray()),
+            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform());
     }
 
     private static void Execute(

@@ -133,9 +133,9 @@ internal static class RelayCommandInspector
             new RelayCommandToGenerate(
                 commandName,
                 methodSymbol.Name,
-                parameterTypes?.ToArray(),
-                parameterNames?.ToArray(),
-                parameterValues.Count == 0 ? null : parameterValues.ToArray(),
+                new EquatableArray<string>(parameterTypes?.ToArray() ?? []),
+                new EquatableArray<string>(parameterNames?.ToArray() ?? []),
+                new EquatableArray<string>(parameterValues.ToArray()),
                 canExecuteName,
                 invertCanExecute,
                 usePropertyForCanExecute,

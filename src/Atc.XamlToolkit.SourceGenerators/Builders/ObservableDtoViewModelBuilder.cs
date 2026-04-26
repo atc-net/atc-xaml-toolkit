@@ -245,7 +245,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
     private static string BuildExecuteExpression(RelayCommandToGenerate cmd)
     {
-        if (cmd.ParameterValues?.Length > 0)
+        if (!cmd.ParameterValues.IsEmpty)
         {
             var parameterValuesAsCommaSeparated = cmd.GetParameterValuesAsCommaSeparated();
             return cmd is { ExecuteOnBackgroundThread: true, UseTask: true }
@@ -305,12 +305,12 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
             return null;
         }
 
-        if (cmd.ParameterValues?.Length > 0)
+        if (!cmd.ParameterValues.IsEmpty)
         {
             return $"{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
         }
 
-        var types = cmd.ParameterTypes ?? [];
+        var types = cmd.ParameterTypes;
         var paramCount = types.Length;
         var isCancellationOnly = paramCount == 1 &&
                                  types[0].EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal);
@@ -580,7 +580,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
         AppendLine($"{p.BackingFieldName} = value;");
         AppendLine($"RaisePropertyChanged({nameofName});");
-        if (p.PropertyNamesToInvalidate is not null)
+        if (!p.PropertyNamesToInvalidate.IsEmpty)
         {
             foreach (var propertyNameToInvalidate in p.PropertyNamesToInvalidate)
             {
@@ -590,7 +590,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
             }
         }
 
-        if (p.CommandNamesToInvalidate is not null)
+        if (!p.CommandNamesToInvalidate.IsEmpty)
         {
             foreach (var commandNamesToInvalidate in p.CommandNamesToInvalidate)
             {
