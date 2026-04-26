@@ -108,7 +108,13 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
     protected virtual void OnPropertyChanged(
         [CallerMemberName] string? propertyName = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        var handler = PropertyChanged;
+        if (handler is null)
+        {
+            return;
+        }
+
+        handler(this, Mvvm.PropertyChangedEventArgsCache.Get(propertyName));
     }
 
     /// <summary>

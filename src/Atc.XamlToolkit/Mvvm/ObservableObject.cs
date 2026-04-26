@@ -17,7 +17,12 @@ public abstract class ObservableObject : IObservableObject
     {
         VerifyPropertyName(propertyName);
         var handler = PropertyChanged;
-        handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        if (handler is null)
+        {
+            return;
+        }
+
+        handler(this, PropertyChangedEventArgsCache.Get(propertyName));
     }
 
     /// <inheritdoc />
@@ -100,7 +105,12 @@ public abstract class ObservableObject : IObservableObject
     {
         VerifyPropertyName(propertyName);
         var handler = PropertyChanged;
-        handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        if (handler is null)
+        {
+            return;
+        }
+
+        handler(this, PropertyChangedEventArgsCache.Get(propertyName));
     }
 
     protected bool Set<T>(
