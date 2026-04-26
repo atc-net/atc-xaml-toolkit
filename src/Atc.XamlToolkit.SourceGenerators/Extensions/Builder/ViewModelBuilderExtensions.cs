@@ -53,6 +53,18 @@ internal static class ViewModelBuilderExtensions
         ViewModelBuilder builder,
         ObservablePropertyToGenerate p)
     {
+        // Emit the optional partial-method declarations before the property so
+        // the property's setter can call into them. Partial methods without a
+        // user-supplied implementation are elided by the C# compiler — zero
+        // runtime cost when unused, full type-safety when used.
+        if (p.GeneratePartialHooks && !p.IsReadOnly)
+        {
+            builder.AppendLineBeforeMember();
+            builder.AppendLine($"partial void On{p.Name}Changing({p.Type} value);");
+            builder.AppendLineBeforeMember();
+            builder.AppendLine($"partial void On{p.Name}Changed({p.Type} value);");
+        }
+
         builder.AppendLineBeforeMember();
 
         // Generate documentation comments if present
@@ -94,6 +106,11 @@ internal static class ViewModelBuilderExtensions
         builder.DecreaseIndent();
         builder.AppendLine("}");
         builder.AppendLine();
+        if (p.GeneratePartialHooks)
+        {
+            builder.AppendLine($"On{p.Name}Changing(value);");
+        }
+
         if (p.BeforeChangedCallback is not null)
         {
             GenerateCallbackInlineCode(builder, p.BeforeChangedCallback);
@@ -108,6 +125,11 @@ internal static class ViewModelBuilderExtensions
         var nameofName = p.Name.EnsureNameofContent();
 
         builder.AppendLine($"{p.BackingFieldName} = value;");
+        if (p.GeneratePartialHooks)
+        {
+            builder.AppendLine($"On{p.Name}Changed(value);");
+        }
+
         builder.AppendLine($"RaisePropertyChanged({nameofName});");
         if (p.PropertyNamesToInvalidate is not null)
         {

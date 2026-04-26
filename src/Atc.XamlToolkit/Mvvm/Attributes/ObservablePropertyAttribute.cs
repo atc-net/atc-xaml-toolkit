@@ -104,7 +104,42 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// </summary>
     public bool UseIsDirty { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the source generator should emit
+    /// <c>partial void On{PropertyName}Changing({Type} value);</c> and
+    /// <c>partial void On{PropertyName}Changed({Type} value);</c> declarations and call them from the
+    /// generated setter — a compile-time-safe alternative to the string-named
+    /// <see cref="BeforeChangedCallback"/> and <see cref="AfterChangedCallback"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When <see langword="true"/>, the generator emits two partial method <i>declarations</i>
+    /// and unconditional calls to them inside the setter. If the consumer does not implement either
+    /// partial method, the C# compiler elides the call entirely — so the feature has zero runtime
+    /// cost when unused, but full type-safety and rename refactoring when used.
+    /// </para>
+    /// <para>
+    /// Composes with <see cref="BeforeChangedCallback"/> / <see cref="AfterChangedCallback"/> if both
+    /// are present: the partial-method calls fire first, then the string-named callbacks.
+    /// </para>
+    /// <para>
+    /// Example:
+    /// <code language="csharp">
+    /// public partial class CustomerViewModel : ViewModelBase
+    /// {
+    ///     [ObservableProperty(GeneratePartialHooks = true)]
+    ///     private string firstName = string.Empty;
+    ///
+    ///     // Optional — implement only the hooks you need.
+    ///     partial void OnFirstNameChanged(string value)
+    ///         => System.Diagnostics.Debug.WriteLine($"FirstName -> {value}");
+    /// }
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool GeneratePartialHooks { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}";
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
 }
