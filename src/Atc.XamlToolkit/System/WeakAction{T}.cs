@@ -87,14 +87,19 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
     {
         get
         {
-            if (staticAction is null && Reference is null)
+            // Snapshot the volatile fields so MarkForDeletion on another
+            // thread cannot turn a passed null check into a deref-NRE.
+            var localStaticAction = staticAction;
+            var localReference = Reference;
+
+            if (localStaticAction is null && localReference is null)
             {
                 return false;
             }
 
-            return staticAction is null
-                ? Reference is not null && Reference.IsAlive
-                : Reference is null || Reference.IsAlive;
+            return localStaticAction is null
+                ? localReference is not null && localReference.IsAlive
+                : localReference is null || localReference.IsAlive;
         }
     }
 
@@ -105,27 +110,30 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
     /// <param name="parameter">A parameter to be passed to the action.</param>
     public void Execute(T? parameter = default)
     {
-        if (staticAction is not null)
+        // Snapshot the volatile fields once. MarkForDeletion can null them
+        // from another thread between a check and a dereference, so we must
+        // not read Method twice.
+        var localStaticAction = staticAction;
+        if (localStaticAction is not null)
         {
-            staticAction(parameter!);
+            localStaticAction(parameter!);
             return;
         }
 
         var actionTarget = ActionTarget;
+        var localMethod = Method;
 
-        if (!IsAlive)
+        if (!IsAlive
+            || localMethod is null
+            || (LiveReference is null && ActionReference is null)
+            || actionTarget is null)
         {
             return;
         }
 
-        if (Method is not null
-            && (LiveReference is not null || ActionReference is not null)
-            && actionTarget is not null)
-        {
-            _ = Method.Invoke(
-                actionTarget,
-                new object[] { parameter! });
-        }
+        _ = localMethod.Invoke(
+            actionTarget,
+            new object[] { parameter! });
     }
 
     /// <summary>
