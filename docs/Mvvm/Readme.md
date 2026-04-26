@@ -22,16 +22,18 @@ The **Atc.XamlToolkit.Avalonia** library provides a robust foundation for implem
 
 The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia` library offers a variety of base classes and utilities to streamline MVVM implementation:
 
-| 🧩 Component              | 📋 Description                                                                |
-|---------------------------|--------------------------------------------------------------------------------|
-| `ViewModelBase`           | A base class for ViewModels.                                                   |
-| `MainWindowViewModelBase` | A base class for the main window ViewModel.                                    |
-| `ViewModelDialogBase`     | A base class for dialog ViewModels.                                            |
-| `ObservableObject`        | A base class for observable objects implementing `INotifyPropertyChanged`.     |
-| `RelayCommand`            | A command supporting `CanExecute`.                                             |
-| `RelayCommand<T>`         | A command with a generic parameter and `CanExecute`.                           |
-| `RelayCommandAsync`       | An asynchronous command supporting `CanExecute`.                               |
-| `RelayCommandAsync<T>`    | An asynchronous command with a generic parameter and `CanExecute`.             |
+| 🧩 Component                   | 📋 Description                                                                |
+|--------------------------------|--------------------------------------------------------------------------------|
+| `ViewModelBase`                | A base class for ViewModels.                                                   |
+| `MainWindowViewModelBase`      | A base class for the main window ViewModel.                                    |
+| `ViewModelDialogBase`          | A base class for dialog ViewModels.                                            |
+| `ObservableValidator`          | A base class with `INotifyPropertyChanged` + `INotifyDataErrorInfo` (no UI-state members or messenger). |
+| `ObservableObject`             | A base class for observable objects implementing `INotifyPropertyChanged`.     |
+| `[INotifyPropertyChanged]`     | An attribute that adds INPC scaffolding to a class you can't make inherit from `ObservableObject`. |
+| `RelayCommand`                 | A command supporting `CanExecute`.                                             |
+| `RelayCommand<T>`              | A command with a generic parameter and `CanExecute`.                           |
+| `RelayCommandAsync`            | An asynchronous command supporting `CanExecute`.                               |
+| `RelayCommandAsync<T>`         | An asynchronous command with a generic parameter and `CanExecute`.             |
 
 📖 For detailed information about commands, refer to the [RelayCommand documentation](../SourceGenerators/ViewModel.md).
 
@@ -40,6 +42,74 @@ The `Atc.XamlToolkit.Wpf`, `Atc.XamlToolkit.WinUI`, or `Atc.XamlToolkit.Avalonia
 📖 For wrapping DTOs with ViewModels, see the [ObservableDtoViewModel documentation](../SourceGenerators/ViewModel.md#-wrapping-dtos-with-observabledtoviewmodel).
 
 💡 **Tip:** The `ObservableDtoViewModel` generator automatically adds `IsDirty` tracking to your ViewModels when inheriting from `ViewModelBase`, helping you track changes in your forms and data. See the [Change Tracking with IsDirty](../SourceGenerators/ViewModel.md#-change-tracking-with-isdirty) section for more details.
+
+---
+
+## 🧬 INPC on plain classes with `[INotifyPropertyChanged]`
+
+When your class needs `INotifyPropertyChanged` but **cannot** inherit from `ObservableObject` or `ViewModelBase` — for example, a domain entity that already has a base class, a DTO produced by another tool, or a third-party type you partial-extend — annotate the class with `[INotifyPropertyChanged]` and the source generator emits the INPC scaffolding directly on it.
+
+### What gets generated
+
+Given:
+
+```csharp
+using Atc.XamlToolkit.Mvvm;
+
+[INotifyPropertyChanged]
+public partial class Customer
+{
+}
+```
+
+The generator emits a partial that adds:
+
+| Member | Visibility | Purpose |
+|---|---|---|
+| `event PropertyChangedEventHandler? PropertyChanged` | `public` | The INPC contract. |
+| `RaisePropertyChanged([CallerMemberName] string?)` | `protected` | Fires `PropertyChanged` for the caller's property. Compatible with source-generated `[ObservableProperty]` setters that emit `RaisePropertyChanged(...)` calls. |
+| `OnPropertyChanged([CallerMemberName] string?)` | `protected` | Alias for `RaisePropertyChanged` — convenience for hand-written setters. |
+| `Set<T>(ref T field, T newValue, [CallerMemberName] string?)` | `protected` | Equality-checked setter helper. Returns `true` if the value changed and `PropertyChanged` was fired. |
+
+The generated `RaisePropertyChanged` shares the process-wide [`PropertyChangedEventArgsCache`](../../src/Atc.XamlToolkit/Mvvm/PropertyChangedEventArgsCache.cs), so allocation behaviour matches `ObservableObject`.
+
+### Combining with `[ObservableProperty]`
+
+`[INotifyPropertyChanged]` is fully compatible with `[ObservableProperty]` on fields — you can opt a class into INPC and still use the field-to-property generator without any inheritance:
+
+```csharp
+using Atc.XamlToolkit.Mvvm;
+
+[INotifyPropertyChanged]
+public partial class Customer
+{
+    [ObservableProperty]
+    private string firstName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FullName))]
+    private string lastName = string.Empty;
+
+    public string FullName => $"{FirstName} {LastName}";
+}
+```
+
+The `[ObservableProperty]` setter emits `RaisePropertyChanged(nameof(FirstName))` calls that resolve against the `RaisePropertyChanged` method generated by `[INotifyPropertyChanged]`. Two generated files combine into the single partial class.
+
+### When to choose what
+
+| Scenario | Recommended |
+|---|---|
+| New ViewModel, full toolkit features (commands, messenger, IsDirty, validation) | Inherit from `ViewModelBase` |
+| New ViewModel, INPC + validation only, no UI-state or messenger | Inherit from `ObservableValidator` |
+| New plain observable, INPC only | Inherit from `ObservableObject` |
+| Existing class with a fixed base class — opt into INPC without changing inheritance | `[INotifyPropertyChanged]` |
+| DTO-shaped class that wraps another DTO with change tracking | `[ObservableDtoViewModel]` |
+
+### Requirements
+
+- The class **must be declared `partial`** (the generator emits `AtcXamlToolkit0002` warning if it is not).
+- The attribute targets classes only (`AttributeTargets.Class`).
 
 ---
 

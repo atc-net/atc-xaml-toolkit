@@ -39,6 +39,8 @@ internal static class NameConstants
     public const string Helper = nameof(Helper);
     public const string IgnoreMethodNames = nameof(IgnoreMethodNames);
     public const string IgnorePropertyNames = nameof(IgnorePropertyNames);
+    public const string INotifyPropertyChanged = nameof(INotifyPropertyChanged);
+    public const string INotifyPropertyChangedAttribute = nameof(INotifyPropertyChangedAttribute);
     public const string IObservableObject = nameof(IObservableObject);
     public const string InvertCanExecute = nameof(InvertCanExecute);
     public const string IRelayCommand = nameof(IRelayCommand);

@@ -6,6 +6,7 @@
 
 | You want to… | Use | Lives in | Page |
 |---|---|---|---|
+| Add `INotifyPropertyChanged` to a class that can't inherit `ObservableObject` | `[INotifyPropertyChanged]` | Plain class | [../Mvvm/Readme.md#-inpc-on-plain-classes-with-inotifypropertychanged](../Mvvm/Readme.md#-inpc-on-plain-classes-with-inotifypropertychanged) |
 | Generate `INotifyPropertyChanged` properties from fields | `[ObservableProperty]` | View model | [ViewModel.md](ViewModel.md) |
 | Generate `ICommand` properties from methods | `[RelayCommand]` | View model | [ViewModel.md](ViewModel.md) |
 | Track a property that depends on others | `[ComputedProperty]` | View model | [ViewModel.md](ViewModel.md) |
@@ -19,6 +20,7 @@
 
 | Attribute | WPF | WinUI 3 | Avalonia | Notes |
 |---|---|---|---|---|
+| `[INotifyPropertyChanged]` | ✅ | ✅ | ✅ | Class-level attribute. Adds `PropertyChanged` event + `RaisePropertyChanged` / `OnPropertyChanged` / `Set<T>` helpers without requiring `ObservableObject` inheritance. Composes with `[ObservableProperty]`. |
 | `[ObservableProperty]` | ✅ | ✅ | ✅ | Same generator across platforms. |
 | `[RelayCommand]` | ✅ | ✅ | ✅ | Async-cancellation features supported on all three. |
 | `[ComputedProperty]` | ✅ | ✅ | ✅ | Auto-detects dependencies in the getter expression. |
