@@ -31,6 +31,7 @@ public sealed class ObservableObjectTests
     }
 
     [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "Test name describes the cache behaviour, not an event.")]
     public void RaisePropertyChanged_ReusesPropertyChangedEventArgs_AcrossRaisesForSamePropertyName()
     {
         // The PropertyChangedEventArgsCache is what makes property-change raises

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Atc.XamlToolkit.Tests.Mvvm;
 
 public sealed class ObservableValidatorTests
@@ -15,7 +13,8 @@ public sealed class ObservableValidatorTests
     public void ValidateAllProperties_FlagsRequiredField_WhenInitialised()
     {
         var sut = new TestPersonValidator();
-        sut.RunValidateAllProperties();
+        sut.RunValidateAllProperties()
+            .Should().BeFalse("an empty FirstName must fail [Required] validation");
 
         sut.HasErrors.Should().BeTrue();
         sut.GetErrors(nameof(TestPersonValidator.FirstName)).Cast<string>()
@@ -107,6 +106,7 @@ public sealed class ObservableValidatorTests
             }
         }
 
-        public bool RunValidateAllProperties() => ValidateAllProperties();
+        public bool RunValidateAllProperties()
+            => ValidateAllProperties();
     }
 }
