@@ -89,14 +89,19 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     {
         get
         {
-            if (staticFunc is null && Reference is null)
+            // Snapshot the volatile fields so MarkForDeletion on another
+            // thread cannot turn a passed null check into a deref-NRE.
+            var localStaticFunc = staticFunc;
+            var localReference = Reference;
+
+            if (localStaticFunc is null && localReference is null)
             {
                 return false;
             }
 
-            return staticFunc is null
-                ? Reference is not null && Reference.IsAlive
-                : Reference is null || Reference.IsAlive;
+            return localStaticFunc is null
+                ? localReference is not null && localReference.IsAlive
+                : localReference is null || localReference.IsAlive;
         }
     }
 
@@ -108,28 +113,29 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     /// <returns>The result of the Func stored as reference.</returns>
     public TResult Execute(T? parameter = default)
     {
-        if (staticFunc is not null)
+        // Snapshot the volatile fields once. MarkForDeletion can null them
+        // from another thread between a check and a dereference, so we must
+        // not read Method twice.
+        var localStaticFunc = staticFunc;
+        if (localStaticFunc is not null)
         {
-            return staticFunc(parameter!);
+            return localStaticFunc(parameter!);
         }
 
         var funcTarget = FuncTarget;
+        var localMethod = Method;
 
-        if (!IsAlive)
+        if (!IsAlive
+            || localMethod is null
+            || (LiveReference is null && FuncReference is null)
+            || funcTarget is null)
         {
             return default!;
         }
 
-        if (Method is not null
-            && (LiveReference is not null || FuncReference is not null)
-            && funcTarget is not null)
-        {
-            return (TResult)Method.Invoke(
-                funcTarget,
-                new object[] { parameter! })!;
-        }
-
-        return default!;
+        return (TResult)localMethod.Invoke(
+            funcTarget,
+            new object[] { parameter! })!;
     }
 
     /// <summary>

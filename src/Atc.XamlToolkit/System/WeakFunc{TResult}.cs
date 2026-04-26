@@ -25,25 +25,31 @@ public class WeakFunc<TResult>
     {
         get
         {
-            if (staticFunc is null
-                && Reference is null
-                && LiveReference is null)
+            // Snapshot the volatile fields so MarkForDeletion on another
+            // thread cannot turn a passed null check into a deref-NRE.
+            var localStaticFunc = staticFunc;
+            var localReference = Reference;
+            var localLiveReference = LiveReference;
+
+            if (localStaticFunc is null
+                && localReference is null
+                && localLiveReference is null)
             {
                 return false;
             }
 
-            if (staticFunc is not null)
+            if (localStaticFunc is not null)
             {
-                return Reference is null || Reference.IsAlive;
+                return localReference is null || localReference.IsAlive;
             }
 
             // Non static action
-            if (LiveReference is not null)
+            if (localLiveReference is not null)
             {
                 return true;
             }
 
-            return Reference is not null && Reference.IsAlive;
+            return localReference is not null && localReference.IsAlive;
         }
     }
 
@@ -167,26 +173,27 @@ public class WeakFunc<TResult>
     /// <returns>The result of the Func stored as reference.</returns>
     public TResult Execute()
     {
-        if (staticFunc is not null)
+        // Snapshot the volatile fields once. MarkForDeletion can null them
+        // from another thread between a check and a dereference, so we must
+        // not read Method twice.
+        var localStaticFunc = staticFunc;
+        if (localStaticFunc is not null)
         {
-            return staticFunc();
+            return localStaticFunc();
         }
 
         var funcTarget = FuncTarget;
+        var localMethod = Method;
 
-        if (!IsAlive)
+        if (!IsAlive
+            || localMethod is null
+            || (LiveReference is null && FuncReference is null)
+            || funcTarget is null)
         {
             return default!;
         }
 
-        if (Method is null ||
-            (LiveReference is null && FuncReference is null) ||
-            funcTarget is null)
-        {
-            return default!;
-        }
-
-        return (TResult)Method.Invoke(funcTarget, parameters: null)!;
+        return (TResult)localMethod.Invoke(funcTarget, parameters: null)!;
     }
 
     /// <summary>
