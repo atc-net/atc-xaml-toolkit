@@ -16,4 +16,8 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.SourceGenerators\Atc.XamlToolkit.SourceGenerators.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Atc.XUnit" Version="3.0.67" />
+  </ItemGroup>
+
 </Project>
