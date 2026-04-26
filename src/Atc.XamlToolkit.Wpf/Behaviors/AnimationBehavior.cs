@@ -6,6 +6,9 @@ namespace Atc.XamlToolkit.Behaviors;
 /// </summary>
 public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
 {
+    private static readonly System.Windows.Media.Animation.CubicEase EaseInCubic = CreateFrozenCubicEase(System.Windows.Media.Animation.EasingMode.EaseIn);
+    private static readonly System.Windows.Media.Animation.CubicEase EaseOutCubic = CreateFrozenCubicEase(System.Windows.Media.Animation.EasingMode.EaseOut);
+
     /// <summary>
     /// Dependency property for the animation trigger.
     /// </summary>
@@ -165,7 +168,7 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
             From = 0,
             To = 1,
             Duration = duration,
-            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut },
+            EasingFunction = EaseOutCubic,
         };
 
         AssociatedObject.BeginAnimation(UIElement.OpacityProperty, animation);
@@ -178,7 +181,7 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
             From = 1,
             To = 0,
             Duration = duration,
-            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn },
+            EasingFunction = EaseInCubic,
         };
 
         AssociatedObject.BeginAnimation(UIElement.OpacityProperty, animation);
@@ -203,7 +206,7 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
                 From = fromX,
                 To = 0,
                 Duration = duration,
-                EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut },
+                EasingFunction = EaseOutCubic,
             };
             transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, animationX);
         }
@@ -215,7 +218,7 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
                 From = fromY,
                 To = 0,
                 Duration = duration,
-                EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut },
+                EasingFunction = EaseOutCubic,
             };
             transform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, animationY);
         }
@@ -239,7 +242,7 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
             From = from,
             To = to,
             Duration = duration,
-            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut },
+            EasingFunction = EaseOutCubic,
         };
 
         var animationY = new System.Windows.Media.Animation.DoubleAnimation
@@ -247,10 +250,18 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
             From = from,
             To = to,
             Duration = duration,
-            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut },
+            EasingFunction = EaseOutCubic,
         };
 
         transform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, animationX);
         transform.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, animationY);
+    }
+
+    private static System.Windows.Media.Animation.CubicEase CreateFrozenCubicEase(
+        System.Windows.Media.Animation.EasingMode mode)
+    {
+        var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = mode };
+        ease.Freeze();
+        return ease;
     }
 }
