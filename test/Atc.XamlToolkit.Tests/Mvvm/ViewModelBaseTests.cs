@@ -32,4 +32,41 @@ public sealed class ViewModelBaseTests
         // Assert
         Assert.Equal(expected, actual);
     }
+
+    [Theory]
+    [InlineData(nameof(ViewModelBase.IsEnabled))]
+    [InlineData(nameof(ViewModelBase.IsVisible))]
+    [InlineData(nameof(ViewModelBase.IsBusy))]
+    [InlineData(nameof(ViewModelBase.IsDirty))]
+    [InlineData(nameof(ViewModelBase.IsSelected))]
+    [InlineData(nameof(ViewModelBase.HasErrors))]
+    public void ShouldSkipValidationOnPropertyChanged_SkipsUIStateAndValidationProperties(
+        string propertyName)
+    {
+        // ViewModelBase overrides ShouldSkipValidationOnPropertyChanged to skip
+        // its own UI-state members (and HasErrors via the ObservableValidator
+        // base impl). Pin the membership so any future addition / removal is
+        // intentional and visible in a diff.
+        var sut = new SkipListProbeViewModel();
+
+        sut.ShouldSkip(propertyName).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("Name")]
+    [InlineData("Address")]
+    [InlineData("Anything")]
+    public void ShouldSkipValidationOnPropertyChanged_DoesNotSkipDomainProperties(
+        string propertyName)
+    {
+        var sut = new SkipListProbeViewModel();
+
+        sut.ShouldSkip(propertyName).Should().BeFalse();
+    }
+
+    private sealed class SkipListProbeViewModel : ViewModelBase
+    {
+        public bool ShouldSkip(string propertyName)
+            => ShouldSkipValidationOnPropertyChanged(propertyName);
+    }
 }
