@@ -1,0 +1,155 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.AvaloniaSample.SampleControls.Messaging.MessengerView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:messaging="clr-namespace:Atc.XamlToolkit.AvaloniaSample.SampleControls.Messaging"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:DataType="messaging:MessengerViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <messaging:MessengerViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="10" RowDefinitions="Auto,10,Auto,10,*">
+
+        <!--  Header  -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="Messenger demo" />
+            <TextBlock
+                Opacity="0.7"
+                Text="One sender. Two receivers (delegate-based + IRecipient&lt;T&gt;). Sending hits both because they share Messenger.Default."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!--  Sender  -->
+        <Border
+            Grid.Row="2"
+            Padding="10"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="1"
+            CornerRadius="3"
+            DataContext="{Binding Sender}">
+            <Grid ColumnDefinitions="80,180,*,100,120">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Sender" />
+                <TextBox
+                    Grid.Column="1"
+                    Margin="5,0"
+                    Text="{Binding SenderName}" />
+                <TextBox
+                    Grid.Column="2"
+                    Margin="5,0"
+                    Text="{Binding DraftText}" />
+
+                <Button
+                    Grid.Column="3"
+                    Margin="5,0"
+                    Padding="10,5"
+                    Command="{Binding SendCommand}"
+                    Content="Send" />
+
+                <TextBlock
+                    Grid.Column="4"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Opacity="0.7">
+                    <Run Text="Sent: " />
+                    <Run FontWeight="Bold" Text="{Binding MessagesSent, Mode=OneWay}" />
+                </TextBlock>
+            </Grid>
+        </Border>
+
+        <!--  Two receivers side-by-side  -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,10,*">
+
+            <!--  Delegate receiver  -->
+            <Border
+                Grid.Column="0"
+                Padding="10"
+                BorderBrush="{DynamicResource SystemBaseLowColor}"
+                BorderThickness="1"
+                CornerRadius="3"
+                DataContext="{Binding DelegateReceiver}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <TextBlock
+                        Grid.Row="0"
+                        FontWeight="SemiBold"
+                        Text="Delegate receiver" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,4,0,8"
+                        FontFamily="Consolas"
+                        Opacity="0.7"
+                        Text="Messenger.Default.Register&lt;ChatMessage&gt;(this, OnChatMessage)"
+                        TextWrapping="Wrap" />
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Log}" />
+
+                    <Grid Grid.Row="3" Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Opacity="0.7">
+                            <Run Text="Received: " />
+                            <Run FontWeight="Bold" Text="{Binding MessagesReceived, Mode=OneWay}" />
+                        </TextBlock>
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,4"
+                            Command="{Binding ClearCommand}"
+                            Content="Clear" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!--  Typed (IRecipient<T>) receiver  -->
+            <Border
+                Grid.Column="2"
+                Padding="10"
+                BorderBrush="{DynamicResource SystemBaseLowColor}"
+                BorderThickness="1"
+                CornerRadius="3"
+                DataContext="{Binding TypedReceiver}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <TextBlock
+                        Grid.Row="0"
+                        FontWeight="SemiBold"
+                        Text="Typed receiver (IRecipient&lt;T&gt;)" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,4,0,8"
+                        FontFamily="Consolas"
+                        Opacity="0.7"
+                        Text="class : IRecipient&lt;ChatMessage&gt; { void Receive(...) {...} }"
+                        TextWrapping="Wrap" />
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Log}" />
+
+                    <Grid Grid.Row="3" Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Opacity="0.7">
+                            <Run Text="Received: " />
+                            <Run FontWeight="Bold" Text="{Binding MessagesReceived, Mode=OneWay}" />
+                        </TextBlock>
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,4"
+                            Command="{Binding ClearCommand}"
+                            Content="Clear" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
