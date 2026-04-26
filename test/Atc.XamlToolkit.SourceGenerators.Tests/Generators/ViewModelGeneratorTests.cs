@@ -23,6 +23,83 @@ public sealed partial class ViewModelGeneratorTests : GeneratorTestBase
     }
 
     [Fact]
+    public void MissingPartial_OnObservableProperty_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0002");
+    }
+
+    [Fact]
+    public void MissingPartial_OnRelayCommand_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class TestViewModel : ViewModelBase
+            {
+                [RelayCommand]
+                private void Save()
+                {
+                }
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0002");
+    }
+
+    [Fact]
+    public void PartialClass_WithObservableProperty_DoesNotEmitMissingPartialDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string name;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0002");
+    }
+
+    [Fact]
+    public void NonPartial_WithoutGeneratorAttributes_DoesNotEmitMissingPartialDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class PlainOldClass
+            {
+                public string Name { get; set; } = string.Empty;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0002");
+    }
+
+    [Fact]
     public void MultiFiles4_ObservableProperty_Name_And_RelayCommand_NoParameter()
     {
         const string inputCode_MyViewModelBase =
