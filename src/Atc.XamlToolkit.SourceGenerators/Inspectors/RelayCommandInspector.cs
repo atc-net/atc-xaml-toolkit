@@ -8,6 +8,11 @@ internal static class RelayCommandInspector
     {
         var result = new List<RelayCommandToGenerate>();
 
+        // Project-level default for the GenerateDocumentation flag, opted in via
+        // [assembly: GenerateDocumentationDefault]. When present, methods that
+        // don't set the flag explicitly still emit the default summary.
+        var generateDocumentationDefault = HasGenerateDocumentationDefaultAttribute(classSymbol);
+
         foreach (var memberSymbol in memberSymbols)
         {
             if (memberSymbol is not IMethodSymbol methodSymbol)
@@ -28,6 +33,7 @@ internal static class RelayCommandInspector
                     methodSymbol,
                     memberSymbols,
                     attr,
+                    generateDocumentationDefault,
                     result);
             }
         }
@@ -35,11 +41,34 @@ internal static class RelayCommandInspector
         return result;
     }
 
+    private static bool HasGenerateDocumentationDefaultAttribute(
+        INamedTypeSymbol classSymbol)
+    {
+        var assemblySymbol = classSymbol.ContainingAssembly;
+        if (assemblySymbol is null)
+        {
+            return false;
+        }
+
+        foreach (var attribute in assemblySymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.GenerateDocumentationDefault
+                or NameConstants.GenerateDocumentationDefaultAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void AppendRelayCommandToGenerate(
         IMethodSymbol methodSymbol,
         ImmutableArray<ISymbol> memberSymbols,
         AttributeData relayCommandAttribute,
+        bool generateDocumentationDefault,
         List<RelayCommandToGenerate> relayCommandsToGenerate)
     {
         var relayCommandArgumentValues = relayCommandAttribute.ExtractConstructorArgumentValues();
@@ -129,6 +158,19 @@ internal static class RelayCommandInspector
             supportsCancellation = supportsCancellationValueAsBool;
         }
 
+        // Three-state resolution mirrors ObservablePropertyInspector: explicit per-attribute
+        // value wins; otherwise fall back to assembly-level [GenerateDocumentationDefault].
+        bool generateDocumentation;
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
+            bool.TryParse(generateDocumentationValue, out var generateDocumentationValueAsBool))
+        {
+            generateDocumentation = generateDocumentationValueAsBool;
+        }
+        else
+        {
+            generateDocumentation = generateDocumentationDefault;
+        }
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
@@ -143,6 +185,7 @@ internal static class RelayCommandInspector
                 useTask,
                 executeOnBackgroundThread,
                 autoSetIsBusy,
-                supportsCancellation));
+                supportsCancellation,
+                generateDocumentation));
     }
 }

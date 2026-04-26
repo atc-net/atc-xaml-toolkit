@@ -14,4 +14,5 @@ internal sealed record RelayCommandToGenerate(
     bool UseTask,
     bool ExecuteOnBackgroundThread,
     bool AutoSetIsBusy,
-    bool SupportsCancellation);
+    bool SupportsCancellation,
+    bool GenerateDocumentation);

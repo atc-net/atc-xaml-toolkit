@@ -80,6 +80,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                                     cmd.ExecuteOnBackgroundThread ||
                                     cmd.AutoSetIsBusy;
 
+            if (cmd.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Gets the {propName}.");
+                builder.AppendLine("/// </summary>");
+            }
+
             // For WinUI async commands, generate full properties with PropertyChanged subscription
             var needsPropertyChangedSubscription = builder.XamlPlatform == XamlPlatform.WinUI && cmd.UseTask;
 
@@ -193,6 +200,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                 var cancelCommandPropName = propName.Replace("Command", "CancelCommand");
                 var cancelCommandFieldName = fieldName.Replace("Command", "CancelCommand");
                 var cancelMethodName = $"Cancel{methodName}";
+                if (cmd.GenerateDocumentation)
+                {
+                    builder.AppendLine("/// <summary>");
+                    builder.AppendLine($"/// Gets the cancel command for {propName}.");
+                    builder.AppendLine("/// </summary>");
+                }
+
                 builder.AppendLine($"public IRelayCommand {cancelCommandPropName} => {cancelCommandFieldName} ??= new RelayCommand({cancelMethodName});");
             }
 
@@ -230,6 +244,13 @@ internal abstract class CommandBuilderBase : BuilderBase
             var cancelMethodName = $"Cancel{methodName}";
 
             // Generate the cancel method
+            if (cmd.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Cancels the running {propName}.");
+                builder.AppendLine("/// </summary>");
+            }
+
             builder.AppendLine($"public void {cancelMethodName}()");
             builder.AppendLine("{");
             builder.IncreaseIndent();
