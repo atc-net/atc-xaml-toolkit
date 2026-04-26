@@ -1378,7 +1378,7 @@ This ensures consistent behavior across all XAML platforms while optimizing for 
 
 ## See Also
 
-- [RelayCommandAsync](RelayCommandAsync.md)
-- [IErrorHandler](../ErrorHandling/IErrorHandler.md)
-- [Command Pattern](../Patterns/CommandPattern.md)
-- [MVVM Best Practices](../Mvvm/BestPractices.md)
+- [RelayCommand and RelayCommandAsync overview](Readme.md)
+- [`IErrorHandler`](../../src/Atc.XamlToolkit/Command/IErrorHandler.cs) (source)
+- [MVVM in WPF / WinUI / Avalonia](../Mvvm/Readme.md)
+- [Source-generated commands and properties](../SourceGenerators/ViewModel.md)

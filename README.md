@@ -48,8 +48,8 @@ This is a base library for building WPF, WinUI, or Avalonia applications with th
 
 ### 🏗️ MVVM Foundation
 
-- **ViewModelBase** - Base class with INotifyPropertyChanged
-- **MainWindowViewModelBase** - Main window lifecycle management
+- **ViewModelBase** - Base class with INotifyPropertyChanged + Data-Annotations validation
+- **[MainWindowViewModelBase](docs/Mvvm/Readme.md#-mainwindowviewmodelbase)** - Main-window lifecycle (Loaded / Closing / KeyDown / KeyUp), F11 fullscreen toggle, `ApplicationExitCommand`
 - **ViewModelDialogBase** - Dialog-specific ViewModels
 - **ObservableObject** - Lightweight observable pattern
 
@@ -348,11 +348,12 @@ public partial class MainViewModel : ViewModelBase
 
 ### Core Concepts
 
-- [MVVM Framework](docs/Mvvm/Readme.md) - ViewModels, Commands, and MVVM patterns
-- [Async Command Cancellation](docs/Command/AsyncCommandCancellation.md) - CancellationToken support for async commands
+- [MVVM Framework](docs/Mvvm/Readme.md) - ViewModels, `MainWindowViewModelBase` lifecycle, and validation
+- [Commands](docs/Command/Readme.md) - `RelayCommand`, `RelayCommandAsync`, error handling
+- [Async Command Cancellation](docs/Command/AsyncCommandCancellation.md) - CancellationToken support, `AutoSetIsBusy`, `IsExecuting`
 - [Messaging System](docs/Messaging/Readme.md) - Decoupled communication between components
 - [Behaviors](docs/Behaviors/Readme.md) - EventToCommandBehavior and declarative behaviors
-- [Source Generators](docs/SourceGenerators/ViewModel.md) - Eliminate boilerplate code
+- [Source Generators](docs/SourceGenerators/Readme.md) - Decision tree, platform matrix, generator deep-dives
 
 ### XAML Styling
 
