@@ -52,6 +52,8 @@ internal static class NameConstants
     public const string Name = nameof(Name);
     public const string NotifyCanExecuteChangedFor = nameof(NotifyCanExecuteChangedFor);
     public const string NotifyCanExecuteChangedForAttribute = nameof(NotifyCanExecuteChangedForAttribute);
+    public const string NotifyDataErrorInfo = nameof(NotifyDataErrorInfo);
+    public const string NotifyDataErrorInfoAttribute = nameof(NotifyDataErrorInfoAttribute);
     public const string NotifyPropertyChangedFor = nameof(NotifyPropertyChangedFor);
     public const string NotifyPropertyChangedForAttribute = nameof(NotifyPropertyChangedForAttribute);
     public const string ObservableDtoViewModel = nameof(ObservableDtoViewModel);
@@ -59,6 +61,7 @@ internal static class NameConstants
     public const string ObservableObject = nameof(ObservableObject);
     public const string ObservableProperty = nameof(ObservableProperty);
     public const string ObservablePropertyAttribute = nameof(ObservablePropertyAttribute);
+    public const string ObservableValidator = nameof(ObservableValidator);
     public const string ParameterValue = nameof(ParameterValue);
     public const string ParameterValues = nameof(ParameterValues);
     public const string PropertyChangedCallback = nameof(PropertyChangedCallback);

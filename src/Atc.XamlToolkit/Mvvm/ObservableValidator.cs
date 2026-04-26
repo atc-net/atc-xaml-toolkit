@@ -27,6 +27,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
 {
     private readonly Dictionary<string, List<string>> errors = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PropertyValidationMetadata> validationCache = new(StringComparer.Ordinal);
+    private readonly Lock validationCacheBuildLock = new();
+    private bool validationCacheBuilt;
 
     /// <summary>
     /// Occurs when the validation errors have changed for a property or for the entire entity.
@@ -49,7 +51,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         bool validateOnPropertyChanged = true,
         bool validateAllPropertiesOnInit = false)
     {
-        BuildValidationCache();
+        EnsureValidationCacheBuilt();
 
         if (validateOnPropertyChanged)
         {
@@ -104,6 +106,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         {
             return true;
         }
+
+        EnsureValidationCacheBuilt();
 
         ClearErrors(propertyName!);
 
@@ -266,6 +270,31 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         {
             var value = metadata.Property.GetValue(this);
             ValidateProperty(value, args.PropertyName);
+        }
+    }
+
+    /// <summary>
+    /// Lazily builds the validation cache on the first call from <see cref="ValidateProperty"/> or
+    /// <see cref="InitializeValidation"/>. Thread-safe via double-checked locking. The flag prevents
+    /// rebuilds when both <see cref="InitializeValidation"/> and inline validation (via
+    /// <c>[NotifyDataErrorInfo]</c>) are used on the same instance.
+    /// </summary>
+    private void EnsureValidationCacheBuilt()
+    {
+        if (validationCacheBuilt)
+        {
+            return;
+        }
+
+        lock (validationCacheBuildLock)
+        {
+            if (validationCacheBuilt)
+            {
+                return;
+            }
+
+            BuildValidationCache();
+            validationCacheBuilt = true;
         }
     }
 
