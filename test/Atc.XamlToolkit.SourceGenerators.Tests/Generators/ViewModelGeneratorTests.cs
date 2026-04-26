@@ -406,6 +406,109 @@ public sealed partial class ViewModelGeneratorTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ComputedProperty_DirectCycle_EmitsDiagnostic()
+    {
+        // A → B → A. Both must be flagged so the user sees the cycle.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ComputedProperty]
+                public int A => B + 1;
+
+                [ComputedProperty]
+                public int B => A + 1;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        var matched = diagnostics.Where(d => d.Id == "AtcXamlToolkit0008").ToList();
+        Assert.Equal(2, matched.Count);
+    }
+
+    [Fact]
+    public void ComputedProperty_TransitiveCycle_EmitsDiagnostic()
+    {
+        // A → B → C → A. All three must be flagged.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ComputedProperty]
+                public int A => B + 1;
+
+                [ComputedProperty]
+                public int B => C + 1;
+
+                [ComputedProperty]
+                public int C => A + 1;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        var matched = diagnostics.Where(d => d.Id == "AtcXamlToolkit0008").ToList();
+        Assert.Equal(3, matched.Count);
+    }
+
+    [Fact]
+    public void ComputedProperty_LinearDependencyChain_DoesNotEmitCycleDiagnostic()
+    {
+        // A → B → C, no cycle. C just reads an observable. No diagnostic.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private int seed;
+
+                [ComputedProperty]
+                public int A => B + 1;
+
+                [ComputedProperty]
+                public int B => C + 1;
+
+                [ComputedProperty]
+                public int C => Seed + 1;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0008");
+    }
+
+    [Fact]
+    public void ComputedProperty_OnlyReferencesObservableProperty_DoesNotEmitCycleDiagnostic()
+    {
+        // The simple happy path — reading [ObservableProperty]-derived names.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private int seed;
+
+                [ComputedProperty]
+                public int Doubled => Seed * 2;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0008");
+    }
+
+    [Fact]
     public void ObservableProperty_OnValidPrivateCamelCaseField_DoesNotEmitFieldDiagnostics()
     {
         const string inputCode =

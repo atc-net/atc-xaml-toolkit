@@ -63,6 +63,16 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "[ComputedProperty] inspects the getter expression for identifier references that match observable properties on the same class and emits RaisePropertyChanged invalidation calls in their setters. When no such references are found, the attribute is silently inert — the generator filters the property out and the UI never refreshes when state changes.");
 
+    private static readonly DiagnosticDescriptor ComputedPropertyCycleDescriptor =
+        new(
+            id: "AtcXamlToolkit0008",
+            title: "[ComputedProperty] participates in a dependency cycle",
+            messageFormat: "Property '{0}' participates in a [ComputedProperty] dependency cycle: {1}. Reading any property in the cycle will infinitely recurse at runtime. Break the cycle by extracting the shared computation into a non-computed helper or by making one of the properties an [ObservableProperty]-backed value.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "Two or more [ComputedProperty] getters mutually reference each other. Because the generator only wires invalidation through observable-property setters, the computed properties don't trigger update loops, but evaluating any of them at runtime will recurse infinitely until the stack overflows.");
+
     public static Diagnostic CreateContainsDuplicateNamesForRelayCommand()
         => Diagnostic.Create(
             new DiagnosticDescriptor(
@@ -116,4 +126,14 @@ internal static class DiagnosticFactory
             ComputedPropertyNoDependenciesDescriptor,
             location,
             propertyName);
+
+    public static Diagnostic CreateComputedPropertyCycle(
+        string propertyName,
+        string cyclePath,
+        Location location)
+        => Diagnostic.Create(
+            ComputedPropertyCycleDescriptor,
+            location,
+            propertyName,
+            cyclePath);
 }
