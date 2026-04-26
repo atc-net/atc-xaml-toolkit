@@ -74,7 +74,7 @@ The repository is organized into distinct platform-specific and shared packages:
   - MainWindowViewModelBase for Avalonia lifecycle
 
 - **Atc.XamlToolkit.SourceGenerators** - Roslyn source generators (netstandard2.0):
-  - ViewModelGenerator - Processes `[ObservableProperty]`, `[ComputedProperty]`, `[RelayCommand]`
+  - ViewModelGenerator - Processes `[ObservableProperty]`, `[ComputedProperty]`, `[RelayCommand]`, `[INotifyPropertyChanged]`
   - ObservableDtoViewModelGenerator - Processes `[ObservableDtoViewModel]`
   - FrameworkElementGenerator - Processes `[DependencyProperty]`, `[AttachedProperty]`, `[RoutedEvent]` (WPF only)
 
@@ -145,6 +145,7 @@ The source generators use Roslyn to analyze code and generate boilerplate at com
 - Commands from methods: `[RelayCommand] private void Execute()` → `public IRelayCommand ExecuteCommand { get; }`
 - Computed properties: `[ComputedProperty]` automatically detects dependencies and generates notifications
 - DTO ViewModels: `[ObservableDtoViewModel]` wraps DTOs with INotifyPropertyChanged, IsDirty tracking, and validation
+- INPC on plain classes: `[INotifyPropertyChanged]` adds `PropertyChanged` event + `RaisePropertyChanged` / `OnPropertyChanged` / `Set<T>` to a partial class without requiring `ObservableObject` inheritance; composes with `[ObservableProperty]`
 
 **Source Generator Attributes:**
 - Located in `src/Atc.XamlToolkit/Mvvm/Attributes/`

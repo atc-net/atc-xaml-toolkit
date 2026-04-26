@@ -6,7 +6,12 @@ namespace Atc.XamlToolkit.Mvvm;
 /// allocation per name for the per-raise allocation that would otherwise occur on every property
 /// change. This is hot-path during data-binding storms (animations, rapid input).
 /// </summary>
-internal static class PropertyChangedEventArgsCache
+/// <remarks>
+/// Used internally by <see cref="ObservableObject"/> and by code emitted from
+/// <see cref="INotifyPropertyChangedAttribute"/>. Exposed publicly so generated code in consumer
+/// assemblies can reuse the same shared cache.
+/// </remarks>
+public static class PropertyChangedEventArgsCache
 {
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, PropertyChangedEventArgs> Cache =
         new(StringComparer.Ordinal);

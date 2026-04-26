@@ -12,6 +12,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
     /// Initializes the source generator.
     /// </summary>
     /// <param name="context">The initialization context.</param>
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — three SyntaxProvider pipelines.")]
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         ////#if DEBUG
@@ -64,6 +65,27 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                     spc.ReportDiagnostic(diagnostic);
                 }
             });
+
+        // Pipeline 3: classes annotated with [INotifyPropertyChanged] — emit the
+        // INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set<T>)
+        // so the class can act as its own INPC source without inheriting from
+        // ObservableObject. Compatible with [ObservableProperty] on the same class.
+        var inpcTargets = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsINotifyPropertyChangedTarget(syntaxNode),
+                transform: static (context, _) => GetINotifyPropertyChangedTarget(context))
+            .Where(static target => target is not null)
+            .WithTrackingName("ViewModelGenerator.INotifyPropertyChangedTarget");
+
+        context.RegisterSourceOutput(
+            inpcTargets,
+            static (spc, target) =>
+            {
+                if (target is not null)
+                {
+                    ExecuteINotifyPropertyChanged(spc, target);
+                }
+            });
     }
 
     private static bool IsMissingPartialTarget(SyntaxNode syntaxNode)
@@ -79,7 +101,13 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             return false;
         }
 
-        // …but DO have at least one member tagged with one of the generator-relevant attributes.
+        // Class-level [INotifyPropertyChanged] attribute also requires partial.
+        if (HasINotifyPropertyChangedAttribute(classDeclaration.AttributeLists))
+        {
+            return true;
+        }
+
+        // …or DO have at least one member tagged with one of the generator-relevant attributes.
         return classDeclaration.Members.Any(member => member switch
         {
             FieldDeclarationSyntax { AttributeLists.Count: > 0 } field =>
@@ -262,7 +290,10 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
 
         var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
 
-        if (!hasAnyBase)
+        // [INotifyPropertyChanged] gives the class its own RaisePropertyChanged via the
+        // INPC pipeline, so it qualifies as a valid base for [ObservableProperty] etc.
+        // even without ObservableObject / ViewModelBase inheritance.
+        if (!hasAnyBase && !ClassHasINotifyPropertyChangedAttribute(classSymbol))
         {
             return null;
         }
@@ -357,5 +388,155 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         context.AddSource(
             viewModelToGenerate.GeneratedFileName,
             sourceText);
+    }
+
+    private static bool ClassHasINotifyPropertyChangedAttribute(
+        INamedTypeSymbol classSymbol)
+    {
+        foreach (var attribute in classSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.INotifyPropertyChanged
+                or NameConstants.INotifyPropertyChangedAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsINotifyPropertyChangedTarget(SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        return HasINotifyPropertyChangedAttribute(classDeclaration.AttributeLists);
+    }
+
+    private static bool HasINotifyPropertyChangedAttribute(
+        SyntaxList<AttributeListSyntax> attributeLists)
+    {
+        foreach (var attributeList in attributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                var attributeName = attribute.Name switch
+                {
+                    GenericNameSyntax genericName => genericName.Identifier.Text,
+                    _ => attribute.Name.ToString(),
+                };
+
+                if (attributeName is
+                    NameConstants.INotifyPropertyChanged or
+                    NameConstants.INotifyPropertyChangedAttribute)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static INotifyPropertyChangedTarget? GetINotifyPropertyChangedTarget(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+
+        if (classSymbol is null)
+        {
+            return null;
+        }
+
+        // Only emit once per type — pick the first qualifying partial declaration.
+        foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
+        {
+            if (declRef.SyntaxTree == classDeclaration.SyntaxTree &&
+                declRef.Span == classDeclaration.Span)
+            {
+                break;
+            }
+
+            if (declRef.GetSyntax() is ClassDeclarationSyntax priorDecl &&
+                IsINotifyPropertyChangedTarget(priorDecl))
+            {
+                return null;
+            }
+        }
+
+        return new INotifyPropertyChangedTarget(
+            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            className: classSymbol.Name,
+            accessModifier: classSymbol.GetAccessModifier());
+    }
+
+    private static void ExecuteINotifyPropertyChanged(
+        SourceProductionContext context,
+        INotifyPropertyChangedTarget? target)
+    {
+        if (target is null)
+        {
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated>");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.ComponentModel;");
+        sb.AppendLine("using System.Runtime.CompilerServices;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {target.NamespaceName};");
+        sb.AppendLine();
+        sb.AppendLine($"{target.AccessModifier} partial class {target.ClassName} : INotifyPropertyChanged");
+        sb.AppendLine("{");
+        sb.AppendLine("    public event PropertyChangedEventHandler? PropertyChanged;");
+        sb.AppendLine();
+        sb.AppendLine("    protected void RaisePropertyChanged([CallerMemberName] string? propertyName = null)");
+        sb.AppendLine("        => PropertyChanged?.Invoke(this, Atc.XamlToolkit.Mvvm.PropertyChangedEventArgsCache.Get(propertyName));");
+        sb.AppendLine();
+        sb.AppendLine("    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)");
+        sb.AppendLine("        => RaisePropertyChanged(propertyName);");
+        sb.AppendLine();
+        sb.AppendLine("    protected bool Set<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (EqualityComparer<T>.Default.Equals(field, newValue))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return false;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        field = newValue;");
+        sb.AppendLine("        RaisePropertyChanged(propertyName);");
+        sb.AppendLine("        return true;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        sb.Append("#nullable disable");
+
+        context.AddSource(
+            $"{target.ClassName}.INotifyPropertyChanged.g.cs",
+            SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+
+    [SuppressMessage("Naming", "S101:Types should be named in PascalCase", Justification = "Name intentionally mirrors the System.ComponentModel.INotifyPropertyChanged interface for symmetry with the public attribute.")]
+    private sealed class INotifyPropertyChangedTarget(
+        string namespaceName,
+        string className,
+        string accessModifier)
+    {
+        public string NamespaceName { get; } = namespaceName;
+
+        public string ClassName { get; } = className;
+
+        public string AccessModifier { get; } = accessModifier;
     }
 }
