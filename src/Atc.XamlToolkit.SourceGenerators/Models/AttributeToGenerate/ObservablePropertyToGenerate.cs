@@ -23,6 +23,8 @@ internal sealed record ObservablePropertyToGenerate(
 
     public bool GeneratePartialHooks { get; set; }
 
+    public bool GenerateDocumentation { get; set; }
+
     public bool ValidatesOnChange { get; set; }
 
     public EquatableArray<string> CustomAttributes { get; set; } = EquatableArray<string>.Empty;

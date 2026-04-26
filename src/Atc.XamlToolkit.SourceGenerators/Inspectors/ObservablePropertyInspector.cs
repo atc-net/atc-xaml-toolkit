@@ -95,7 +95,8 @@ internal static class ObservablePropertyInspector
                     or NameConstants.BroadcastOnChange
                     or NameConstants.UseIsDirty
                     or NameConstants.IsRequired
-                    or NameConstants.GeneratePartialHooks)
+                    or NameConstants.GeneratePartialHooks
+                    or NameConstants.GenerateDocumentation)
                 {
                     continue;
                 }
@@ -133,6 +134,9 @@ internal static class ObservablePropertyInspector
 
         var generatePartialHooks = fieldArgumentValues.TryGetValue(NameConstants.GeneratePartialHooks, out var generatePartialHooksValue) &&
                                    "true".Equals(generatePartialHooksValue, StringComparison.OrdinalIgnoreCase);
+
+        var generateDocumentation = fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
+                                    "true".Equals(generateDocumentationValue, StringComparison.OrdinalIgnoreCase);
 
         var isRequired = fieldArgumentValues.TryGetValue(NameConstants.IsRequired, out var isRequiredValue) &&
                          "true".Equals(isRequiredValue, StringComparison.OrdinalIgnoreCase);
@@ -222,6 +226,7 @@ internal static class ObservablePropertyInspector
                 UseIsDirty = useIsDirty,
                 IsRequired = isRequired,
                 GeneratePartialHooks = generatePartialHooks,
+                GenerateDocumentation = generateDocumentation,
                 ValidatesOnChange = validatesOnChange,
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),

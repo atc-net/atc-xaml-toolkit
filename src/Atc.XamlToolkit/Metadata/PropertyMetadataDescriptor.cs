@@ -255,4 +255,4 @@ public static class PropertyMetadataDescriptor
 
         return string.Compare(x.DisplayName, y.DisplayName, StringComparison.Ordinal);
     }
-}
+}
