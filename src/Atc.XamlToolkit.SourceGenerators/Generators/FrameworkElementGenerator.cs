@@ -24,12 +24,14 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsSyntaxTarget(syntaxNode),
                 transform: static (context, _) => GetSemanticTarget(context))
-            .Where(target => target is not null)
+            .Where(static target => target is not null)
+            .WithTrackingName("FrameworkElementGenerator.SemanticTarget")
             .Collect()
-            .Select((viewModels, _) => viewModels
+            .Select(static (viewModels, _) => viewModels
                 .GroupBy(vm => vm!.GeneratedFileName, StringComparer.Ordinal)
-                .Select(group => group.First())
-                .ToImmutableArray());
+                .Select(static group => group.First())
+                .ToImmutableArray())
+            .WithTrackingName("FrameworkElementGenerator.Deduplicated");
 
         context.RegisterSourceOutput(
             viewModelsToGenerate,
