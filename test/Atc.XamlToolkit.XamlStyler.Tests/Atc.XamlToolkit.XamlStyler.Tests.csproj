@@ -9,4 +9,8 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.XamlStyler\Atc.XamlToolkit.XamlStyler.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Atc.XUnit" Version="3.0.67" />
+  </ItemGroup>
+
 </Project>
