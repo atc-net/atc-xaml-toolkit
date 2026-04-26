@@ -47,6 +47,7 @@ internal static class NameConstants
     public const string IRelayCommand = nameof(IRelayCommand);
     public const string IRelayCommandAsync = nameof(IRelayCommandAsync);
     public const string IsAnimationProhibited = nameof(IsAnimationProhibited);
+    public const string IsRequired = nameof(IsRequired);
     public const string MainWindowViewModelBase = nameof(MainWindowViewModelBase);
     public const string Name = nameof(Name);
     public const string NotifyCanExecuteChangedFor = nameof(NotifyCanExecuteChangedFor);

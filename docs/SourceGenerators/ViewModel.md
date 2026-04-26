@@ -62,6 +62,7 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `AfterChangedCallback` is executed after the property value changes.
 - `BroadcastOnChange` broadcasts a `PropertyChangedMessage<T>` via the messenger when the property changes.
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
+- `IsRequired` emits the C# 11+ `required` modifier on the generated property — forces callers to set it via an object initializer (see [Required properties](#-required-properties)).
 - `GeneratePartialHooks` emits `partial void On{PropertyName}Changing/Changed({Type} value)` declarations and calls — a compile-time-safe alternative to the string-named callbacks (see [Partial-method hooks](#-partial-method-hooks)).
 
 ### 🛠 Quick Start: Using `ObservableProperty`
@@ -321,6 +322,31 @@ The source generator automatically detects dependencies in:
     BeforeChangedCallback = "DoStuffA();",
     AfterChangedCallback = "EntrySelected?.Invoke(this, selectedEntry); DoStuffB();")]
 ```
+
+### ❗ Required properties
+
+`IsRequired = true` decorates the generated property with the C# 11+ `required` modifier. Callers must set the property via an object initializer (or via a constructor annotated with `[SetsRequiredMembers]`); omitting it produces compile error `CS9035`.
+
+**When to use:** ViewModels that depend on values supplied at construction time — common for record-style ViewModels, ViewModels that wrap an `Id` or aggregate-root key, or ViewModels created via factory + initializer.
+
+**Example:**
+
+```csharp
+public partial class CustomerViewModel : ViewModelBase
+{
+    [ObservableProperty(IsRequired = true)]
+    private string firstName = string.Empty;
+}
+
+// OK — required member is set via object initializer
+var vm = new CustomerViewModel { FirstName = "Ada" };
+
+// CS9035 — required member 'FirstName' must be set in the object initializer
+// or attribute constructor
+var vm = new CustomerViewModel();
+```
+
+`IsRequired` composes freely with the other `[ObservableProperty]` options (callbacks, partial hooks, broadcasting, etc.) — they sit in different parts of the generated output.
 
 ### 🪝 Partial-method hooks
 

@@ -27,6 +27,8 @@ internal sealed class ObservablePropertyToGenerate(
 
     public bool UseIsDirty { get; set; }
 
+    public bool IsRequired { get; set; }
+
     public bool GeneratePartialHooks { get; set; }
 
     public List<string>? CustomAttributes { get; set; }
@@ -34,5 +36,5 @@ internal sealed class ObservablePropertyToGenerate(
     public List<string>? DocumentationComments { get; set; }
 
     public override string ToString()
-        => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(BackingFieldName)}: {BackingFieldName}, {nameof(PropertyNamesToInvalidate)}.Count: {PropertyNamesToInvalidate?.Count}, {nameof(CommandNamesToInvalidate)}.Count: {CommandNamesToInvalidate?.Count}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
+        => $"{nameof(Name)}: {Name}, {nameof(Type)}: {Type}, {nameof(BackingFieldName)}: {BackingFieldName}, {nameof(PropertyNamesToInvalidate)}.Count: {PropertyNamesToInvalidate?.Count}, {nameof(CommandNamesToInvalidate)}.Count: {CommandNamesToInvalidate?.Count}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(IsRequired)}: {IsRequired}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
 }

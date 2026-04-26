@@ -85,7 +85,8 @@ internal static class ViewModelBuilderExtensions
             }
         }
 
-        builder.AppendLine($"public {p.Type} {p.Name}");
+        var requiredModifier = p.IsRequired ? "required " : string.Empty;
+        builder.AppendLine($"public {requiredModifier}{p.Type} {p.Name}");
         builder.AppendLine("{");
         builder.IncreaseIndent();
         builder.AppendLine($"get => {p.BackingFieldName};");
