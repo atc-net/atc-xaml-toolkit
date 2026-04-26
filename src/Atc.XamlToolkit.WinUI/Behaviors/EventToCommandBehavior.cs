@@ -180,10 +180,16 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
 
     private void OnEventRaised(object? eventArgs)
     {
-        var parameter = GetCommandParameter(eventArgs);
-        if (Command?.CanExecute(parameter) == true)
+        var command = Command;
+        if (command is null)
         {
-            Command.Execute(parameter);
+            return;
+        }
+
+        var parameter = GetCommandParameter(eventArgs);
+        if (command.CanExecute(parameter))
+        {
+            command.Execute(parameter);
         }
     }
 
