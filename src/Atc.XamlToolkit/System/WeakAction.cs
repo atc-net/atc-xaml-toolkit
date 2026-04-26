@@ -100,25 +100,31 @@ public class WeakAction
     {
         get
         {
-            if (staticAction is null
-                && Reference is null
-                && LiveReference is null)
+            // Snapshot the volatile fields so MarkForDeletion on another
+            // thread cannot turn a passed null check into a deref-NRE.
+            var localStaticAction = staticAction;
+            var localReference = Reference;
+            var localLiveReference = LiveReference;
+
+            if (localStaticAction is null
+                && localReference is null
+                && localLiveReference is null)
             {
                 return false;
             }
 
-            if (staticAction is not null)
+            if (localStaticAction is not null)
             {
-                return Reference is null || Reference.IsAlive;
+                return localReference is null || localReference.IsAlive;
             }
 
             // Non static action
-            if (LiveReference is not null)
+            if (localLiveReference is not null)
             {
                 return true;
             }
 
-            return Reference is not null && Reference.IsAlive;
+            return localReference is not null && localReference.IsAlive;
         }
     }
 
@@ -167,25 +173,28 @@ public class WeakAction
     /// </summary>
     public void Execute()
     {
-        if (staticAction is not null)
+        // Snapshot the volatile fields once. MarkForDeletion can null them
+        // from another thread between a check and a dereference, so we must
+        // not read Method twice.
+        var localStaticAction = staticAction;
+        if (localStaticAction is not null)
         {
-            staticAction();
+            localStaticAction();
             return;
         }
 
         var actionTarget = ActionTarget;
+        var localMethod = Method;
 
-        if (!IsAlive)
+        if (!IsAlive
+            || localMethod is null
+            || (LiveReference is null && ActionReference is null)
+            || actionTarget is null)
         {
             return;
         }
 
-        if (Method is null || (LiveReference is null && ActionReference is null) || actionTarget is null)
-        {
-            return;
-        }
-
-        _ = Method.Invoke(actionTarget, parameters: null);
+        _ = localMethod.Invoke(actionTarget, parameters: null);
     }
 
     /// <summary>
