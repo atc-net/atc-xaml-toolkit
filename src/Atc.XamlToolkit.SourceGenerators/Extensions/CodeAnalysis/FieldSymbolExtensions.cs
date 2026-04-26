@@ -67,7 +67,9 @@ internal static class FieldSymbolExtensions
                     if (attributeName is NameConstants.ObservablePropertyAttribute
                         or NameConstants.ObservableProperty
                         or NameConstants.NotifyPropertyChangedForAttribute
-                        or NameConstants.NotifyPropertyChangedFor)
+                        or NameConstants.NotifyPropertyChangedFor
+                        or NameConstants.NotifyCanExecuteChangedForAttribute
+                        or NameConstants.NotifyCanExecuteChangedFor)
                     {
                         continue;
                     }

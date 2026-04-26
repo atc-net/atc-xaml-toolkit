@@ -46,6 +46,8 @@ internal static class NameConstants
     public const string IsAnimationProhibited = nameof(IsAnimationProhibited);
     public const string MainWindowViewModelBase = nameof(MainWindowViewModelBase);
     public const string Name = nameof(Name);
+    public const string NotifyCanExecuteChangedFor = nameof(NotifyCanExecuteChangedFor);
+    public const string NotifyCanExecuteChangedForAttribute = nameof(NotifyCanExecuteChangedForAttribute);
     public const string NotifyPropertyChangedFor = nameof(NotifyPropertyChangedFor);
     public const string NotifyPropertyChangedForAttribute = nameof(NotifyPropertyChangedForAttribute);
     public const string ObservableDtoViewModel = nameof(ObservableDtoViewModel);
