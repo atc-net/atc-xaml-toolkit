@@ -234,6 +234,8 @@ public class MyViewModel : ViewModelBase
 }
 ```
 
+> **Listening to non-Messenger events?** When the source is something *outside* the Messenger system — a model's `INotifyCollectionChanged` or `INotifyPropertyChanged`, a third-party event you don't own — see [Weak event listening](../Mvvm/Readme.md#-weak-event-listening) for the `WeakCollectionChangedListener` / `WeakPropertyChangedListener` sugar helpers (and the underlying `WeakEventListener<TSubscriber, TEventArgs>` primitive).
+
 ### 2. Use Typed Messages
 
 Prefer `GenericMessage<T>` over string-based messages for type safety:

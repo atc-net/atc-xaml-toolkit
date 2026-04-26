@@ -113,6 +113,84 @@ The `[ObservableProperty]` setter emits `RaisePropertyChanged(nameof(FirstName))
 
 ---
 
+## 🪶 Weak event listening
+
+`Atc.XamlToolkit.Mvvm` ships a thin sugar layer on top of `WeakReference` for the classic "consumer-side" leak: a short-lived view-model subscribes to a long-lived model's event and forgets to unsubscribe before being collected. The model's event keeps the view-model rooted forever.
+
+The `Messenger` already covers this for pub/sub messaging — these helpers cover the cases where you can't change the source (you're listening to `INotifyCollectionChanged` on a `List<T>` someone else gave you, or `INotifyPropertyChanged` on a model you don't own).
+
+### `WeakCollectionChangedListener` / `WeakPropertyChangedListener`
+
+```csharp
+using Atc.XamlToolkit.Mvvm;
+
+public sealed class CustomerViewModel : ViewModelBase
+{
+    private IDisposable? lineItemsListener;
+
+    public void AttachTo(ObservableCollection<LineItem> lineItems)
+    {
+        lineItemsListener = WeakCollectionChangedListener.Subscribe(
+            lineItems,
+            this,
+            static (vm, _, e) => vm.OnLineItemsChanged(e));
+    }
+
+    private void OnLineItemsChanged(NotifyCollectionChangedEventArgs e)
+    {
+        // Handle add/remove/reset…
+    }
+
+    public override void Dispose()
+    {
+        // Optional eager teardown — otherwise GC of `this` will let the
+        // listener auto-unsubscribe on the next raise.
+        lineItemsListener?.Dispose();
+        base.Dispose();
+    }
+}
+```
+
+The same shape works for `INotifyPropertyChanged`:
+
+```csharp
+using var listener = WeakPropertyChangedListener.Subscribe(
+    model,
+    this,
+    static (vm, _, e) =>
+    {
+        if (e.PropertyName == nameof(Model.Status))
+        {
+            vm.RefreshFromStatus();
+        }
+    });
+```
+
+### Why a `static` lambda
+
+The first argument of the callback is the live subscriber. **Pass a static lambda** (`static (s, sender, args) => s.…`) so the lambda doesn't accidentally capture `this` — which would defeat the weak-reference contract by re-introducing a strong root.
+
+### `WeakEventListener<TSubscriber, TEventArgs>` (generic primitive)
+
+For `EventHandler<TEventArgs>`-shaped events that aren't INPC/INotifyCollectionChanged, build on the generic primitive directly:
+
+```csharp
+using var listener = new WeakEventListener<MyViewModel, JobCompletedEventArgs>(
+    this,
+    static (vm, _, e) => vm.OnJobCompleted(e),
+    h => jobRunner.Completed += h,
+    h => jobRunner.Completed -= h);
+```
+
+### Lifetime semantics
+
+- **Subscriber held weakly.** When the subscriber is collected, the next raise auto-unsubscribes the listener from the source.
+- **Source held strongly via the closure.** Don't store the listener as a static — that pins the source for the process lifetime. Store it as an instance field and dispose it (or let the field reference die with the instance).
+- **Disposal is idempotent.** Calling `Dispose()` more than once is safe.
+- **Not a fit for fire-and-forget without a handle.** If you don't keep the returned `IDisposable` alive, GC may collect the listener before the first event raise. Keep the field while you're interested.
+
+---
+
 ## 🪟 MainWindowViewModelBase
 
 `MainWindowViewModelBase` extends `ViewModelBase` with the lifecycle and chrome glue that almost every desktop app needs: a Loaded hook that auto-maximises when the window is at least as large as the screen, a Closing hook that drives orderly shutdown, an F11 fullscreen toggle, and an `ApplicationExitCommand` for menu / button binding. Each platform package ships its own implementation behind a shared interface (`IMainWindowViewModelBase`).
