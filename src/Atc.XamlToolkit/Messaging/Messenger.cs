@@ -11,7 +11,7 @@ public class Messenger : IMessenger
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction = new();
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsStrictAction = new();
     private readonly SynchronizationContext? context = SynchronizationContext.Current;
-    private bool isCleanupRegistered;
+    private int cleanupPending;
 
     /// <summary>
     /// Gets the Messenger's default instance, allowing
@@ -21,17 +21,17 @@ public class Messenger : IMessenger
     {
         get
         {
-            if (defaultInstance is not null)
+            var instance = Volatile.Read(ref defaultInstance);
+            if (instance is not null)
             {
-                return defaultInstance;
+                return instance;
             }
 
             lock (CreationLock)
             {
-                defaultInstance = new Messenger();
+                defaultInstance ??= new Messenger();
+                return defaultInstance;
             }
-
-            return defaultInstance;
         }
     }
 
@@ -50,7 +50,10 @@ public class Messenger : IMessenger
     /// </summary>
     public static void Reset()
     {
-        defaultInstance = null;
+        lock (CreationLock)
+        {
+            defaultInstance = null;
+        }
     }
 
     /// <inheritdoc />
@@ -212,11 +215,15 @@ public class Messenger : IMessenger
     /// </summary>
     public void RequestCleanup()
     {
-        if (isCleanupRegistered)
+        // Claim the cleanup slot atomically. If another thread already claimed it,
+        // bail out — that thread will run (or has scheduled) the cleanup.
+        if (Interlocked.CompareExchange(ref cleanupPending, value: 1, comparand: 0) != 0)
         {
             return;
         }
 
+        // Set the flag BEFORE dispatching: when context is null, Cleanup() runs inline
+        // and resets the flag at the end, so a subsequent RequestCleanup will dispatch again.
         var cleanupAction = Cleanup;
 
         if (context is not null)
@@ -227,8 +234,6 @@ public class Messenger : IMessenger
         {
             cleanupAction(); // run inline w/o a context
         }
-
-        isCleanupRegistered = true;
     }
 
     /// <summary>
@@ -246,7 +251,7 @@ public class Messenger : IMessenger
     {
         CleanupList(recipientsOfSubclassesAction);
         CleanupList(recipientsStrictAction);
-        isCleanupRegistered = false;
+        Interlocked.Exchange(ref cleanupPending, value: 0);
     }
 
     private static void CleanupList(
