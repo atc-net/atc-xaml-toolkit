@@ -80,4 +80,4 @@ public sealed class PropertyDisplayAttribute : Attribute
     /// <inheritdoc />
     public override string ToString()
         => $"{nameof(DisplayName)}: {DisplayName}, {nameof(GroupName)}: {GroupName}, {nameof(Order)}: {Order}, {nameof(Description)}: {Description}";
-}
+}

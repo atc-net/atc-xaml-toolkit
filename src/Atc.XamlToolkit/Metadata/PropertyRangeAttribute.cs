@@ -84,4 +84,4 @@ public sealed class PropertyRangeAttribute : Attribute
     /// <inheritdoc />
     public override string ToString()
         => $"{nameof(Minimum)}: {Minimum}, {nameof(Maximum)}: {Maximum}, {nameof(Step)}: {Step}";
-}
+}

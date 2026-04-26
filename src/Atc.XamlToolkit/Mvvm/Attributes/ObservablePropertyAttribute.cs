@@ -167,7 +167,39 @@ public sealed class ObservablePropertyAttribute : Attribute
     /// </remarks>
     public bool GeneratePartialHooks { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the source generator should emit a default
+    /// <c>/// &lt;summary&gt;Gets or sets the {PropertyName}.&lt;/summary&gt;</c> comment block
+    /// above the generated property when the backing field has no XML documentation comments
+    /// of its own.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Off by default to preserve byte-identical generated output for existing consumers.
+    /// When the backing field already carries XML doc comments, those are propagated to the
+    /// generated property regardless of this flag — this opt-in only governs the default-doc
+    /// fallback. To turn it on globally for an entire project, see the project-level default
+    /// follow-up tracked in the roadmap.
+    /// </para>
+    /// <para>
+    /// Example:
+    /// <code language="csharp">
+    /// public partial class CustomerViewModel : ViewModelBase
+    /// {
+    ///     [ObservableProperty(GenerateDocumentation = true)]
+    ///     private string firstName = string.Empty;
+    /// }
+    /// </code>
+    /// emits
+    /// <code language="csharp">
+    /// /// &lt;summary&gt;Gets or sets the FirstName.&lt;/summary&gt;
+    /// public string FirstName { get; set; }
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool GenerateDocumentation { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(IsRequired)}: {IsRequired}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(IsRequired)}: {IsRequired}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}, {nameof(GenerateDocumentation)}: {GenerateDocumentation}";
 }

@@ -64,6 +64,7 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
 - `IsRequired` emits the C# 11+ `required` modifier on the generated property — forces callers to set it via an object initializer (see [Required properties](#-required-properties)).
 - `GeneratePartialHooks` emits `partial void On{PropertyName}Changing/Changed({Type} value)` declarations and calls — a compile-time-safe alternative to the string-named callbacks (see [Partial-method hooks](#-partial-method-hooks)).
+- `GenerateDocumentation` emits a default `/// <summary>Gets or sets the {PropertyName}.</summary>` block above the generated property when the backing field has no XML doc comments of its own (see [XML documentation generation](#-xml-documentation-generation)).
 
 ### 🛠 Quick Start: Using `ObservableProperty`
 
@@ -465,6 +466,35 @@ public partial class PersonViewModel
 - ✅ Use `<remarks>` for additional details, validation rules, or usage notes
 - ✅ Keep documentation concise and focused on the property's purpose
 - ✅ Update documentation when validation attributes or business rules change
+
+### 📚 XML documentation generation
+
+When the backing field already carries XML doc comments, those are propagated to the generated property automatically (see the section above). For fields **without** any docs, you can opt into a default summary by setting `GenerateDocumentation = true`:
+
+```csharp
+[ObservableProperty(GenerateDocumentation = true)]
+private string firstName = string.Empty;
+```
+
+**Generates:**
+
+```csharp
+/// <summary>
+/// Gets or sets the FirstName.
+/// </summary>
+public string FirstName
+{
+    get => firstName;
+    set { /* ... */ }
+}
+```
+
+**Notes:**
+
+- Off by default to preserve byte-identical generated output for existing consumers — turning it on globally would break the toolkit's own snapshot tests, so the per-attribute opt-in is the supported escape hatch today.
+- When the field has its own XML doc comments, those win — `GenerateDocumentation` is a *fallback*, not a replacement.
+- The default summary uses the **property** name (`PropertyName` argument or PascalCase-of-field), not the backing field name.
+- A project-level default (e.g., MSBuild property) is the natural follow-up; see the open roadmap line for tracking.
 
 ### 🔄 Change Tracking with `UseIsDirty`
 
