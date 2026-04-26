@@ -962,32 +962,206 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             }
         }
 
-        List<Diagnostic>? diagnostics = null;
-
+        // Map each [ComputedProperty] to its declaration and to the set of
+        // OTHER [ComputedProperty] names referenced in its getter — used for
+        // cycle detection below.
+        var computedPropertyDeclarations = new Dictionary<string, PropertyDeclarationSyntax>(StringComparer.Ordinal);
         foreach (var member in classDeclaration.Members)
         {
-            if (member is not PropertyDeclarationSyntax propertyDeclaration)
+            if (member is PropertyDeclarationSyntax propertyDeclaration &&
+                HasComputedPropertyAttribute(propertyDeclaration))
             {
-                continue;
+                computedPropertyDeclarations[propertyDeclaration.Identifier.Text] = propertyDeclaration;
+            }
+        }
+
+        List<Diagnostic>? diagnostics = null;
+
+        foreach (var entry in computedPropertyDeclarations)
+        {
+            if (!HasComputedPropertyDependency(entry.Value, knownPropertyNames))
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateComputedPropertyNoDependencies(
+                    entry.Key,
+                    entry.Value.Identifier.GetLocation()));
+            }
+        }
+
+        // Detect cycles in the [ComputedProperty] → [ComputedProperty]
+        // sub-graph. Linear dependency chains and references to
+        // [ObservableProperty] don't participate.
+        var computedDependencyEdges = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var entry in computedPropertyDeclarations)
+        {
+            var edges = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var referenced in CollectIdentifierReferences(entry.Value))
+            {
+                if (referenced != entry.Key &&
+                    computedPropertyDeclarations.ContainsKey(referenced))
+                {
+                    edges.Add(referenced);
+                }
             }
 
-            if (!HasComputedPropertyAttribute(propertyDeclaration))
-            {
-                continue;
-            }
+            computedDependencyEdges[entry.Key] = edges;
+        }
 
-            if (HasComputedPropertyDependency(propertyDeclaration, knownPropertyNames))
-            {
-                continue;
-            }
+        var participantsInCycles = FindCycleParticipants(computedDependencyEdges);
+        foreach (var propertyName in participantsInCycles)
+        {
+            var declaration = computedPropertyDeclarations[propertyName];
+            var cyclePath = BuildCyclePath(propertyName, computedDependencyEdges);
 
             diagnostics ??= [];
-            diagnostics.Add(DiagnosticFactory.CreateComputedPropertyNoDependencies(
-                propertyDeclaration.Identifier.Text,
-                propertyDeclaration.Identifier.GetLocation()));
+            diagnostics.Add(DiagnosticFactory.CreateComputedPropertyCycle(
+                propertyName,
+                cyclePath,
+                declaration.Identifier.GetLocation()));
         }
 
         return diagnostics;
+    }
+
+    private static IEnumerable<string> CollectIdentifierReferences(
+        PropertyDeclarationSyntax propertyDeclaration)
+    {
+        IEnumerable<IdentifierNameSyntax> identifiers;
+
+        if (propertyDeclaration.ExpressionBody is not null)
+        {
+            identifiers = propertyDeclaration
+                .ExpressionBody
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>();
+        }
+        else
+        {
+            var getter = propertyDeclaration.AccessorList?.Accessors
+                .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
+            if (getter is null)
+            {
+                yield break;
+            }
+
+            identifiers = getter
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>();
+        }
+
+        foreach (var node in identifiers)
+        {
+            yield return node.Identifier.ValueText;
+        }
+    }
+
+    private static HashSet<string> FindCycleParticipants(
+        Dictionary<string, HashSet<string>> edges)
+    {
+        var participants = new HashSet<string>(StringComparer.Ordinal);
+
+        // A node participates in a cycle iff it is reachable from itself via
+        // its own out-edges. Run a DFS from each node.
+        foreach (var start in edges.Keys)
+        {
+            if (CanReachSelf(start, edges))
+            {
+                participants.Add(start);
+            }
+        }
+
+        return participants;
+    }
+
+    private static bool CanReachSelf(
+        string start,
+        Dictionary<string, HashSet<string>> edges)
+    {
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        var stack = new Stack<string>();
+        if (!edges.TryGetValue(start, out var initialEdges))
+        {
+            return false;
+        }
+
+        foreach (var first in initialEdges)
+        {
+            stack.Push(first);
+        }
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (current == start)
+            {
+                return true;
+            }
+
+            if (!visited.Add(current))
+            {
+                continue;
+            }
+
+            if (edges.TryGetValue(current, out var nextEdges))
+            {
+                foreach (var next in nextEdges)
+                {
+                    stack.Push(next);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static string BuildCyclePath(
+        string start,
+        Dictionary<string, HashSet<string>> edges)
+    {
+        // BFS to find the shortest cycle starting and ending at `start`,
+        // for a more useful diagnostic message.
+        var queue = new Queue<List<string>>();
+        if (edges.TryGetValue(start, out var startEdges))
+        {
+            foreach (var first in startEdges)
+            {
+                queue.Enqueue([start, first]);
+            }
+        }
+
+        var visited = new HashSet<string>(StringComparer.Ordinal) { start };
+
+        while (queue.Count > 0)
+        {
+            var path = queue.Dequeue();
+            var tail = path[path.Count - 1];
+
+            if (tail == start && path.Count > 2)
+            {
+                return string.Join(" → ", path);
+            }
+
+            if (!visited.Add(tail))
+            {
+                continue;
+            }
+
+            if (!edges.TryGetValue(tail, out var nextEdges))
+            {
+                continue;
+            }
+
+            foreach (var next in nextEdges)
+            {
+                if (next == start || !visited.Contains(next))
+                {
+                    var newPath = new List<string>(path) { next };
+                    queue.Enqueue(newPath);
+                }
+            }
+        }
+
+        return start;
     }
 
     private static bool HasComputedPropertyAttribute(
