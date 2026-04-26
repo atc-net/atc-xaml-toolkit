@@ -264,22 +264,31 @@ public class Messenger : IMessenger
 
         lock (lists)
         {
-            var listsToRemove = new List<Type>();
+            List<Type>? listsToRemove = null;
             foreach (var (key, value) in lists)
             {
-                var recipientsToRemove = value
-                    .Where(item => item.Action is null || !item.Action.IsAlive)
-                    .ToList();
-
-                foreach (var recipient in recipientsToRemove)
+                // In-place reverse removal — avoids allocating a temporary
+                // list inside the lock that previously stalled other callers
+                // when many recipients were dead.
+                for (var i = value.Count - 1; i >= 0; i--)
                 {
-                    _ = value.Remove(recipient);
+                    var item = value[i];
+                    if (item.Action is null || !item.Action.IsAlive)
+                    {
+                        value.RemoveAt(i);
+                    }
                 }
 
                 if (value.Count == 0)
                 {
+                    listsToRemove ??= [];
                     listsToRemove.Add(key);
                 }
+            }
+
+            if (listsToRemove is null)
+            {
+                return;
             }
 
             foreach (var key in listsToRemove)
@@ -300,12 +309,9 @@ public class Messenger : IMessenger
             return;
         }
 
-        // Clone to protect from people registering in a "receive message" method
-        // Correction Messaging BL0004.007
-        var list = weakActionsAndTokens.ToList();
-        var listClone = list
-            .Take(list.Count)
-            .ToList();
+        // Clone to protect from people registering in a "receive message" method.
+        // Correction Messaging BL0004.007.
+        var listClone = weakActionsAndTokens.ToList();
 
         foreach (var item in listClone)
         {
@@ -395,42 +401,52 @@ public class Messenger : IMessenger
     {
         var messageType = typeof(TMessage);
 
-        List<WeakActionAndToken>? list = null;
-        var listClone = recipientsOfSubclassesAction
-            .Keys
-            .Take(recipientsOfSubclassesAction.Count)
-            .ToList();
-        foreach (var type in listClone)
+        // Snapshot the registered subclass-listener types under the lock —
+        // enumerating .Keys without locking can throw if another thread
+        // registers/unregisters mid-iteration.
+        List<Type> typesToCheck;
+        lock (recipientsOfSubclassesAction)
         {
-            if (messageType == type
-                || messageType.IsSubclassOf(type)
-                || type.IsAssignableFrom(messageType))
+            typesToCheck = new List<Type>(recipientsOfSubclassesAction.Keys);
+        }
+
+        foreach (var type in typesToCheck)
+        {
+            if (messageType != type
+                && !messageType.IsSubclassOf(type)
+                && !type.IsAssignableFrom(messageType))
             {
-                lock (recipientsOfSubclassesAction)
+                continue;
+            }
+
+            // Previously this dispatch ran on every iteration — including
+            // iterations where no type matched — which re-sent the *previous*
+            // matching list and double-fired handlers when more than one
+            // subclass type was registered.
+            List<WeakActionAndToken>? subclassList = null;
+            lock (recipientsOfSubclassesAction)
+            {
+                if (recipientsOfSubclassesAction.TryGetValue(type, out var recipients))
                 {
-                    list = recipientsOfSubclassesAction[type]
-                        .Take(recipientsOfSubclassesAction[type].Count)
-                        .ToList();
+                    subclassList = new List<WeakActionAndToken>(recipients);
                 }
             }
 
-            SendToList(message, list, messageTargetType, token);
+            SendToList(message, subclassList, messageTargetType, token);
         }
 
-        list = null;
+        List<WeakActionAndToken>? strictList = null;
         lock (recipientsStrictAction)
         {
-            if (recipientsStrictAction.ContainsKey(messageType))
+            if (recipientsStrictAction.TryGetValue(messageType, out var recipients))
             {
-                list = recipientsStrictAction[messageType]
-                    .Take(recipientsStrictAction[messageType].Count)
-                    .ToList();
+                strictList = new List<WeakActionAndToken>(recipients);
             }
         }
 
-        if (list is not null)
+        if (strictList is not null)
         {
-            SendToList(message, list, messageTargetType, token);
+            SendToList(message, strictList, messageTargetType, token);
         }
 
         RequestCleanup();
