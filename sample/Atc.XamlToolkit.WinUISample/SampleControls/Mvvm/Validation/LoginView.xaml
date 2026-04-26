@@ -1,0 +1,131 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Mvvm.Validation.LoginView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="500"
+    d:DesignWidth="700"
+    mc:Ignorable="d">
+
+    <Grid Margin="10" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="Form validation demo (manual InitializeValidation path)" />
+            <TextBlock
+                Opacity="0.7"
+                Text="LoginViewModel inherits ViewModelBase, declares fields with DataAnnotations, and calls InitializeValidation(validateOnPropertyChanged: true) in its constructor. Each keystroke re-runs validation; Submit is gated on HasErrors."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!--  Form  -->
+        <Grid
+            Grid.Row="1"
+            ColumnSpacing="10"
+            RowSpacing="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  Username  -->
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Username *" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{x:Bind ViewModel.UsernameError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Email  -->
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Email *" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{x:Bind ViewModel.EmailError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Password  -->
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="Password *" />
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Foreground="Red"
+                Text="{x:Bind ViewModel.PasswordError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <!--  Submit / Reset  -->
+            <StackPanel
+                Grid.Row="3"
+                Grid.Column="1"
+                Margin="0,10,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    MinWidth="100"
+                    Padding="10,5"
+                    Command="{x:Bind ViewModel.SubmitCommand}"
+                    Content="Submit" />
+                <Button
+                    MinWidth="100"
+                    Padding="10,5"
+                    Command="{x:Bind ViewModel.ResetCommand}"
+                    Content="Reset" />
+            </StackPanel>
+        </Grid>
+
+        <!--  Status  -->
+        <Border
+            Grid.Row="2"
+            Padding="10"
+            BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1"
+            CornerRadius="3">
+            <StackPanel Spacing="4">
+                <TextBlock>
+                    <Run Text="Has Errors: " />
+                    <Run FontWeight="Bold" Text="{x:Bind ViewModel.HasErrors, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock>
+                    <Run Text="Last submitted username: " />
+                    <Run FontWeight="Bold" Text="{x:Bind ViewModel.LastSubmittedUsername, Mode=OneWay, FallbackValue='(none yet)'}" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
