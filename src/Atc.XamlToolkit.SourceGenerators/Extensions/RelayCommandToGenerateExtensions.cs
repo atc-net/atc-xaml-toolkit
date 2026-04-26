@@ -5,10 +5,8 @@ internal static class RelayCommandToGenerateExtensions
 {
     public static bool HasParameterTypesOfCancellationToken(
         this RelayCommandToGenerate relayCommandToGenerate)
-    {
-        var parameterTypes = relayCommandToGenerate.ParameterTypes ?? [];
-        return parameterTypes.Any(t => t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal));
-    }
+        => relayCommandToGenerate.ParameterTypes
+            .Any(t => t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal));
 
     public static string GetInterfaceType(
         this RelayCommandToGenerate relayCommandToGenerate)
@@ -33,7 +31,7 @@ internal static class RelayCommandToGenerateExtensions
     public static string GetGenericArgAsString(
         this RelayCommandToGenerate relayCommandToGenerate)
     {
-        if (relayCommandToGenerate.ParameterValues?.Length > 0)
+        if (!relayCommandToGenerate.ParameterValues.IsEmpty)
         {
             return string.Empty;
         }
@@ -50,21 +48,18 @@ internal static class RelayCommandToGenerateExtensions
 
     public static string[] GetParameterTypesWithoutCancellationToken(
         this RelayCommandToGenerate relayCommandToGenerate)
-    {
-        var parameterTypes = relayCommandToGenerate.ParameterTypes ?? [];
-        return parameterTypes
+        => relayCommandToGenerate.ParameterTypes
             .Where(t => !t.EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
             .ToArray();
-    }
 
     public static string[] GetParameterNamesWithoutCancellationToken(
         this RelayCommandToGenerate relayCommandToGenerate)
     {
-        var parameterTypes = relayCommandToGenerate.ParameterTypes ?? [];
-        var parameterNames = relayCommandToGenerate.ParameterNames ?? [];
+        var parameterTypes = relayCommandToGenerate.ParameterTypes;
+        var parameterNames = relayCommandToGenerate.ParameterNames;
 
         var result = new List<string>();
-        for (var i = 0; i < parameterTypes.Length; i++)
+        for (var i = 0; i < parameterTypes.Count; i++)
         {
             if (!parameterTypes[i].EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal))
             {
@@ -77,9 +72,9 @@ internal static class RelayCommandToGenerateExtensions
 
     public static string? GetParameterValuesAsCommaSeparated(
         this RelayCommandToGenerate relayCommandToGenerate)
-        => relayCommandToGenerate.ParameterValues?.Length > 0
-            ? string.Join(", ", relayCommandToGenerate.ParameterValues)
-            : null;
+        => relayCommandToGenerate.ParameterValues.IsEmpty
+            ? null
+            : string.Join(", ", relayCommandToGenerate.ParameterValues);
 
     public static string? GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated(
         this RelayCommandToGenerate relayCommandToGenerate)

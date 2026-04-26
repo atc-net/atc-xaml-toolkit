@@ -214,8 +214,8 @@ internal static class ObservablePropertyInspector
                 backingFieldName,
                 fieldSymbol.IsReadOnly)
             {
-                PropertyNamesToInvalidate = propertyNamesToInvalidate,
-                CommandNamesToInvalidate = commandNamesToInvalidate,
+                PropertyNamesToInvalidate = new EquatableArray<string>(propertyNamesToInvalidate?.ToArray() ?? []),
+                CommandNamesToInvalidate = new EquatableArray<string>(commandNamesToInvalidate ?? []),
                 BeforeChangedCallback = beforeChangedCallback,
                 AfterChangedCallback = afterChangedCallback,
                 BroadcastOnChange = broadcastOnChange,
@@ -223,8 +223,8 @@ internal static class ObservablePropertyInspector
                 IsRequired = isRequired,
                 GeneratePartialHooks = generatePartialHooks,
                 ValidatesOnChange = validatesOnChange,
-                CustomAttributes = customAttributes,
-                DocumentationComments = documentationComments,
+                CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
+                DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
             });
     }
 }

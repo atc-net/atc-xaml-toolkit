@@ -92,9 +92,9 @@ internal static class RoutedEventInspector
 
         routedEventToGenerate.Add(
             new RoutedEventToGenerate(
-                ownerType: classSymbol.Name,
-                name: propertyName,
-                routingStrategy: routingStrategy,
-                handlerTypeName: handlerTypeName));
+                OwnerType: classSymbol.Name,
+                Name: propertyName,
+                RoutingStrategy: routingStrategy,
+                HandlerTypeName: handlerTypeName));
     }
 }

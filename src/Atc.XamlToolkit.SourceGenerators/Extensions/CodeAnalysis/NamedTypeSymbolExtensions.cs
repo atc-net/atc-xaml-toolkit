@@ -51,8 +51,8 @@ internal static class NamedTypeSymbolExtensions
                     p.Type.ToString(),
                     isRecordParameter,
                     isReadOnly,
-                    attributes,
-                    documentationComments);
+                    new EquatableArray<string>(attributes.ToArray()),
+                    new EquatableArray<string>(documentationComments?.ToArray() ?? []));
             })
             .ToList();
     }
@@ -78,12 +78,12 @@ internal static class NamedTypeSymbolExtensions
                     .Select(p => new DtoMethodParameterInfo(
                         p.Name,
                         p.Type.ToString()))
-                    .ToList();
+                    .ToArray();
 
                 return new DtoMethodInfo(
                     m.Name,
                     m.ReturnType.ToString(),
-                    parameters);
+                    new EquatableArray<DtoMethodParameterInfo>(parameters));
             })
             .ToList();
     }

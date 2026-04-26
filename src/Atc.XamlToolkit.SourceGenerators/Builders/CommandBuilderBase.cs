@@ -8,9 +8,9 @@ internal abstract class CommandBuilderBase : BuilderBase
 {
     public virtual void GenerateRelayCommands(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate>? relayCommandsToGenerate)
+        EquatableArray<RelayCommandToGenerate> relayCommandsToGenerate)
     {
-        if (relayCommandsToGenerate is null || relayCommandsToGenerate.Count == 0)
+        if (relayCommandsToGenerate.IsEmpty)
         {
             return;
         }
@@ -26,9 +26,9 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     public virtual void GenerateRelayCommandMethods(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate>? relayCommandsToGenerate)
+        EquatableArray<RelayCommandToGenerate> relayCommandsToGenerate)
     {
-        if (relayCommandsToGenerate is null || relayCommandsToGenerate.Count == 0)
+        if (relayCommandsToGenerate.IsEmpty)
         {
             return;
         }
@@ -40,7 +40,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendPrivateBackingFields(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate> commands)
+        EquatableArray<RelayCommandToGenerate> commands)
     {
         foreach (var cmd in commands)
         {
@@ -63,7 +63,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendPublicProperties(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate> commands)
+        EquatableArray<RelayCommandToGenerate> commands)
     {
         for (var i = 0; i < commands.Count; i++)
         {
@@ -205,7 +205,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendCancelMethods(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate> commands)
+        EquatableArray<RelayCommandToGenerate> commands)
     {
         var first = true;
         foreach (var cmd in commands)
@@ -241,7 +241,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
     private static void AppendDisposeCommandsMethod(
         CommandBuilderBase builder,
-        IList<RelayCommandToGenerate> commands)
+        EquatableArray<RelayCommandToGenerate> commands)
     {
         // All async commands (IRelayCommandAsync) implement IDisposable,
         // so we need to generate DisposeCommands() for all of them
@@ -537,7 +537,7 @@ internal abstract class CommandBuilderBase : BuilderBase
     private static string BuildExecuteExpressionForNoAutoSetIsBusy(
         RelayCommandToGenerate cmd)
     {
-        if (cmd.ParameterValues?.Length > 0)
+        if (!cmd.ParameterValues.IsEmpty)
         {
             var parameterValuesAsCommaSeparated = cmd.GetParameterValuesAsCommaSeparated();
             return cmd is { ExecuteOnBackgroundThread: true, UseTask: true }
@@ -644,7 +644,7 @@ internal abstract class CommandBuilderBase : BuilderBase
     private static string BuildExecuteExpressionForAutoSetIsBusy(
         RelayCommandToGenerate cmd)
     {
-        if (cmd.ParameterValues?.Length > 0)
+        if (!cmd.ParameterValues.IsEmpty)
         {
             var parameterValues = cmd.GetParameterValuesAsCommaSeparated();
             return cmd is { ExecuteOnBackgroundThread: true }
@@ -735,12 +735,12 @@ internal abstract class CommandBuilderBase : BuilderBase
             return null;
         }
 
-        if (cmd.ParameterValues?.Length > 0)
+        if (!cmd.ParameterValues.IsEmpty)
         {
             return $"{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
         }
 
-        var types = cmd.ParameterTypes ?? [];
+        var types = cmd.ParameterTypes;
         var paramCount = types.Length;
         var isCancellationOnly = paramCount == 1 &&
                                  types[0].EndsWith(NameConstants.CancellationToken, StringComparison.Ordinal);
