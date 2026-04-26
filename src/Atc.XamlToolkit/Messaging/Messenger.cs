@@ -412,9 +412,11 @@ public class Messenger : IMessenger
 
         foreach (var type in typesToCheck)
         {
-            if (messageType != type
-                && !messageType.IsSubclassOf(type)
-                && !type.IsAssignableFrom(messageType))
+            // IsAssignableFrom subsumes both reference-equality and IsSubclassOf:
+            // it returns true when messageType == type, when messageType is a
+            // subclass of type, and when type is an interface implemented by
+            // messageType — covering every case the previous three-check chain did.
+            if (!type.IsAssignableFrom(messageType))
             {
                 continue;
             }
