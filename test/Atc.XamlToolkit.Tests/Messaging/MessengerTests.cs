@@ -270,6 +270,163 @@ public sealed class MessengerTests
         hits.Should().Be(0, "the registered recipient was collected — its handler must not fire");
     }
 
+    [Fact]
+    public void Send_DoesNotInvokeNewlyRegisteredRecipient_DuringSameDispatch()
+    {
+        // The dispatch path snapshots the recipient list before iterating, so a
+        // recipient that registers itself from inside another recipient's
+        // handler must NOT be invoked for the in-flight message — only for
+        // subsequent sends.
+        var messenger = new Messenger();
+        var earlyHits = 0;
+        var lateHits = 0;
+        var earlyReceiver = new object();
+        var lateReceiver = new object();
+
+        messenger.Register<DerivedMessage>(
+            earlyReceiver,
+            _ =>
+            {
+                earlyHits++;
+
+                // Register a second recipient mid-dispatch.
+                if (earlyHits == 1)
+                {
+                    messenger.Register<DerivedMessage>(lateReceiver, _ => lateHits++);
+                }
+            });
+
+        messenger.Send(new DerivedMessage());
+
+        earlyHits.Should().Be(1, "the existing recipient fires once");
+        lateHits.Should().Be(0, "the recipient registered mid-dispatch must not receive the in-flight message");
+
+        messenger.Send(new DerivedMessage());
+
+        earlyHits.Should().Be(2);
+        lateHits.Should().Be(1, "a recipient registered mid-dispatch becomes active for subsequent sends");
+    }
+
+    [Fact]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Test thread captures any exception so the assertion can fail the test.")]
+    [SuppressMessage("Usage", "xUnit1051:Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken", Justification = "Cancellation here is the test's internal time budget, not test-framework cancellation.")]
+    public async Task Send_AndRegister_OnDifferentThreads_DoNotCorruptInternalState()
+    {
+        // Stress-test: spin one thread spamming Register while another spams
+        // Send. Neither should throw, and the messenger's internal dictionaries
+        // must remain consistent. The pre-fix `.Keys` enumeration in
+        // SendToTargetOrType could throw InvalidOperationException under this
+        // workload — the test pins the post-fix behaviour.
+        var messenger = new Messenger();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
+        var registerErrors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+        var sendErrors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+
+        var registerTask = Task.Run(() =>
+        {
+            try
+            {
+                while (!cts.IsCancellationRequested)
+                {
+                    var recipient = new object();
+                    messenger.Register<DerivedMessage>(recipient, _ => { });
+                    messenger.Register<UnrelatedMessage>(
+                        recipient,
+                        receiveDerivedMessagesToo: true,
+                        _ => { });
+                }
+            }
+            catch (Exception ex)
+            {
+                registerErrors.Add(ex);
+            }
+        });
+
+        var sendTask = Task.Run(() =>
+        {
+            try
+            {
+                while (!cts.IsCancellationRequested)
+                {
+                    messenger.Send(new DerivedMessage());
+                }
+            }
+            catch (Exception ex)
+            {
+                sendErrors.Add(ex);
+            }
+        });
+
+        await Task.WhenAll(registerTask, sendTask);
+
+        registerErrors.Should().BeEmpty("Register must not throw under concurrent Send");
+        sendErrors.Should().BeEmpty("Send must not throw under concurrent Register");
+    }
+
+    [Fact]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Test thread captures any exception so the assertion can fail the test.")]
+    [SuppressMessage("Usage", "xUnit1051:Calls to methods which accept CancellationToken should use TestContext.Current.CancellationToken", Justification = "Cancellation here is the test's internal time budget, not test-framework cancellation.")]
+    [SuppressMessage("Reliability", "AsyncFixer02:Long-running or blocking operations inside an async method", Justification = "Synchronous test setup; the work below is genuinely async via Task.Run.")]
+    public async Task Send_AndUnRegister_OnDifferentThreads_DoNotCorruptInternalState()
+    {
+        // Mirror of the register/send race: ensure UnRegister can run
+        // concurrently with Send without throwing.
+        var messenger = new Messenger();
+        var recipients = new List<object>(32);
+        for (var i = 0; i < 32; i++)
+        {
+            recipients.Add(new object());
+        }
+
+        foreach (var recipient in recipients)
+        {
+            messenger.Register<DerivedMessage>(recipient, _ => { });
+        }
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
+        var unregisterErrors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+        var sendErrors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+
+        var unregisterTask = Task.Run(() =>
+        {
+            try
+            {
+                var index = 0;
+                while (!cts.IsCancellationRequested)
+                {
+                    var recipient = recipients[index % recipients.Count];
+                    messenger.UnRegister<DerivedMessage>(recipient);
+                    messenger.Register<DerivedMessage>(recipient, _ => { });
+                    index++;
+                }
+            }
+            catch (Exception ex)
+            {
+                unregisterErrors.Add(ex);
+            }
+        });
+
+        var sendTask = Task.Run(() =>
+        {
+            try
+            {
+                while (!cts.IsCancellationRequested)
+                {
+                    messenger.Send(new DerivedMessage());
+                }
+            }
+            catch (Exception ex)
+            {
+                sendErrors.Add(ex);
+            }
+        });
+
+        await Task.WhenAll(unregisterTask, sendTask);
+
+        unregisterErrors.Should().BeEmpty("UnRegister must not throw under concurrent Send");
+        sendErrors.Should().BeEmpty("Send must not throw under concurrent UnRegister");
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void RegisterShortLivedHandler(
         Messenger messenger,
