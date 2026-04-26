@@ -5,6 +5,43 @@ namespace Atc.XamlToolkit.Command;
 /// An asynchronous command whose sole purpose is to relay its functionality to other
 /// objects by invoking delegates. The default return value for the CanExecute method is 'true'.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>WinUI threading notes — different from WPF and Avalonia:</b>
+/// </para>
+/// <list type="bullet">
+///   <item>
+///     <description>
+///       The constructor captures the UI thread's <see cref="DispatcherQueue"/> by calling
+///       <c>DispatcherQueue.GetForCurrentThread()</c>. Construct this command on the UI thread
+///       (a ViewModel that is created on the UI thread is fine; one created on a worker thread
+///       will not capture a dispatcher and the auto-marshalling described below becomes a no-op).
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///       <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/> events for
+///       <c>IsExecuting</c> are automatically marshalled to the UI thread via
+///       <see cref="DispatcherQueue.TryEnqueue(DispatcherQueuePriority, DispatcherQueueHandler)"/>.
+///       This is required because WinUI <c>x:Bind</c> only subscribes to <c>PropertyChanged</c> on
+///       the root ViewModel, and raising the event from a background thread otherwise causes
+///       <c>RPC_E_WRONG_THREAD</c> (0x8001010E) when bindings refresh.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///       WPF and Avalonia do not need this — their dispatchers cope with cross-thread
+///       <c>PropertyChanged</c> raises and standard <c>{Binding}</c> subscribes to intermediate
+///       objects in property paths.
+///     </description>
+///   </item>
+/// </list>
+/// <para>
+/// To bind <c>IsExecuting</c> on a nested command property with <c>x:Bind</c>, use the property
+/// the source generator emits on the ViewModel for compiled bindings:
+/// <c>{x:Bind ViewModel.DoStuffCommand.IsExecuting, Mode=OneWay}</c>.
+/// </para>
+/// </remarks>
 public class RelayCommandAsync : RelayCommandAsyncBase
 {
     private readonly DispatcherQueue? dispatcherQueue;
