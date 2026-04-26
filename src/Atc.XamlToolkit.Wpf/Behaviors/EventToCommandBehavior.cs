@@ -16,7 +16,7 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
             nameof(EventName),
             typeof(string),
             typeof(EventToCommandBehavior),
-            new PropertyMetadata(defaultValue: null, OnEventNameChanged));
+            new PropertyMetadata(string.Empty, OnEventNameChanged));
 
     /// <summary>
     /// Dependency property for the command to execute.
@@ -153,9 +153,16 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
         object? sender,
         EventArgs e)
     {
-        if (Command?.CanExecute(GetCommandParameter(e)) == true)
+        var command = Command;
+        if (command is null)
         {
-            Command.Execute(GetCommandParameter(e));
+            return;
+        }
+
+        var parameter = GetCommandParameter(e);
+        if (command.CanExecute(parameter))
+        {
+            command.Execute(parameter);
         }
     }
 

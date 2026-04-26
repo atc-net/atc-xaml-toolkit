@@ -140,9 +140,16 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
         object? sender,
         EventArgs e)
     {
-        if (Command?.CanExecute(GetCommandParameter(e)) == true)
+        var command = Command;
+        if (command is null)
         {
-            Command.Execute(GetCommandParameter(e));
+            return;
+        }
+
+        var parameter = GetCommandParameter(e);
+        if (command.CanExecute(parameter))
+        {
+            command.Execute(parameter);
         }
     }
 
