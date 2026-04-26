@@ -141,7 +141,33 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 }
             });
 
-        // Pipeline 6: classes annotated with [INotifyPropertyChanged] — emit the
+        // Pipeline 6: validate [ComputedProperty] dependency detection.
+        // Surface a diagnostic for properties whose getter doesn't reference
+        // any other property — the inspector silently filters them out today,
+        // so the user gets nothing and can't tell why.
+        var computedPropertyDiagnostics = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsClassWithComputedPropertyUsage(syntaxNode),
+                transform: static (context, _) => GetComputedPropertyDiagnostics(context))
+            .Where(static diagnostics => diagnostics is { Count: > 0 })
+            .WithTrackingName("ViewModelGenerator.ComputedPropertyDiagnostics");
+
+        context.RegisterSourceOutput(
+            computedPropertyDiagnostics,
+            static (spc, diagnostics) =>
+            {
+                if (diagnostics is null)
+                {
+                    return;
+                }
+
+                foreach (var diagnostic in diagnostics)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+
+        // Pipeline 7: classes annotated with [INotifyPropertyChanged] — emit the
         // INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set<T>)
         // so the class can act as its own INPC source without inheriting from
         // ObservableObject. Compatible with [ObservableProperty] on the same class.
@@ -866,6 +892,168 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         }
 
         return commandName;
+    }
+
+    private static bool IsClassWithComputedPropertyUsage(SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not PropertyDeclarationSyntax propertyDeclaration ||
+                propertyDeclaration.AttributeLists.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in propertyDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is
+                        NameConstants.ComputedProperty or
+                        NameConstants.ComputedPropertyAttribute)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all [ComputedProperty] members.")]
+    private static List<Diagnostic>? GetComputedPropertyDiagnostics(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+        if (classSymbol is null)
+        {
+            return null;
+        }
+
+        // Build the set of identifiers a getter might reference and that
+        // count as a tracked dependency: declared properties + properties
+        // generated from [ObservableProperty] fields.
+        var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var member in classSymbol.GetMembers())
+        {
+            if (member is IPropertySymbol propertySymbol)
+            {
+                knownPropertyNames.Add(propertySymbol.Name);
+                continue;
+            }
+
+            if (member is IFieldSymbol fieldSymbol &&
+                FieldHasObservablePropertyAttribute(fieldSymbol))
+            {
+                knownPropertyNames.Add(GetGeneratedPropertyName(fieldSymbol));
+            }
+        }
+
+        List<Diagnostic>? diagnostics = null;
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not PropertyDeclarationSyntax propertyDeclaration)
+            {
+                continue;
+            }
+
+            if (!HasComputedPropertyAttribute(propertyDeclaration))
+            {
+                continue;
+            }
+
+            if (HasComputedPropertyDependency(propertyDeclaration, knownPropertyNames))
+            {
+                continue;
+            }
+
+            diagnostics ??= [];
+            diagnostics.Add(DiagnosticFactory.CreateComputedPropertyNoDependencies(
+                propertyDeclaration.Identifier.Text,
+                propertyDeclaration.Identifier.GetLocation()));
+        }
+
+        return diagnostics;
+    }
+
+    private static bool HasComputedPropertyAttribute(
+        PropertyDeclarationSyntax propertyDeclaration)
+    {
+        foreach (var attributeList in propertyDeclaration.AttributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                var attributeName = attribute.Name switch
+                {
+                    GenericNameSyntax genericName => genericName.Identifier.Text,
+                    _ => attribute.Name.ToString(),
+                };
+
+                if (attributeName is
+                    NameConstants.ComputedProperty or
+                    NameConstants.ComputedPropertyAttribute)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasComputedPropertyDependency(
+        PropertyDeclarationSyntax propertyDeclaration,
+        HashSet<string> knownPropertyNames)
+    {
+        // Mirror ComputedPropertyInspector.AnalyzePropertyDependencies — scan
+        // the getter (expression body or `get { ... }`) for IdentifierName
+        // references that match a known property.
+        IEnumerable<IdentifierNameSyntax> identifierNodes;
+
+        if (propertyDeclaration.ExpressionBody is not null)
+        {
+            identifierNodes = propertyDeclaration
+                .ExpressionBody
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>();
+        }
+        else
+        {
+            var getter = propertyDeclaration.AccessorList?.Accessors
+                .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
+            if (getter is null)
+            {
+                return false;
+            }
+
+            identifierNodes = getter
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>();
+        }
+
+        foreach (var node in identifierNodes)
+        {
+            if (knownPropertyNames.Contains(node.Identifier.ValueText))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool FieldHasObservablePropertyAttribute(

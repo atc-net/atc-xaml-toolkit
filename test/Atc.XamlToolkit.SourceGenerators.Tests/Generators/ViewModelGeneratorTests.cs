@@ -360,6 +360,52 @@ public sealed partial class ViewModelGeneratorTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ComputedProperty_WithNoDetectedDependencies_EmitsDiagnostic()
+    {
+        // The getter only references local literals, so no observable
+        // property is read. The generator currently filters this property
+        // out entirely — the user gets nothing.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ComputedProperty]
+                public string Greeting => "Hello!";
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0007");
+    }
+
+    [Fact]
+    public void ComputedProperty_WithDetectedDependency_DoesNotEmitDiagnostic()
+    {
+        // Reads firstName which has [ObservableProperty] → known dependency.
+        // No diagnostic.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string firstName;
+
+                [ComputedProperty]
+                public string Upper => FirstName.ToUpper();
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0007");
+    }
+
+    [Fact]
     public void ObservableProperty_OnValidPrivateCamelCaseField_DoesNotEmitFieldDiagnostics()
     {
         const string inputCode =
