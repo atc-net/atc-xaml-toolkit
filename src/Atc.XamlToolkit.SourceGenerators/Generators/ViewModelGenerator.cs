@@ -117,7 +117,31 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 }
             });
 
-        // Pipeline 5: classes annotated with [INotifyPropertyChanged] — emit the
+        // Pipeline 5: validate [NotifyCanExecuteChangedFor("X")] references.
+        // Same shape as pipeline 4 but for command references.
+        var notifyCanExecForRefDiagnostics = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsClassWithNotifyCanExecuteChangedForUsage(syntaxNode),
+                transform: static (context, _) => GetNotifyCanExecuteChangedForDiagnostics(context))
+            .Where(static diagnostics => diagnostics is { Count: > 0 })
+            .WithTrackingName("ViewModelGenerator.NotifyCanExecuteChangedForDiagnostics");
+
+        context.RegisterSourceOutput(
+            notifyCanExecForRefDiagnostics,
+            static (spc, diagnostics) =>
+            {
+                if (diagnostics is null)
+                {
+                    return;
+                }
+
+                foreach (var diagnostic in diagnostics)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+
+        // Pipeline 6: classes annotated with [INotifyPropertyChanged] — emit the
         // INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set<T>)
         // so the class can act as its own INPC source without inheriting from
         // ObservableObject. Compatible with [ObservableProperty] on the same class.
@@ -646,6 +670,202 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         }
 
         return diagnostics;
+    }
+
+    private static bool IsClassWithNotifyCanExecuteChangedForUsage(
+        SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not ClassDeclarationSyntax classDeclaration)
+        {
+            return false;
+        }
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration ||
+                fieldDeclaration.AttributeLists.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is
+                        NameConstants.NotifyCanExecuteChangedFor or
+                        NameConstants.NotifyCanExecuteChangedForAttribute)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all fields with [NotifyCanExecuteChangedFor].")]
+    private static List<Diagnostic>? GetNotifyCanExecuteChangedForDiagnostics(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+        if (classSymbol is null)
+        {
+            return null;
+        }
+
+        var knownCommandNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var member in classSymbol.GetMembers())
+        {
+            // User-declared property whose name ends in "Command" — covers
+            // hand-written IRelayCommand properties without forcing us to
+            // load the type symbol.
+            if (member is IPropertySymbol propertySymbol &&
+                propertySymbol.Name.EndsWith(NameConstants.Command, StringComparison.Ordinal))
+            {
+                knownCommandNames.Add(propertySymbol.Name);
+                continue;
+            }
+
+            if (member is IMethodSymbol methodSymbol &&
+                MethodHasRelayCommandAttribute(methodSymbol))
+            {
+                knownCommandNames.Add(GetGeneratedCommandName(methodSymbol));
+            }
+        }
+
+        List<Diagnostic>? diagnostics = null;
+
+        foreach (var member in classDeclaration.Members)
+        {
+            if (member is not FieldDeclarationSyntax fieldDeclaration)
+            {
+                continue;
+            }
+
+            foreach (var attributeList in fieldDeclaration.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var attributeName = attribute.Name switch
+                    {
+                        GenericNameSyntax genericName => genericName.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
+
+                    if (attributeName is not (
+                        NameConstants.NotifyCanExecuteChangedFor or
+                        NameConstants.NotifyCanExecuteChangedForAttribute))
+                    {
+                        continue;
+                    }
+
+                    if (attribute.ArgumentList is null)
+                    {
+                        continue;
+                    }
+
+                    var fieldName = fieldDeclaration.Declaration.Variables
+                        .FirstOrDefault()?.Identifier.Text
+                        ?? string.Empty;
+
+                    foreach (var argument in attribute.ArgumentList.Arguments)
+                    {
+                        var referencedName = ExtractAttributeStringArgument(argument);
+                        if (referencedName is null)
+                        {
+                            continue;
+                        }
+
+                        if (knownCommandNames.Contains(referencedName))
+                        {
+                            continue;
+                        }
+
+                        diagnostics ??= [];
+                        diagnostics.Add(DiagnosticFactory.CreateNotifyCanExecuteChangedForNonExistentTarget(
+                            fieldName,
+                            referencedName,
+                            argument.GetLocation()));
+                    }
+                }
+            }
+        }
+
+        return diagnostics;
+    }
+
+    private static bool MethodHasRelayCommandAttribute(
+        IMethodSymbol methodSymbol)
+    {
+        foreach (var attribute in methodSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.RelayCommand
+                or NameConstants.RelayCommandAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string GetGeneratedCommandName(IMethodSymbol methodSymbol)
+    {
+        // Mirror RelayCommandInspector.AppendRelayCommandToGenerate naming logic:
+        //   1. Honour Name attribute argument when present.
+        //   2. Otherwise upper-case the method name.
+        //   3. Strip "Handler" suffix.
+        //   4. Append "Command" if not already there.
+        //   5. Append "X" if the result equals the method name (collision avoidance).
+        string commandName = methodSymbol.Name.EnsureFirstCharacterToUpper();
+
+        foreach (var attribute in methodSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name is not (
+                NameConstants.RelayCommand
+                or NameConstants.RelayCommandAttribute))
+            {
+                continue;
+            }
+
+            // ExtractConstructorArgumentValues maps positional arg #0 to key
+            // "Name" (the same convention RelayCommandInspector uses).
+            var args = attribute.ExtractConstructorArgumentValues();
+            if (args.TryGetValue(NameConstants.Name, out var explicitName) &&
+                !string.IsNullOrEmpty(explicitName))
+            {
+                commandName = explicitName!.EnsureFirstCharacterToUpper();
+            }
+
+            break;
+        }
+
+        if (commandName.EndsWith(NameConstants.Handler, StringComparison.Ordinal))
+        {
+            commandName = commandName.Substring(0, commandName.Length - NameConstants.Handler.Length);
+        }
+
+        if (!commandName.EndsWith(NameConstants.Command, StringComparison.Ordinal))
+        {
+            commandName += NameConstants.Command;
+        }
+
+        if (commandName == methodSymbol.Name)
+        {
+            commandName += "X";
+        }
+
+        return commandName;
     }
 
     private static bool FieldHasObservablePropertyAttribute(
