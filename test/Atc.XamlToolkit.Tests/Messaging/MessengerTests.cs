@@ -149,9 +149,60 @@ public sealed class MessengerTests
             .BeFalse("Cleanup must drop type keys whose recipient list is empty");
     }
 
+    [Fact]
+    public void IRecipient_Register_DispatchesMessageToRecipientReceive()
+    {
+        var messenger = new Messenger();
+        var recipient = new RecordingRecipient();
+
+        messenger.Register(recipient, keepTargetAlive: true);
+        messenger.Send(new DerivedMessage());
+
+        recipient.ReceivedMessages.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void IRecipient_Register_WithToken_FiltersByToken()
+    {
+        var messenger = new Messenger();
+        var alpha = new RecordingRecipient();
+        var beta = new RecordingRecipient();
+        var tokenA = new object();
+        var tokenB = new object();
+
+        messenger.Register(alpha, tokenA, keepTargetAlive: true);
+        messenger.Register(beta, tokenB, keepTargetAlive: true);
+
+        messenger.Send(new DerivedMessage(), tokenA);
+
+        alpha.ReceivedMessages.Should().HaveCount(1);
+        beta.ReceivedMessages.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void IRecipient_UnRegister_StopsFurtherDelivery()
+    {
+        var messenger = new Messenger();
+        var recipient = new RecordingRecipient();
+
+        messenger.Register(recipient, keepTargetAlive: true);
+        messenger.Send(new DerivedMessage());
+        messenger.UnRegister(recipient);
+        messenger.Send(new DerivedMessage());
+
+        recipient.ReceivedMessages.Should().HaveCount(1, "the second send must not reach the unregistered recipient");
+    }
+
     private sealed class DerivedMessage;
 
     private sealed class UnrelatedMessage;
+
+    private sealed class RecordingRecipient : IRecipient<DerivedMessage>
+    {
+        public List<DerivedMessage> ReceivedMessages { get; } = [];
+
+        public void Receive(DerivedMessage message) => ReceivedMessages.Add(message);
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void RegisterAndAbandonRecipient<TMessage>(
