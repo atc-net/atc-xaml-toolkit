@@ -94,6 +94,7 @@ internal static class ObservablePropertyInspector
                     or NameConstants.BeforeChangedCallback
                     or NameConstants.BroadcastOnChange
                     or NameConstants.UseIsDirty
+                    or NameConstants.IsRequired
                     or NameConstants.GeneratePartialHooks)
                 {
                     continue;
@@ -132,6 +133,9 @@ internal static class ObservablePropertyInspector
 
         var generatePartialHooks = fieldArgumentValues.TryGetValue(NameConstants.GeneratePartialHooks, out var generatePartialHooksValue) &&
                                    "true".Equals(generatePartialHooksValue, StringComparison.OrdinalIgnoreCase);
+
+        var isRequired = fieldArgumentValues.TryGetValue(NameConstants.IsRequired, out var isRequiredValue) &&
+                         "true".Equals(isRequiredValue, StringComparison.OrdinalIgnoreCase);
 
         foreach (var attr in fieldSymbolAttributes)
         {
@@ -201,6 +205,7 @@ internal static class ObservablePropertyInspector
                 AfterChangedCallback = afterChangedCallback,
                 BroadcastOnChange = broadcastOnChange,
                 UseIsDirty = useIsDirty,
+                IsRequired = isRequired,
                 GeneratePartialHooks = generatePartialHooks,
                 CustomAttributes = customAttributes,
                 DocumentationComments = documentationComments,

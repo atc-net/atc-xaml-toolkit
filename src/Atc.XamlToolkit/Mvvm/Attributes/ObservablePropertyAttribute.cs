@@ -105,6 +105,34 @@ public sealed class ObservablePropertyAttribute : Attribute
     public bool UseIsDirty { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the generated property should be emitted with the
+    /// C# 11+ <c>required</c> modifier, forcing callers to set it via an object initializer (or
+    /// via a constructor annotated with <c>[SetsRequiredMembers]</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Useful when a ViewModel has properties that must be supplied at construction time (e.g.,
+    /// dependencies injected via property initialization, or DTO-style ViewModels created from
+    /// records).
+    /// </para>
+    /// <para>
+    /// Example:
+    /// <code language="csharp">
+    /// public partial class CustomerViewModel : ViewModelBase
+    /// {
+    ///     [ObservableProperty(IsRequired = true)]
+    ///     private string firstName = string.Empty;
+    /// }
+    ///
+    /// // Caller:
+    /// var vm = new CustomerViewModel { FirstName = "Ada" }; // OK
+    /// var vm = new CustomerViewModel(); // CS9035 — required member 'FirstName' must be set.
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool IsRequired { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the source generator should emit
     /// <c>partial void On{PropertyName}Changing({Type} value);</c> and
     /// <c>partial void On{PropertyName}Changed({Type} value);</c> declarations and call them from the
@@ -141,5 +169,5 @@ public sealed class ObservablePropertyAttribute : Attribute
 
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
+        => $"{nameof(PropertyName)}: {PropertyName}, {nameof(DependentPropertyNames)}: {DependentPropertyNames}, {nameof(DependentCommandNames)}: {DependentCommandNames}, {nameof(BeforeChangedCallback)}: {BeforeChangedCallback}, {nameof(AfterChangedCallback)}: {AfterChangedCallback}, {nameof(BroadcastOnChange)}: {BroadcastOnChange}, {nameof(UseIsDirty)}: {UseIsDirty}, {nameof(IsRequired)}: {IsRequired}, {nameof(GeneratePartialHooks)}: {GeneratePartialHooks}";
 }
