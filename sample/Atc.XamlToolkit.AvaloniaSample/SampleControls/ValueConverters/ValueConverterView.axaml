@@ -159,7 +159,7 @@
                     <StackPanel Margin="0,5">
                         <TextBlock Text="StringNullOrEmptyToBoolValueConverter" FontWeight="SemiBold" />
                         <TextBlock Text="Returns true if string is null or empty" Margin="0,2,0,5" />
-                        <TextBox x:Name="StringEmptyTextBox" Watermark="Type something..." Width="300" HorizontalAlignment="Left" />
+                        <TextBox x:Name="StringEmptyTextBox" PlaceholderText="Type something..." Width="300" HorizontalAlignment="Left" />
                         <CheckBox
                             Content="String is empty"
                             IsChecked="{Binding #StringEmptyTextBox.Text, Converter={StaticResource StringNullOrEmptyToBoolConverter}}"
@@ -171,7 +171,7 @@
                     <StackPanel Margin="0,10,0,5">
                         <TextBlock Text="StringNullOrEmptyToInverseBoolValueConverter" FontWeight="SemiBold" />
                         <TextBlock Text="Returns true if string is NOT null or empty" Margin="0,2,0,5" />
-                        <TextBox x:Name="StringNotEmptyTextBox" Watermark="Type something..." Width="300" HorizontalAlignment="Left" />
+                        <TextBox x:Name="StringNotEmptyTextBox" PlaceholderText="Type something..." Width="300" HorizontalAlignment="Left" />
                         <CheckBox
                             Content="String has content"
                             IsChecked="{Binding #StringNotEmptyTextBox.Text, Converter={StaticResource StringNullOrEmptyToInverseBoolConverter}}"
@@ -183,7 +183,7 @@
                     <StackPanel Margin="0,10,0,5">
                         <TextBlock Text="StringNullOrEmptyToVisibilityCollapsedValueConverter" FontWeight="SemiBold" />
                         <TextBlock Text="Hides element when string is null or empty" Margin="0,2,0,5" />
-                        <TextBox x:Name="StringCollapsedTextBox" Watermark="Type to hide message..." Width="300" HorizontalAlignment="Left" />
+                        <TextBox x:Name="StringCollapsedTextBox" PlaceholderText="Type to hide message..." Width="300" HorizontalAlignment="Left" />
                         <TextBlock
                             Text="This text disappears when you type above"
                             IsVisible="{Binding #StringCollapsedTextBox.Text, Converter={StaticResource StringNullOrEmptyToVisibilityCollapsedConverter}}"
@@ -194,7 +194,7 @@
                     <StackPanel Margin="0,10,0,5">
                         <TextBlock Text="StringNullOrEmptyToVisibilityVisibleValueConverter" FontWeight="SemiBold" />
                         <TextBlock Text="Shows element when string is null or empty" Margin="0,2,0,5" />
-                        <TextBox x:Name="StringVisibleTextBox" Watermark="Type to show message..." Width="300" HorizontalAlignment="Left" />
+                        <TextBox x:Name="StringVisibleTextBox" PlaceholderText="Type to show message..." Width="300" HorizontalAlignment="Left" />
                         <TextBlock
                             Text="This text appears when you type above"
                             IsVisible="{Binding #StringVisibleTextBox.Text, Converter={StaticResource StringNullOrEmptyToVisibilityVisibleConverter}}"
@@ -205,7 +205,7 @@
                     <StackPanel Margin="0,10,0,5">
                         <TextBlock Text="StringToNullableIntValueConverter" FontWeight="SemiBold" />
                         <TextBlock Text="Converts string to nullable int (for two-way binding)" Margin="0,2,0,5" />
-                        <TextBox x:Name="StringToIntTextBox" Watermark="Enter a number..." Width="300" HorizontalAlignment="Left" />
+                        <TextBox x:Name="StringToIntTextBox" PlaceholderText="Enter a number..." Width="300" HorizontalAlignment="Left" />
                         <Slider
                             Minimum="0"
                             Maximum="100"

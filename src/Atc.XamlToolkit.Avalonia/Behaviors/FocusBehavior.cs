@@ -149,7 +149,7 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 
     private void OnGotFocus(
         object? sender,
-        GotFocusEventArgs e)
+        FocusChangedEventArgs e)
     {
         isUpdatingFocus = true;
         IsFocused = true;

@@ -50,7 +50,7 @@ public partial class WatermarkBehavior : AvaloniaObject
 
     private static void OnTextBoxGotFocus(
         object? sender,
-        global::Avalonia.Input.GotFocusEventArgs e)
+        global::Avalonia.Input.FocusChangedEventArgs e)
     {
         if (sender is not TextBox textBox || !string.IsNullOrEmpty(textBox.Tag as string))
         {
