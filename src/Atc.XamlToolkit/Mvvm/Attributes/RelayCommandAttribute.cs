@@ -83,7 +83,24 @@ public sealed class RelayCommandAttribute : Attribute
     /// </summary>
     public bool SupportsCancellation { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the source generator should emit a default
+    /// <c>/// &lt;summary&gt;Gets the {CommandName}.&lt;/summary&gt;</c> comment block above
+    /// the generated command property (and matching summaries for the cancel command property
+    /// and <c>Cancel{Name}()</c> method when <see cref="SupportsCancellation"/> is enabled).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Off by default to preserve byte-identical generated output for existing consumers.
+    /// To turn it on globally for an entire project, apply
+    /// <c>[assembly: GenerateDocumentationDefault]</c> — that flips the per-attribute default
+    /// for both <c>[ObservableProperty]</c> and <c>[RelayCommand]</c>. Per-attribute
+    /// <c>GenerateDocumentation = false</c> always wins as an explicit opt-out.
+    /// </para>
+    /// </remarks>
+    public bool GenerateDocumentation { get; set; }
+
     /// <inheritdoc />
     public override string ToString()
-        => $"{nameof(CommandName)}: {CommandName}, {nameof(CanExecute)}: {CanExecute}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(ParameterValue)}: {ParameterValue}, {nameof(ParameterValues)}: {ParameterValues}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}, {nameof(SupportsCancellation)}: {SupportsCancellation}";
+        => $"{nameof(CommandName)}: {CommandName}, {nameof(CanExecute)}: {CanExecute}, {nameof(InvertCanExecute)}: {InvertCanExecute}, {nameof(ParameterValue)}: {ParameterValue}, {nameof(ParameterValues)}: {ParameterValues}, {nameof(ExecuteOnBackgroundThread)}: {ExecuteOnBackgroundThread}, {nameof(AutoSetIsBusy)}: {AutoSetIsBusy}, {nameof(SupportsCancellation)}: {SupportsCancellation}, {nameof(GenerateDocumentation)}: {GenerateDocumentation}";
 }

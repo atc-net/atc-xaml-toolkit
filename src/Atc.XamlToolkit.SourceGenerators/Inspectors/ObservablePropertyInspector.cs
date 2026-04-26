@@ -10,6 +10,11 @@ internal static class ObservablePropertyInspector
     {
         var result = new List<ObservablePropertyToGenerate>();
 
+        // Project-level default for the GenerateDocumentation flag, opted in via
+        // [assembly: GenerateDocumentationDefault]. When present, fields that
+        // don't set the flag explicitly still emit the default summary.
+        var generateDocumentationDefault = HasGenerateDocumentationDefaultAttribute(classSymbol);
+
         foreach (var memberSymbol in memberSymbols)
         {
             if (memberSymbol is not IFieldSymbol fieldSymbol)
@@ -44,10 +49,33 @@ internal static class ObservablePropertyInspector
                 fieldSymbolAttributes,
                 fieldPropertyAttribute,
                 inheritFromViewModel,
+                generateDocumentationDefault,
                 result);
         }
 
         return result;
+    }
+
+    private static bool HasGenerateDocumentationDefaultAttribute(
+        INamedTypeSymbol classSymbol)
+    {
+        var assemblySymbol = classSymbol.ContainingAssembly;
+        if (assemblySymbol is null)
+        {
+            return false;
+        }
+
+        foreach (var attribute in assemblySymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.GenerateDocumentationDefault
+                or NameConstants.GenerateDocumentationDefaultAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
@@ -56,6 +84,7 @@ internal static class ObservablePropertyInspector
         ImmutableArray<AttributeData> fieldSymbolAttributes,
         AttributeData fieldPropertyAttribute,
         bool inheritFromViewModel,
+        bool generateDocumentationDefault,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
         var backingFieldName = fieldSymbol.Name;
@@ -135,8 +164,19 @@ internal static class ObservablePropertyInspector
         var generatePartialHooks = fieldArgumentValues.TryGetValue(NameConstants.GeneratePartialHooks, out var generatePartialHooksValue) &&
                                    "true".Equals(generatePartialHooksValue, StringComparison.OrdinalIgnoreCase);
 
-        var generateDocumentation = fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
-                                    "true".Equals(generateDocumentationValue, StringComparison.OrdinalIgnoreCase);
+        // Resolve GenerateDocumentation with three-state semantics:
+        //   - explicit per-property `= true`  → on
+        //   - explicit per-property `= false` → off (overrides assembly default)
+        //   - not specified                   → fall back to assembly-level default
+        bool generateDocumentation;
+        if (fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue))
+        {
+            generateDocumentation = "true".Equals(generateDocumentationValue, StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            generateDocumentation = generateDocumentationDefault;
+        }
 
         var isRequired = fieldArgumentValues.TryGetValue(NameConstants.IsRequired, out var isRequiredValue) &&
                          "true".Equals(isRequiredValue, StringComparison.OrdinalIgnoreCase);

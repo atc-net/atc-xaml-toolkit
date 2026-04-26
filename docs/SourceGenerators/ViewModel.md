@@ -494,7 +494,16 @@ public string FirstName
 - Off by default to preserve byte-identical generated output for existing consumers — turning it on globally would break the toolkit's own snapshot tests, so the per-attribute opt-in is the supported escape hatch today.
 - When the field has its own XML doc comments, those win — `GenerateDocumentation` is a *fallback*, not a replacement.
 - The default summary uses the **property** name (`PropertyName` argument or PascalCase-of-field), not the backing field name.
-- A project-level default (e.g., MSBuild property) is the natural follow-up; see the open roadmap line for tracking.
+
+**Project-level default.** To flip the default for an entire assembly, add `[assembly: GenerateDocumentationDefault]` (anywhere in the project — `AssemblyInfo.cs` is conventional but not required):
+
+```csharp
+using Atc.XamlToolkit.Mvvm;
+
+[assembly: GenerateDocumentationDefault]
+```
+
+After this, every plain `[ObservableProperty]` in the assembly emits the default summary without writing the flag on every field. Per-field `[ObservableProperty(GenerateDocumentation = false)]` still wins as an explicit opt-out for individual properties.
 
 ### 🔄 Change Tracking with `UseIsDirty`
 
@@ -634,6 +643,7 @@ The `RelayCommand` attribute generates `IRelayCommand` properties, eliminating m
 - `CommandName` for customization.
 - `CanExecute` a property or method that return `bool` to specified to control when the command is executable.
 - `ParameterValue` or `ParameterValues` for 1 or many parameter values.
+- `GenerateDocumentation` emits a default `/// <summary>Gets the {CommandName}.</summary>` block above the generated command property (and matching summaries on the cancel command property and `Cancel{Name}()` method when `SupportsCancellation = true`). Off by default. Honors the same `[assembly: GenerateDocumentationDefault]` opt-in as `[ObservableProperty]` — set the assembly attribute and every plain `[RelayCommand]` gets its docs without per-attribute flags. Per-attribute `GenerateDocumentation = false` always wins as an explicit opt-out.
 
 ### 🛠 Quick Start Tips for RelayCommands
 

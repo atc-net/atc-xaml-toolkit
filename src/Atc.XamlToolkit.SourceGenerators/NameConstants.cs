@@ -35,6 +35,8 @@ internal static class NameConstants
     public const string Flags = nameof(Flags);
     public const string FrameworkElement = nameof(FrameworkElement);
     public const string GenerateDocumentation = nameof(GenerateDocumentation);
+    public const string GenerateDocumentationDefault = nameof(GenerateDocumentationDefault);
+    public const string GenerateDocumentationDefaultAttribute = nameof(GenerateDocumentationDefaultAttribute);
     public const string GeneratePartialHooks = nameof(GeneratePartialHooks);
     public const string Handler = nameof(Handler);
     public const string HandlerType = nameof(HandlerType);
