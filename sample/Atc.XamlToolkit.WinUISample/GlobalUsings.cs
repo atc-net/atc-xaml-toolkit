@@ -8,6 +8,7 @@ global using System.Text;
 
 global using Atc.XamlToolkit.Command;
 global using Atc.XamlToolkit.Controls.Attributes;
+global using Atc.XamlToolkit.Messaging;
 global using Atc.XamlToolkit.Mvvm;
 global using Atc.XamlToolkit.WinUISample.Models;
 

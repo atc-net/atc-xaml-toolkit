@@ -1,0 +1,175 @@
+<UserControl
+    x:Class="Atc.XamlToolkit.WinUISample.SampleControls.Messaging.MessengerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    mc:Ignorable="d">
+
+    <Grid Margin="10" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="Messenger demo" />
+            <TextBlock
+                Opacity="0.7"
+                Text="One sender. Two receivers (delegate-based + IRecipient&lt;T&gt;). Sending hits both because they share Messenger.Default."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!--  Sender  -->
+        <Border
+            Grid.Row="1"
+            Padding="10"
+            BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1"
+            CornerRadius="3">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Sender" />
+                <TextBox Grid.Column="1" Text="{x:Bind ViewModel.Sender.SenderName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Column="2" Text="{x:Bind ViewModel.Sender.DraftText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button
+                    Grid.Column="3"
+                    Padding="10,5"
+                    Command="{x:Bind ViewModel.Sender.SendCommand}"
+                    Content="Send" />
+
+                <TextBlock
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    Opacity="0.7">
+                    <Run Text="Sent: " />
+                    <Run FontWeight="Bold" Text="{x:Bind ViewModel.Sender.MessagesSent, Mode=OneWay}" />
+                </TextBlock>
+            </Grid>
+        </Border>
+
+        <!--  Two receivers side-by-side  -->
+        <Grid Grid.Row="2" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Delegate receiver  -->
+            <Border
+                Grid.Column="0"
+                Padding="10"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="3">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        Grid.Row="0"
+                        FontWeight="SemiBold"
+                        Text="Delegate receiver" />
+                    <TextBlock
+                        Grid.Row="1"
+                        FontFamily="Consolas"
+                        Opacity="0.7"
+                        Text="Messenger.Default.Register&lt;ChatMessage&gt;(this, OnChatMessage)"
+                        TextWrapping="Wrap" />
+
+                    <ListView Grid.Row="2" ItemsSource="{x:Bind ViewModel.DelegateReceiver.Log, Mode=OneWay}" />
+
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Opacity="0.7">
+                            <Run Text="Received: " />
+                            <Run FontWeight="Bold" Text="{x:Bind ViewModel.DelegateReceiver.MessagesReceived, Mode=OneWay}" />
+                        </TextBlock>
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,4"
+                            Command="{x:Bind ViewModel.DelegateReceiver.ClearCommand}"
+                            Content="Clear" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!--  Typed (IRecipient<T>) receiver  -->
+            <Border
+                Grid.Column="1"
+                Padding="10"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="3">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        Grid.Row="0"
+                        FontWeight="SemiBold"
+                        Text="Typed receiver (IRecipient&lt;T&gt;)" />
+                    <TextBlock
+                        Grid.Row="1"
+                        FontFamily="Consolas"
+                        Opacity="0.7"
+                        Text="class : IRecipient&lt;ChatMessage&gt; { void Receive(...) {...} }"
+                        TextWrapping="Wrap" />
+
+                    <ListView Grid.Row="2" ItemsSource="{x:Bind ViewModel.TypedReceiver.Log, Mode=OneWay}" />
+
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Opacity="0.7">
+                            <Run Text="Received: " />
+                            <Run FontWeight="Bold" Text="{x:Bind ViewModel.TypedReceiver.MessagesReceived, Mode=OneWay}" />
+                        </TextBlock>
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,4"
+                            Command="{x:Bind ViewModel.TypedReceiver.ClearCommand}"
+                            Content="Clear" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
