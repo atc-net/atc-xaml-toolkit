@@ -267,6 +267,99 @@ public sealed partial class ViewModelGeneratorTests : GeneratorTestBase
     }
 
     [Fact]
+    public void NotifyCanExecuteChangedFor_ReferencingNonExistentCommand_EmitsDiagnostic()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                [NotifyCanExecuteChangedFor("DoesNotExistCommand")]
+                private string firstName;
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.Contains(diagnostics, d => d.Id == "AtcXamlToolkit0006");
+    }
+
+    [Fact]
+    public void NotifyCanExecuteChangedFor_ReferencingGeneratedRelayCommand_DoesNotEmitDiagnostic()
+    {
+        // The Save method with [RelayCommand] generates a SaveCommand property.
+        // The diagnostic must recognise the synthesised name.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+                private string firstName;
+
+                [RelayCommand]
+                private void Save() { }
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0006");
+    }
+
+    [Fact]
+    public void NotifyCanExecuteChangedFor_ReferencingExplicitlyNamedRelayCommand_DoesNotEmitDiagnostic()
+    {
+        // [RelayCommand("Persist")] with method `Save` produces PersistCommand.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                [NotifyCanExecuteChangedFor("PersistCommand")]
+                private string firstName;
+
+                [RelayCommand("Persist")]
+                private void Save() { }
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0006");
+    }
+
+    [Fact]
+    public void NotifyCanExecuteChangedFor_ReferencingDeclaredCommandProperty_DoesNotEmitDiagnostic()
+    {
+        // Hand-written command property — not from [RelayCommand].
+        const string inputCode =
+            """
+            namespace TestNamespace;
+            using Atc.XamlToolkit.Command;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+                private string firstName;
+
+                public IRelayCommand SaveCommand { get; } = new RelayCommand(() => { });
+            }
+            """;
+
+        var (_, diagnostics) = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "AtcXamlToolkit0006");
+    }
+
+    [Fact]
     public void ObservableProperty_OnValidPrivateCamelCaseField_DoesNotEmitFieldDiagnostics()
     {
         const string inputCode =
