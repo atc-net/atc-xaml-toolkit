@@ -66,7 +66,33 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
                 }
             });
 
-        // Pipeline 3: classes annotated with [INotifyPropertyChanged] — emit the
+        // Pipeline 3: [ObservableProperty] field-level validation — surface
+        // diagnostics for fields the generator currently skips silently
+        // (non-private, PascalCase). Catches a class of footguns where the
+        // user expects a property but the generator emits nothing.
+        var invalidObservablePropertyFields = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) => IsObservablePropertyFieldTarget(syntaxNode),
+                transform: static (context, _) => GetObservablePropertyFieldDiagnostics(context))
+            .Where(static diagnostics => diagnostics is { Count: > 0 })
+            .WithTrackingName("ViewModelGenerator.ObservablePropertyFieldDiagnostics");
+
+        context.RegisterSourceOutput(
+            invalidObservablePropertyFields,
+            static (spc, diagnostics) =>
+            {
+                if (diagnostics is null)
+                {
+                    return;
+                }
+
+                foreach (var diagnostic in diagnostics)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+
+        // Pipeline 4: classes annotated with [INotifyPropertyChanged] — emit the
         // INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set<T>)
         // so the class can act as its own INPC source without inheriting from
         // ObservableObject. Compatible with [ObservableProperty] on the same class.
@@ -388,6 +414,83 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         context.AddSource(
             viewModelToGenerate.GeneratedFileName,
             sourceText);
+    }
+
+    private static bool IsObservablePropertyFieldTarget(SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not FieldDeclarationSyntax fieldDeclaration)
+        {
+            return false;
+        }
+
+        if (fieldDeclaration.AttributeLists.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var attributeList in fieldDeclaration.AttributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                var attributeName = attribute.Name switch
+                {
+                    GenericNameSyntax genericName => genericName.Identifier.Text,
+                    _ => attribute.Name.ToString(),
+                };
+
+                if (attributeName is
+                    NameConstants.ObservableProperty or
+                    NameConstants.ObservablePropertyAttribute)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static List<Diagnostic>? GetObservablePropertyFieldDiagnostics(
+        GeneratorSyntaxContext context)
+    {
+        var fieldDeclaration = (FieldDeclarationSyntax)context.Node;
+        List<Diagnostic>? diagnostics = null;
+
+        // The accessibility check is on the declaration's modifiers; default
+        // to private when no modifier is present.
+        var hasPrivateModifier = fieldDeclaration.Modifiers
+            .Any(m => m.IsKind(SyntaxKind.PrivateKeyword));
+        var hasNonPrivateModifier = fieldDeclaration.Modifiers
+            .Any(m => m.IsKind(SyntaxKind.PublicKeyword)
+                || m.IsKind(SyntaxKind.InternalKeyword)
+                || m.IsKind(SyntaxKind.ProtectedKeyword));
+
+        foreach (var variable in fieldDeclaration.Declaration.Variables)
+        {
+            var fieldName = variable.Identifier.Text;
+            if (string.IsNullOrEmpty(fieldName))
+            {
+                continue;
+            }
+
+            if (!hasPrivateModifier && hasNonPrivateModifier)
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateObservablePropertyFieldNotPrivate(
+                    fieldName,
+                    variable.Identifier.GetLocation()));
+            }
+
+            if (char.IsUpper(fieldName[0]))
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateObservablePropertyFieldNameNotCamelCase(
+                    fieldName,
+                    variable.Identifier.GetLocation()));
+            }
+        }
+
+        return diagnostics;
     }
 
     private static bool ClassHasINotifyPropertyChangedAttribute(
