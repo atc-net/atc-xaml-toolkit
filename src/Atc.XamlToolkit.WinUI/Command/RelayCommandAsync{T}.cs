@@ -7,6 +7,13 @@ namespace Atc.XamlToolkit.Command;
 /// This class allows you to accept command parameters in the Execute and CanExecute callback methods.
 /// </summary>
 /// <typeparam name="T">The type of the command parameter.</typeparam>
+/// <remarks>
+/// See <see cref="RelayCommandAsync"/> for the WinUI-specific threading notes — they apply to this
+/// generic variant identically. In short: construct on the UI thread, and <c>PropertyChanged</c>
+/// for <c>IsExecuting</c> is auto-marshalled via the captured <see cref="DispatcherQueue"/> so that
+/// <c>x:Bind</c> against <c>IsExecuting</c> works from background-thread completions without
+/// <c>RPC_E_WRONG_THREAD</c>.
+/// </remarks>
 public class RelayCommandAsync<T> : RelayCommandAsyncBase<T>
 {
     private readonly DispatcherQueue? dispatcherQueue;
