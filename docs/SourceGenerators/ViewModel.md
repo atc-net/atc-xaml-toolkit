@@ -60,7 +60,9 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `DependentCommandNames` for 1 to many other commands to be notified.
 - `BeforeChangedCallback` is executed before the property value changes.
 - `AfterChangedCallback` is executed after the property value changes.
+- `BroadcastOnChange` broadcasts a `PropertyChangedMessage<T>` via the messenger when the property changes.
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
+- `GeneratePartialHooks` emits `partial void On{PropertyName}Changing/Changed({Type} value)` declarations and calls — a compile-time-safe alternative to the string-named callbacks (see [Partial-method hooks](#-partial-method-hooks)).
 
 ### 🛠 Quick Start: Using `ObservableProperty`
 
@@ -319,6 +321,54 @@ The source generator automatically detects dependencies in:
     BeforeChangedCallback = "DoStuffA();",
     AfterChangedCallback = "EntrySelected?.Invoke(this, selectedEntry); DoStuffB();")]
 ```
+
+### 🪝 Partial-method hooks
+
+`GeneratePartialHooks = true` emits compile-time-safe partial-method declarations for change notifications instead of the string-named `BeforeChangedCallback` / `AfterChangedCallback`. The generator emits **declarations** of `partial void On{PropertyName}Changing({Type} value)` and `partial void On{PropertyName}Changed({Type} value)` plus unconditional calls to them in the setter. Implementing the partial methods is optional — when no implementation exists, the C# compiler **elides the call entirely**, so the feature has zero runtime cost when unused.
+
+**Why use this over `BeforeChangedCallback` / `AfterChangedCallback`?**
+
+| Aspect | String-named callbacks | Partial-method hooks |
+|---|---|---|
+| Type-safety on parameters | ❌ — callbacks take no args | ✅ — receives the new `value` |
+| Refactor-safe rename | ❌ — string lookup | ✅ — IDE rename works |
+| Catches typos at compile time | ❌ | ✅ |
+| Unused calls are free | n/a | ✅ — compiler elides |
+| Inline expressions (e.g., `"DoStuff();"`) | ✅ | ❌ — must declare a method |
+
+**Example:**
+
+```csharp
+public partial class CustomerViewModel : ViewModelBase
+{
+    [ObservableProperty(GeneratePartialHooks = true)]
+    private string firstName = string.Empty;
+
+    // Optional — implement only the hooks you need.
+    partial void OnFirstNameChanging(string value)
+    {
+        // Fires before the field assignment; you can still observe the
+        // current backing field value here for old/new comparisons.
+    }
+
+    partial void OnFirstNameChanged(string value)
+    {
+        System.Diagnostics.Debug.WriteLine($"FirstName -> {value}");
+    }
+}
+```
+
+**Composing with the string-named callbacks** (both can be used together):
+
+```csharp
+[ObservableProperty(
+    GeneratePartialHooks = true,
+    BeforeChangedCallback = nameof(LogIncoming),
+    AfterChangedCallback = nameof(LogOutgoing))]
+private string name;
+```
+
+The setter fires partial-method calls **first**, then the string-named callbacks — so partial hooks always see the change before any string-named callback runs.
 
 ### 📝 XML Documentation Comments Support
 
