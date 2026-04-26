@@ -48,6 +48,85 @@ public abstract class GeneratorTestBase
         return (generatorResult, diagnostics);
     }
 
+    /// <summary>
+    /// Runs the generator twice on equivalent compilations with
+    /// <c>trackIncrementalGeneratorSteps</c> enabled. The second run's tracked
+    /// step results expose the cache verdict for each named pipeline stage —
+    /// <see cref="IncrementalStepRunReason.Cached"/> means the generator did
+    /// not re-emit code on the second run, which is the goal when models
+    /// implement value equality.
+    /// </summary>
+    /// <typeparam name="T">The generator type.</typeparam>
+    /// <param name="inputCodes">Source files to compile for both runs.</param>
+    /// <returns>The second run's <see cref="GeneratorRunResult"/>, exposing TrackedSteps.</returns>
+    internal static GeneratorRunResult RunGeneratorIncremental<T>(
+        params string[] inputCodes)
+        where T : IIncrementalGenerator, new()
+    {
+        var firstCompilation = CreateCompilation(inputCodes);
+
+        // A fresh compilation with the same source content but different
+        // syntax-tree identity simulates an unrelated file edit elsewhere in
+        // the user's project — what we want is for the model-producing
+        // pipeline stages to report Cached because their input values are
+        // value-equal even though their inputs are reference-distinct.
+        var secondCompilation = CreateCompilation(inputCodes);
+
+        T generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: [generator.AsSourceGenerator()],
+            additionalTexts: null,
+            parseOptions: null,
+            optionsProvider: null,
+            driverOptions: new GeneratorDriverOptions(
+                disabledOutputs: IncrementalGeneratorOutputKind.None,
+                trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(firstCompilation);
+        driver = driver.RunGenerators(secondCompilation);
+
+        return driver.GetRunResult().Results[0];
+    }
+
+    /// <summary>
+    /// Asserts that every output entry of the given tracked step on the second
+    /// run reports <see cref="IncrementalStepRunReason.Cached"/> or
+    /// <see cref="IncrementalStepRunReason.Unchanged"/> — i.e. the model is
+    /// value-equal across runs and the pipeline does not re-emit downstream.
+    /// </summary>
+    /// <param name="runResult">The second run's result from <see cref="RunGeneratorIncremental{T}"/>.</param>
+    /// <param name="trackingName">The pipeline-stage tracking name to assert on.</param>
+    internal static void AssertTrackedStepIsCached(
+        GeneratorRunResult runResult,
+        string trackingName)
+    {
+        if (!runResult.TrackedSteps.TryGetValue(trackingName, out var steps))
+        {
+            Assert.Fail(
+                $"Tracked step '{trackingName}' was not present in the run result. "
+                + $"Available: {string.Join(", ", runResult.TrackedSteps.Keys)}");
+            return;
+        }
+
+        foreach (var step in steps)
+        {
+            foreach (var output in step.Outputs)
+            {
+                if (output.Reason is IncrementalStepRunReason.Cached
+                    or IncrementalStepRunReason.Unchanged)
+                {
+                    continue;
+                }
+
+                Assert.Fail(
+                    $"Tracked step '{trackingName}' was re-evaluated on the second run "
+                    + $"(reason: {output.Reason}). Expected Cached or Unchanged. "
+                    + "This usually means a model in the pipeline lacks value-based equality.");
+            }
+        }
+    }
+
     internal static void AssertGeneratorRunResultAsEqual(
         string expectedCode,
         (GeneratorRunResult GeneratorResult, ImmutableArray<Diagnostic> Diagnostics) generatorResult)

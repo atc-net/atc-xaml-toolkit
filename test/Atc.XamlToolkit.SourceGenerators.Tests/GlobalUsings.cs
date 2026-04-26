@@ -2,6 +2,7 @@ global using System.Collections.Immutable;
 global using System.Diagnostics.CodeAnalysis;
 
 global using Atc.XamlToolkit.SourceGenerators.Builders;
+global using Atc.XamlToolkit.SourceGenerators.Collections;
 global using Atc.XamlToolkit.SourceGenerators.Extensions;
 global using Atc.XamlToolkit.SourceGenerators.Generators;
 global using Atc.XamlToolkit.SourceGenerators.Inspectors;
