@@ -71,6 +71,88 @@ public sealed class MessengerTests
         third.Should().NotBeSameAs(first);
     }
 
+    [Fact]
+    public void Send_DoesNotDoubleFire_WhenMultipleSubclassListenerTypesRegistered()
+    {
+        // Regression: SendToTargetOrType used to call SendToList unconditionally
+        // inside the foreach over subclass-listener types, reusing the previous
+        // iteration's list when the current iteration's type did not match.
+        // That caused the matching handler to fire once per registered type.
+        var messenger = new Messenger();
+        var derivedReceiver = new object();
+        var unrelatedReceiver = new object();
+
+        var derivedHits = 0;
+        messenger.Register<DerivedMessage>(
+            derivedReceiver,
+            receiveDerivedMessagesToo: true,
+            _ => derivedHits++);
+
+        // A second subclass-listener type forces the bug path: the loop sees
+        // two keys, only one matches, and the unconditional dispatch used to
+        // re-send the matched list a second time.
+        messenger.Register<UnrelatedMessage>(
+            unrelatedReceiver,
+            receiveDerivedMessagesToo: true,
+            _ => { });
+
+        messenger.Send(new DerivedMessage());
+
+        derivedHits
+            .Should()
+            .Be(1, "subclass-listener handlers must fire exactly once per Send");
+    }
+
+    [Fact]
+    public void Send_DispatchesToBothSubclassAndStrictListeners()
+    {
+        var messenger = new Messenger();
+        var subclassReceiver = new object();
+        var strictReceiver = new object();
+
+        var subclassHits = 0;
+        var strictHits = 0;
+
+        messenger.Register<DerivedMessage>(
+            subclassReceiver,
+            receiveDerivedMessagesToo: true,
+            _ => subclassHits++);
+
+        messenger.Register<DerivedMessage>(
+            strictReceiver,
+            _ => strictHits++);
+
+        messenger.Send(new DerivedMessage());
+
+        subclassHits.Should().Be(1);
+        strictHits.Should().Be(1);
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void Cleanup_RemovesDeadRecipients_AndDropsEmptyTypeKeys()
+    {
+        var messenger = new Messenger();
+
+        RegisterAndAbandonRecipient<int>(messenger);
+        ForceFullGarbageCollection();
+
+        var typeMap = (System.Collections.IDictionary)GetPrivateField(messenger, "recipientsStrictAction")!;
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeTrue("the type bucket exists until Cleanup runs");
+
+        messenger.Cleanup();
+
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeFalse("Cleanup must drop type keys whose recipient list is empty");
+    }
+
+    private sealed class DerivedMessage;
+
+    private sealed class UnrelatedMessage;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void RegisterAndAbandonRecipient<TMessage>(
         Messenger messenger)
