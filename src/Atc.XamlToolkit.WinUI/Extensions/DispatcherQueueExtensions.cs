@@ -13,6 +13,13 @@ public static class DispatcherQueueExtensions
     /// <param name="action">The action to be executed.</param>
     /// <param name="priority">The priority at which the action is invoked, if required. The default is <see cref="DispatcherQueuePriority.Normal"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="dispatcherQueue"/> or <paramref name="action"/> is null.</exception>
+    /// <remarks>
+    /// <b>Semantic difference vs WPF/Avalonia:</b> WinUI 3's <see cref="DispatcherQueue"/> has no synchronous-wait
+    /// primitive, so when called from a background thread this method is <i>fire-and-forget</i> — it returns
+    /// immediately after calling <see cref="DispatcherQueue.TryEnqueue(DispatcherQueuePriority, DispatcherQueueHandler)"/>
+    /// without waiting for the action to run. WPF's and Avalonia's <c>InvokeIfRequired</c> block until the action
+    /// completes. If you need WinUI to wait, use <see cref="InvokeAsyncIfRequired"/> and <c>await</c> the result.
+    /// </remarks>
     public static void InvokeIfRequired(
         this DispatcherQueue dispatcherQueue,
         Action action,
