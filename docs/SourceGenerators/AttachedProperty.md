@@ -148,7 +148,7 @@ public static partial class DragBehavior
 
 - The source generator then creates the necessary registration code and accessor methods.
 
-### ⚙️ Auto-Generated Code - for simple example
+### ⚙️ Auto-Generated Code - for simple example (WPF / WinUI)
 
 The source generator will produce code equivalent to:
 
@@ -168,6 +168,42 @@ public static partial class DragBehavior
         => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
 }
 ```
+
+### ⚙️ Auto-Generated Code - for simple example (Avalonia)
+
+Avalonia uses a different registration API. The owner must inherit from `AvaloniaObject` and **cannot be static**, so the source declaration changes shape:
+
+```csharp
+[AttachedProperty<bool>("IsDraggable")]
+public partial class DragBehavior : AvaloniaObject
+{
+}
+```
+
+The generator emits:
+
+```csharp
+public partial class DragBehavior : AvaloniaObject
+{
+    public static readonly Avalonia.AvaloniaProperty IsDraggableProperty =
+        Avalonia.AvaloniaProperty.RegisterAttached<DragBehavior, AvaloniaObject, bool>(
+            "IsDraggable",
+            defaultValue: false);
+
+    public static bool GetIsDraggable(AvaloniaObject element)
+        => (bool)element.GetValue(IsDraggableProperty)!;
+
+    public static void SetIsDraggable(AvaloniaObject element, bool value)
+        => element?.SetValue(IsDraggableProperty, value);
+}
+```
+
+**Key differences from the WPF/WinUI shape:**
+
+- `RegisterAttached<TOwner, THost, TValue>` uses **generic type parameters** instead of `typeof(...)` arguments. The middle type parameter (`AvaloniaObject`) is the host element type — what the property can be applied to.
+- **No `BooleanBoxes`** — Avalonia stores plain `bool` values; the `Get`/`Set` methods pass them through unboxed.
+- **Get/Set methods take `AvaloniaObject`**, not `DependencyObject`.
+- The `Get` accessor uses the **null-forgiving operator** (`element.GetValue(...)!`) for non-nullable value types because `AvaloniaObject.GetValue` returns `object?`.
 
 ### 📝 Human-Written Code - for complex example
 
@@ -257,7 +293,7 @@ public partial class DragBehavior
     - `true`: The value is accepted and applied to the property.
     - `false`: The value is considered invalid, and an exception is thrown.
 
-### ⚙️ Auto-Generated Code - for complex example
+### ⚙️ Auto-Generated Code - for complex example (WPF)
 
 The source generator will produce equivalent code:
 
@@ -284,3 +320,52 @@ public partial class DragBehavior
     }
 }
 ```
+
+### ⚙️ Auto-Generated Code - for complex example (Avalonia)
+
+Avalonia's registration surface is **smaller** by design — there are no flags, no `ValidateValueCallback`, no `CoerceValueCallback`, no `DefaultUpdateSourceTrigger`, no `IsAnimationProhibited`. Specifying any of those on `[AttachedProperty]` for an Avalonia target is a no-op (the generator silently drops them). The two surviving knobs are `DefaultValue` and `PropertyChangedCallback`.
+
+`PropertyChangedCallback` is wired up differently: instead of being passed into the registration call, it's bound through `Property.Changed.AddClassHandler<TOwner>(...)` in a generated **static constructor**:
+
+```csharp
+[AttachedProperty<bool>(
+    "IsDraggable",
+    DefaultValue = false,
+    PropertyChangedCallback = nameof(PropertyChangedCallback))]
+public partial class DragBehavior : AvaloniaObject
+{
+    private static void PropertyChangedCallback(
+        AvaloniaObject d,
+        AvaloniaPropertyChangedEventArgs e)
+    {
+        // …
+    }
+}
+```
+
+…produces:
+
+```csharp
+public partial class DragBehavior : AvaloniaObject
+{
+    static DragBehavior()
+    {
+        IsDraggableProperty.Changed.AddClassHandler<DragBehavior>(PropertyChangedCallback);
+    }
+
+    public static readonly Avalonia.AvaloniaProperty IsDraggableProperty =
+        Avalonia.AvaloniaProperty.RegisterAttached<DragBehavior, AvaloniaObject, bool>(
+            "IsDraggable",
+            defaultValue: false);
+
+    public static bool GetIsDraggable(AvaloniaObject element)
+        => (bool)element.GetValue(IsDraggableProperty)!;
+
+    public static void SetIsDraggable(AvaloniaObject element, bool value)
+        => element?.SetValue(IsDraggableProperty, value);
+}
+```
+
+**Why a static constructor?** Avalonia separates the property *definition* from per-class *change subscriptions*. The `Changed.AddClassHandler<T>(...)` call wires the callback once when the type loads — typed to the owning class so the callback receives a strongly-typed first argument. This is the canonical Avalonia pattern; the generator mirrors it directly.
+
+**The handler signature** also differs from WPF: `(AvaloniaObject, AvaloniaPropertyChangedEventArgs)` instead of `(DependencyObject, DependencyPropertyChangedEventArgs)`. Inside, you typically pattern-match on the first argument to the host type (e.g., `if (d is Control element) { ... }`) — see `sample/Atc.XamlToolkit.AvaloniaSample/SampleControls/FrameworkElements/AttachedPropertyComponents/HighlightBehavior.cs` for a runnable example.
