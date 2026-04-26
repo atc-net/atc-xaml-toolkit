@@ -3,6 +3,7 @@
 `Atc.XamlToolkit` ships four ICommand implementations — sync and async, with and without a typed parameter — plus the `[RelayCommand]` source generator that wraps them in zero-boilerplate properties on your `ViewModelBase`-derived view model. This page is the entry point. For deep-dives, jump to:
 
 - [Async cancellation, `AutoSetIsBusy`, error handlers, and `IsExecuting` bindings](AsyncCommandCancellation.md)
+- [Error handling for async commands — `IErrorHandler`](ErrorHandling.md)
 - [Source-generated `[RelayCommand]` recipe](../SourceGenerators/ViewModel.md)
 
 ## Pick the right command
@@ -104,6 +105,8 @@ public MyViewModel()
 ```
 
 For async commands, exceptions thrown by the `execute` delegate **and** parameter-conversion failures are routed to `HandleError`. For sync commands, only parameter-conversion failures are caught (your `execute` delegate's exceptions propagate to the binding system as before; wrap in your own try/catch if you need to swallow them).
+
+See **[ErrorHandling.md](ErrorHandling.md)** for the full contract: when handlers fire (and when they don't — `OperationCanceledException` is silently swallowed), implementation patterns (logger / toast / view-model-wide), and the anti-patterns that turn a useful diagnostic hook into a process-killer.
 
 ## Cross-references
 
