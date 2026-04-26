@@ -60,7 +60,7 @@ public sealed class ObservableDtoViewModelAttribute : Attribute
     /// When <see langword="true"/>, the generated ViewModel constructor calls
     /// <c>InitializeValidation(validateAllPropertiesOnInit: true)</c> on <see cref="ViewModelBase"/>,
     /// which validates every wrapped property exactly once at construction time so that
-    /// <see cref="ViewModelBase.HasErrors"/> reflects the DTO's initial state immediately.
+    /// <see cref="ObservableValidator.HasErrors"/> reflects the DTO's initial state immediately.
     /// </summary>
     /// <remarks>
     /// Independent of <see cref="EnableValidationOnPropertyChanged"/> — set both to validate at
