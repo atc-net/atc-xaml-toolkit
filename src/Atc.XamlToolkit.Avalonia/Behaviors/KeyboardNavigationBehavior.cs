@@ -166,7 +166,7 @@ public class KeyboardNavigationBehavior : Avalonia.Xaml.Interactivity.Behavior<C
 
     private void OnGotFocus(
         object? sender,
-        GotFocusEventArgs e)
+        FocusChangedEventArgs e)
     {
         // Ensure keyboard focus is set when the element gets focus
         AssociatedObject?.Focus();
