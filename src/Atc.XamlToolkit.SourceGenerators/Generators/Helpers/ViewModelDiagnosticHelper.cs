@@ -212,11 +212,7 @@ internal static class ViewModelDiagnosticHelper
         {
             foreach (var attribute in attributeList.Attributes)
             {
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 if (attributeName is
                     NameConstants.ObservableProperty or
@@ -280,9 +276,44 @@ internal static class ViewModelDiagnosticHelper
             NameConstants.NotifyPropertyChangedFor,
             NameConstants.NotifyPropertyChangedForAttribute);
 
-    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all fields with [NotifyPropertyChangedFor].")]
     private static List<Diagnostic>? GetNotifyPropertyChangedForDiagnostics(
         GeneratorSyntaxContext context)
+        => GetNotifyForReferenceDiagnostics(
+            context,
+            CollectKnownPropertyNames,
+            NameConstants.NotifyPropertyChangedFor,
+            NameConstants.NotifyPropertyChangedForAttribute,
+            DiagnosticFactory.CreateNotifyPropertyChangedForNonExistentTarget);
+
+    private static bool IsClassWithNotifyCanExecuteChangedForUsage(
+        SyntaxNode syntaxNode)
+        => HasFieldWithAttribute(
+            syntaxNode,
+            NameConstants.NotifyCanExecuteChangedFor,
+            NameConstants.NotifyCanExecuteChangedForAttribute);
+
+    private static List<Diagnostic>? GetNotifyCanExecuteChangedForDiagnostics(
+        GeneratorSyntaxContext context)
+        => GetNotifyForReferenceDiagnostics(
+            context,
+            CollectKnownCommandNames,
+            NameConstants.NotifyCanExecuteChangedFor,
+            NameConstants.NotifyCanExecuteChangedForAttribute,
+            DiagnosticFactory.CreateNotifyCanExecuteChangedForNonExistentTarget);
+
+    /// <summary>
+    /// Shared core for the <c>[NotifyPropertyChangedFor("X")]</c> and
+    /// <c>[NotifyCanExecuteChangedFor("X")]</c> diagnostic transforms — they have identical
+    /// shape (build a known-name set, walk fields, validate per-argument string references)
+    /// and only differ in the attribute name, the known-name source, and the diagnostic factory.
+    /// </summary>
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all NotifyXxxFor fields.")]
+    private static List<Diagnostic>? GetNotifyForReferenceDiagnostics(
+        GeneratorSyntaxContext context,
+        Func<INamedTypeSymbol, HashSet<string>> collectKnownNames,
+        string attributeName,
+        string attributeNameWithSuffix,
+        Func<string, string, Location, Diagnostic> diagnosticFactory)
     {
         var classDeclaration = (ClassDeclarationSyntax)context.Node;
         var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
@@ -291,25 +322,7 @@ internal static class ViewModelDiagnosticHelper
             return null;
         }
 
-        // Build the set of property names that will exist on the final type:
-        //   1. Declared properties (across all partial halves)
-        //   2. Properties to be generated from [ObservableProperty] fields
-        var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
-        {
-            if (member is IPropertySymbol propertySymbol)
-            {
-                knownPropertyNames.Add(propertySymbol.Name);
-                continue;
-            }
-
-            if (member is IFieldSymbol fieldSymbol &&
-                ViewModelGeneratorHelper.FieldHasObservablePropertyAttribute(fieldSymbol))
-            {
-                knownPropertyNames.Add(ViewModelGeneratorHelper.GetGeneratedPropertyName(fieldSymbol));
-            }
-        }
-
+        var knownNames = collectKnownNames(classSymbol);
         List<Diagnostic>? diagnostics = null;
 
         foreach (var member in classDeclaration.Members)
@@ -323,15 +336,8 @@ internal static class ViewModelDiagnosticHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax genericName => genericName.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
-
-                    if (attributeName is not (
-                        NameConstants.NotifyPropertyChangedFor or
-                        NameConstants.NotifyPropertyChangedForAttribute))
+                    var name = attribute.GetSimpleAttributeName();
+                    if (name != attributeName && name != attributeNameWithSuffix)
                     {
                         continue;
                     }
@@ -348,21 +354,13 @@ internal static class ViewModelDiagnosticHelper
                     foreach (var argument in attribute.ArgumentList.Arguments)
                     {
                         var referencedName = ViewModelGeneratorHelper.ExtractAttributeStringArgument(argument);
-                        if (referencedName is null)
-                        {
-                            continue;
-                        }
-
-                        if (knownPropertyNames.Contains(referencedName))
+                        if (referencedName is null || knownNames.Contains(referencedName))
                         {
                             continue;
                         }
 
                         diagnostics ??= [];
-                        diagnostics.Add(DiagnosticFactory.CreateNotifyPropertyChangedForNonExistentTarget(
-                            fieldName,
-                            referencedName,
-                            argument.GetLocation()));
+                        diagnostics.Add(diagnosticFactory(fieldName, referencedName, argument.GetLocation()));
                     }
                 }
             }
@@ -371,24 +369,41 @@ internal static class ViewModelDiagnosticHelper
         return diagnostics;
     }
 
-    private static bool IsClassWithNotifyCanExecuteChangedForUsage(
-        SyntaxNode syntaxNode)
-        => HasFieldWithAttribute(
-            syntaxNode,
-            NameConstants.NotifyCanExecuteChangedFor,
-            NameConstants.NotifyCanExecuteChangedForAttribute);
-
-    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK — single-pass diagnostic emission across all fields with [NotifyCanExecuteChangedFor].")]
-    private static List<Diagnostic>? GetNotifyCanExecuteChangedForDiagnostics(
-        GeneratorSyntaxContext context)
+    /// <summary>
+    /// Builds the set of property names that will exist on the final type:
+    /// declared properties across all partial halves, plus properties that will be generated
+    /// from <c>[ObservableProperty]</c> fields.
+    /// </summary>
+    private static HashSet<string> CollectKnownPropertyNames(
+        INamedTypeSymbol classSymbol)
     {
-        var classDeclaration = (ClassDeclarationSyntax)context.Node;
-        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
-        if (classSymbol is null)
+        var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var member in classSymbol.GetMembers())
         {
-            return null;
+            if (member is IPropertySymbol propertySymbol)
+            {
+                knownPropertyNames.Add(propertySymbol.Name);
+                continue;
+            }
+
+            if (member is IFieldSymbol fieldSymbol &&
+                ViewModelGeneratorHelper.FieldHasObservablePropertyAttribute(fieldSymbol))
+            {
+                knownPropertyNames.Add(ViewModelGeneratorHelper.GetGeneratedPropertyName(fieldSymbol));
+            }
         }
 
+        return knownPropertyNames;
+    }
+
+    /// <summary>
+    /// Builds the set of command names that will exist on the final type:
+    /// declared properties whose name ends in <c>"Command"</c>, plus commands that will be
+    /// generated from <c>[RelayCommand]</c> methods.
+    /// </summary>
+    private static HashSet<string> CollectKnownCommandNames(
+        INamedTypeSymbol classSymbol)
+    {
         var knownCommandNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var member in classSymbol.GetMembers())
         {
@@ -409,65 +424,7 @@ internal static class ViewModelDiagnosticHelper
             }
         }
 
-        List<Diagnostic>? diagnostics = null;
-
-        foreach (var member in classDeclaration.Members)
-        {
-            if (member is not FieldDeclarationSyntax fieldDeclaration)
-            {
-                continue;
-            }
-
-            foreach (var attributeList in fieldDeclaration.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax genericName => genericName.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
-
-                    if (attributeName is not (
-                        NameConstants.NotifyCanExecuteChangedFor or
-                        NameConstants.NotifyCanExecuteChangedForAttribute))
-                    {
-                        continue;
-                    }
-
-                    if (attribute.ArgumentList is null)
-                    {
-                        continue;
-                    }
-
-                    var fieldName = fieldDeclaration.Declaration.Variables
-                        .FirstOrDefault()?.Identifier.Text
-                        ?? string.Empty;
-
-                    foreach (var argument in attribute.ArgumentList.Arguments)
-                    {
-                        var referencedName = ViewModelGeneratorHelper.ExtractAttributeStringArgument(argument);
-                        if (referencedName is null)
-                        {
-                            continue;
-                        }
-
-                        if (knownCommandNames.Contains(referencedName))
-                        {
-                            continue;
-                        }
-
-                        diagnostics ??= [];
-                        diagnostics.Add(DiagnosticFactory.CreateNotifyCanExecuteChangedForNonExistentTarget(
-                            fieldName,
-                            referencedName,
-                            argument.GetLocation()));
-                    }
-                }
-            }
-        }
-
-        return diagnostics;
+        return knownCommandNames;
     }
 
     private static bool IsClassWithComputedPropertyUsage(SyntaxNode syntaxNode)
@@ -489,11 +446,7 @@ internal static class ViewModelDiagnosticHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax genericName => genericName.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
+                    var attributeName = attribute.GetSimpleAttributeName();
 
                     if (attributeName is
                         NameConstants.ComputedProperty or
@@ -747,11 +700,7 @@ internal static class ViewModelDiagnosticHelper
         {
             foreach (var attribute in attributeList.Attributes)
             {
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 if (attributeName is
                     NameConstants.ComputedProperty or
@@ -853,11 +802,7 @@ internal static class ViewModelDiagnosticHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax genericName => genericName.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
+                    var attributeName = attribute.GetSimpleAttributeName();
 
                     if (attributeName is
                         NameConstants.NotifyDataErrorInfo or
@@ -914,11 +859,7 @@ internal static class ViewModelDiagnosticHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var name = attribute.Name switch
-                    {
-                        GenericNameSyntax genericName => genericName.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
+                    var name = attribute.GetSimpleAttributeName();
 
                     if (name == attributeName || name == attributeNameWithSuffix)
                     {

@@ -149,11 +149,7 @@ internal static class ObservableDtoViewModelGeneratorHelper
             {
                 // Get the attribute name - for generic attributes,
                 // we need to check the base identifier name.
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 // Check for ObservableDtoViewModel attribute (with or without "Attribute" suffix).
                 // Platform-agnostic: works across WPF, WinUI, and Avalonia.

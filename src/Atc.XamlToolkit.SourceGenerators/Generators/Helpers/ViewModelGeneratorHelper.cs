@@ -81,11 +81,7 @@ internal static class ViewModelGeneratorHelper
         {
             foreach (var attribute in attributeList.Attributes)
             {
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 if (attributeName is
 
@@ -291,11 +287,7 @@ internal static class ViewModelGeneratorHelper
         {
             foreach (var attribute in attributeList.Attributes)
             {
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 if (attributeName is
                     NameConstants.INotifyPropertyChanged or

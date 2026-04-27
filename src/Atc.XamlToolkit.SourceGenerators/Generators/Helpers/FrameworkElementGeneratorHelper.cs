@@ -254,11 +254,7 @@ internal static class FrameworkElementGeneratorHelper
             {
                 // Get the attribute name - for generic attributes like DependencyProperty<T>,
                 // we need to check the base identifier name
-                var attributeName = attribute.Name switch
-                {
-                    GenericNameSyntax genericName => genericName.Identifier.Text,
-                    _ => attribute.Name.ToString(),
-                };
+                var attributeName = attribute.GetSimpleAttributeName();
 
                 // Check for framework element attributes (with or without "Attribute" suffix)
                 // Note: We check all attributes here; platform-specific filtering happens in GetSemanticTarget
@@ -303,11 +299,7 @@ internal static class FrameworkElementGeneratorHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax generic => generic.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
+                    var attributeName = attribute.GetSimpleAttributeName();
 
                     if (attributeName is NameConstants.RoutedEvent or NameConstants.RoutedEventAttribute)
                     {
@@ -337,11 +329,7 @@ internal static class FrameworkElementGeneratorHelper
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name switch
-                    {
-                        GenericNameSyntax generic => generic.Identifier.Text,
-                        _ => attribute.Name.ToString(),
-                    };
+                    var attributeName = attribute.GetSimpleAttributeName();
 
                     if (attributeName is not (NameConstants.RoutedEvent or NameConstants.RoutedEventAttribute))
                     {
