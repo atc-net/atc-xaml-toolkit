@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>relaycmdcancel</Title>
+      <Shortcut>relaycmdcancel</Shortcut>
+      <Description>Atc.XamlToolkit: async RelayCommand with cancellation + auto-IsBusy.</Description>
+      <Author>Atc.XamlToolkit</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>name</ID>
+          <ToolTip>Method name (Command suffix appended automatically)</ToolTip>
+          <Default>Save</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp"><![CDATA[[RelayCommand(SupportsCancellation = true, AutoSetIsBusy = true)]
+private async Task $name$Async(CancellationToken cancellationToken)
+{
+    $end$
+}]]></Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
