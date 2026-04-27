@@ -1,8 +1,16 @@
 namespace Atc.XamlToolkit.Diagnostics;
 
 /// <summary>
-/// A class that listens to binding errors and forwards them as message boxes.
+/// Listens to WPF data-binding errors via <see cref="PresentationTraceSources.DataBindingSource"/>
+/// and forwards each error message to the <see cref="BindingErrorOccurred"/> event. Optionally
+/// surfaces each error as a modal <see cref="MessageBox"/> for ad-hoc debugging.
 /// </summary>
+/// <remarks>
+/// Subscribe to <see cref="BindingErrorOccurred"/> to log binding errors to a sink of your
+/// choice (logger, file, telemetry). Keep <see cref="ShowMessageBoxOnError"/> off in production —
+/// a modal dialog per binding error blocks the UI. The default is <c>true</c> for backward
+/// compatibility with earlier toolkit versions.
+/// </remarks>
 public sealed class BindingErrorTraceListener : DefaultTraceListener
 {
     private static BindingErrorTraceListener? listener;
@@ -16,6 +24,19 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     {
         ignoreErrorMessages.Add("Cannot find governing FrameworkElement or FrameworkContentElement for target element. BindingExpression:Path=Fill; DataItem=null; target element is 'GeometryDrawing'");
     }
+
+    /// <summary>
+    /// Raised once per binding-error trace line, on the dispatcher thread.
+    /// Subscribe to log binding errors without blocking the UI.
+    /// </summary>
+    public static event EventHandler<BindingErrorEventArgs>? BindingErrorOccurred;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to display a modal <see cref="MessageBox"/>
+    /// for each binding error. Defaults to <c>true</c> for backward compatibility;
+    /// set to <c>false</c> in production and rely on <see cref="BindingErrorOccurred"/> instead.
+    /// </summary>
+    public static bool ShowMessageBoxOnError { get; set; } = true;
 
     /// <summary>
     /// Starts the trace.
@@ -37,6 +58,24 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     }
 
     /// <summary>
+    /// Starts the trace with explicit MessageBox UX control.
+    /// </summary>
+    /// <param name="level">The level.</param>
+    /// <param name="options">The options.</param>
+    /// <param name="showMessageBoxOnError">
+    /// If <c>true</c>, each binding error surfaces as a modal <see cref="MessageBox"/>;
+    /// if <c>false</c>, errors are silent and only routed to <see cref="BindingErrorOccurred"/>.
+    /// </param>
+    public static void StartTrace(
+        SourceLevels level,
+        TraceOptions options,
+        bool showMessageBoxOnError)
+    {
+        ShowMessageBoxOnError = showMessageBoxOnError;
+        StartTrace(level, options);
+    }
+
+    /// <summary>
     /// Closes the trace.
     /// </summary>
     public static void CloseTrace()
@@ -52,30 +91,14 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
         listener = null;
     }
 
-    /// <summary>
-    /// Writes the output to the <see langword="OutputDebugString" /> function and to the <see ref="M:System.Diagnostics.Debugger.Log(System.Int32,System.String,System.String)" /> method.
-    /// </summary>
-    /// <param name="message">The message to write to <see langword="OutputDebugString" /> and <see ref="M:System.Diagnostics.Debugger.Log(System.Int32,System.String,System.String)" />.</param>
-    /// <PermissionSet>
-    /// <IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="True" />
-    /// <IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="ControlEvidence" />
-    /// </PermissionSet>
+    /// <inheritdoc />
     public override void Write(string? message)
     {
         _ = errorMessage.Append(message);
     }
 
-    /// <summary>
-    /// Writes the output to the <see langword="OutputDebugString" /> function and to the <see ref="M:System.Diagnostics.Debugger.Log(System.Int32,System.String,System.String)" /> method,
-    /// followed by a carriage return and line feed (\r\n).
-    /// </summary>
-    /// <param name="message">The message to write to <see langword="OutputDebugString" /> and <see ref="M:System.Diagnostics.Debugger.Log(System.Int32,System.String,System.String)" />.</param>
-    /// <exception cref="ArgumentException">BindingError: " + error.</exception>
-    /// <PermissionSet>
-    /// <IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="True" />
-    /// <IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="True" />
-    /// <IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="ControlEvidence" />
-    /// </PermissionSet>
+    /// <inheritdoc />
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "A subscriber should never break the trace pipeline.")]
     public override void WriteLine(string? message)
     {
         if (string.IsNullOrEmpty(message))
@@ -91,6 +114,21 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
         _ = errorMessage.Append(message);
         var error = errorMessage.ToString();
         errorMessage.Length = 0;
+
+        // Notify subscribers regardless of the MessageBox UX so loggers always get the event.
+        try
+        {
+            BindingErrorOccurred?.Invoke(null, new BindingErrorEventArgs(error));
+        }
+        catch
+        {
+            // A subscriber should not break the trace pipeline.
+        }
+
+        if (!ShowMessageBoxOnError)
+        {
+            return;
+        }
 
         _ = Application.Current.Dispatcher.BeginInvoke(
             DispatcherPriority.Normal,
