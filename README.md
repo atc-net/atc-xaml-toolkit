@@ -379,6 +379,10 @@ Example for ViewModel classes with source generation:
 
 For more details, see the [MVVM](docs/Mvvm/Readme.md) section.
 
+### IDE snippets
+
+Drop the snippets in [`snippets/`](snippets/README.md) into VS Code or Visual Studio so the boilerplate types itself — `obsprop` → `[ObservableProperty]` field, `relaycmd` → sync `[RelayCommand]`, `relaycmdcancel` → cancellable async command, `depprop` / `attprop` / `styledprop` for framework-element properties, plus a handful of others.
+
 ## 🎯 Complete Feature List
 
 ### Core MVVM Components

@@ -1,0 +1,176 @@
+{
+  "ObservableProperty": {
+    "scope": "csharp",
+    "prefix": "obsprop",
+    "description": "Atc.XamlToolkit: source-generated INotifyPropertyChanged property from a private field.",
+    "body": [
+      "[ObservableProperty]",
+      "private ${1:string} ${2:fieldName}${3: = ${4:string.Empty}};"
+    ]
+  },
+  "ObservableProperty (with callback)": {
+    "scope": "csharp",
+    "prefix": "obspropcb",
+    "description": "Atc.XamlToolkit: ObservableProperty with explicit property-changed callback.",
+    "body": [
+      "[ObservableProperty(",
+      "    BeforeChangedCallback = nameof(On${2/(.*)/${1:/capitalize}/}Changing),",
+      "    AfterChangedCallback = nameof(On${2/(.*)/${1:/capitalize}/}Changed))]",
+      "private ${1:string} ${2:fieldName}${3: = ${4:string.Empty}};",
+      "",
+      "private void On${2/(.*)/${1:/capitalize}/}Changing(${1:string} value)",
+      "{",
+      "    $0",
+      "}",
+      "",
+      "private void On${2/(.*)/${1:/capitalize}/}Changed(${1:string} value)",
+      "{",
+      "}"
+    ]
+  },
+  "ObservableProperty (notifies command)": {
+    "scope": "csharp",
+    "prefix": "obspropcmd",
+    "description": "Atc.XamlToolkit: ObservableProperty whose change re-evaluates a command's CanExecute.",
+    "body": [
+      "[ObservableProperty]",
+      "[NotifyCanExecuteChangedFor(nameof(${3:Save}Command))]",
+      "private ${1:string} ${2:fieldName}${4: = ${5:string.Empty}};"
+    ]
+  },
+  "ComputedProperty": {
+    "scope": "csharp",
+    "prefix": "compprop",
+    "description": "Atc.XamlToolkit: ComputedProperty with auto-detected dependencies.",
+    "body": [
+      "[ComputedProperty]",
+      "public ${1:string} ${2:FullName} => $0;"
+    ]
+  },
+  "RelayCommand (sync)": {
+    "scope": "csharp",
+    "prefix": "relaycmd",
+    "description": "Atc.XamlToolkit: synchronous RelayCommand from a method.",
+    "body": [
+      "[RelayCommand]",
+      "private void ${1:Save}()",
+      "{",
+      "    $0",
+      "}"
+    ]
+  },
+  "RelayCommand (async)": {
+    "scope": "csharp",
+    "prefix": "relaycmdasync",
+    "description": "Atc.XamlToolkit: async RelayCommand from a method returning Task.",
+    "body": [
+      "[RelayCommand]",
+      "private async Task ${1:Save}Async()",
+      "{",
+      "    $0",
+      "}"
+    ]
+  },
+  "RelayCommand (cancellable)": {
+    "scope": "csharp",
+    "prefix": "relaycmdcancel",
+    "description": "Atc.XamlToolkit: async RelayCommand with cancellation + auto-IsBusy.",
+    "body": [
+      "[RelayCommand(SupportsCancellation = true, AutoSetIsBusy = true)]",
+      "private async Task ${1:Save}Async(CancellationToken cancellationToken)",
+      "{",
+      "    $0",
+      "}"
+    ]
+  },
+  "RelayCommand (with CanExecute)": {
+    "scope": "csharp",
+    "prefix": "relaycmdcanexec",
+    "description": "Atc.XamlToolkit: RelayCommand bound to a CanExecute predicate.",
+    "body": [
+      "[RelayCommand(CanExecute = nameof(Can${1:Save}))]",
+      "private void ${1:Save}()",
+      "{",
+      "    $0",
+      "}",
+      "",
+      "private bool Can${1:Save}() => $2;"
+    ]
+  },
+  "DependencyProperty (field)": {
+    "scope": "csharp",
+    "prefix": "depprop",
+    "description": "Atc.XamlToolkit: DependencyProperty from a private field (WPF / WinUI).",
+    "body": [
+      "[DependencyProperty]",
+      "private ${1:string} ${2:title}${3: = ${4:string.Empty}};"
+    ]
+  },
+  "DependencyProperty (class)": {
+    "scope": "csharp",
+    "prefix": "deppropclass",
+    "description": "Atc.XamlToolkit: DependencyProperty declared at the class level (generic form).",
+    "body": [
+      "[DependencyProperty<${1:string}>(\"${2:Title}\"${3:, DefaultValue = ${4:string.Empty}})]"
+    ]
+  },
+  "AttachedProperty (field)": {
+    "scope": "csharp",
+    "prefix": "attprop",
+    "description": "Atc.XamlToolkit: AttachedProperty from a private static field (WPF / WinUI / Avalonia).",
+    "body": [
+      "[AttachedProperty]",
+      "private static ${1:bool} ${2:isDraggable};"
+    ]
+  },
+  "AttachedProperty (class)": {
+    "scope": "csharp",
+    "prefix": "attpropclass",
+    "description": "Atc.XamlToolkit: AttachedProperty declared at the class level (generic form).",
+    "body": [
+      "[AttachedProperty<${1:bool}>(\"${2:IsDraggable}\"${3:, DefaultValue = ${4:false}})]"
+    ]
+  },
+  "StyledProperty (Avalonia)": {
+    "scope": "csharp",
+    "prefix": "styledprop",
+    "description": "Atc.XamlToolkit: Avalonia StyledProperty from a private field.",
+    "body": [
+      "[StyledProperty]",
+      "private ${1:string} ${2:title}${3: = ${4:string.Empty}};"
+    ]
+  },
+  "RoutedEvent (WPF)": {
+    "scope": "csharp",
+    "prefix": "routedevt",
+    "description": "Atc.XamlToolkit: RoutedEvent from a private static field (WPF only).",
+    "body": [
+      "[RoutedEvent(RoutingStrategy = RoutingStrategy.${2:Bubble})]",
+      "private static readonly RoutedEventHandler ${1:itemSelected};"
+    ]
+  },
+  "INotifyPropertyChanged (class)": {
+    "scope": "csharp",
+    "prefix": "inotpc",
+    "description": "Atc.XamlToolkit: add INotifyPropertyChanged to a partial class without inheriting ObservableObject.",
+    "body": [
+      "[INotifyPropertyChanged]",
+      "public partial class ${1:MyClass}",
+      "{",
+      "    $0",
+      "}"
+    ]
+  },
+  "ObservableDtoViewModel": {
+    "scope": "csharp",
+    "prefix": "dtoview",
+    "description": "Atc.XamlToolkit: wrap a DTO with a partial class that gains INotifyPropertyChanged + IsDirty.",
+    "body": [
+      "[ObservableDtoViewModel(typeof(${1:MyDto}))]",
+      "public partial class ${2:MyViewModel}",
+      "{",
+      "    $0",
+      "}"
+    ]
+  }
+}

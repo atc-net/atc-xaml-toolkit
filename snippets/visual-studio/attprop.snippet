@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>attprop</Title>
+      <Shortcut>attprop</Shortcut>
+      <Description>Atc.XamlToolkit: AttachedProperty from a private static field.</Description>
+      <Author>Atc.XamlToolkit</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>type</ID>
+          <ToolTip>Property type</ToolTip>
+          <Default>bool</Default>
+        </Literal>
+        <Literal>
+          <ID>name</ID>
+          <ToolTip>camelCase backing-field name</ToolTip>
+          <Default>isDraggable</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp"><![CDATA[[AttachedProperty]
+private static $type$ $name$;$end$]]></Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

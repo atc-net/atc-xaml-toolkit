@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>relaycmd</Title>
+      <Shortcut>relaycmd</Shortcut>
+      <Description>Atc.XamlToolkit: synchronous RelayCommand from a method.</Description>
+      <Author>Atc.XamlToolkit</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>name</ID>
+          <ToolTip>Method name (Command suffix appended automatically)</ToolTip>
+          <Default>Save</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp"><![CDATA[[RelayCommand]
+private void $name$()
+{
+    $end$
+}]]></Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
