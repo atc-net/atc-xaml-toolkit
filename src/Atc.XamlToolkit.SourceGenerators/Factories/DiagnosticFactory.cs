@@ -83,6 +83,16 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "[NotifyDataErrorInfo] makes the generated property setter call ObservableValidator.ValidateProperty(...) inline. ValidateProperty is a protected member of ObservableValidator (and is inherited by ViewModelBase). Classes that derive from ObservableObject directly, or that use the [INotifyPropertyChanged] class-level attribute without ObservableValidator inheritance, do not have ValidateProperty in scope and will produce a confusing CS0103 inside the generated file.");
 
+    private static readonly DiagnosticDescriptor RoutedEventOnNonWpfDescriptor =
+        new(
+            id: "AtcXamlToolkit0010",
+            title: "[RoutedEvent] is WPF-only",
+            messageFormat: "Field '{0}' is decorated with [RoutedEvent] but the project targets {1}. The source generator silently skips routed-event generation on non-WPF platforms because WinUI 3 and Avalonia have no equivalent of WPF's RoutedEvent / EventManager pattern. Replace the field with a standard CLR event (e.g. 'public event RoutedEventHandler ItemSelected;') or remove the attribute.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "WPF's RoutedEvent / EventManager.RegisterRoutedEvent infrastructure does not exist on WinUI 3 or Avalonia. The source generator therefore emits routed-event code only when the compilation references WPF. Without this diagnostic the [RoutedEvent] attribute would be silently inert on the wrong platform — the developer would expect an event to materialize and find nothing, with no build-time clue.");
+
     public static Diagnostic CreateContainsDuplicateNamesForRelayCommand()
         => Diagnostic.Create(
             new DiagnosticDescriptor(
@@ -156,4 +166,14 @@ internal static class DiagnosticFactory
             location,
             fieldName,
             className);
+
+    public static Diagnostic CreateRoutedEventOnNonWpf(
+        string fieldName,
+        string platformName,
+        Location location)
+        => Diagnostic.Create(
+            RoutedEventOnNonWpfDescriptor,
+            location,
+            fieldName,
+            platformName);
 }
