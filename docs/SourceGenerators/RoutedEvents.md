@@ -43,10 +43,14 @@ Routed events are fundamentally a WPF-specific feature that relies on infrastruc
 
 The source generator automatically detects your target platform and:
 
-- **WPF Projects:** Generates full routed event code with `EventManager.RegisterRoutedEvent()`, routing strategies, and CLR event wrappers
-- **WinUI/Avalonia Projects:** Silently ignores `[RoutedEvent]` attributes since these platforms don't support the pattern
+- **WPF Projects:** Generates full routed event code with `EventManager.RegisterRoutedEvent()`, routing strategies, and CLR event wrappers.
+- **WinUI / Avalonia Projects:** Skips routed-event generation **and emits diagnostic `AtcXamlToolkit0010`** as a build-time warning, telling you to use a standard CLR event instead.
 
-This ensures your code remains platform-appropriate without compilation errors.
+`AtcXamlToolkit0010` is the safety net that turns the platform skip from a silent inertness into an explicit message — so you find out at compile time, not at runtime when the event you wrote never raises.
+
+```text
+warning AtcXamlToolkit0010: Field 'tap' is decorated with [RoutedEvent] but the project targets Avalonia. The source generator silently skips routed-event generation on non-WPF platforms because WinUI 3 and Avalonia have no equivalent of WPF's RoutedEvent / EventManager pattern. Replace the field with a standard CLR event (e.g. 'public event RoutedEventHandler ItemSelected;') or remove the attribute.
+```
 
 ---
 
