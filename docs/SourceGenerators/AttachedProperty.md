@@ -91,6 +91,46 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 📚 XML documentation generation
+
+Attached property accessors are public APIs that ship to consumers; the generator can emit a default `/// <summary>` on the static `Get{Name}` / `Set{Name}` methods. The behaviour is **opt-in** to keep existing snapshots byte-identical:
+
+```csharp
+public static partial class DragBehavior
+{
+    [AttachedProperty(GenerateDocumentation = true)]
+    private static bool isDraggable;
+}
+```
+
+generates:
+
+```csharp
+/// <summary>
+/// Gets the IsDraggable attached property value.
+/// </summary>
+public static bool GetIsDraggable(DependencyObject element)
+    => (bool)element.GetValue(IsDraggableProperty);
+
+/// <summary>
+/// Sets the IsDraggable attached property value.
+/// </summary>
+public static void SetIsDraggable(DependencyObject element, bool value)
+    => element?.SetValue(IsDraggableProperty, Atc.XamlToolkit.BooleanBoxes.Box(value));
+```
+
+The same flag works on the class-level generic form (`[AttachedProperty<T>("Name", GenerateDocumentation = true)]`).
+
+To flip the default across the entire assembly, apply once:
+
+```csharp
+[assembly: GenerateDocumentationDefault]
+```
+
+Plain `[AttachedProperty]` (and `[DependencyProperty]`, `[StyledProperty]`, `[ObservableProperty]`, `[RelayCommand]`) then emit the default summary by default. Per-attribute `GenerateDocumentation = false` still wins as an explicit opt-out.
+
+---
+
 ## 📌 Summary
 
 This example demonstrates **advanced metadata** handling for attached properties with source generation, enabling:

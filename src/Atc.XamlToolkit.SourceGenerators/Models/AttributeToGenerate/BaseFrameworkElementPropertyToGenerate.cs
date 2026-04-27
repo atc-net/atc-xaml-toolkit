@@ -15,7 +15,8 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     string? DefaultUpdateSourceTrigger,
     bool? IsAnimationProhibited,
     string? Category,
-    string? Description)
+    string? Description,
+    bool GenerateDocumentation)
 {
     public bool HasAnyMetadata
         => DefaultValue is not null ||
@@ -43,7 +44,8 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
         string? defaultUpdateSourceTrigger,
         bool? isAnimationProhibited,
         string? category,
-        string? description)
+        string? description,
+        bool generateDocumentation)
         where T : BaseFrameworkElementPropertyToGenerate
     {
         BaseFrameworkElementPropertyToGenerate result;
@@ -64,7 +66,8 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
                 defaultUpdateSourceTrigger,
                 isAnimationProhibited,
                 category,
-                description);
+                description,
+                generateDocumentation);
         }
         else
         {
@@ -83,7 +86,8 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
                 defaultUpdateSourceTrigger,
                 isAnimationProhibited,
                 category,
-                description);
+                description,
+                generateDocumentation);
         }
 
         return (T)result;
