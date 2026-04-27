@@ -452,6 +452,13 @@ internal static class FrameworkElementBuilderExtensions
 
         if (p.IsOwnerTypeStatic)
         {
+            if (p.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Gets the {p.Name} attached property value.");
+                builder.AppendLine("/// </summary>");
+            }
+
             if (!string.IsNullOrEmpty(p.Category))
             {
                 builder.AppendLine($"[Category(\"{p.Category}\")]");
@@ -480,6 +487,13 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine();
 
+            if (p.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Sets the {p.Name} attached property value.");
+                builder.AppendLine("/// </summary>");
+            }
+
             if (!string.IsNullOrEmpty(p.Category))
             {
                 builder.AppendLine($"[Category(\"{p.Category}\")]");
@@ -500,6 +514,13 @@ internal static class FrameworkElementBuilderExtensions
         }
         else
         {
+            if (p.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Gets or sets the {p.Name}.");
+                builder.AppendLine("/// </summary>");
+            }
+
             if (!string.IsNullOrEmpty(p.Category))
             {
                 builder.AppendLine($"[Category(\"{p.Category}\")]");
@@ -554,6 +575,13 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine();
 
+        if (p.GenerateDocumentation)
+        {
+            builder.AppendLine("/// <summary>");
+            builder.AppendLine($"/// Gets the {p.Name} attached property value.");
+            builder.AppendLine("/// </summary>");
+        }
+
         if (!string.IsNullOrEmpty(p.Category))
         {
             builder.AppendLine($"[Category(\"{p.Category}\")]");
@@ -583,6 +611,13 @@ internal static class FrameworkElementBuilderExtensions
             builder.DecreaseIndent();
 
             builder.AppendLine();
+
+            if (p.GenerateDocumentation)
+            {
+                builder.AppendLine("/// <summary>");
+                builder.AppendLine($"/// Sets the {p.Name} attached property value.");
+                builder.AppendLine("/// </summary>");
+            }
 
             if (!string.IsNullOrEmpty(p.Category))
             {

@@ -20,7 +20,8 @@ public sealed class BaseFrameworkElementPropertyToGenerateTests
             defaultUpdateSourceTrigger: null,
             isAnimationProhibited: null,
             category: null,
-            description: null);
+            description: null,
+            generateDocumentation: false);
 
         Assert.IsType<DependencyPropertyToGenerate>(result);
         Assert.Equal("MyControl", result.OwnerType);
@@ -46,7 +47,8 @@ public sealed class BaseFrameworkElementPropertyToGenerateTests
             defaultUpdateSourceTrigger: null,
             isAnimationProhibited: null,
             category: null,
-            description: null);
+            description: null,
+            generateDocumentation: false);
 
         Assert.IsType<AttachedPropertyToGenerate>(result);
         Assert.Equal("MyHelper", result.OwnerType);
@@ -76,7 +78,8 @@ public sealed class BaseFrameworkElementPropertyToGenerateTests
             defaultUpdateSourceTrigger: "PropertyChanged",
             isAnimationProhibited: true,
             category: "Layout",
-            description: "A test property");
+            description: "A test property",
+            generateDocumentation: false);
 
         Assert.False(result.IsOwnerTypeStatic);
         Assert.Equal("Owner", result.OwnerType);
@@ -113,7 +116,8 @@ public sealed class BaseFrameworkElementPropertyToGenerateTests
             defaultUpdateSourceTrigger: null,
             isAnimationProhibited: null,
             category: null,
-            description: null);
+            description: null,
+            generateDocumentation: false);
 
         Assert.False(result.HasAnyMetadata);
     }
@@ -136,7 +140,8 @@ public sealed class BaseFrameworkElementPropertyToGenerateTests
             defaultUpdateSourceTrigger: null,
             isAnimationProhibited: null,
             category: null,
-            description: null);
+            description: null,
+            generateDocumentation: false);
 
         Assert.True(result.HasAnyMetadata);
     }

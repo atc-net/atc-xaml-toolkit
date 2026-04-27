@@ -15,7 +15,8 @@ internal sealed record AttachedPropertyToGenerate(
     string? DefaultUpdateSourceTrigger,
     bool? IsAnimationProhibited,
     string? Category,
-    string? Description)
+    string? Description,
+    bool GenerateDocumentation)
     : BaseFrameworkElementPropertyToGenerate(
         IsOwnerTypeStatic,
         OwnerType,
@@ -31,4 +32,5 @@ internal sealed record AttachedPropertyToGenerate(
         DefaultUpdateSourceTrigger,
         IsAnimationProhibited,
         Category,
-        Description);
+        Description,
+        GenerateDocumentation);

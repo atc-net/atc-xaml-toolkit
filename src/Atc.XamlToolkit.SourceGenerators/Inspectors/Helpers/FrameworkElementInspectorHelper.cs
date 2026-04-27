@@ -13,6 +13,11 @@ internal static class FrameworkElementInspectorHelper
 
         var ownerType = classSymbol.Name;
 
+        // Project-level default for the GenerateDocumentation flag, opted in via
+        // [assembly: GenerateDocumentationDefault]. When present, attributes that
+        // don't set the flag explicitly still emit the default summary.
+        var generateDocumentationDefault = HasGenerateDocumentationDefaultAttribute(classSymbol);
+
         foreach (var propertyAttribute in propertyAttributes)
         {
             var argumentValues = propertyAttribute.ExtractConstructorArgumentValues();
@@ -42,6 +47,7 @@ internal static class FrameworkElementInspectorHelper
                 argumentValues,
                 type,
                 xamlPlatform,
+                generateDocumentationDefault,
                 out var propertyChangedCallback,
                 out var coerceValueCallback,
                 out var validateValueCallback,
@@ -50,6 +56,7 @@ internal static class FrameworkElementInspectorHelper
                 out var isAnimationProhibited,
                 out var category,
                 out var description,
+                out var generateDocumentation,
                 ref defaultValue);
 
             propertiesToGenerate.Add(
@@ -68,7 +75,8 @@ internal static class FrameworkElementInspectorHelper
                     defaultUpdateSourceTrigger,
                     isAnimationProhibited,
                     category,
-                    description));
+                    description,
+                    generateDocumentation));
         }
 
         return propertiesToGenerate;
@@ -103,10 +111,13 @@ internal static class FrameworkElementInspectorHelper
 
         object? defaultValue = null;
 
+        var generateDocumentationDefault = HasGenerateDocumentationDefaultAttribute(classSymbol);
+
         Extract(
             argumentValues,
             type,
             xamlPlatform,
+            generateDocumentationDefault,
             out var propertyChangedCallback,
             out var coerceValueCallback,
             out var validateValueCallback,
@@ -115,6 +126,7 @@ internal static class FrameworkElementInspectorHelper
             out var isAnimationProhibited,
             out var category,
             out var description,
+            out var generateDocumentation,
             ref defaultValue);
 
         return BaseFrameworkElementPropertyToGenerate.Create<T>(
@@ -132,13 +144,37 @@ internal static class FrameworkElementInspectorHelper
             defaultUpdateSourceTrigger,
             isAnimationProhibited,
             category,
-            description);
+            description,
+            generateDocumentation);
+    }
+
+    private static bool HasGenerateDocumentationDefaultAttribute(
+        INamedTypeSymbol classSymbol)
+    {
+        var assemblySymbol = classSymbol.ContainingAssembly;
+        if (assemblySymbol is null)
+        {
+            return false;
+        }
+
+        foreach (var attribute in assemblySymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name
+                is NameConstants.GenerateDocumentationDefault
+                or NameConstants.GenerateDocumentationDefaultAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void Extract(
         IDictionary<string, string?> argumentValues,
         string type,
         XamlPlatform xamlPlatform,
+        bool generateDocumentationDefault,
         out string? propertyChangedCallback,
         out string? coerceValueCallback,
         out string? validateValueCallback,
@@ -147,6 +183,7 @@ internal static class FrameworkElementInspectorHelper
         out bool? isAnimationProhibited,
         out string? category,
         out string? description,
+        out bool generateDocumentation,
         ref object? defaultValue)
     {
         if (argumentValues.TryGetValue(NameConstants.DefaultValue, out var defaultValueValue))
@@ -200,6 +237,19 @@ internal static class FrameworkElementInspectorHelper
         if (argumentValues.TryGetValue(NameConstants.Description, out var descriptionValue))
         {
             description = descriptionValue;
+        }
+
+        // Three-state resolution mirrors ObservablePropertyInspector / RelayCommandInspector:
+        // explicit per-attribute value wins; otherwise fall back to assembly-level
+        // [GenerateDocumentationDefault].
+        if (argumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
+            bool.TryParse(generateDocumentationValue, out var generateDocumentationValueAsBool))
+        {
+            generateDocumentation = generateDocumentationValueAsBool;
+        }
+        else
+        {
+            generateDocumentation = generateDocumentationDefault;
         }
 
         defaultValue = defaultValue is null && type.IsKnownValueType()

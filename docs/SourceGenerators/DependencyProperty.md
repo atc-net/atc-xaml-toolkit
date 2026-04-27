@@ -112,6 +112,47 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 📚 XML documentation generation
+
+Since framework-element APIs are typically shipped as public NuGet packages, the generator can emit a default `/// <summary>` on the generated CLR property. The behaviour is **opt-in** so existing snapshots stay byte-identical:
+
+```csharp
+[DependencyProperty(GenerateDocumentation = true)]
+private bool isRunning;
+```
+
+generates:
+
+```csharp
+/// <summary>
+/// Gets or sets the IsRunning.
+/// </summary>
+public bool IsRunning
+{
+    get => (bool)GetValue(IsRunningProperty);
+    set => SetValue(IsRunningProperty, Atc.XamlToolkit.BooleanBoxes.Box(value));
+}
+```
+
+The same flag works on the class-level form:
+
+```csharp
+[DependencyProperty<bool>("IsRunning", GenerateDocumentation = true)]
+public partial class MyControl : UserControl
+{
+}
+```
+
+To enable defaults across the assembly without writing the flag on every attribute, opt in once:
+
+```csharp
+[assembly: GenerateDocumentationDefault]
+```
+
+After this, plain `[DependencyProperty]` (and `[ObservableProperty]`, `[RelayCommand]`, `[AttachedProperty]`, `[StyledProperty]`) emit the default summary. Per-attribute `GenerateDocumentation = false` still wins as an explicit opt-out.
+
+---
+
 ## 📌 Summary
 
 This example demonstrates how to use **advanced metadata** with dependency properties via source generators, allowing:
