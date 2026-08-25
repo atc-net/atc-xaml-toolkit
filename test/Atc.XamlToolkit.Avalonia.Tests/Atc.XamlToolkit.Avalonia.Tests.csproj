@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -10,8 +10,5 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.Avalonia\Atc.XamlToolkit.Avalonia.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Atc.XUnit" Version="3.0.67" />
-  </ItemGroup>
 
 </Project>
