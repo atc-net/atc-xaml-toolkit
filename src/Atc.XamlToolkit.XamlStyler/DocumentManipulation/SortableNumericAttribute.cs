@@ -41,6 +41,7 @@ internal sealed class SortableNumericAttribute : ISortableAttribute
         return 0;
     }
 
+    [SuppressMessage("Major Code Smell", "S1244:Do not check floating point equality with exact values, use a range instead", Justification = "OK — exact equality is required so Equals stays consistent with GetHashCode; a tolerance range would break the equality contract.")]
     public override bool Equals(object? obj) =>
         obj is SortableNumericAttribute other && value.Equals(other.value);
 
