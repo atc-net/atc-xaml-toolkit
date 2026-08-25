@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
@@ -6,7 +6,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-    <PublishProfile Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU'">win-$(Platform).pubxml</PublishProfile>
+    <!-- No PublishProfile is set: *.pubxml files are git-ignored, so the template profiles are not part of the repository. -->
     <EnableMsixTooling Condition="'$(Platform)' != 'AnyCPU'">true</EnableMsixTooling>
     <IsPackable>false</IsPackable>
     <UseWinUI>true</UseWinUI>

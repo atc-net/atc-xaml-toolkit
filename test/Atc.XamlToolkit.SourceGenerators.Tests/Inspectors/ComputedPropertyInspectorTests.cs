@@ -33,9 +33,9 @@ public sealed class ComputedPropertyInspectorTests
         ComputedPropertyInspector.LinkToObservableProperties(observables, computed);
 
         Assert.False(observables[0].PropertyNamesToInvalidate.IsEmpty);
-        Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate);
+        Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate, StringComparer.Ordinal);
         Assert.False(observables[1].PropertyNamesToInvalidate.IsEmpty);
-        Assert.Contains("FullName", observables[1].PropertyNamesToInvalidate);
+        Assert.Contains("FullName", observables[1].PropertyNamesToInvalidate, StringComparer.Ordinal);
     }
 
     [Fact]
@@ -95,8 +95,8 @@ public sealed class ComputedPropertyInspectorTests
 
         Assert.False(observables[0].PropertyNamesToInvalidate.IsEmpty);
         Assert.Equal(2, observables[0].PropertyNamesToInvalidate.Count);
-        Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate);
-        Assert.Contains("Initials", observables[0].PropertyNamesToInvalidate);
+        Assert.Contains("FullName", observables[0].PropertyNamesToInvalidate, StringComparer.Ordinal);
+        Assert.Contains("Initials", observables[0].PropertyNamesToInvalidate, StringComparer.Ordinal);
     }
 
     [Fact]
