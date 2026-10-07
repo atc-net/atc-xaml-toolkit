@@ -4,6 +4,7 @@
     <TargetFramework />
     <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
     <RootNamespace>Atc.XamlToolkit.XamlStyler</RootNamespace>
+    <IsPackable>true</IsPackable>
     <PackageId>Atc.XamlToolkit.XamlStyler</PackageId>
     <Description>XAML styling and formatting engine for .NET — attribute reordering, indentation, element formatting, and more. Ported and modernized from Xavalon/XamlStyler.</Description>
     <PackageTags>xaml;xaml-styler;xaml-formatter;wpf;avalonia;maui;winui</PackageTags>
