@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Title>Atc.XamlToolkit.Avalonia</Title>
+    <IsPackable>true</IsPackable>
     <PackageId>Atc.XamlToolkit.Avalonia</PackageId>
     <PackageTags>avalonia;xaml;mvvm;relaycommand;ui-toolkit</PackageTags>
     <Description>Atc.XamlToolkit.Avalonia is a library for building Avalonia applications using the MVVM design pattern.</Description>

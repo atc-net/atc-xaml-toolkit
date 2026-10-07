@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Title>Atc.XamlToolkit</Title>
+    <IsPackable>true</IsPackable>
     <PackageId>Atc.XamlToolkit</PackageId>
     <PackageTags>xaml;mvvm;relaycommand;ui-toolkit</PackageTags>
     <Description>Atc.XamlToolkit is a library for building XAML applications using the MVVM design pattern.</Description>
