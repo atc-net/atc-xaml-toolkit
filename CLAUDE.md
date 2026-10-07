@@ -80,7 +80,7 @@ The repository is organized into distinct platform-specific and shared packages:
 
 ### Test Projects (`./test/`)
 
-Each source project has a corresponding test project using xUnit, NSubstitute, FluentAssertions, and AutoFixture.
+Each source project has a corresponding test project using xUnit, NSubstitute, AwesomeAssertions, and AutoFixture.
 
 ### Sample Projects (`./sample/`)
 
@@ -243,7 +243,7 @@ This repository uses the **ATC coding rules** (v1.0.0) defined in `.editorconfig
 - **Test Framework**: xUnit v3 with Xunit.StaFact for UI thread tests
 - **Test Runner**: Microsoft.Testing.Platform (configured in `global.json`)
 - **Mocking**: NSubstitute
-- **Assertions**: FluentAssertions
+- **Assertions**: AwesomeAssertions
 - **Test Data**: AutoFixture with AutoFixture.Xunit3
 - **Coverage**: Microsoft.Testing.Extensions.CodeCoverage
 - Tests for source generators use `Microsoft.CodeAnalysis.CSharp` to verify generated code
