@@ -50,7 +50,7 @@ jobs:
       # Only projects with IsPackable=true (the five src libraries) produce a package.
       - name: 🗳️ Creating library packages for release
         if: ${{ steps.release.outputs.release_created }}
-        run: dotnet pack Atc.XamlToolkit.slnx -c Release --no-restore -o ${{ github.workspace }}/packages
+        run: dotnet pack Atc.XamlToolkit.slnx -c Release --no-restore -o "${{ github.workspace }}\packages"
 
       - name: 🔑 NuGet login (OIDC → short-lived API key)
         if: ${{ steps.release.outputs.release_created }}
@@ -59,6 +59,7 @@ jobs:
         with:
           user: ${{ secrets.NUGET_USER }}
 
+      # On Windows, dotnet nuget push only expands the wildcard in a path that uses backslashes.
       - name: 📦 Push packages to NuGet
         if: ${{ steps.release.outputs.release_created }}
-        run: dotnet nuget push "${{ github.workspace }}/packages/*.nupkg" -k "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+        run: dotnet nuget push "${{ github.workspace }}\packages\*.nupkg" -k "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
