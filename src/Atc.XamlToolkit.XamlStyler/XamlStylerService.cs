@@ -5,7 +5,7 @@ namespace Atc.XamlToolkit.XamlStyler;
 /// </summary>
 public sealed class XamlStylerService
 {
-    [SuppressMessage("Minor Code Smell", "S5332:Using http protocol is insecure. Use https instead", Justification = "OK — these are XML namespace identifiers, not network endpoints, and must match the literal values used in XAML documents.")]
+    [SuppressMessage("Security", "S5332:Using http protocol is insecure", Justification = "OK - XML namespace identifiers, not URLs.")]
     private readonly string[] ignoredNamespacesInOrdering =
     [
         "http://schemas.microsoft.com/expression/blend/2008",
