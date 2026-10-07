@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.5](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.1.4...v3.1.5) (2026-10-07)
+
+
+### ci
+
+* use backslash paths so dotnet nuget push finds the packages on Windows ([bcce5d0](https://github.com/atc-net/atc-xaml-toolkit/commit/bcce5d038c7a8ad8f02d8500c905e8b1f9e8bb53))
+
 ## [3.1.4](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.1.3...v3.1.4) (2026-10-07)
 
 
