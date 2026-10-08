@@ -278,6 +278,23 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         builder.AppendLine();
 
+        // DisposeCommands() has no source member to copy docs from, so it gets a fixed summary
+        // whenever the class opts into documented commands (copied docs or GenerateDocumentation).
+        var hasDocumentedCommands = false;
+        foreach (var cmd in commands)
+        {
+            if (cmd.GenerateDocumentation || !cmd.DocumentationComments.IsEmpty)
+            {
+                hasDocumentedCommands = true;
+                break;
+            }
+        }
+
+        if (hasDocumentedCommands)
+        {
+            builder.AppendSummary("Disposes the async commands and releases their cancellation resources.");
+        }
+
         builder.AppendLine("public void DisposeCommands()");
         builder.AppendLine("{");
         builder.IncreaseIndent();
