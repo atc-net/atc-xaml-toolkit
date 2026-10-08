@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.1.5...v3.2.0) (2026-10-08)
+
+
+### New features
+
+* copy XML docs from fields/methods to generated DP, attached property, routed event and command members ([eb164f9](https://github.com/atc-net/atc-xaml-toolkit/commit/eb164f910eba45cac0dc6414bf9a43575d610fa6))
+* document generated DisposeCommands() when commands are documented ([2c6a179](https://github.com/atc-net/atc-xaml-toolkit/commit/2c6a179e34faf0d584ee341a090a723806cc3fbf))
+
 ## [3.1.5](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.1.4...v3.1.5) (2026-10-07)
 
 
