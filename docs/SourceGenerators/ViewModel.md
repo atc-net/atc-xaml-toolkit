@@ -645,6 +645,7 @@ The `RelayCommand` attribute generates `IRelayCommand` properties, eliminating m
 - `ParameterValue` or `ParameterValues` for 1 or many parameter values.
 - `GenerateDocumentation` emits a default `/// <summary>Gets the {CommandName}.</summary>` block above the generated command property (and matching summaries on the cancel command property and `Cancel{Name}()` method when `SupportsCancellation = true`). Off by default. Honors the same `[assembly: GenerateDocumentationDefault]` opt-in as `[ObservableProperty]` — set the assembly attribute and every plain `[RelayCommand]` gets its docs without per-attribute flags. Per-attribute `GenerateDocumentation = false` always wins as an explicit opt-out.
 - XML doc comments on the method are copied to the generated command property and take precedence over `GenerateDocumentation`. Method-only elements (`<param>`, `<typeparam>`, `<returns>`) are left out, since they don't apply to a property.
+- When any command in the class is documented (copied docs or `GenerateDocumentation`), the generated `DisposeCommands()` method also gets a summary, so it doesn't trigger CS1591.
 
 ### 🛠 Quick Start Tips for RelayCommands
 
