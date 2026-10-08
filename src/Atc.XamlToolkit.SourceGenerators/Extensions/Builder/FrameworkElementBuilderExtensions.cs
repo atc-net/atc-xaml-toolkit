@@ -151,6 +151,11 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLineBeforeMember();
 
+        if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
+        {
+            builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
+        }
+
         // Avalonia uses generic type parameters, WPF/WinUI use typeof() parameters
         if (xamlPlatform == XamlPlatform.Avalonia)
         {
@@ -195,6 +200,23 @@ internal static class FrameworkElementBuilderExtensions
         {
             builder.AppendLine($"typeof({p.Type.TrimNullableForTypeOf()}),");
         }
+    }
+
+    private static string GetPropertyIdentifierSummary(
+        BaseFrameworkElementPropertyToGenerate p,
+        bool isAttached,
+        XamlPlatform xamlPlatform)
+    {
+        // Attached properties and properties on a static owner only have Get/Set methods,
+        // so there is no {Name} member for a cref to point at.
+        if (isAttached || p.IsOwnerTypeStatic)
+        {
+            return $"Identifies the {p.Name} attached property.";
+        }
+
+        return xamlPlatform == XamlPlatform.Avalonia
+            ? $"Identifies the <see cref=\"{p.Name}\"/> styled property."
+            : $"Identifies the <see cref=\"{p.Name}\"/> dependency property.";
     }
 
     private static void GenerateDependencyPropertyBody(
@@ -452,12 +474,7 @@ internal static class FrameworkElementBuilderExtensions
 
         if (p.IsOwnerTypeStatic)
         {
-            if (p.GenerateDocumentation)
-            {
-                builder.AppendLine("/// <summary>");
-                builder.AppendLine($"/// Gets the {p.Name} attached property value.");
-                builder.AppendLine("/// </summary>");
-            }
+            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -487,12 +504,7 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine();
 
-            if (p.GenerateDocumentation)
-            {
-                builder.AppendLine("/// <summary>");
-                builder.AppendLine($"/// Sets the {p.Name} attached property value.");
-                builder.AppendLine("/// </summary>");
-            }
+            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -514,12 +526,7 @@ internal static class FrameworkElementBuilderExtensions
         }
         else
         {
-            if (p.GenerateDocumentation)
-            {
-                builder.AppendLine("/// <summary>");
-                builder.AppendLine($"/// Gets or sets the {p.Name}.");
-                builder.AppendLine("/// </summary>");
-            }
+            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets or sets the {p.Name}.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -575,12 +582,7 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine();
 
-        if (p.GenerateDocumentation)
-        {
-            builder.AppendLine("/// <summary>");
-            builder.AppendLine($"/// Gets the {p.Name} attached property value.");
-            builder.AppendLine("/// </summary>");
-        }
+        builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
 
         if (!string.IsNullOrEmpty(p.Category))
         {
@@ -612,12 +614,7 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine();
 
-            if (p.GenerateDocumentation)
-            {
-                builder.AppendLine("/// <summary>");
-                builder.AppendLine($"/// Sets the {p.Name} attached property value.");
-                builder.AppendLine("/// </summary>");
-            }
+            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -645,6 +642,13 @@ internal static class FrameworkElementBuilderExtensions
         RoutedEventToGenerate re)
     {
         builder.AppendLineBeforeMember();
+
+        // RoutedEvent has no GenerateDocumentation flag, so only document it when the field has docs.
+        if (!re.DocumentationComments.IsEmpty)
+        {
+            builder.AppendSummary($"Identifies the <see cref=\"{re.Name}\"/> routed event.");
+        }
+
         builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
         builder.IncreaseIndent();
         builder.AppendLine($"name: nameof({re.Name}),");
@@ -655,6 +659,7 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendLine($"ownerType: typeof({re.OwnerType}));");
         builder.DecreaseIndent();
         builder.AppendLine();
+        builder.AppendDocumentation(re.DocumentationComments, generateDocumentation: false, fallbackSummary: string.Empty);
         builder.AppendLine($"public event {re.HandlerTypeName} {re.Name}");
         builder.AppendLine("{");
         builder.IncreaseIndent();

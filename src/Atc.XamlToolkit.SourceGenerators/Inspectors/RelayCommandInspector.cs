@@ -171,6 +171,8 @@ internal static class RelayCommandInspector
             generateDocumentation = generateDocumentationDefault;
         }
 
+        var documentationComments = methodSymbol.ExtractDocumentationComments();
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
@@ -186,6 +188,9 @@ internal static class RelayCommandInspector
                 executeOnBackgroundThread,
                 autoSetIsBusy,
                 supportsCancellation,
-                generateDocumentation));
+                generateDocumentation)
+            {
+                DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
+            });
     }
 }

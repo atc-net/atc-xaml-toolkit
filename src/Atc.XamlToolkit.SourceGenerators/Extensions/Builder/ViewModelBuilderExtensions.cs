@@ -67,23 +67,10 @@ internal static class ViewModelBuilderExtensions
 
         builder.AppendLineBeforeMember();
 
-        // Generate documentation comments if present
-        if (!p.DocumentationComments.IsEmpty)
-        {
-            foreach (var documentationComment in p.DocumentationComments)
-            {
-                builder.AppendLine(documentationComment);
-            }
-        }
-        else if (p.GenerateDocumentation)
-        {
-            // Opt-in fallback: when the user sets [ObservableProperty(GenerateDocumentation = true)]
-            // and the backing field has no XML doc comments of its own, emit a default summary so
-            // the generated property carries IntelliSense.
-            builder.AppendLine("/// <summary>");
-            builder.AppendLine($"/// Gets or sets the {p.Name}.");
-            builder.AppendLine("/// </summary>");
-        }
+        // Copy the backing field's XML doc comments. Opt-in fallback: when the user sets
+        // [ObservableProperty(GenerateDocumentation = true)] and the field has no XML doc
+        // comments of its own, emit a default summary so the property carries IntelliSense.
+        builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets or sets the {p.Name}.");
 
         // Generate custom attributes if present
         if (!p.CustomAttributes.IsEmpty)

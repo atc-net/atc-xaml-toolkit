@@ -80,6 +80,38 @@ internal abstract class BuilderBase
         wasLastCallAppendLine = true;
     }
 
+    // Appends the XML doc comments copied from the source member. When there are none and
+    // generateDocumentation is set, appends a summary with the fallback text instead.
+    public void AppendDocumentation(
+        EquatableArray<string> documentationComments,
+        bool generateDocumentation,
+        string fallbackSummary)
+    {
+        if (!documentationComments.IsEmpty)
+        {
+            foreach (var documentationComment in documentationComments)
+            {
+                // Re-indent each line: the source member may be nested deeper than the
+                // generated member, e.g. in a block-scoped namespace.
+                foreach (var line in documentationComment.Split('\n'))
+                {
+                    AppendLine(line.Trim());
+                }
+            }
+        }
+        else if (generateDocumentation)
+        {
+            AppendSummary(fallbackSummary);
+        }
+    }
+
+    public void AppendSummary(string summary)
+    {
+        AppendLine("/// <summary>");
+        AppendLine($"/// {summary}");
+        AppendLine("/// </summary>");
+    }
+
     public void Append(string stringToAppend)
     {
         if (wasLastCallAppendLine)

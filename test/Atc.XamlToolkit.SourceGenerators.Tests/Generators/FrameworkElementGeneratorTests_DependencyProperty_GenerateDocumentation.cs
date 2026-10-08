@@ -27,6 +27,9 @@ public sealed partial class FrameworkElementGeneratorTests
 
             public partial class MyControl
             {
+                /// <summary>
+                /// Identifies the <see cref="IsRunning"/> dependency property.
+                /// </summary>
                 public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
                     nameof(IsRunning),
                     typeof(bool),
@@ -118,6 +121,9 @@ public sealed partial class FrameworkElementGeneratorTests
 
             public partial class MyControl
             {
+                /// <summary>
+                /// Identifies the <see cref="IsRunning"/> dependency property.
+                /// </summary>
                 public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
                     nameof(IsRunning),
                     typeof(bool),
@@ -170,6 +176,9 @@ public sealed partial class FrameworkElementGeneratorTests
 
             public partial class MyControl
             {
+                /// <summary>
+                /// Identifies the <see cref="IsRunning"/> dependency property.
+                /// </summary>
                 public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
                     nameof(IsRunning),
                     typeof(bool),

@@ -91,6 +91,8 @@ public partial class CustomButton
 }
 ```
 
+When the field has XML doc comments, the generator copies them to the generated event, and the `{Name}Event` field gets an `Identifies the <see cref="{Name}"/> routed event.` summary.
+
 ### 🛠️ Specifying a custom delegate type
 
 If you want a strongly‑typed event handler (instead of the generic RoutedEventHandler) add the HandlerType named argument:

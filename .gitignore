@@ -400,3 +400,7 @@ FodyWeavers.xsd
 *.sln.iml
 .claude/settings.local.json
 .claude/settings.local.json
+
+# Local working notes
+plans/
+issues/
