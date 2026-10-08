@@ -93,7 +93,20 @@ The source generator automatically detects your platform and generates the appro
 
 ## 📚 XML documentation generation
 
-Attached property accessors are public APIs that ship to consumers; the generator can emit a default `/// <summary>` on the static `Get{Name}` / `Set{Name}` methods. The behaviour is **opt-in** to keep existing snapshots byte-identical:
+When the backing field has XML doc comments, the generator copies them to the generated `Get{Name}` / `Set{Name}` methods, and the `{Name}Property` field gets an "Identifies the {Name} attached property." summary:
+
+```csharp
+public static partial class DragBehavior
+{
+    /// <summary>
+    /// Allows the element to be dragged.
+    /// </summary>
+    [AttachedProperty]
+    private static bool isDraggable;
+}
+```
+
+For fields without docs, attached property accessors are public APIs that ship to consumers, so the generator can emit a default `/// <summary>` on the static `Get{Name}` / `Set{Name}` methods. The behaviour is **opt-in** to keep existing snapshots byte-identical:
 
 ```csharp
 public static partial class DragBehavior
@@ -106,6 +119,12 @@ public static partial class DragBehavior
 generates:
 
 ```csharp
+/// <summary>
+/// Identifies the IsDraggable attached property.
+/// </summary>
+public static readonly DependencyProperty IsDraggableProperty = DependencyProperty.RegisterAttached(
+    ...);
+
 /// <summary>
 /// Gets the IsDraggable attached property value.
 /// </summary>
@@ -128,6 +147,8 @@ To flip the default across the entire assembly, apply once:
 ```
 
 Plain `[AttachedProperty]` (and `[DependencyProperty]`, `[StyledProperty]`, `[ObservableProperty]`, `[RelayCommand]`) then emit the default summary by default. Per-attribute `GenerateDocumentation = false` still wins as an explicit opt-out.
+
+Docs on the field always take precedence: `GenerateDocumentation` is a *fallback*, not a replacement.
 
 ---
 

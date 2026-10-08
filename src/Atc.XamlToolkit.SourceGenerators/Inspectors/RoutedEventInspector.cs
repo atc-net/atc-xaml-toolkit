@@ -90,11 +90,16 @@ internal static class RoutedEventInspector
             }
         }
 
+        var documentationComments = fieldSymbol.ExtractDocumentationComments();
+
         routedEventToGenerate.Add(
             new RoutedEventToGenerate(
                 OwnerType: classSymbol.Name,
                 Name: propertyName,
                 RoutingStrategy: routingStrategy,
-                HandlerTypeName: handlerTypeName));
+                HandlerTypeName: handlerTypeName)
+            {
+                DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
+            });
     }
 }

@@ -114,7 +114,37 @@ The source generator automatically detects your platform and generates the appro
 
 ## 📚 XML documentation generation
 
-Since framework-element APIs are typically shipped as public NuGet packages, the generator can emit a default `/// <summary>` on the generated CLR property. The behaviour is **opt-in** so existing snapshots stay byte-identical:
+When the backing field has XML doc comments, the generator copies them to the generated CLR property, and the `{Name}Property` field gets an "Identifies the ... dependency property." summary:
+
+```csharp
+/// <summary>
+/// The width of the pane when it is open.
+/// </summary>
+[DependencyProperty(DefaultValue = 240d)]
+private double openPaneLength;
+```
+
+generates:
+
+```csharp
+/// <summary>
+/// Identifies the <see cref="OpenPaneLength"/> dependency property.
+/// </summary>
+public static readonly DependencyProperty OpenPaneLengthProperty = DependencyProperty.Register(
+    ...);
+
+/// <summary>
+/// The width of the pane when it is open.
+/// </summary>
+public double OpenPaneLength
+{
+    ...
+}
+```
+
+The same applies to `[StyledProperty]` on Avalonia ("Identifies the ... styled property."). On a static owner class, the docs go on the generated `Get{Name}` / `Set{Name}` methods.
+
+For fields **without** docs, and for the class-level form (which has no field), the generator can emit a default summary instead. Since framework-element APIs are typically shipped as public NuGet packages, the generator can emit a default `/// <summary>` on the generated CLR property. The behaviour is **opt-in** so existing snapshots stay byte-identical:
 
 ```csharp
 [DependencyProperty(GenerateDocumentation = true)]
@@ -124,6 +154,12 @@ private bool isRunning;
 generates:
 
 ```csharp
+/// <summary>
+/// Identifies the <see cref="IsRunning"/> dependency property.
+/// </summary>
+public static readonly DependencyProperty IsRunningProperty = DependencyProperty.Register(
+    ...);
+
 /// <summary>
 /// Gets or sets the IsRunning.
 /// </summary>
@@ -150,6 +186,8 @@ To enable defaults across the assembly without writing the flag on every attribu
 ```
 
 After this, plain `[DependencyProperty]` (and `[ObservableProperty]`, `[RelayCommand]`, `[AttachedProperty]`, `[StyledProperty]`) emit the default summary. Per-attribute `GenerateDocumentation = false` still wins as an explicit opt-out.
+
+Docs on the field always take precedence: `GenerateDocumentation` is a *fallback*, not a replacement.
 
 ---
 

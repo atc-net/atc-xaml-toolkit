@@ -18,6 +18,8 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     string? Description,
     bool GenerateDocumentation)
 {
+    public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
+
     public bool HasAnyMetadata
         => DefaultValue is not null ||
            PropertyChangedCallback is not null ||

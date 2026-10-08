@@ -129,7 +129,7 @@ internal static class FrameworkElementInspectorHelper
             out var generateDocumentation,
             ref defaultValue);
 
-        return BaseFrameworkElementPropertyToGenerate.Create<T>(
+        var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
             classSymbol.IsStatic,
             ownerType,
             propertyName,
@@ -146,6 +146,11 @@ internal static class FrameworkElementInspectorHelper
             category,
             description,
             generateDocumentation);
+
+        var documentationComments = fieldSymbol.ExtractDocumentationComments();
+        propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);
+
+        return propertyToGenerate;
     }
 
     private static bool HasGenerateDocumentationDefaultAttribute(

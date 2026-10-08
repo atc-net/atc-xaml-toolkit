@@ -80,12 +80,7 @@ internal abstract class CommandBuilderBase : BuilderBase
                                     cmd.ExecuteOnBackgroundThread ||
                                     cmd.AutoSetIsBusy;
 
-            if (cmd.GenerateDocumentation)
-            {
-                builder.AppendLine("/// <summary>");
-                builder.AppendLine($"/// Gets the {propName}.");
-                builder.AppendLine("/// </summary>");
-            }
+            builder.AppendDocumentation(cmd.DocumentationComments, cmd.GenerateDocumentation, $"Gets the {propName}.");
 
             // For WinUI async commands, generate full properties with PropertyChanged subscription
             var needsPropertyChangedSubscription = builder.XamlPlatform == XamlPlatform.WinUI && cmd.UseTask;

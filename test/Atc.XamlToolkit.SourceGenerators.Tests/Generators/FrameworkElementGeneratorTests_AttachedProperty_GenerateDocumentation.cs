@@ -27,6 +27,9 @@ public sealed partial class FrameworkElementGeneratorTests
 
             public static partial class DragBehavior
             {
+                /// <summary>
+                /// Identifies the IsDraggable attached property.
+                /// </summary>
                 public static readonly DependencyProperty IsDraggableProperty = DependencyProperty.RegisterAttached(
                     "IsDraggable",
                     typeof(bool),
@@ -127,6 +130,9 @@ public sealed partial class FrameworkElementGeneratorTests
 
             public static partial class DragBehavior
             {
+                /// <summary>
+                /// Identifies the IsDraggable attached property.
+                /// </summary>
                 public static readonly DependencyProperty IsDraggableProperty = DependencyProperty.RegisterAttached(
                     "IsDraggable",
                     typeof(bool),

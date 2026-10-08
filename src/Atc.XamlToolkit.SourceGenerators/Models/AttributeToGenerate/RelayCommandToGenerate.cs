@@ -15,4 +15,7 @@ internal sealed record RelayCommandToGenerate(
     bool ExecuteOnBackgroundThread,
     bool AutoSetIsBusy,
     bool SupportsCancellation,
-    bool GenerateDocumentation);
+    bool GenerateDocumentation)
+{
+    public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
+}
