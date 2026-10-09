@@ -7,6 +7,7 @@ global using System.Windows.Input;
 global using System.Windows.Threading;
 
 global using Atc.XamlToolkit.Command;
+global using Atc.XamlToolkit.Controls.Attributes;
 global using Atc.XamlToolkit.Helpers;
 global using Atc.XamlToolkit.Mvvm;
 global using Atc.XamlToolkit.Resolvers;

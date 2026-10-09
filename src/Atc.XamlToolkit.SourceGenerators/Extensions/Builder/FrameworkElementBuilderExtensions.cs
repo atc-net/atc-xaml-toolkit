@@ -240,7 +240,9 @@ internal static class FrameworkElementBuilderExtensions
 
             if (string.IsNullOrEmpty(p.Flags) &&
                 string.IsNullOrEmpty(p.PropertyChangedCallback) &&
-                string.IsNullOrEmpty(p.CoerceValueCallback))
+                string.IsNullOrEmpty(p.CoerceValueCallback) &&
+                string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger) &&
+                p.IsAnimationProhibited is null)
             {
                 if (isWpf && p.HasAnyValidateValueCallback)
                 {
@@ -358,6 +360,8 @@ internal static class FrameworkElementBuilderExtensions
 
         if (string.IsNullOrEmpty(p.PropertyChangedCallback))
         {
+            // PropertyMetadata has no (defaultValue, coerceValueCallback) constructor
+            builder.AppendLine("propertyChangedCallback: null,");
             builder.AppendLine(
                 endWithComma
                     ? $"coerceValueCallback: {p.CoerceValueCallback}),"
@@ -385,6 +389,12 @@ internal static class FrameworkElementBuilderExtensions
         BaseFrameworkElementPropertyToGenerate p,
         bool endWithComma)
     {
+        if (RequiresFullFrameworkPropertyMetadataConstructor(p))
+        {
+            GenerateFullFrameworkPropertyMetadata(builder, p, endWithComma);
+            return;
+        }
+
         builder.AppendLine("new FrameworkPropertyMetadata(");
         builder.IncreaseIndent();
         if (p.DefaultValue is not null && !"null".Equals(p.DefaultValue))
@@ -457,6 +467,62 @@ internal static class FrameworkElementBuilderExtensions
             endWithComma
                 ? "),"
                 : "));");
+    }
+
+    /// <summary>
+    /// The coerce callback, IsAnimationProhibited and DefaultUpdateSourceTrigger are only available
+    /// on constructors that also take flags and propertyChangedCallback.
+    /// </summary>
+    private static bool RequiresFullFrameworkPropertyMetadataConstructor(
+        BaseFrameworkElementPropertyToGenerate p)
+        => (!string.IsNullOrEmpty(p.CoerceValueCallback) ||
+            !string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger) ||
+            p.IsAnimationProhibited.HasValue) &&
+           (string.IsNullOrEmpty(p.Flags) ||
+            string.IsNullOrEmpty(p.PropertyChangedCallback));
+
+    private static void GenerateFullFrameworkPropertyMetadata(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        bool endWithComma)
+    {
+        var defaultValue = p.DefaultValue is not null && !"null".Equals(p.DefaultValue)
+            ? p.DefaultValue
+            : "null";
+
+        var arguments = new List<string>
+        {
+            $"defaultValue: {defaultValue}",
+            $"flags: {(string.IsNullOrEmpty(p.Flags) ? "FrameworkPropertyMetadataOptions.None" : p.Flags)}",
+            $"propertyChangedCallback: {(string.IsNullOrEmpty(p.PropertyChangedCallback) ? "null" : p.PropertyChangedCallback)}",
+            $"coerceValueCallback: {(string.IsNullOrEmpty(p.CoerceValueCallback) ? "null" : p.CoerceValueCallback)}",
+        };
+
+        if (p.IsAnimationProhibited.HasValue ||
+            !string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger))
+        {
+            var isAnimationProhibited = p.IsAnimationProhibited.GetValueOrDefault()
+                .ToString()
+                .ToLowerInvariant();
+            arguments.Add($"isAnimationProhibited: {isAnimationProhibited}");
+        }
+
+        if (!string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger))
+        {
+            arguments.Add($"defaultUpdateSourceTrigger: {p.DefaultUpdateSourceTrigger}");
+        }
+
+        builder.AppendLine("new FrameworkPropertyMetadata(");
+        builder.IncreaseIndent();
+        for (var i = 0; i < arguments.Count - 1; i++)
+        {
+            builder.AppendLine($"{arguments[i]},");
+        }
+
+        builder.AppendLine(
+            endWithComma
+                ? $"{arguments[arguments.Count - 1]}),"
+                : $"{arguments[arguments.Count - 1]}));");
     }
 
     private static void GenerateClrDependencyProperty(
