@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.2.0...v3.2.1) (2026-10-09)
+
+
+### Bug fixes
+
+* emit complete FrameworkPropertyMetadata constructor calls for [DependencyProperty] and [AttachedProperty] ([9a87edf](https://github.com/atc-net/atc-xaml-toolkit/commit/9a87edf1e8990932e3c48e4d8844050a52ec4037))
+
 ## [3.2.0](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.1.5...v3.2.0) (2026-10-08)
 
 
