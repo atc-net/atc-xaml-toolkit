@@ -295,6 +295,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     typeof(MyControl),
                     new PropertyMetadata(
                         defaultValue: Atc.XamlToolkit.BooleanBoxes.FalseBox,
+                        propertyChangedCallback: null,
                         coerceValueCallback: CoerceValueCallback));
 
                 public bool IsRunning
