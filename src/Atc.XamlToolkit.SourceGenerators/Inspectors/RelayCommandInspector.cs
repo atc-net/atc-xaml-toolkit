@@ -63,6 +63,47 @@ internal static class RelayCommandInspector
         return false;
     }
 
+    // Returns the ParameterValue / ParameterValues arguments as C# expressions.
+    // Bound constants are rendered as literals (quoted strings, true/false, qualified enum
+    // members); the textual fallback is only used when the arguments could not be bound.
+    private static List<string> ExtractParameterValues(
+        AttributeData relayCommandAttribute,
+        IDictionary<string, string?> relayCommandArgumentValues)
+    {
+        foreach (var namedArgument in relayCommandAttribute.NamedArguments)
+        {
+            if (namedArgument.Key == NameConstants.ParameterValue &&
+                namedArgument.Value.Kind is not (TypedConstantKind.Error or TypedConstantKind.Array))
+            {
+                return [namedArgument.Value.ToCSharpString()];
+            }
+
+            if (namedArgument.Key == NameConstants.ParameterValues &&
+                namedArgument.Value is { Kind: TypedConstantKind.Array, IsNull: false } &&
+                namedArgument.Value.Values.All(x => x.Kind is not (TypedConstantKind.Error or TypedConstantKind.Array)))
+            {
+                return namedArgument.Value.Values
+                    .Select(x => x.ToCSharpString())
+                    .ToList();
+            }
+        }
+
+        var parameterValues = new List<string>();
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValue, out var parameterValueValue))
+        {
+            parameterValues.Add(parameterValueValue!);
+        }
+        else if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValues, out var parameterValuesValue))
+        {
+            parameterValues.AddRange(
+                parameterValuesValue!
+                    .Split(',')
+                    .Select(x => x.Trim()));
+        }
+
+        return parameterValues;
+    }
+
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void AppendRelayCommandToGenerate(
         IMethodSymbol methodSymbol,
@@ -108,18 +149,7 @@ internal static class RelayCommandInspector
                                        memberSymbols.HasObservablePropertyOrFieldName(canExecuteName);
         }
 
-        var parameterValues = new List<string>();
-        if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValue, out var parameterValueValue))
-        {
-            parameterValues.Add(parameterValueValue!);
-        }
-        else if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValues, out var parameterValuesValue))
-        {
-            parameterValues.AddRange(
-                parameterValuesValue!
-                    .Split(',')
-                    .Select(x => x.Trim()));
-        }
+        var parameterValues = ExtractParameterValues(relayCommandAttribute, relayCommandArgumentValues);
 
         List<string>? parameterTypes = null;
         List<string>? parameterNames = null;

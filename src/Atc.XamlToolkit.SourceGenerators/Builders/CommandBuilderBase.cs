@@ -770,7 +770,11 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         if (!cmd.ParameterValues.IsEmpty)
         {
-            return $"{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
+            // The command takes no parameter - the fixed values are passed in a lambda.
+            var negation = cmd.InvertCanExecute ? "!" : string.Empty;
+            return cmd.UsePropertyForCanExecute
+                ? $"() => {negation}{cmd.CanExecuteName}"
+                : $"() => {negation}{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
         }
 
         var types = cmd.ParameterTypes;

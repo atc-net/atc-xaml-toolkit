@@ -1008,19 +1008,19 @@ public sealed partial class ViewModelGeneratorTests
             
                 public IRelayCommandAsync MyTestLeftCommand => myTestLeftCommand ??= new RelayCommandAsync(
                     () => TurnDirectionSingle(LeftTopRightBottomType.Left, 1),
-                    CanTurnDirectionSingle(LeftTopRightBottomType.Left, 1));
+                    () => CanTurnDirectionSingle(LeftTopRightBottomType.Left, 1));
 
                 public IRelayCommandAsync MyTestTopCommand => myTestTopCommand ??= new RelayCommandAsync(
                     () => TurnDirectionSingle(LeftTopRightBottomType.Top, 1),
-                    CanTurnDirectionSingle(LeftTopRightBottomType.Top, 1));
+                    () => CanTurnDirectionSingle(LeftTopRightBottomType.Top, 1));
 
                 public IRelayCommandAsync MyTestRightCommand => myTestRightCommand ??= new RelayCommandAsync(
                     () => TurnDirectionSingle(LeftTopRightBottomType.Right, 1),
-                    CanTurnDirectionSingle(LeftTopRightBottomType.Right, 1));
+                    () => CanTurnDirectionSingle(LeftTopRightBottomType.Right, 1));
 
                 public IRelayCommandAsync MyTestBottomCommand => myTestBottomCommand ??= new RelayCommandAsync(
                     () => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1),
-                    CanTurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
+                    () => CanTurnDirectionSingle(LeftTopRightBottomType.Bottom, 1));
 
                 public void DisposeCommands()
                 {

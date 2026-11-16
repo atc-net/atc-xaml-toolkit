@@ -221,6 +221,50 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void RelayCommand_ParameterValues_WithCanExecute_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public enum Direction
+            {
+                Left,
+                Right,
+            }
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                public bool IsReady { get; set; }
+
+                [RelayCommand("TurnLeft", CanExecute = nameof(CanTurn), ParameterValues = [Direction.Left, 1])]
+                [RelayCommand("TurnRight", CanExecute = nameof(CanTurn), InvertCanExecute = true, ParameterValues = [Direction.Right, 2])]
+                private void Turn(Direction direction, int steps)
+                {
+                }
+
+                private bool CanTurn(Direction direction, int steps) => true;
+
+                [RelayCommand("SayHello", ParameterValue = "say \"hi\", twice")]
+                [RelayCommand("SayBye", CanExecute = nameof(IsReady), ParameterValue = "bye")]
+                private void Say(string text)
+                {
+                }
+
+                [RelayCommand("Enable", ParameterValue = true)]
+                private void SetEnabled(bool value)
+                {
+                }
+
+                [RelayCommand("Half", ParameterValues = [0.5, 'x', "a, b"])]
+                private Task ScaleAsync(double factor, char unit, string label) => Task.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =
