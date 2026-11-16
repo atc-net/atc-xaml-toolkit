@@ -32,7 +32,6 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         AvaloniaProperty.Register<AnimationBehavior, bool>(nameof(AutoStart));
 
     private object? lastTrigger;
-    private IDisposable? subscription;
 
     /// <summary>
     /// Gets or sets the trigger value. When changed, the animation will play.
@@ -78,32 +77,19 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         base.OnAttached();
 
         AssociatedObject.AttachedToVisualTree += OnAttachedToVisualTree;
-
-        // Subscribe to property changes on the behavior itself
-        subscription = AnimationTriggerProperty.Changed.Subscribe(new AnimationTriggerObserver(this));
     }
 
-    private sealed class AnimationTriggerObserver : IObserver<AvaloniaPropertyChangedEventArgs<object?>>
+    /// <inheritdoc />
+    protected override void OnPropertyChanged(
+        AvaloniaPropertyChangedEventArgs change)
     {
-        private readonly AnimationBehavior behavior;
+        ArgumentNullException.ThrowIfNull(change);
 
-        public AnimationTriggerObserver(AnimationBehavior behavior)
-            => this.behavior = behavior;
+        base.OnPropertyChanged(change);
 
-        public void OnNext(AvaloniaPropertyChangedEventArgs<object?> value)
+        if (change.Property == AnimationTriggerProperty && AssociatedObject is not null)
         {
-            if (ReferenceEquals(value.Sender, behavior))
-            {
-                behavior.OnAnimationTriggerChanged(value.NewValue.GetValueOrDefault());
-            }
-        }
-
-        public void OnError(Exception error)
-        {
-        }
-
-        public void OnCompleted()
-        {
+            OnAnimationTriggerChanged(change.NewValue);
         }
     }
 
@@ -114,9 +100,6 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         {
             AssociatedObject.AttachedToVisualTree -= OnAttachedToVisualTree;
         }
-
-        subscription?.Dispose();
-        subscription = null;
 
         base.OnDetaching();
     }
