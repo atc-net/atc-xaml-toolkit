@@ -24,6 +24,15 @@ public sealed class MarkupExtensionParser
         {
             var reader = new TokenReader(sourceText);
             graph = ParseMarkupExtension(reader);
+
+            // Anything left after the closing brace means the value is not a single markup
+            // extension (e.g. "{0} of {1}"); treating it as one would discard the remainder.
+            reader.SkipWhitespace();
+            if (!reader.IsAtEnd)
+            {
+                graph = null;
+            }
+
             return graph is not null;
         }
         catch

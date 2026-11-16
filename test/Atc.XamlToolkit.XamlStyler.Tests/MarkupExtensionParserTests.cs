@@ -271,4 +271,43 @@ public sealed class MarkupExtensionParserTests
         result.Should().Be(xaml);
         service.StyleDocument(result).Should().Be(result, "formatting should be idempotent");
     }
+
+    [Theory]
+    [InlineData("{0} of {1}")]
+    [InlineData("{Binding Name} items")]
+    [InlineData("{Binding A}{Binding B}")]
+    public void TryParse_TextAfterTheExtension_Fails(string sourceText)
+    {
+        // Arrange & Act
+        var success = MarkupExtensionParser.TryParse(sourceText, out var graph);
+
+        // Assert
+        success.Should().BeFalse();
+        graph.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryParse_SurroundingWhitespace_Succeeds()
+    {
+        // Arrange & Act
+        var success = MarkupExtensionParser.TryParse("  {Binding Name}  ", out var graph);
+
+        // Assert
+        success.Should().BeTrue();
+        graph!.TypeName.Should().Be("Binding");
+    }
+
+    [Fact]
+    public void StyleDocument_AttributeValueWithSeveralBraceGroups_IsUnchanged()
+    {
+        // Arrange
+        var xaml = @"<Button xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" Tag=""{0} of {1}"" />";
+        var service = new XamlStylerService(new XamlStylerOptions());
+
+        // Act
+        var result = service.StyleDocument(xaml);
+
+        // Assert
+        result.Should().Be(xaml);
+    }
 }
