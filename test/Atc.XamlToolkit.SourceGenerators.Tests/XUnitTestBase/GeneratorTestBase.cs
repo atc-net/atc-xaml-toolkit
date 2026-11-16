@@ -197,6 +197,129 @@ public abstract class GeneratorTestBase
         TestResultHelper.AssertOnTestResults(testResults);
     }
 
+    /// <summary>
+    /// Runs all three generators together on the given sources - the way a consumer project
+    /// does - and asserts that no generator throws and that the resulting compilation
+    /// (user code + generated code) has no errors.
+    /// </summary>
+    /// <remarks>
+    /// The compilation mimics a minimal Avalonia consumer: the SDK implicit usings plus
+    /// <c>Atc.XamlToolkit.Mvvm</c> and <c>Atc.XamlToolkit.Command</c>, nullable enabled, and
+    /// references to <c>Atc.XamlToolkit</c>, <c>Atc.XamlToolkit.Avalonia</c> and Avalonia.
+    /// </remarks>
+    /// <param name="inputCodes">Source files to compile.</param>
+    internal static void AssertCompilesWithAllGenerators(
+        params string[] inputCodes)
+    {
+        var problems = CompileWithAllGenerators(inputCodes);
+        if (problems.Count == 0)
+        {
+            return;
+        }
+
+        Assert.Fail(string.Join(Environment.NewLine, problems));
+    }
+
+    /// <summary>
+    /// Runs all three generators together on the given sources and returns the generator
+    /// exceptions and compile errors, followed by the generated sources.
+    /// The list is empty when everything compiles.
+    /// </summary>
+    /// <param name="inputCodes">Source files to compile.</param>
+    /// <returns>The problems found.</returns>
+    internal static IReadOnlyList<string> CompileWithAllGenerators(
+        params string[] inputCodes)
+    {
+        const string consumerGlobalUsings =
+            """
+            global using System;
+            global using System.Collections.Generic;
+            global using System.IO;
+            global using System.Linq;
+            global using System.Threading;
+            global using System.Threading.Tasks;
+            global using Atc.XamlToolkit.Command;
+            global using Atc.XamlToolkit.Mvvm;
+            """;
+
+        var syntaxTrees = inputCodes
+            .Prepend(consumerGlobalUsings)
+            .Select((source, index) => CSharpSyntaxTree.ParseText(source, path: $"Input{index}.cs"))
+            .ToArray();
+
+        var inputCompilation = CSharpCompilation.Create(
+            "compilation",
+            syntaxTrees,
+            ConsumerMetadataReferences.Value,
+            new CSharpCompilationOptions(
+                OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable));
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            new ViewModelGenerator().AsSourceGenerator(),
+            new ObservableDtoViewModelGenerator().AsSourceGenerator(),
+            new FrameworkElementGenerator().AsSourceGenerator());
+
+        driver = driver.RunGeneratorsAndUpdateCompilation(
+            inputCompilation,
+            out var outputCompilation,
+            out _);
+
+        var runResult = driver.GetRunResult();
+
+        var problems = new List<string>();
+
+        foreach (var result in runResult.Results.Where(x => x.Exception is not null))
+        {
+            problems.Add($"Generator exception: {result.Exception!.GetType().Name}: {result.Exception.Message}");
+        }
+
+        problems.AddRange(
+            outputCompilation
+                .GetDiagnostics()
+                .Where(x => x.Severity == DiagnosticSeverity.Error)
+                .Select(x => $"Compile error: {x.Id} {x.GetMessage(System.Globalization.CultureInfo.InvariantCulture)} @ {x.Location.GetLineSpan()}"));
+
+        if (problems.Count > 0)
+        {
+            problems.AddRange(
+                runResult.Results
+                    .SelectMany(x => x.GeneratedSources)
+                    .Select(x => $"{Environment.NewLine}----- {x.HintName}{Environment.NewLine}{x.SourceText}"));
+        }
+
+        return problems;
+    }
+
+    private static readonly Lazy<MetadataReference[]> ConsumerMetadataReferences = new(CreateConsumerMetadataReferences);
+
+    private static MetadataReference[] CreateConsumerMetadataReferences()
+    {
+        var frameworkAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(Path.PathSeparator)
+            .Where(path =>
+            {
+                var fileName = Path.GetFileName(path);
+                return fileName.StartsWith("System.", StringComparison.Ordinal)
+                       || fileName is "mscorlib.dll" or "netstandard.dll";
+            });
+
+        var consumerAssemblies = Directory
+            .GetFiles(AppContext.BaseDirectory, "*.dll")
+            .Where(path =>
+            {
+                var fileName = Path.GetFileName(path);
+                return fileName is "Atc.XamlToolkit.dll" or "Atc.XamlToolkit.Avalonia.dll"
+                       || fileName.StartsWith("Avalonia.", StringComparison.Ordinal);
+            });
+
+        return frameworkAssemblies
+            .Concat(consumerAssemblies)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(path => (MetadataReference)MetadataReference.CreateFromFile(path))
+            .ToArray();
+    }
+
     private static Compilation CreateCompilation(params string[] sources)
     {
         var syntaxTrees = sources
