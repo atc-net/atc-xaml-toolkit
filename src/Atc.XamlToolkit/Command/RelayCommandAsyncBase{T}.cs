@@ -142,8 +142,40 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             return false;
         }
 
-        return wfCanExecute is null ||
-               ((wfCanExecute.IsStatic || wfCanExecute.IsAlive) && wfCanExecute.Execute());
+        if (wfCanExecute is null)
+        {
+            return true;
+        }
+
+        if (!wfCanExecute.IsStatic && !wfCanExecute.IsAlive)
+        {
+            return false;
+        }
+
+        object? val;
+        try
+        {
+            val = ConvertParameter(parameter);
+        }
+        catch (InvalidCastException)
+        {
+            return false;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        return val switch
+        {
+            null when typeof(T).IsValueType => wfCanExecute.Execute(),
+            null or T => wfCanExecute.Execute((T)val!),
+            _ => false,
+        };
     }
 
     /// <inheritdoc />
@@ -173,36 +205,31 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     public async void Execute(object? parameter)
     {
-        var val = parameter;
+        object? val;
 
-        if (parameter is not null &&
-            parameter.GetType() != typeof(T) &&
-            parameter is IConvertible)
+        // Convert.ChangeType throws on overflow / format / unsupported casts.
+        // Without this guard the throw escapes from async void and can crash
+        // the process (no AppDomain handler for fire-and-forget continuations).
+        try
         {
-            // Convert.ChangeType throws on overflow / format / unsupported casts.
-            // Without this guard the throw escapes from async void and can crash
-            // the process (no AppDomain handler for fire-and-forget continuations).
-            try
-            {
-                val = Convert.ChangeType(parameter, typeof(T), provider: null);
-            }
-            catch (Exception ex) when (errorHandler is not null)
-            {
-                errorHandler.HandleError(ex);
-                return;
-            }
-            catch (InvalidCastException)
-            {
-                return;
-            }
-            catch (FormatException)
-            {
-                return;
-            }
-            catch (OverflowException)
-            {
-                return;
-            }
+            val = ConvertParameter(parameter);
+        }
+        catch (Exception ex) when (errorHandler is not null)
+        {
+            errorHandler.HandleError(ex);
+            return;
+        }
+        catch (InvalidCastException)
+        {
+            return;
+        }
+        catch (FormatException)
+        {
+            return;
+        }
+        catch (OverflowException)
+        {
+            return;
         }
 
         if (isExecuting || !CanExecute(val))
@@ -308,6 +335,13 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             cancellationTokenSource = null;
         }
     }
+
+    private static object? ConvertParameter(object? parameter)
+        => parameter is not null &&
+           parameter.GetType() != typeof(T) &&
+           parameter is IConvertible
+            ? Convert.ChangeType(parameter, typeof(T), provider: null)
+            : parameter;
 
     private async Task DoExecute(object? val)
     {

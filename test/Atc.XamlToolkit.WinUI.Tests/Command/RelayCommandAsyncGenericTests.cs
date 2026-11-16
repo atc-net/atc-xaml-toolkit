@@ -75,6 +75,84 @@ public sealed class RelayCommandAsyncGenericTests
         Assert.Equal(expected, actual);
     }
 
+    [Theory]
+    [InlineData(true, "go")]
+    [InlineData(false, "stop")]
+    [InlineData(false, null)]
+    public void CanExecute_PassesParameter(
+        bool expected,
+        string? parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<string>(_ => MyTask(), text => text == "go");
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, 42)]
+    [InlineData(false, 7)]
+    [InlineData(false, null)]
+    public void CanExecute_PassesParameter_ValueType(
+        bool expected,
+        object? parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<int>(_ => MyTask(), number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, "42")]
+    [InlineData(false, "7")]
+    [InlineData(false, "abc")]
+    public void CanExecute_ConvertsParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<int>(_ => MyTask(), number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, "go")]
+    [InlineData(false, "stop")]
+    public void Execute_UsesCanExecuteWithParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        var executed = false;
+        using var command = new RelayCommandAsync<string>(
+            _ =>
+            {
+                executed = true;
+                return Task.CompletedTask;
+            },
+            text => text == "go");
+
+        // Act
+        command.Execute(parameter);
+
+        // Assert
+        Assert.Equal(expected, executed);
+    }
+
     private delegate void OpDelegate(string op);
 
     private static async Task<string> MyTask()
