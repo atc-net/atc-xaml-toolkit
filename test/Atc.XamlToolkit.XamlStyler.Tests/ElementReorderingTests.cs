@@ -13,6 +13,31 @@ public sealed class ElementReorderingTests
     }
 
     [Fact]
+    public void ReorderVSM_Last_KeepsVisualStateGroups_WhenNoTrailingWhitespace()
+    {
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""><VisualStateManager.VisualStateGroups><VisualStateGroup x:Name=""g"" /></VisualStateManager.VisualStateGroups></Grid>";
+
+        var result = StyleWith(xaml, o => o.ReorderVSM = VisualStateManagerRule.Last);
+
+        result.Should().Contain("VisualStateManager.VisualStateGroups");
+        result.Should().Contain("VisualStateGroup x:Name=\"g\"");
+    }
+
+    [Fact]
+    public void ReorderVSM_Last_KeepsLastChildElement_WhenNoTrailingWhitespace()
+    {
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+    <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name=""g"" /></VisualStateManager.VisualStateGroups>
+    <Button Content=""Keep"" /></Grid>";
+
+        var result = StyleWith(xaml, o => o.ReorderVSM = VisualStateManagerRule.Last);
+
+        result.Should().Contain("Content=\"Keep\"");
+        result.IndexOf("Keep", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("VisualStateManager.VisualStateGroups", StringComparison.Ordinal), "the VisualStateManager should be moved last");
+    }
+
+    [Fact]
     public void ReorderGridChildren_SortsByRowThenColumn()
     {
         var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
