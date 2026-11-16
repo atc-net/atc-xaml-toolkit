@@ -133,7 +133,10 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
 
         _ = localMethod.Invoke(
             actionTarget,
-            new object[] { parameter! });
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            new object[] { parameter! },
+            culture: null);
     }
 
     /// <summary>

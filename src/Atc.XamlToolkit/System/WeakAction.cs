@@ -194,7 +194,12 @@ public class WeakAction
             return;
         }
 
-        _ = localMethod.Invoke(actionTarget, parameters: null);
+        _ = localMethod.Invoke(
+            actionTarget,
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            parameters: null,
+            culture: null);
     }
 
     /// <summary>

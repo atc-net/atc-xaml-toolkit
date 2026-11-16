@@ -135,7 +135,10 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
 
         return (TResult)localMethod.Invoke(
             funcTarget,
-            new object[] { parameter! })!;
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            new object[] { parameter! },
+            culture: null)!;
     }
 
     /// <summary>

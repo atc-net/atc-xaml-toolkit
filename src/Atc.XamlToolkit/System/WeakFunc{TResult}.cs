@@ -193,7 +193,12 @@ public class WeakFunc<TResult>
             return default!;
         }
 
-        return (TResult)localMethod.Invoke(funcTarget, parameters: null)!;
+        return (TResult)localMethod.Invoke(
+            funcTarget,
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            parameters: null,
+            culture: null)!;
     }
 
     /// <summary>
