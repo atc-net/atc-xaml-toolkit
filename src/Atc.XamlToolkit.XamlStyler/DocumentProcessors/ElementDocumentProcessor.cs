@@ -115,6 +115,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         else
         {
             output.Append('>');
+            elementProcessContext.Current.StartTagEndIndex = output.Length - 1;
         }
     }
 

@@ -80,4 +80,15 @@ public sealed class ElementFormattingTests
         var lines = result.Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Trim().Length > 0).ToArray();
         lines.Length.Should().Be(1);
     }
+
+    [Fact]
+    public void TextContent_WithGreaterThan_IsPreserved()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>File > Open</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        result.Should().Contain("<TextBlock>File > Open</TextBlock>");
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
 }
