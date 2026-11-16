@@ -48,6 +48,8 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
             typeof(EventToCommandBehavior),
             new PropertyMetadata(BooleanBoxes.FalseBox));
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Func<EventToCommandBehavior, Delegate>> AdapterFactories = new();
+
     private Delegate? eventHandler;
     private System.Reflection.EventInfo? eventInfo;
 
@@ -132,9 +134,52 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
             throw new InvalidOperationException($"Event '{EventName}' not found on type '{AssociatedObject.GetType().Name}'");
         }
 
-        var methodInfo = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        eventHandler = Delegate.CreateDelegate(eventInfo.EventHandlerType!, this, methodInfo!);
+        eventHandler = CreateEventHandler(eventInfo.EventHandlerType!);
         eventInfo.AddEventHandler(AssociatedObject, eventHandler);
+    }
+
+    [SuppressMessage("Design", "S3011:Make sure this accessibility bypass is safe here", Justification = "Intended.")]
+    private Delegate CreateEventHandler(Type handlerType)
+    {
+        var parameters = handlerType.GetMethod(nameof(Action.Invoke))!.GetParameters();
+        if (parameters.Length == 2 &&
+            !parameters[0].ParameterType.IsValueType &&
+            typeof(EventArgs).IsAssignableFrom(parameters[1].ParameterType))
+        {
+            var methodInfo = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return Delegate.CreateDelegate(handlerType, this, methodInfo!);
+        }
+
+        // The handler does not have an (object, EventArgs) shape - for example DependencyPropertyChangedEventHandler,
+        // whose event args is a struct - so it is bridged with a compiled adapter, created once per handler type.
+        return AdapterFactories.GetOrAdd(handlerType, CreateAdapterFactory)(this);
+    }
+
+    [SuppressMessage("Design", "S3011:Make sure this accessibility bypass is safe here", Justification = "Intended.")]
+    private static Func<EventToCommandBehavior, Delegate> CreateAdapterFactory(
+        Type handlerType)
+    {
+        var handlerParameters = handlerType
+            .GetMethod(nameof(Action.Invoke))!
+            .GetParameters()
+            .Select(p => System.Linq.Expressions.Expression.Parameter(p.ParameterType, p.Name))
+            .ToArray();
+
+        // Pass the second parameter (event args) if it exists, otherwise null
+        System.Linq.Expressions.Expression eventArgsExpression = handlerParameters.Length > 1
+            ? System.Linq.Expressions.Expression.Convert(handlerParameters[1], typeof(object))
+            : System.Linq.Expressions.Expression.Constant(null, typeof(object));
+
+        var targetMethod = typeof(EventToCommandBehavior).GetMethod(nameof(OnAdaptedEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var behaviorParameter = System.Linq.Expressions.Expression.Parameter(typeof(EventToCommandBehavior), "behavior");
+        var handler = System.Linq.Expressions.Expression.Lambda(
+            handlerType,
+            System.Linq.Expressions.Expression.Call(behaviorParameter, targetMethod, eventArgsExpression),
+            handlerParameters);
+
+        return System.Linq.Expressions.Expression
+            .Lambda<Func<EventToCommandBehavior, Delegate>>(handler, behaviorParameter)
+            .Compile();
     }
 
     private void DetachHandler()
@@ -152,6 +197,9 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
     private void OnEventRaised(
         object? sender,
         EventArgs e)
+        => OnAdaptedEventRaised(e);
+
+    private void OnAdaptedEventRaised(object? e)
     {
         var command = Command;
         if (command is null)
@@ -166,7 +214,7 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
         }
     }
 
-    private object? GetCommandParameter(EventArgs e)
+    private object? GetCommandParameter(object? e)
         => PassEventArgsToCommand
             ? e
             : CommandParameter;
