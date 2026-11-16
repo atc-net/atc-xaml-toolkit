@@ -157,6 +157,13 @@ internal static class ViewModelGeneratorHelper
             }
         }
 
+        // A class with [ObservableDtoViewModel] is owned by ObservableDtoViewModelGenerator,
+        // which also emits its [ObservableProperty] and [RelayCommand] members.
+        if (classSymbol.HasObservableDtoViewModelAttribute())
+        {
+            return null;
+        }
+
         var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
 
         var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();

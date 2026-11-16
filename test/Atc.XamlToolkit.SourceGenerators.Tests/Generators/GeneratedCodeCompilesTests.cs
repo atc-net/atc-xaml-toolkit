@@ -171,6 +171,56 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableDtoViewModel_WithCustomPropertyAndCommand_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Person
+            {
+                public string Name { get; set; } = string.Empty;
+            }
+
+            [ObservableDtoViewModel(typeof(Person))]
+            public partial class PersonViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private bool isSelectedInList;
+
+                [RelayCommand]
+                private void Save()
+                {
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
+    public void ViewModel_NamedAsHelper_WithRelayCommand_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class SaveHelper : ViewModelBase
+            {
+                [ObservableProperty]
+                private string name = string.Empty;
+
+                [RelayCommand]
+                private void Save()
+                {
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

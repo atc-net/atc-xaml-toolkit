@@ -162,6 +162,15 @@ internal static class FrameworkElementGeneratorHelper
             }
         }
 
+        // The commands of a view model class are emitted by ViewModelGenerator
+        // (or by ObservableDtoViewModelGenerator), even when the class is named like a helper.
+        if (allRelayCommands.Count > 0 &&
+            (classSymbol.CheckBaseClasses().HasAnyBase ||
+             ViewModelGeneratorHelper.ClassHasINotifyPropertyChangedAttribute(classSymbol)))
+        {
+            allRelayCommands.Clear();
+        }
+
         if (allAttachedProperties.Count == 0 &&
             allDependencyProperties.Count == 0 &&
             allRoutedEvents.Count == 0 &&
