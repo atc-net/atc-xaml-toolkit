@@ -51,7 +51,7 @@ internal static class FieldSymbolExtensions
             var syntax = syntaxRef.GetSyntax();
             if (syntax is not VariableDeclaratorSyntax
                 {
-                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration }
+                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration },
                 })
             {
                 continue;
@@ -98,7 +98,7 @@ internal static class FieldSymbolExtensions
             var syntax = syntaxRef.GetSyntax();
             if (syntax is not VariableDeclaratorSyntax
                 {
-                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration }
+                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration },
                 })
             {
                 continue;

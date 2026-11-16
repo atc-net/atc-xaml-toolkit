@@ -10,5 +10,9 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Atc.XUnit" Version="4.0.0" />
+  </ItemGroup>
+
 
 </Project>

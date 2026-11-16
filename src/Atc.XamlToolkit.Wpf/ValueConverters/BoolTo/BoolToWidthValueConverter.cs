@@ -35,8 +35,8 @@ public sealed class BoolToWidthValueConverter :
 
         return converted is not null &&
                double.TryParse(converted.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
-            ? result
-            : 0;
+                   ? result
+                   : 0;
     }
 
     public override bool ConvertBack(

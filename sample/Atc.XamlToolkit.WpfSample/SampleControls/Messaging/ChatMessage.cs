@@ -4,6 +4,8 @@ namespace Atc.XamlToolkit.WpfSample.SampleControls.Messaging;
 /// Sample message broadcast through <see cref="Atc.XamlToolkit.Messaging.Messenger"/>
 /// to demonstrate the publish/subscribe pattern.
 /// </summary>
+/// <param name="sender">The name of the sender.</param>
+/// <param name="text">The message text.</param>
 public sealed class ChatMessage(
     string sender,
     string text)

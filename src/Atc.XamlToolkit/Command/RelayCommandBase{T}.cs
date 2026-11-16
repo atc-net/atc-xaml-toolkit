@@ -8,6 +8,7 @@ namespace Atc.XamlToolkit.Command;
 [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "OK")]
 [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "OK")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "OK")]
+[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1304:Non-private readonly fields should begin with upper-case letter", Justification = "OK")]
 public abstract class RelayCommandBase<T> : IRelayCommand<T>
 {
     protected readonly WeakAction<T>? waExecute;

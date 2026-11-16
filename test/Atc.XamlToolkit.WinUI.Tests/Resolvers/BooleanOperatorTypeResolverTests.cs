@@ -16,7 +16,7 @@ public sealed class BooleanOperatorTypeResolverTests
     /// │ enum AND   │  OR      │ OR        │ { OR }    │
     /// └────────────┴──────────┴───────────┴───────────┘
     /// </summary>
-    public static IEnumerable<object?[]> ResolveOperatorData =>
+    public static IList<object?[]> ResolveOperatorData =>
     [
         [null,                    BooleanOperatorType.OR,  BooleanOperatorType.OR,  null],
         ["AND",                   BooleanOperatorType.OR,  BooleanOperatorType.AND, null],

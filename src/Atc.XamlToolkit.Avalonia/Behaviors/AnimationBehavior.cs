@@ -90,11 +90,11 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         public AnimationTriggerObserver(AnimationBehavior behavior)
             => this.behavior = behavior;
 
-        public void OnNext(AvaloniaPropertyChangedEventArgs<object?> e)
+        public void OnNext(AvaloniaPropertyChangedEventArgs<object?> value)
         {
-            if (ReferenceEquals(e.Sender, behavior))
+            if (ReferenceEquals(value.Sender, behavior))
             {
-                behavior.OnAnimationTriggerChanged(e.NewValue.GetValueOrDefault());
+                behavior.OnAnimationTriggerChanged(value.NewValue.GetValueOrDefault());
             }
         }
 

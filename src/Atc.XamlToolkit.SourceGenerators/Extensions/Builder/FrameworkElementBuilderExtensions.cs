@@ -586,8 +586,8 @@ internal static class FrameworkElementBuilderExtensions
             builder.IncreaseIndent();
             builder.AppendLine(
                 p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                ? $"=> element?.SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                : $"=> element?.SetValue({p.Name}Property, value);");
+                    ? $"=> element?.SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                    : $"=> element?.SetValue({p.Name}Property, value);");
             builder.DecreaseIndent();
         }
         else
@@ -626,8 +626,8 @@ internal static class FrameworkElementBuilderExtensions
             {
                 builder.AppendLine(
                     p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                    ? $"set => SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                    : $"set => SetValue({p.Name}Property, value);");
+                        ? $"set => SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                        : $"set => SetValue({p.Name}Property, value);");
             }
 
             builder.DecreaseIndent();
@@ -696,8 +696,8 @@ internal static class FrameworkElementBuilderExtensions
             builder.IncreaseIndent();
             builder.AppendLine(
                 p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                ? $"=> element?.SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                : $"=> element?.SetValue({p.Name}Property, value);");
+                    ? $"=> element?.SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                    : $"=> element?.SetValue({p.Name}Property, value);");
         }
 
         builder.DecreaseIndent();
