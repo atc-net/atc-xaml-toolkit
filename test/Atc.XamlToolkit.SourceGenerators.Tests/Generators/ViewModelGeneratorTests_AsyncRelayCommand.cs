@@ -359,7 +359,7 @@ public sealed partial class ViewModelGeneratorTests
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(
                     Save,
-                    !CanSave);
+                    () => !CanSave());
 
                 public void DisposeCommands()
                 {

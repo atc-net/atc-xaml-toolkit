@@ -344,8 +344,9 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
             switch (filteredParameterTypes.Length)
             {
                 case 1:
+                    // A method group cannot be negated - wrap it in a lambda.
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"x => !{cmd.CanExecuteName}(x)"
                         : cmd.CanExecuteName;
                     break;
                 case > 1:
@@ -360,7 +361,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
 
                 default:
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"() => !{cmd.CanExecuteName}()"
                         : cmd.CanExecuteName;
                     break;
             }

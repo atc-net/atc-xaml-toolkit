@@ -807,8 +807,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             switch (filteredParameterTypes.Length)
             {
                 case 1:
+                    // A method group cannot be negated - wrap it in a lambda.
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"x => !{cmd.CanExecuteName}(x)"
                         : cmd.CanExecuteName;
                     break;
                 case > 1:
@@ -823,7 +824,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
                 default:
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"() => !{cmd.CanExecuteName}()"
                         : cmd.CanExecuteName;
                     break;
             }

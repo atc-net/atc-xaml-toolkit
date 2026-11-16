@@ -34,6 +34,40 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void RelayCommand_InvertCanExecute_WithCanExecuteMethod_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(CanExecute = nameof(IsLocked), InvertCanExecute = true)]
+                private void Save()
+                {
+                }
+
+                [RelayCommand(CanExecute = nameof(IsItemLocked), InvertCanExecute = true)]
+                private void Delete(string item)
+                {
+                }
+
+                [RelayCommand(CanExecute = nameof(IsLocked), InvertCanExecute = true)]
+                private Task LoadAsync() => Task.CompletedTask;
+
+                [RelayCommand(CanExecute = nameof(IsItemLocked), InvertCanExecute = true)]
+                private Task OpenAsync(string item) => Task.CompletedTask;
+
+                private bool IsLocked() => false;
+
+                private bool IsItemLocked(string item) => false;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

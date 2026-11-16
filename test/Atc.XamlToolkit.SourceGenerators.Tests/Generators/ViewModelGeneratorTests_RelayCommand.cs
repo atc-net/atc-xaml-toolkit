@@ -435,7 +435,7 @@ public sealed partial class ViewModelGeneratorTests
 
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
                     Save,
-                    !CanSave);
+                    () => !CanSave());
             }
 
             #nullable disable
