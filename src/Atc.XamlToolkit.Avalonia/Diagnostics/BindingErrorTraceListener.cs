@@ -156,8 +156,9 @@ public static class BindingErrorTraceListener
                 return;
             }
 
-            // Avalonia's Logger interpolates {0}, {1}, ... placeholders with positional values.
-            // This mirrors the framework's own formatting closely enough for diagnostic display.
+            // Avalonia logs with message templates that use named placeholders, for example
+            // "An error occurred binding {Property} to {Expression}: {Message}", whose values
+            // are supplied in the order the placeholders appear.
             var message = propertyValues.Length == 0
                 ? messageTemplate
                 : FormatTemplate(messageTemplate, propertyValues);
@@ -168,14 +169,64 @@ public static class BindingErrorTraceListener
             string template,
             object?[] values)
         {
-            try
+            var sb = new StringBuilder(template.Length + 32);
+            var nextValueIndex = 0;
+            var i = 0;
+
+            while (i < template.Length)
             {
-                return string.Format(CultureInfo.InvariantCulture, template, values);
+                var c = template[i];
+                var isEscapedBrace = c is '{' or '}' &&
+                                     i + 1 < template.Length &&
+                                     template[i + 1] == c;
+                if (isEscapedBrace)
+                {
+                    sb.Append(c);
+                    i += 2;
+                    continue;
+                }
+
+                var end = c == '{'
+                    ? template.IndexOf('}', i + 1)
+                    : -1;
+                if (end < 0)
+                {
+                    sb.Append(c);
+                    i++;
+                    continue;
+                }
+
+                var valueIndex = GetValueIndex(template.AsSpan(i + 1, end - i - 1), ref nextValueIndex);
+                if (valueIndex >= 0 && valueIndex < values.Length)
+                {
+                    sb.Append(Convert.ToString(values[valueIndex], CultureInfo.InvariantCulture));
+                }
+                else
+                {
+                    sb.Append(template, i, end - i + 1);
+                }
+
+                i = end + 1;
             }
-            catch (FormatException)
-            {
-                return template;
-            }
+
+            return sb.ToString();
+        }
+
+        private static int GetValueIndex(
+            ReadOnlySpan<char> placeholder,
+            ref int nextValueIndex)
+        {
+            // Strip an alignment or format suffix: {Name,10} or {Name:F2}.
+            var suffixIndex = placeholder.IndexOfAny(',', ':');
+            var name = suffixIndex < 0
+                ? placeholder
+                : placeholder[..suffixIndex];
+
+            // A positional placeholder ({0}) addresses its value directly,
+            // a named one ({Property}, {$Value}) takes the next value in order.
+            return int.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out var position)
+                ? position
+                : nextValueIndex++;
         }
     }
 }
