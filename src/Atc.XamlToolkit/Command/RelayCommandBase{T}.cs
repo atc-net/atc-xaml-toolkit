@@ -62,10 +62,15 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
             return false;
         }
 
-        return parameter switch
+        if (!CommandParameterConverter.TryConvert<T>(parameter, out var val))
+        {
+            return false;
+        }
+
+        return val switch
         {
             null when typeof(T).IsValueType => wfCanExecute.Execute(),
-            null or T => wfCanExecute.Execute((T)parameter!),
+            null or T => wfCanExecute.Execute((T)val!),
             _ => false,
         };
     }
@@ -93,31 +98,12 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
     /// </remarks>
     public void Execute(object? parameter)
     {
-        var val = parameter;
-
-        if (parameter is not null &&
-            parameter.GetType() != typeof(T) &&
-            parameter is IConvertible)
+        // A failed conversion (overflow / format / unsupported cast) is treated as
+        // "cannot execute" rather than letting the throw propagate up through the
+        // binding system.
+        if (!CommandParameterConverter.TryConvert<T>(parameter, out var val))
         {
-            // Convert.ChangeType throws on overflow / format / unsupported casts.
-            // Treat a failed conversion as "cannot execute" rather than letting
-            // the throw propagate up through the binding system.
-            try
-            {
-                val = Convert.ChangeType(parameter, typeof(T), provider: null);
-            }
-            catch (InvalidCastException)
-            {
-                return;
-            }
-            catch (FormatException)
-            {
-                return;
-            }
-            catch (OverflowException)
-            {
-                return;
-            }
+            return;
         }
 
         if (!CanExecute(val) ||

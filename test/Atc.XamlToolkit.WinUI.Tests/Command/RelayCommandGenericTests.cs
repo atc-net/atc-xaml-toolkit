@@ -71,4 +71,22 @@ public sealed class RelayCommandGenericTests
         // Assert
         Assert.Equal(expected, actual);
     }
+
+    [Theory]
+    [InlineData(true, "42")]
+    [InlineData(false, "7")]
+    [InlineData(false, "abc")]
+    public void CanExecute_ConvertsParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        var command = new RelayCommand<int>(_ => { }, number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
 }

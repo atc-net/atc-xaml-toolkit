@@ -154,20 +154,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             return false;
         }
 
-        object? val;
-        try
-        {
-            val = ConvertParameter(parameter);
-        }
-        catch (InvalidCastException)
-        {
-            return false;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-        catch (OverflowException)
+        if (!CommandParameterConverter.TryConvert<T>(parameter, out var val))
         {
             return false;
         }
@@ -214,7 +201,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
         // the process (no AppDomain handler for fire-and-forget continuations).
         try
         {
-            val = ConvertParameter(parameter);
+            val = CommandParameterConverter.Convert<T>(parameter);
         }
         catch (Exception ex) when (errorHandler is not null)
         {
@@ -322,13 +309,6 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             cancellationTokenSource = null;
         }
     }
-
-    private static object? ConvertParameter(object? parameter)
-        => parameter is not null &&
-           parameter.GetType() != typeof(T) &&
-           parameter is IConvertible
-            ? Convert.ChangeType(parameter, typeof(T), provider: null)
-            : parameter;
 
     private void BeginExecution()
     {
