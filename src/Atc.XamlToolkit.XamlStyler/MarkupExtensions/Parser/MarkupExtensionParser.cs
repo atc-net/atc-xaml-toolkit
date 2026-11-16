@@ -248,6 +248,8 @@ public sealed class MarkupExtensionParser
 
                 if (c == '\\')
                 {
+                    // Keep the escape character: the value is written back verbatim.
+                    sb.Append(c);
                     position++;
                     if (!IsAtEnd)
                     {
