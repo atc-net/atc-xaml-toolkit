@@ -173,4 +173,19 @@ public sealed class RelayCommandGenericTests
         // Assert
         Assert.Equal(5, actual);
     }
+
+    [Fact]
+    public void Execute_IsIgnored_WhenParameterHasWrongType_AndNoCanExecute()
+    {
+        // Arrange
+        var executed = false;
+        var command = new RelayCommand<string>(_ => executed = true);
+
+        // Act
+        var exception = Record.Exception(() => command.Execute(new object()));
+
+        // Assert
+        Assert.Null(exception);
+        Assert.False(executed);
+    }
 }

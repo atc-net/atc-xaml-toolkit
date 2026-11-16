@@ -106,6 +106,12 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
             return;
         }
 
+        // A parameter that is not (convertible to) T can never be passed to the delegate.
+        if (val is not null and not T)
+        {
+            return;
+        }
+
         if (!CanExecute(val) ||
             waExecute is null ||
             (!waExecute.IsStatic && !waExecute.IsAlive))

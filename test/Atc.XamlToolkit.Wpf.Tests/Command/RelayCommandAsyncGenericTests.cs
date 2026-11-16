@@ -302,6 +302,28 @@ public sealed class RelayCommandAsyncGenericTests
         Assert.False(command.IsExecuting);
     }
 
+    [Fact]
+    public void Execute_IsIgnored_WhenParameterHasWrongType_AndNoCanExecute()
+    {
+        // Arrange
+        var executed = false;
+        var errorHandler = Substitute.For<IErrorHandler>();
+        using var command = new RelayCommandAsync<string>(
+            _ =>
+            {
+                executed = true;
+                return Task.CompletedTask;
+            },
+            errorHandler: errorHandler);
+
+        // Act
+        ((System.Windows.Input.ICommand)command).Execute(new object());
+
+        // Assert
+        Assert.False(executed);
+        errorHandler.DidNotReceive().HandleError(Arg.Any<Exception>());
+    }
+
     private delegate void OpDelegate(string op);
 
     private static async Task<string> MyTask()

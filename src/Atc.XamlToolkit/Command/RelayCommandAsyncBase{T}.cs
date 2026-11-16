@@ -221,6 +221,12 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             return;
         }
 
+        // A parameter that is not (convertible to) T can never be passed to the delegate.
+        if (val is not null and not T)
+        {
+            return;
+        }
+
         if (isExecuting || !CanExecute(val))
         {
             return;
