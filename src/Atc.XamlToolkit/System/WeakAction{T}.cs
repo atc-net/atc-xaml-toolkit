@@ -72,6 +72,9 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
 #endif
     }
 
+    /// <inheritdoc />
+    public override bool IsStatic => staticAction is not null;
+
     /// <summary>
     /// Gets the name of the method that this WeakAction represents.
     /// </summary>
@@ -160,7 +163,7 @@ public sealed class WeakAction<T> : WeakAction, IExecuteWithObject
     /// which is a signal for containing objects that this WeakAction
     /// should be deleted.
     /// </summary>
-    public new void MarkForDeletion()
+    public override void MarkForDeletion()
     {
         staticAction = null;
         base.MarkForDeletion();

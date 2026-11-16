@@ -83,7 +83,7 @@ public class WeakAction
     /// <summary>
     /// Gets a value indicating whether the WeakAction is static or not.
     /// </summary>
-    public bool IsStatic => staticAction is not null;
+    public virtual bool IsStatic => staticAction is not null;
 
     /// <summary>
     /// Gets the name of the method that this WeakAction represents.
@@ -205,7 +205,7 @@ public class WeakAction
     /// <summary>
     /// Sets the reference that this instance stores to null.
     /// </summary>
-    public void MarkForDeletion()
+    public virtual void MarkForDeletion()
     {
         Reference = null;
         ActionReference = null;

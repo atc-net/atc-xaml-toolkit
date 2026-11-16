@@ -74,6 +74,9 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
 #endif
     }
 
+    /// <inheritdoc />
+    public override bool IsStatic => staticFunc is not null;
+
     /// <summary>
     /// Gets the name of the method that this WeakFunc represents.
     /// </summary>
