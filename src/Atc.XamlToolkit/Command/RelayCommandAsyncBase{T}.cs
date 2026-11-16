@@ -20,6 +20,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     protected readonly IErrorHandler? errorHandler;
     protected bool isExecuting;
     protected CancellationTokenSource? cancellationTokenSource;
+    private int executionCount;
 
     /// <summary>
     /// Gets a value indicating whether the command is currently executing.
@@ -238,33 +239,9 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             return;
         }
 
-        if (execute is null && executeWithCancellation is null)
-        {
-            return;
-        }
-
-        isExecuting = true;
-        OnPropertyChanged(nameof(IsExecuting));
-        RaiseCanExecuteChanged();
-
-        // Always create a fresh cancellation token source if we support cancellation
-        // This ensures that a previously canceled token is never reused
-        if (executeWithCancellation is not null)
-        {
-            if (cancellationTokenSource is not null)
-            {
-                await cancellationTokenSource
-                    .CancelAsync()
-                    .ConfigureAwait(false);
-            }
-
-            cancellationTokenSource?.Dispose();
-            cancellationTokenSource = new CancellationTokenSource();
-        }
-
         try
         {
-            await DoExecute(val).ConfigureAwait(true);
+            await ExecuteAsync(val is null ? default! : (T)val).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -274,45 +251,54 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
         {
             errorHandler.HandleError(ex);
         }
-        finally
-        {
-            // Always clean up and reset state
-            if (executeWithCancellation is not null)
-            {
-                cancellationTokenSource?.Dispose();
-                cancellationTokenSource = null;
-            }
-
-            isExecuting = false;
-            OnPropertyChanged(nameof(IsExecuting));
-            RaiseCanExecuteChanged();
-        }
     }
 
-    /// <inheritdoc />
-    public Task ExecuteAsync(T parameter)
+    /// <summary>
+    /// Executes the command asynchronously. The execution state (<see cref="IsExecuting"/>,
+    /// <see cref="CanExecuteChanged"/> and the cancellation token) is managed the same way
+    /// as for <see cref="Execute"/>, but exceptions are propagated to the caller.
+    /// </summary>
+    /// <param name="parameter">The command parameter.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task ExecuteAsync(T parameter)
     {
-        // Note: CanExecute is already checked in Execute() before calling this method
-        // We don't check it again here because isExecuting may be true at this point
+        if (execute is null && executeWithCancellation is null)
+        {
+            return;
+        }
+
+        // Every run gets its own token source, so a canceled token is never reused
+        // and Cancel() always targets the most recently started run.
+        CancellationTokenSource? runTokenSource = null;
         if (executeWithCancellation is not null)
         {
-            // Create a fresh cancellation token source if it doesn't exist or is canceled
-            // This handles the case where ExecuteAsync() is called directly (not from Execute())
-            if (cancellationTokenSource is null || cancellationTokenSource.IsCancellationRequested)
+            runTokenSource = new CancellationTokenSource();
+            cancellationTokenSource = runTokenSource;
+        }
+
+        BeginExecution();
+
+        try
+        {
+            if (executeWithCancellation is not null)
             {
-                cancellationTokenSource?.Dispose();
-                cancellationTokenSource = new CancellationTokenSource();
+                await executeWithCancellation(parameter, runTokenSource!.Token).ConfigureAwait(true);
+            }
+            else
+            {
+                await execute!(parameter).ConfigureAwait(true);
+            }
+        }
+        finally
+        {
+            if (runTokenSource is not null)
+            {
+                Interlocked.CompareExchange(ref cancellationTokenSource, value: null, runTokenSource);
+                runTokenSource.Dispose();
             }
 
-            return executeWithCancellation(parameter, cancellationTokenSource.Token);
+            EndExecution();
         }
-
-        if (execute is not null)
-        {
-            return execute(parameter);
-        }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -344,36 +330,27 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             ? Convert.ChangeType(parameter, typeof(T), provider: null)
             : parameter;
 
-    private async Task DoExecute(object? val)
+    private void BeginExecution()
     {
-        if (val is null)
+        if (Interlocked.Increment(ref executionCount) != 1)
         {
-            if (typeof(T).IsValueType)
-            {
-                await ExecuteAsync(default!).ConfigureAwait(true);
-            }
-            else
-            {
-                if (executeWithCancellation is not null && cancellationTokenSource is not null)
-                {
-                    await executeWithCancellation((T)val!, cancellationTokenSource.Token).ConfigureAwait(true);
-                }
-                else if (execute is not null)
-                {
-                    await execute((T)val!).ConfigureAwait(true);
-                }
-            }
+            return;
         }
-        else
+
+        isExecuting = true;
+        OnPropertyChanged(nameof(IsExecuting));
+        RaiseCanExecuteChanged();
+    }
+
+    private void EndExecution()
+    {
+        if (Interlocked.Decrement(ref executionCount) != 0)
         {
-            if (executeWithCancellation is not null && cancellationTokenSource is not null)
-            {
-                await executeWithCancellation((T)val, cancellationTokenSource.Token).ConfigureAwait(true);
-            }
-            else if (execute is not null)
-            {
-                await execute((T)val).ConfigureAwait(true);
-            }
+            return;
         }
+
+        isExecuting = false;
+        OnPropertyChanged(nameof(IsExecuting));
+        RaiseCanExecuteChanged();
     }
 }
