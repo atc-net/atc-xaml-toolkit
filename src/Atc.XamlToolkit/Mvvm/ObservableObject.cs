@@ -6,6 +6,8 @@ namespace Atc.XamlToolkit.Mvvm;
 /// <seealso cref="INotifyPropertyChanged" />
 public abstract class ObservableObject : IObservableObject
 {
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Type Type, string PropertyName), bool> VerifiedPropertyNames = new();
+
     /// <summary>
     /// Occurs when a property value changes.
     /// </summary>
@@ -44,31 +46,48 @@ public abstract class ObservableObject : IObservableObject
     /// <inheritdoc />
     public void VerifyPropertyName(string? propertyName)
     {
-        var info = GetType().GetTypeInfo();
-        if (string.IsNullOrEmpty(propertyName) ||
-            info.GetDeclaredProperty(propertyName) is not null)
+        if (string.IsNullOrEmpty(propertyName))
         {
             return;
         }
 
-        // Check base types
-        var found = false;
-        while (info.BaseType is not null && info.BaseType != typeof(object))
+        // The reflection lookup only runs the first time a name is raised for a type;
+        // property changes are a hot path.
+        var key = (GetType(), propertyName);
+        if (VerifiedPropertyNames.ContainsKey(key))
         {
-            info = info.BaseType.GetTypeInfo();
-            if (info.GetDeclaredProperty(propertyName) is null)
-            {
-                continue;
-            }
-
-            found = true;
-            break;
+            return;
         }
 
-        if (!found)
+        if (!HasProperty(key.Item1, propertyName))
         {
             throw new ArgumentException("Property not found", propertyName);
         }
+
+        VerifiedPropertyNames.TryAdd(key, value: true);
+    }
+
+    private static bool HasProperty(
+        Type type,
+        string propertyName)
+    {
+        // "Item[]" is the conventional name for indexer change notifications.
+        var name = propertyName.EndsWith("[]", StringComparison.Ordinal)
+            ? propertyName[..^2]
+            : propertyName;
+
+        for (var current = type; current is not null && current != typeof(object); current = current.BaseType)
+        {
+            foreach (var property in current.GetTypeInfo().DeclaredProperties)
+            {
+                if (string.Equals(property.Name, name, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

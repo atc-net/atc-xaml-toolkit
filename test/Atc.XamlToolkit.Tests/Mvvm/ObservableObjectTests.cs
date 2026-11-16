@@ -31,6 +31,34 @@ public sealed class ObservableObjectTests
     }
 
     [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
+    public void RaisePropertyChanged_IndexerName_RaisesEvent()
+    {
+        // Arrange
+        var sut = new TestObservableObject();
+        string? actual = null;
+        sut.PropertyChanged += (_, e) => actual = e.PropertyName;
+
+        // Act
+        sut.RaisePropertyChanged("Item[]");
+
+        // Assert
+        Assert.Equal("Item[]", actual);
+    }
+
+    [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
+    public void RaisePropertyChanged_UnknownPropertyName_Throws()
+    {
+        // Arrange
+        var sut = new TestObservableObject();
+
+        // Act & Assert - twice, to make sure a failed lookup is never remembered as verified
+        Assert.Throws<ArgumentException>(() => sut.RaisePropertyChanged("DoesNotExist"));
+        Assert.Throws<ArgumentException>(() => sut.RaisePropertyChanged("DoesNotExist"));
+    }
+
+    [Fact]
     [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "Test name describes the cache behaviour, not an event.")]
     public void RaisePropertyChanged_ReusesPropertyChangedEventArgs_AcrossRaisesForSamePropertyName()
     {
