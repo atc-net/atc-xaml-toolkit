@@ -68,6 +68,35 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void INotifyPropertyChanged_SameClassNameInTwoNamespaces_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace First
+            {
+                [INotifyPropertyChanged]
+                public partial class Item
+                {
+                    [ObservableProperty]
+                    private string name = string.Empty;
+                }
+            }
+
+            namespace Second
+            {
+                [INotifyPropertyChanged]
+                public partial class Item
+                {
+                    [ObservableProperty]
+                    private int count;
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

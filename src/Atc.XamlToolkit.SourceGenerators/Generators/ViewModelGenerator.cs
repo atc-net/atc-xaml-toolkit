@@ -153,7 +153,7 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
         sb.Append("#nullable disable");
 
         context.AddSource(
-            $"{target.ClassName}.INotifyPropertyChanged.g.cs",
+            $"{target.NamespaceName}.{target.ClassName}.INotifyPropertyChanged.g.cs",
             SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 }
