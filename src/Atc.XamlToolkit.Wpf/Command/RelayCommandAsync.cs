@@ -74,11 +74,6 @@ public class RelayCommandAsync : RelayCommandAsyncBase
     {
         add
         {
-            if (wfCanExecute is null)
-            {
-                return;
-            }
-
             EventHandler handler2;
             var canExecuteChanged = requerySuggestedLocal;
 
@@ -98,11 +93,6 @@ public class RelayCommandAsync : RelayCommandAsyncBase
 
         remove
         {
-            if (wfCanExecute is null)
-            {
-                return;
-            }
-
             EventHandler handler2;
             var canExecuteChanged = requerySuggestedLocal;
 

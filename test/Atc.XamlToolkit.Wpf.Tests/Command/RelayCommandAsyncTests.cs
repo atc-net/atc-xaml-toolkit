@@ -38,6 +38,27 @@ public sealed class RelayCommandAsyncTests
         Assert.Equal(expected, canExecuteChangedCalled);
     }
 
+    [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
+    public void RaiseCanExecuteChanged_WithoutCanExecute_NotifiesSubscribers()
+    {
+        // Arrange
+        var canExecuteChangedCalled = 0;
+        var canExecuteChangedEventHandler = new EventHandler((_, _) => canExecuteChangedCalled++);
+
+        using var command = new RelayCommandAsync(MyTask);
+        command.CanExecuteChanged += canExecuteChangedEventHandler;
+
+        // Act
+        command.RaiseCanExecuteChanged();
+
+        // Forces processing of CommandManager.InvalidateRequerySuggested by dispatching an empty action at background priority.
+        _ = Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
+
+        // Assert
+        Assert.Equal(1, canExecuteChangedCalled);
+    }
+
     [Theory]
     [InlineData(true, true, null)]
     [InlineData(false, false, null)]
