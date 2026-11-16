@@ -59,7 +59,10 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             return;
         }
 
-        var frameworkElementBuilder = new FrameworkElementBuilder();
+        var frameworkElementBuilder = new FrameworkElementBuilder
+        {
+            XamlPlatform = frameworkElementToGenerate.XamlPlatform,
+        };
 
         frameworkElementBuilder.GenerateStart(frameworkElementToGenerate);
 

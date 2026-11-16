@@ -97,6 +97,26 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void FrameworkElement_RelayCommandWithAutoSetIsBusy_UsesThePlatformOfTheProject()
+    {
+        // The compilation references Avalonia, so the generated dispatcher code must be Avalonia code.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class SaveBehavior
+            {
+                public bool IsBusy { get; set; }
+
+                [RelayCommand(AutoSetIsBusy = true)]
+                private Task SaveAsync() => Task.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =
