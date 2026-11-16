@@ -96,7 +96,9 @@ internal static class ViewModelBuilderExtensions
         builder.AppendLine("set");
         builder.AppendLine("{");
         builder.IncreaseIndent();
-        builder.AppendLine($"if ({p.BackingFieldName} == value)");
+        builder.AppendLine(p.UseEqualityComparer
+            ? $"if (global::System.Collections.Generic.EqualityComparer<{p.Type}>.Default.Equals({p.BackingFieldName}, value))"
+            : $"if ({p.BackingFieldName} == value)");
         builder.AppendLine("{");
         builder.IncreaseIndent();
         builder.AppendLine("return;");

@@ -133,7 +133,9 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
                 AppendLine("set");
                 AppendLine("{");
                 IncreaseIndent();
-                AppendLine($"if (dto.{property.Name} == value)");
+                AppendLine(property.UseEqualityComparer
+                    ? $"if (global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(dto.{property.Name}, value))"
+                    : $"if (dto.{property.Name} == value)");
                 AppendLine("{");
                 IncreaseIndent();
                 AppendLine("return;");
@@ -558,7 +560,9 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         AppendLine("set");
         AppendLine("{");
         IncreaseIndent();
-        AppendLine($"if ({p.BackingFieldName} == value)");
+        AppendLine(p.UseEqualityComparer
+            ? $"if (global::System.Collections.Generic.EqualityComparer<{p.Type}>.Default.Equals({p.BackingFieldName}, value))"
+            : $"if ({p.BackingFieldName} == value)");
         AppendLine("{");
         IncreaseIndent();
         AppendLine("return;");

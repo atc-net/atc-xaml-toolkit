@@ -52,7 +52,10 @@ internal static class NamedTypeSymbolExtensions
                     isRecordParameter,
                     isReadOnly,
                     new EquatableArray<string>(attributes.ToArray()),
-                    new EquatableArray<string>(documentationComments?.ToArray() ?? []));
+                    new EquatableArray<string>(documentationComments?.ToArray() ?? []))
+                {
+                    UseEqualityComparer = !p.Type.SupportsEqualityOperator(),
+                };
             })
             .ToList();
     }

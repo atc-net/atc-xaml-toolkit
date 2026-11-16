@@ -268,6 +268,7 @@ internal static class ObservablePropertyInspector
                 GeneratePartialHooks = generatePartialHooks,
                 GenerateDocumentation = generateDocumentation,
                 ValidatesOnChange = validatesOnChange,
+                UseEqualityComparer = !fieldSymbol.Type.SupportsEqualityOperator(),
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
             });

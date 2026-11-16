@@ -117,6 +117,60 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableProperty_StructWithoutEqualityOperator_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public struct Money
+            {
+                public decimal Amount;
+            }
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private Money price;
+
+                [ObservableProperty]
+                private Money? discount;
+
+                [ObservableProperty]
+                private (int Row, int Column) cell;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
+    public void ObservableDtoViewModel_StructPropertyWithoutEqualityOperator_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public struct Money
+            {
+                public decimal Amount;
+            }
+
+            public class Order
+            {
+                public Money Total { get; set; }
+            }
+
+            [ObservableDtoViewModel(typeof(Order))]
+            public partial class OrderViewModel : ViewModelBase
+            {
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =
