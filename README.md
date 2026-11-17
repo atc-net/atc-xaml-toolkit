@@ -351,6 +351,7 @@ public partial class MainViewModel : ViewModelBase
 ### Get Started
 
 - **[Getting Started Guide](docs/GettingStarted.md)** - Complete walkthrough for beginners
+- **[Upgrading to version 4](docs/UpgradingToV4.md)** - Breaking changes and behaviour changes since version 3
 
 ### Core Concepts
 
