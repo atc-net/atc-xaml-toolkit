@@ -166,6 +166,30 @@ public sealed class PropertyMetadataDescriptorTests
     }
 
     [Fact]
+    public void GetDescriptors_ShouldDetectRangeFromTypedBclRangeAttribute()
+    {
+        // Act
+        var result = PropertyMetadataDescriptor.GetDescriptors<TypedRangeModel>();
+
+        // Assert - [Range(typeof(decimal), "0.5", "10")] stores its bounds as text
+        var prop = result.First(x => x.PropertyName == "Price");
+        Assert.True(prop.HasRange);
+        Assert.Equal(0.5, prop.RangeMinimum);
+        Assert.Equal(10.0, prop.RangeMaximum);
+    }
+
+    [Fact]
+    public void GetDescriptors_ShouldIgnoreNonNumericTypedBclRangeAttribute()
+    {
+        // Act
+        var result = PropertyMetadataDescriptor.GetDescriptors<TypedRangeModel>();
+
+        // Assert - a date range has no numeric minimum or maximum
+        var prop = result.First(x => x.PropertyName == "Day");
+        Assert.False(prop.HasRange);
+    }
+
+    [Fact]
     public void GetDescriptors_ShouldDetectRangeWithoutStep()
     {
         // Act
@@ -363,6 +387,17 @@ public sealed class PropertyMetadataDescriptorTests
         [PropertyDisplay("Volume")]
         [PropertyRange(0, 100)]
         public int Volume { get; set; }
+    }
+
+    private sealed class TypedRangeModel
+    {
+        [PropertyDisplay("Price")]
+        [Range(typeof(decimal), "0.5", "10")]
+        public decimal Price { get; set; }
+
+        [PropertyDisplay("Day")]
+        [Range(typeof(DateTime), "2026-01-01", "2026-12-31")]
+        public DateTime Day { get; set; }
     }
 
     private sealed class EditorHintModel
