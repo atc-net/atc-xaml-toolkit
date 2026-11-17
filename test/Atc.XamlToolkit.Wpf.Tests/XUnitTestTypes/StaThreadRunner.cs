@@ -36,7 +36,8 @@ internal static class StaThreadRunner
         failure?.Throw();
     }
 
-    // Shows the content in a window, so it is loaded and can take keyboard focus.
+    // Shows the content in a window, so it is loaded and visible.
+    // The window is not activated, so tests must not depend on it having the keyboard focus.
     public static Window ShowInWindow(UIElement content)
     {
         var window = new Window
@@ -44,12 +45,12 @@ internal static class StaThreadRunner
             Content = content,
             Width = 200,
             Height = 100,
+            ShowActivated = false,
             ShowInTaskbar = false,
             WindowStyle = WindowStyle.None,
         };
 
         window.Show();
-        window.Activate();
         PumpDispatcher();
         return window;
     }

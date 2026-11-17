@@ -3,7 +3,7 @@ namespace Atc.XamlToolkit.Wpf.Tests.Behaviors;
 public sealed class KeyboardNavigationBehaviorTests
 {
     [Fact]
-    public void FocusingChildControl_KeepsKeyboardFocusOnChild()
+    public void ChildControlGotFocus_DoesNotMoveKeyboardFocusToAssociatedObject()
         => StaThreadRunner.Run(() =>
         {
             // Arrange
@@ -14,18 +14,19 @@ public sealed class KeyboardNavigationBehaviorTests
                 Child = textBox,
             };
 
-            var behavior = new Atc.XamlToolkit.Behaviors.KeyboardNavigationBehavior();
-            behavior.Attach(container);
-
+            // The behavior is attached after the element is loaded, so that it has not focused the element yet
             var window = StaThreadRunner.ShowInWindow(container);
             try
             {
-                // Act
-                textBox.Focus();
-                StaThreadRunner.PumpDispatcher();
+                var behavior = new Atc.XamlToolkit.Behaviors.KeyboardNavigationBehavior();
+                behavior.Attach(container);
+                var focusRequests = CountKeyboardFocusRequests(container);
 
-                // Assert - the bubbling GotFocus of the child must not move focus to the container
-                Assert.Same(textBox, Keyboard.FocusedElement);
+                // Act - GotFocus bubbles from the child to the container
+                textBox.RaiseEvent(new RoutedEventArgs(UIElement.GotFocusEvent, textBox));
+
+                // Assert
+                Assert.Equal(0, focusRequests());
             }
             finally
             {
@@ -34,7 +35,7 @@ public sealed class KeyboardNavigationBehaviorTests
         });
 
     [Fact]
-    public void FocusingAssociatedObject_SetsKeyboardFocus()
+    public void AssociatedObjectGotFocus_MovesKeyboardFocusToAssociatedObject()
         => StaThreadRunner.Run(() =>
         {
             // Arrange
@@ -44,22 +45,39 @@ public sealed class KeyboardNavigationBehaviorTests
                 Child = new System.Windows.Controls.TextBox(),
             };
 
-            var behavior = new Atc.XamlToolkit.Behaviors.KeyboardNavigationBehavior();
-            behavior.Attach(container);
-
+            // The behavior is attached after the element is loaded, so that it has not focused the element yet
             var window = StaThreadRunner.ShowInWindow(container);
             try
             {
+                var behavior = new Atc.XamlToolkit.Behaviors.KeyboardNavigationBehavior();
+                behavior.Attach(container);
+                var focusRequests = CountKeyboardFocusRequests(container);
+
                 // Act
-                container.Focus();
-                StaThreadRunner.PumpDispatcher();
+                container.RaiseEvent(new RoutedEventArgs(UIElement.GotFocusEvent, container));
 
                 // Assert
-                Assert.Same(container, Keyboard.FocusedElement);
+                Assert.Equal(1, focusRequests());
             }
             finally
             {
                 window.Close();
             }
         });
+
+    // Counts the requests to give the element keyboard focus. The preview event is raised for every request,
+    // also when the window is not the active one, so the tests do not depend on the desktop's focus state.
+    private static Func<int> CountKeyboardFocusRequests(UIElement element)
+    {
+        var count = 0;
+        element.PreviewGotKeyboardFocus += (_, e) =>
+        {
+            if (ReferenceEquals(e.NewFocus, element))
+            {
+                count++;
+            }
+        };
+
+        return () => count;
+    }
 }
