@@ -416,6 +416,14 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         var useDispatcherInvoke = false;
         switch (cmd.UseTask)
         {
+            case false when execExpr.StartsWith("Task.Run(", StringComparison.Ordinal):
+                // The work runs on a background thread: wait for it, so IsBusy stays set until it is done
+                builder.AppendLine(
+                    execExprContainParameters
+                        ? "async x =>"
+                        : "async () =>");
+                useDispatcherInvokeAsync = true;
+                break;
             case false:
                 builder.AppendLine(
                     execExprContainParameters
@@ -501,7 +509,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         {
             if (execExpr.StartsWith("Task.Run(", StringComparison.Ordinal))
             {
-                builder.AppendLine("_ = Task");
+                builder.AppendLine("await Task");
                 builder.IncreaseIndent();
                 builder.AppendLine($".Run({execExpr.RemoveTaskDotRun()})");
                 builder.AppendLine(".ConfigureAwait(false);");

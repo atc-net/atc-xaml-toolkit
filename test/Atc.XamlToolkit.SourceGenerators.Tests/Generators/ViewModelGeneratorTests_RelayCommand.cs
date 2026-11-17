@@ -1724,19 +1724,23 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand? saveCommand;
 
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(Save)
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
             }
@@ -1782,19 +1786,23 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand? saveCommand;
 
                 public IRelayCommand SaveCommand => saveCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(Save)
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     },
                     CanSave);
@@ -1841,19 +1849,23 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand<string>? saveCommand;
 
                 public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
-                    x =>
+                    async x =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => Save(x))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
             }
@@ -1899,19 +1911,23 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand<string>? saveCommand;
 
                 public IRelayCommand<string> SaveCommand => saveCommand ??= new RelayCommand<string>(
-                    x =>
+                    async x =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => Save(x, CancellationToken.None))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
             }
@@ -1963,70 +1979,86 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand? myTestBottomCommand;
 
                 public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Left))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
 
                 public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Top))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
 
                 public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Right))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
 
                 public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Bottom))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
             }
@@ -2078,70 +2110,86 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand? myTestBottomCommand;
 
                 public IRelayCommand MyTestLeftCommand => myTestLeftCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Left, 1))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
-            
+
                 public IRelayCommand MyTestTopCommand => myTestTopCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Top, 1))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
-            
+
                 public IRelayCommand MyTestRightCommand => myTestRightCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Right, 1))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
-            
+
                 public IRelayCommand MyTestBottomCommand => myTestBottomCommand ??= new RelayCommand(
-                    () =>
+                    async () =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => TurnDirectionSingle(LeftTopRightBottomType.Bottom, 1))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     });
             }
@@ -2202,19 +2250,23 @@ public sealed partial class ViewModelGeneratorTests
                 private IRelayCommand<(string, int, bool, Atc.Data.Models.LogItem)>? saveCommand;
 
                 public IRelayCommand<(string, int, bool, Atc.Data.Models.LogItem)> SaveCommand => saveCommand ??= new RelayCommand<(string, int, bool, Atc.Data.Models.LogItem)>(
-                    x =>
+                    async x =>
                     {
-                        Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = true);
+                        await Application.Current.Dispatcher
+                            .InvokeAsyncIfRequired(() => IsBusy = true)
+                            .ConfigureAwait(false);
 
                         try
                         {
-                            _ = Task
+                            await Task
                                 .Run(() => Save(x.Item1, x.Item2, x.Item3, x.Item4, CancellationToken.None))
                                 .ConfigureAwait(false);
                         }
                         finally
                         {
-                            Application.Current.Dispatcher.InvokeIfRequired(() => IsBusy = false);
+                            await Application.Current.Dispatcher
+                                .InvokeAsyncIfRequired(() => IsBusy = false)
+                                .ConfigureAwait(false);
                         }
                     },
                     x => CanSave(x.Item1, x.Item2, x.Item3, x.Item4));

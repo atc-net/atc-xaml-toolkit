@@ -409,6 +409,14 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         switch (cmd.UseTask)
         {
+            case false when execExpr.StartsWith("Task.Run(", StringComparison.Ordinal):
+                // The work runs on a background thread: wait for it, so IsBusy stays set until it is done
+                builder.AppendLine(
+                    execExprContainParameters
+                        ? "async x =>"
+                        : "async () =>");
+                useDispatcherInvokeAsync = true;
+                break;
             case false:
                 builder.AppendLine(
                     execExprContainParameters
@@ -416,9 +424,12 @@ internal abstract class CommandBuilderBase : BuilderBase
                         : "() =>");
                 useDispatcherInvoke = true;
                 break;
-            case true when supportsCancellation && parameterNamesWithoutCt.Length > 1:
-                // When AutoSetIsBusy + SupportsCancellation with multiple parameters,
-                // the lambda must accept the parameters as one tuple AND CancellationToken
+            case true when supportsCancellation &&
+                           (parameterNamesWithoutCt.Length > 1 ||
+                            (parameterNamesWithoutCt.Length == 1 && cmd.ExecuteOnBackgroundThread)):
+                // When AutoSetIsBusy + SupportsCancellation with multiple parameters (or with one
+                // parameter on a background thread), the lambda must accept the parameter(s) as x
+                // AND CancellationToken
                 builder.AppendLine("async (x, cancellationToken) =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
@@ -516,7 +527,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         {
             if (execExpr.StartsWith("Task.Run(", StringComparison.Ordinal))
             {
-                builder.AppendLine("_ = Task");
+                builder.AppendLine("await Task");
                 builder.IncreaseIndent();
                 builder.AppendLine($".Run({execExpr.RemoveTaskDotRun()})");
                 builder.AppendLine(".ConfigureAwait(false);");
@@ -662,6 +673,17 @@ internal abstract class CommandBuilderBase : BuilderBase
         // we need to wrap it in a lambda that accepts the CancellationToken (but doesn't use it)
         if (cmd.SupportsCancellation && !hasCt)
         {
+            if (cmd.ExecuteOnBackgroundThread)
+            {
+                // Task.Run stops waiting for the method when the command is cancelled
+                return filteredParameterTypes.Length switch
+                {
+                    0 => $"ct => Task.Run(() => {cmd.MethodName}(), ct)",
+                    1 => $"(x, ct) => Task.Run(() => {cmd.MethodName}(x), ct)",
+                    _ => $"(x, ct) => Task.Run(() => {cmd.MethodName}({cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated()}), ct)",
+                };
+            }
+
             if (filteredParameterTypes.Length == 0)
             {
                 // async (ct) => await MethodAsync()
@@ -695,6 +717,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                     return $"x => Task.Run(() => {cmd.MethodName}{paramCall})";
                 }
 
+                // When SupportsCancellation = true and ExecuteOnBackgroundThread = true,
+                // run the method on a background thread with the command's token
+                if (cmd.SupportsCancellation && hasCt && cmd.ExecuteOnBackgroundThread)
+                {
+                    return $"(x, cancellationToken) => Task.Run(() => {cmd.MethodName}(x, cancellationToken), cancellationToken)";
+                }
+
                 // When SupportsCancellation = true and method has CancellationToken, pass method with explicit cast
                 if (cmd.SupportsCancellation && hasCt)
                 {
@@ -724,7 +753,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             // pass the command's token on instead of CancellationToken.None
             if (cmd.SupportsCancellation && hasCt)
             {
-                return $"(x, cancellationToken) => {cmd.MethodName}({args}, cancellationToken)";
+                return cmd.ExecuteOnBackgroundThread
+                    ? $"(x, cancellationToken) => Task.Run(() => {cmd.MethodName}({args}, cancellationToken), cancellationToken)"
+                    : $"(x, cancellationToken) => {cmd.MethodName}({args}, cancellationToken)";
             }
 
             return $"x => {cmd.MethodName}{call}";
@@ -737,6 +768,13 @@ internal abstract class CommandBuilderBase : BuilderBase
             return hasCt
                 ? $"() => Task.Run(() => {cmd.MethodName}({NameConstants.CancellationTokenNone}))"
                 : $"() => Task.Run({cmd.MethodName})";
+        }
+
+        // When SupportsCancellation = true and ExecuteOnBackgroundThread = true,
+        // run the method on a background thread with the command's token
+        if (cmd.SupportsCancellation && hasCt && cmd.ExecuteOnBackgroundThread)
+        {
+            return $"cancellationToken => Task.Run(() => {cmd.MethodName}(cancellationToken), cancellationToken)";
         }
 
         // When SupportsCancellation = true and method has CancellationToken, pass method with explicit cast
@@ -770,6 +808,12 @@ internal abstract class CommandBuilderBase : BuilderBase
             {
                 if (cmd.ExecuteOnBackgroundThread)
                 {
+                    // With SupportsCancellation the lambda provides the command's token
+                    if (cmd.SupportsCancellation && hasCt)
+                    {
+                        return $"Task.Run(() => {cmd.MethodName}(x, cancellationToken), cancellationToken)";
+                    }
+
                     var paramCall = hasCt
                         ? $"(x, {NameConstants.CancellationTokenNone})"
                         : "(x)";
@@ -798,7 +842,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             // the lambda receives the parameters as one tuple (x) plus the CancellationToken
             if (cmd.SupportsCancellation && hasCt)
             {
-                return $"{cmd.MethodName}({args}, cancellationToken)";
+                return cmd.ExecuteOnBackgroundThread
+                    ? $"Task.Run(() => {cmd.MethodName}({args}, cancellationToken), cancellationToken)"
+                    : $"{cmd.MethodName}({args}, cancellationToken)";
             }
 
             var call = hasCt
@@ -813,6 +859,12 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         if (cmd.ExecuteOnBackgroundThread)
         {
+            // With SupportsCancellation the lambda provides the command's token
+            if (cmd.SupportsCancellation && hasCt)
+            {
+                return $"Task.Run(() => {cmd.MethodName}(cancellationToken), cancellationToken)";
+            }
+
             return hasCt
                 ? $"Task.Run(() => {cmd.MethodName}({NameConstants.CancellationTokenNone}))"
                 : $"Task.Run({cmd.MethodName})";
