@@ -15,5 +15,16 @@
     <PackageReference Include="Avalonia.Headless" Version="12.1.6" />
   </ItemGroup>
 
+  <!--
+    The headless session sets up an isolated application for every dispatch, which rebinds
+    Avalonia's UI-thread dispatcher. A test on another thread that touches Avalonia in that
+    moment makes its own thread the UI thread, and the dispatch then fails with "the calling
+    thread cannot access this object". xunit.runner.json therefore turns parallel test
+    collections off for this project.
+  -->
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 
 </Project>

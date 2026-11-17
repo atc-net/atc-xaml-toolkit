@@ -15,6 +15,9 @@ public sealed class WeakDelegateExceptionTests
         var exception = Assert.Throws<InvalidOperationException>(() => sut.Execute());
 
         Assert.Equal("boom", exception.Message);
+
+        // The delegate holds its target weakly; keep it alive until the call has been made.
+        GC.KeepAlive(target);
     }
 
     [Fact]
@@ -26,6 +29,9 @@ public sealed class WeakDelegateExceptionTests
         var exception = Assert.Throws<InvalidOperationException>(() => sut.Execute(42));
 
         Assert.Equal("boom 42", exception.Message);
+
+        // The delegate holds its target weakly; keep it alive until the call has been made.
+        GC.KeepAlive(target);
     }
 
     [Fact]
@@ -37,6 +43,9 @@ public sealed class WeakDelegateExceptionTests
         var exception = Assert.Throws<InvalidOperationException>(() => sut.Execute());
 
         Assert.Equal("boom", exception.Message);
+
+        // The delegate holds its target weakly; keep it alive until the call has been made.
+        GC.KeepAlive(target);
     }
 
     [Fact]
@@ -48,6 +57,9 @@ public sealed class WeakDelegateExceptionTests
         var exception = Assert.Throws<InvalidOperationException>(() => sut.Execute(42));
 
         Assert.Equal("boom 42", exception.Message);
+
+        // The delegate holds its target weakly; keep it alive until the call has been made.
+        GC.KeepAlive(target);
     }
 
     private sealed class Thrower(string message)
