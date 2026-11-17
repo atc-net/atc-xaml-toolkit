@@ -89,6 +89,12 @@ public class AnimationBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElem
         if (AssociatedObject is not null)
         {
             AssociatedObject.Loaded += OnLoaded;
+
+            // An element that is already loaded does not raise Loaded again
+            if (AssociatedObject.IsLoaded && AutoStart)
+            {
+                PlayAnimation();
+            }
         }
     }
 

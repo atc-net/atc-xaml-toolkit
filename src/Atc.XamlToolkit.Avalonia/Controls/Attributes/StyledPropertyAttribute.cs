@@ -18,4 +18,10 @@ namespace Atc.XamlToolkit.Controls.Attributes;
 [AttributeUsage(AttributeTargets.Field, Inherited = false)]
 public sealed class StyledPropertyAttribute : StyledPropertyBaseAttribute
 {
+    /// <summary>
+    /// Gets or sets the name of the generated property. By default it is the name of the
+    /// field with its first letter in upper case. State it when the field cannot have that
+    /// name, for example because the class has locals or parameters of the same name.
+    /// </summary>
+    public string? PropertyName { get; set; }
 }

@@ -13,6 +13,31 @@ public sealed class ElementReorderingTests
     }
 
     [Fact]
+    public void ReorderVSM_Last_KeepsVisualStateGroups_WhenNoTrailingWhitespace()
+    {
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""><VisualStateManager.VisualStateGroups><VisualStateGroup x:Name=""g"" /></VisualStateManager.VisualStateGroups></Grid>";
+
+        var result = StyleWith(xaml, o => o.ReorderVSM = VisualStateManagerRule.Last);
+
+        result.Should().Contain("VisualStateManager.VisualStateGroups");
+        result.Should().Contain("VisualStateGroup x:Name=\"g\"");
+    }
+
+    [Fact]
+    public void ReorderVSM_Last_KeepsLastChildElement_WhenNoTrailingWhitespace()
+    {
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+    <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name=""g"" /></VisualStateManager.VisualStateGroups>
+    <Button Content=""Keep"" /></Grid>";
+
+        var result = StyleWith(xaml, o => o.ReorderVSM = VisualStateManagerRule.Last);
+
+        result.Should().Contain("Content=\"Keep\"");
+        result.IndexOf("Keep", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("VisualStateManager.VisualStateGroups", StringComparison.Ordinal), "the VisualStateManager should be moved last");
+    }
+
+    [Fact]
     public void ReorderGridChildren_SortsByRowThenColumn()
     {
         var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
@@ -29,6 +54,24 @@ public sealed class ElementReorderingTests
 
         a1Index.Should().BeLessThan(a2Index, "Row=0,Col=0 should come before Row=0,Col=1");
         a2Index.Should().BeLessThan(bIndex, "Row=0 elements should come before Row=1");
+    }
+
+    [Fact]
+    public void ReorderGridChildren_ChangedAfterTheServiceWasCreated_TakesEffect()
+    {
+        // The formatting options are read on every call; the reordering options must be too.
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
+    <TextBlock Grid.Row=""1"" Text=""B"" />
+    <TextBlock Grid.Row=""0"" Text=""A"" />
+</Grid>";
+        var options = new XamlStylerOptions { ReorderGridChildren = false };
+        var service = new XamlStylerService(options);
+
+        options.ReorderGridChildren = true;
+        var result = service.StyleDocument(xaml);
+
+        result.IndexOf("\"A\"", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("\"B\"", StringComparison.Ordinal), "Row=0 should come before Row=1 once reordering is switched on");
     }
 
     [Fact]
@@ -75,5 +118,54 @@ public sealed class ElementReorderingTests
         var wIndex = result.IndexOf("Width", StringComparison.Ordinal);
         var bgIndex = result.IndexOf("Background", StringComparison.Ordinal);
         wIndex.Should().BeLessThan(bgIndex, "original order preserved");
+    }
+
+    [Theory]
+    [InlineData("http://schemas.microsoft.com/winfx/2006/xaml/presentation")]
+    [InlineData("https://github.com/avaloniaui")]
+    [InlineData("http://schemas.microsoft.com/dotnet/2021/maui")]
+    [InlineData("http://xamarin.com/schemas/2014/forms")]
+    public void ReorderSetters_ByProperty_SortsSettersOfEachXamlDialect(
+        string xamlNamespace)
+    {
+        var xaml = $"<Style xmlns=\"{xamlNamespace}\">\n    <Setter Property=\"Width\" Value=\"100\" />\n    <Setter Property=\"Background\" Value=\"Red\" />\n    <Setter Property=\"Height\" Value=\"50\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ReorderSetters = ReorderSettersBy.Property);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            $"<Style xmlns=\"{xamlNamespace}\">",
+            "    <Setter Property=\"Background\" Value=\"Red\" />",
+            "    <Setter Property=\"Height\" Value=\"50\" />",
+            "    <Setter Property=\"Width\" Value=\"100\" />",
+            "</Style>");
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("http://schemas.microsoft.com/winfx/2006/xaml/presentation")]
+    [InlineData("https://github.com/avaloniaui")]
+    [InlineData("http://schemas.microsoft.com/dotnet/2021/maui")]
+    [InlineData("http://xamarin.com/schemas/2014/forms")]
+    public void ThicknessFormatting_AppliesToSetterValuesOfEachXamlDialect(
+        string xamlNamespace)
+    {
+        var xaml = $"<Style xmlns=\"{xamlNamespace}\">\n    <Setter Property=\"Margin\" Value=\"1 2 3 4\" />\n    <Setter Property=\"Tag\" Value=\"1 2 3 4\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ThicknessStyle = ThicknessStyle.Comma);
+
+        result.Should().Contain("<Setter Property=\"Margin\" Value=\"1,2,3,4\" />");
+        result.Should().Contain("<Setter Property=\"Tag\" Value=\"1 2 3 4\" />");
+    }
+
+    [Fact]
+    public void ReorderSetters_ByProperty_LeavesSettersOfUnknownNamespacesAlone()
+    {
+        var xaml = "<Style xmlns=\"urn:custom\">\n    <Setter Property=\"Width\" Value=\"100\" />\n    <Setter Property=\"Background\" Value=\"Red\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ReorderSetters = ReorderSettersBy.Property);
+
+        result.IndexOf("Width", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("Background", StringComparison.Ordinal));
     }
 }

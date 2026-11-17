@@ -19,6 +19,11 @@ public static class DispatcherQueueExtensions
     /// immediately after calling <see cref="DispatcherQueue.TryEnqueue(DispatcherQueuePriority, DispatcherQueueHandler)"/>
     /// without waiting for the action to run. WPF's and Avalonia's <c>InvokeIfRequired</c> block until the action
     /// completes. If you need WinUI to wait, use <see cref="InvokeAsyncIfRequired"/> and <c>await</c> the result.
+    /// <para>
+    /// If the dispatcher queue no longer accepts work (it is shutting down), the action is dropped
+    /// silently. <see cref="InvokeAsyncIfRequired"/> and <see cref="BeginInvokeIfRequired"/> report
+    /// that case by returning a canceled task.
+    /// </para>
     /// </remarks>
     public static void InvokeIfRequired(
         this DispatcherQueue dispatcherQueue,
@@ -62,7 +67,7 @@ public static class DispatcherQueueExtensions
         else
         {
             var tcs = new TaskCompletionSource<bool>();
-            dispatcherQueue.TryEnqueue(priority, () =>
+            var enqueued = dispatcherQueue.TryEnqueue(priority, () =>
             {
                 try
                 {
@@ -74,6 +79,12 @@ public static class DispatcherQueueExtensions
                     tcs.SetException(ex);
                 }
             });
+
+            if (!enqueued)
+            {
+                // The queue is shutting down and will never run the action - cancel instead of waiting forever.
+                tcs.TrySetCanceled();
+            }
 
             await tcs.Task;
         }
@@ -102,7 +113,7 @@ public static class DispatcherQueueExtensions
         }
 
         var tcs = new TaskCompletionSource<bool>();
-        dispatcherQueue.TryEnqueue(priority, () =>
+        var enqueued = dispatcherQueue.TryEnqueue(priority, () =>
         {
             try
             {
@@ -116,6 +127,12 @@ public static class DispatcherQueueExtensions
                 tcs.SetException(ex);
             }
         });
+
+        if (!enqueued)
+        {
+            // The queue is shutting down and will never run the action - cancel instead of never completing.
+            tcs.TrySetCanceled();
+        }
 
         return tcs.Task;
     }

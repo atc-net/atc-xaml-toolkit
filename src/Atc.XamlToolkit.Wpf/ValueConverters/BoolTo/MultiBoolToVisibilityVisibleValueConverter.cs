@@ -43,11 +43,21 @@ public sealed class MultiBoolToVisibilityVisibleValueConverter :
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((Data.Converters.IMultiValueConverter)this).Convert(
+    {
+        // WPF passes UnsetValue for a child binding that has not produced a value yet,
+        // for example before the DataContext is set. Leave the target unset as well.
+        if (values is not null &&
+            Array.Exists(values, x => x == DependencyProperty.UnsetValue))
+        {
+            return DependencyProperty.UnsetValue;
+        }
+
+        return ((Data.Converters.IMultiValueConverter)this).Convert(
             values,
             targetType,
             parameter,
             culture);
+    }
 
     object?[] System.Windows.Data.IMultiValueConverter.ConvertBack(
         object? value,

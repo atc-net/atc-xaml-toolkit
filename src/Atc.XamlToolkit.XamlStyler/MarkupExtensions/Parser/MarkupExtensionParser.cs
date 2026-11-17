@@ -24,6 +24,15 @@ public sealed class MarkupExtensionParser
         {
             var reader = new TokenReader(sourceText);
             graph = ParseMarkupExtension(reader);
+
+            // Anything left after the closing brace means the value is not a single markup
+            // extension (e.g. "{0} of {1}"); treating it as one would discard the remainder.
+            reader.SkipWhitespace();
+            if (!reader.IsAtEnd)
+            {
+                graph = null;
+            }
+
             return graph is not null;
         }
         catch
@@ -153,6 +162,10 @@ public sealed class MarkupExtensionParser
     /// </summary>
     private sealed class TokenReader
     {
+        // A quote written as an XML entity reaches the parser in the masked form the
+        // XmlEscapingService gives entities before the document is parsed.
+        private static readonly string[] MaskedQuotes = ["__amp__quot__scln__", "__amp__apos__scln__"];
+
         private readonly string source;
         private int position;
 
@@ -221,6 +234,15 @@ public sealed class MarkupExtensionParser
                 return ReadQuotedString(c);
             }
 
+            // Quoted string whose quotes are written as XML entities (&quot; / &apos;)
+            foreach (var maskedQuote in MaskedQuotes)
+            {
+                if (string.CompareOrdinal(source, position, maskedQuote, 0, maskedQuote.Length) == 0)
+                {
+                    return ReadMaskedQuotedString(maskedQuote) ?? ReadUnquotedValue();
+                }
+            }
+
             // Escaped literal: {} prefix means literal text
             if (c == '{' && position + 1 < source.Length && source[position + 1] == '}')
             {
@@ -229,6 +251,21 @@ public sealed class MarkupExtensionParser
             }
 
             return ReadUnquotedValue();
+        }
+
+        private string? ReadMaskedQuotedString(string maskedQuote)
+        {
+            var closingQuoteStart = source.IndexOf(maskedQuote, position + maskedQuote.Length, StringComparison.Ordinal);
+            if (closingQuoteStart < 0)
+            {
+                // Unterminated - not a quoted string after all.
+                return null;
+            }
+
+            // The value is written back verbatim, including the quotes.
+            var start = position;
+            position = closingQuoteStart + maskedQuote.Length;
+            return source.Substring(start, position - start);
         }
 
         private string ReadQuotedString(char quote)
@@ -248,6 +285,8 @@ public sealed class MarkupExtensionParser
 
                 if (c == '\\')
                 {
+                    // Keep the escape character: the value is written back verbatim.
+                    sb.Append(c);
                     position++;
                     if (!IsAtEnd)
                     {

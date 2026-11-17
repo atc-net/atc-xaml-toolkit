@@ -71,6 +71,8 @@ The generator emits a partial that adds:
 | `OnPropertyChanged([CallerMemberName] string?)` | `protected` | Alias for `RaisePropertyChanged` — convenience for hand-written setters. |
 | `Set<T>(ref T field, T newValue, [CallerMemberName] string?)` | `protected` | Equality-checked setter helper. Returns `true` if the value changed and `PropertyChanged` was fired. |
 
+In a `sealed` class the three helper methods are `private` instead of `protected`. With `[assembly: GenerateDocumentationDefault]` the four generated members get XML summaries, so a public class in a project that reports missing documentation (CS1591) can use the attribute.
+
 The generated `RaisePropertyChanged` shares the process-wide [`PropertyChangedEventArgsCache`](../../src/Atc.XamlToolkit/Mvvm/PropertyChangedEventArgsCache.cs), so allocation behaviour matches `ObservableObject`.
 
 ### Combining with `[ObservableProperty]`

@@ -438,6 +438,161 @@ public sealed class MessengerTests
         // recipient leaves scope — eligible for GC.
     }
 
+    [Fact]
+    public void Send_DoesNotRequestCleanup_WhenAllRecipientsAreAlive()
+    {
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+        var recipient = new object();
+
+        messenger.Register<DerivedMessage>(recipient, _ => { });
+        context.RunPosted();
+
+        for (var i = 0; i < 10; i++)
+        {
+            messenger.Send(new DerivedMessage());
+        }
+
+        context.PostCount
+            .Should()
+            .Be(1, "only Register asks for a cleanup; sending to live recipients leaves nothing to clean up");
+
+        GC.KeepAlive(recipient);
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void Send_RequestsCleanup_WhenItMeetsADeadRecipient()
+    {
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<DerivedMessage>(messenger);
+        context.RunPosted();
+        ForceFullGarbageCollection();
+
+        messenger.Send(new DerivedMessage());
+
+        context.PostCount
+            .Should()
+            .Be(2, "a dead recipient found while sending must still lead to a cleanup");
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void RequestCleanup_CleansUpInline_WhenThePostedCleanupNeverRuns()
+    {
+        // The context accepts the posted cleanup but never runs it - as a
+        // dispatcher that has stopped pumping does.
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<int>(messenger);
+        ForceFullGarbageCollection();
+
+        for (var i = 0; i < 100; i++)
+        {
+            messenger.RequestCleanup();
+        }
+
+        var typeMap = (System.Collections.IDictionary)GetPrivateField(messenger, "recipientsStrictAction")!;
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeFalse("dead recipients must still be removed when the posted cleanup is never run");
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void RequestCleanup_CleansUpInline_OnlyAfter64IgnoredRequests()
+    {
+        // Registering requests a cleanup, which is posted; later requests are ignored while it is pending.
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<int>(messenger);
+        ForceFullGarbageCollection();
+        var typeMap = (System.Collections.IDictionary)GetPrivateField(messenger, "recipientsStrictAction")!;
+
+        for (var i = 0; i < 63; i++)
+        {
+            messenger.RequestCleanup();
+        }
+
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeTrue("63 ignored requests are not enough to give up on the posted cleanup");
+
+        messenger.RequestCleanup();
+
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeFalse("the 64th ignored request runs the cleanup on the calling thread");
+    }
+
+    [Fact]
+    public void Register_DoesNotThrow_WhenTheContextRejectsThePostedCleanup()
+    {
+        var messenger = CreateMessengerOn(new RejectingSynchronizationContext());
+        var recipient = new object();
+        var hits = 0;
+
+        var exception = Record.Exception(() => messenger.Register<DerivedMessage>(recipient, _ => hits++, keepTargetAlive: true));
+        messenger.Send(new DerivedMessage());
+
+        exception.Should().BeNull();
+        hits.Should().Be(1);
+    }
+
+    private sealed class RejectingSynchronizationContext : SynchronizationContext
+    {
+        public override void Post(
+            SendOrPostCallback d,
+            object? state)
+            => throw new InvalidOperationException("The context has shut down.");
+    }
+
+    private static Messenger CreateMessengerOn(SynchronizationContext context)
+    {
+        // The messenger posts its cleanups to the context it was created on.
+        var original = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+
+        try
+        {
+            return new Messenger();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    private sealed class RecordingSynchronizationContext : SynchronizationContext
+    {
+        private readonly List<(SendOrPostCallback Callback, object? State)> posted = [];
+
+        public int PostCount { get; private set; }
+
+        public override void Post(
+            SendOrPostCallback d,
+            object? state)
+        {
+            PostCount++;
+            posted.Add((d, state));
+        }
+
+        public void RunPosted()
+        {
+            var callbacks = posted.ToList();
+            posted.Clear();
+
+            foreach (var (callback, state) in callbacks)
+            {
+                callback(state);
+            }
+        }
+    }
+
     private sealed class DerivedMessage;
 
     private sealed class UnrelatedMessage;

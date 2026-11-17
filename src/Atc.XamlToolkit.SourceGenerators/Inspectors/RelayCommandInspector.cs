@@ -22,7 +22,7 @@ internal static class RelayCommandInspector
 
             foreach (var attr in methodSymbol.GetAttributes())
             {
-                if (attr.AttributeClass?.Name
+                if (attr.GetToolkitAttributeName()
                     is not NameConstants.RelayCommandAttribute
                     and not NameConstants.RelayCommand)
                 {
@@ -30,6 +30,7 @@ internal static class RelayCommandInspector
                 }
 
                 AppendRelayCommandToGenerate(
+                    classSymbol,
                     methodSymbol,
                     memberSymbols,
                     attr,
@@ -52,7 +53,7 @@ internal static class RelayCommandInspector
 
         foreach (var attribute in assemblySymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.GenerateDocumentationDefault
                 or NameConstants.GenerateDocumentationDefaultAttribute)
             {
@@ -63,8 +64,70 @@ internal static class RelayCommandInspector
         return false;
     }
 
+    // True when a base class declares the property, or an [ObservableProperty] field for it.
+    private static bool HasInheritedPropertyName(
+        INamedTypeSymbol classSymbol,
+        string name)
+    {
+        for (var baseType = classSymbol.BaseType;
+             baseType is not null;
+             baseType = baseType.BaseType)
+        {
+            var baseMemberSymbols = baseType.GetMembers();
+            if (baseMemberSymbols.HasPropertyName(name) ||
+                baseMemberSymbols.HasObservablePropertyOrFieldName(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Returns the ParameterValue / ParameterValues arguments as C# expressions.
+    // Bound constants are rendered as literals (quoted strings, true/false, qualified enum
+    // members); the textual fallback is only used when the arguments could not be bound.
+    private static List<string> ExtractParameterValues(
+        AttributeData relayCommandAttribute,
+        IDictionary<string, string?> relayCommandArgumentValues)
+    {
+        foreach (var namedArgument in relayCommandAttribute.NamedArguments)
+        {
+            if (namedArgument.Key == NameConstants.ParameterValue &&
+                namedArgument.Value.Kind is not (TypedConstantKind.Error or TypedConstantKind.Array))
+            {
+                return [namedArgument.Value.ToCSharpString()];
+            }
+
+            if (namedArgument.Key == NameConstants.ParameterValues &&
+                namedArgument.Value is { Kind: TypedConstantKind.Array, IsNull: false } &&
+                namedArgument.Value.Values.All(x => x.Kind is not (TypedConstantKind.Error or TypedConstantKind.Array)))
+            {
+                return namedArgument.Value.Values
+                    .Select(x => x.ToCSharpString())
+                    .ToList();
+            }
+        }
+
+        var parameterValues = new List<string>();
+        if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValue, out var parameterValueValue))
+        {
+            parameterValues.Add(parameterValueValue!);
+        }
+        else if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValues, out var parameterValuesValue))
+        {
+            parameterValues.AddRange(
+                parameterValuesValue!
+                    .Split(',')
+                    .Select(x => x.Trim()));
+        }
+
+        return parameterValues;
+    }
+
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void AppendRelayCommandToGenerate(
+        INamedTypeSymbol classSymbol,
         IMethodSymbol methodSymbol,
         ImmutableArray<ISymbol> memberSymbols,
         AttributeData relayCommandAttribute,
@@ -105,21 +168,11 @@ internal static class RelayCommandInspector
         if (canExecuteName is not null)
         {
             usePropertyForCanExecute = memberSymbols.HasPropertyName(canExecuteName) ||
-                                       memberSymbols.HasObservablePropertyOrFieldName(canExecuteName);
+                                       memberSymbols.HasObservablePropertyOrFieldName(canExecuteName) ||
+                                       HasInheritedPropertyName(classSymbol, canExecuteName);
         }
 
-        var parameterValues = new List<string>();
-        if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValue, out var parameterValueValue))
-        {
-            parameterValues.Add(parameterValueValue!);
-        }
-        else if (relayCommandArgumentValues.TryGetValue(NameConstants.ParameterValues, out var parameterValuesValue))
-        {
-            parameterValues.AddRange(
-                parameterValuesValue!
-                    .Split(',')
-                    .Select(x => x.Trim()));
-        }
+        var parameterValues = ExtractParameterValues(relayCommandAttribute, relayCommandArgumentValues);
 
         List<string>? parameterTypes = null;
         List<string>? parameterNames = null;
@@ -129,7 +182,7 @@ internal static class RelayCommandInspector
                 .Select(parameterSymbol => parameterSymbol.Type.ToDisplayString())
                 .ToList();
             parameterNames = methodSymbol.Parameters
-                .Select(parameterSymbol => parameterSymbol.Name)
+                .Select(parameterSymbol => parameterSymbol.Name.EscapeKeyword())
                 .ToList();
         }
 
@@ -173,10 +226,13 @@ internal static class RelayCommandInspector
 
         var documentationComments = methodSymbol.ExtractDocumentationComments();
 
+        // A ValueTask-returning method is called through a generated Task-returning adapter.
+        var returnsValueTask = methodSymbol.ReturnType.Name is NameConstants.ValueTask;
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
-                methodSymbol.Name,
+                returnsValueTask ? methodSymbol.Name + "AsTask" : methodSymbol.Name.EscapeKeyword(),
                 new EquatableArray<string>(parameterTypes?.ToArray() ?? []),
                 new EquatableArray<string>(parameterNames?.ToArray() ?? []),
                 new EquatableArray<string>(parameterValues.ToArray()),
@@ -191,6 +247,7 @@ internal static class RelayCommandInspector
                 generateDocumentation)
             {
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
+                ValueTaskMethodName = returnsValueTask ? methodSymbol.Name.EscapeKeyword() : null,
             });
     }
 }

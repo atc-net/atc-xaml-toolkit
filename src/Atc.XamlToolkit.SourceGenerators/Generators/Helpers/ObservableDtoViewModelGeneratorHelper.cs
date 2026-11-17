@@ -35,6 +35,12 @@ internal static class ObservableDtoViewModelGeneratorHelper
             return false;
         }
 
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
+        {
+            return false;
+        }
+
         // Must have a base list (inherits from a base class)
         if (classDeclaration.BaseList is null)
         {
@@ -46,6 +52,31 @@ internal static class ObservableDtoViewModelGeneratorHelper
         // needs to pass the predicate; the semantic phase will discover all partials.
         return classDeclaration.AttributeLists.Count > 0 &&
                HasObservableDtoViewModelAttribute(classDeclaration.AttributeLists);
+    }
+
+    /// <summary>
+    /// Determines whether <see cref="ObservableDtoViewModelGenerator"/> emits the class, and
+    /// with it the <c>[ObservableProperty]</c> and <c>[RelayCommand]</c> members the class
+    /// declares itself. When it does not, those members are left to <see cref="ViewModelGenerator"/>.
+    /// </summary>
+    /// <param name="compilation">The compilation.</param>
+    /// <param name="classSymbol">The class.</param>
+    /// <returns>True if the DTO generator emits the class; otherwise, false.</returns>
+    public static bool EmitsClass(
+        Compilation compilation,
+        INamedTypeSymbol classSymbol)
+    {
+        if (!classSymbol.HasObservableDtoViewModelAttribute())
+        {
+            return false;
+        }
+
+        var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
+
+        return hasAnyBase &&
+               ObservableDtoViewModelInspector
+                   .Inspect(compilation, classSymbol, inheritFromViewModel)
+                   .FoundAnythingToGenerate;
     }
 
     /// <summary>
@@ -105,7 +136,7 @@ internal static class ObservableDtoViewModelGeneratorHelper
         }
 
         return new ObservableDtoViewModelToGenerate(
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             DtoTypeName: result.DtoTypeName!,
@@ -119,7 +150,12 @@ internal static class ObservableDtoViewModelGeneratorHelper
             CustomProperties: new EquatableArray<ObservablePropertyToGenerate>(result.CustomProperties.ToArray()),
             CustomCommands: new EquatableArray<RelayCommandToGenerate>(result.CustomCommands.ToArray()),
             ComputedProperties: new EquatableArray<ComputedPropertyToGenerate>(result.ComputedProperties.ToArray()),
-            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform());
+            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform())
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>

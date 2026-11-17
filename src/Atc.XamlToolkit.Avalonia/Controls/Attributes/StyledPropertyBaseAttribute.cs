@@ -13,23 +13,73 @@ public abstract class StyledPropertyBaseAttribute : Attribute
     public object? DefaultValue { get; set; }
 
     /// <summary>
+    /// Gets or sets the default value as C# source text that is emitted unchanged, for a
+    /// default that is not a constant: a method call, a static member or a constructor,
+    /// e.g. <c>"CreateFrozenBrush(40)"</c> or <c>"new Thickness(1)"</c>. Unlike
+    /// <see cref="DefaultValue"/> the text is never quoted or rewritten to fit the property
+    /// type. When both are set, the expression is used. The value is created once and
+    /// shared by all instances, so it should be immutable (a frozen brush, an empty array).
+    /// </summary>
+    public string? DefaultValueExpression { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the property changed callback method.
     /// </summary>
     public string? PropertyChangedCallback { get; set; }
 
     /// <summary>
-    /// Gets or sets the category for design-time tools.
+    /// Gets or sets a value indicating whether a typed partial method is generated that is
+    /// called when the property value changes: <c>partial void On{Name}Changed(T oldValue, T newValue)</c>,
+    /// or for an attached property <c>static partial void On{Name}Changed(target, T oldValue, T newValue)</c>.
+    /// Implement the method in the class to react to the change; when it is not implemented,
+    /// the call is removed by the compiler. Can be combined with <see cref="PropertyChangedCallback"/>,
+    /// which then runs first.
+    /// </summary>
+    public bool GeneratePartialHooks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the accessibility of the generated CLR property's setter, or of the
+    /// <c>Set{Name}</c> method of an attached property. The default is
+    /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
+    /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.
+    /// </summary>
+    public PropertyAccessModifier SetterAccessModifier { get; set; }
+
+    /// <summary>
+    /// Gets or sets the accessibility of the generated members: the property identifier
+    /// field and the CLR property, or the <c>Get{Name}</c> / <c>Set{Name}</c> methods of an
+    /// attached property. The default is <see cref="PropertyAccessModifier.Public"/>.
+    /// <see cref="SetterAccessModifier"/> can restrict the setter further.
+    /// </summary>
+    public PropertyAccessModifier AccessModifier { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the CLR property, or the <c>Get{Name}</c> /
+    /// <c>Set{Name}</c> methods of an attached property, are generated. Set it to
+    /// <c>false</c> to generate only the property identifier field, for a property that is
+    /// read and written with <c>GetValue</c> / <c>SetValue</c>. The default is <c>true</c>.
+    /// </summary>
+    public bool GenerateClrAccessors { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the category for design-time tools. The generator puts
+    /// <c>[Category("...")]</c> on the generated CLR property, or on the <c>Get{Name}</c>
+    /// and <c>Set{Name}</c> methods of an attached property.
     /// </summary>
     public string? Category { get; set; }
 
     /// <summary>
-    /// Gets or sets the description for design-time tools.
+    /// Gets or sets the description for design-time tools. The generator puts
+    /// <c>[Description("...")]</c> on the generated CLR property; for an attached property
+    /// <c>[Description("Get: ...")]</c> on <c>Get{Name}</c> and
+    /// <c>[Description("Set: ...")]</c> on <c>Set{Name}</c>.
     /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to emit a default
-    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property.
+    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property
+    /// and an <c>Identifies the {Name} ... property.</c> summary on the property identifier field.
     /// When the property has no field-level XML doc, the generator emits
     /// <c>Gets or sets the {Name}.</c> for instance properties, or
     /// <c>Gets the {Name} attached property value.</c> /

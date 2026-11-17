@@ -36,11 +36,15 @@ namespace Atc.XamlToolkit.Mvvm
                     Microsoft.UI.Windowing.DisplayAreaFallback.Primary);
 
                 if (displayArea is not null &&
-                    window.Content is FrameworkElement content &&
-                    (content.ActualWidth >= displayArea.WorkArea.Width ||
-                     content.ActualHeight >= displayArea.WorkArea.Height))
+                    window.Content is FrameworkElement content)
                 {
-                    presenter.Maximize();
+                    // The actual size is in device-independent pixels and the work area is in physical pixels
+                    var scaling = content.XamlRoot?.RasterizationScale ?? 1.0;
+                    if (content.ActualWidth * scaling >= displayArea.WorkArea.Width ||
+                        content.ActualHeight * scaling >= displayArea.WorkArea.Height)
+                    {
+                        presenter.Maximize();
+                    }
                 }
             }
         }
@@ -82,10 +86,11 @@ namespace Atc.XamlToolkit.Mvvm
                     {
                         presenter.Maximize();
                     }
+
+                    // Only mark the key as handled when the window state was toggled
+                    e.Handled = true;
                 }
             }
-
-            e.Handled = true;
         }
 
         /// <inheritdoc />

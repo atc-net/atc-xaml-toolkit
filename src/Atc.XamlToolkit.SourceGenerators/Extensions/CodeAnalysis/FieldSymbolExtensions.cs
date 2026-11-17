@@ -10,7 +10,7 @@ internal static class FieldSymbolExtensions
     {
         var attribute = fieldSymbol
             .GetAttributes()
-            .FirstOrDefault(attr => attr.AttributeClass?.Name
+            .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                 is NameConstants.ObservablePropertyAttribute
                 or NameConstants.ObservableProperty);
 
@@ -33,10 +33,10 @@ internal static class FieldSymbolExtensions
     public static bool HasObservableFieldName(
         this IFieldSymbol fieldSymbol,
         string name)
-        => fieldSymbol.Name == name.EnsureFirstCharacterToLower() &&
+        => fieldSymbol.Name.RemovePrefixFromField() == name.EnsureFirstCharacterToLower() &&
            fieldSymbol
                .GetAttributes()
-               .FirstOrDefault(attr => attr.AttributeClass?.Name
+               .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                    is NameConstants.ObservablePropertyAttribute
                    or NameConstants.ObservableProperty) is not null;
 
@@ -51,7 +51,7 @@ internal static class FieldSymbolExtensions
             var syntax = syntaxRef.GetSyntax();
             if (syntax is not VariableDeclaratorSyntax
                 {
-                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration }
+                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration },
                 })
             {
                 continue;
@@ -61,7 +61,13 @@ internal static class FieldSymbolExtensions
             {
                 foreach (var attribute in attributeList.Attributes)
                 {
-                    var attributeName = attribute.Name.ToString();
+                    // Compare the simple name, so a (fully) qualified attribute is recognized too
+                    var attributeName = attribute.Name switch
+                    {
+                        QualifiedNameSyntax qualifiedName => qualifiedName.Right.Identifier.Text,
+                        AliasQualifiedNameSyntax aliasQualifiedName => aliasQualifiedName.Name.Identifier.Text,
+                        _ => attribute.Name.ToString(),
+                    };
 
                     // Skip source generator specific attributes
                     if (attributeName is NameConstants.ObservablePropertyAttribute
@@ -98,7 +104,7 @@ internal static class FieldSymbolExtensions
             var syntax = syntaxRef.GetSyntax();
             if (syntax is not VariableDeclaratorSyntax
                 {
-                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration }
+                    Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax fieldDeclaration },
                 })
             {
                 continue;

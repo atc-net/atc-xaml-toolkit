@@ -7,6 +7,9 @@ internal sealed class TestObservableObject : ObservableObject
     private bool isBoolPropertyWithSet;
     private bool isBoolPropertyWithSetAndExpression;
 
+    public string this[int index]
+        => index.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
     public bool IsBoolProperty
     {
         get => isBoolProperty;

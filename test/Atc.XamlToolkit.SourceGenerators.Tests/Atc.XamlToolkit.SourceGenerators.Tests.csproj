@@ -10,11 +10,19 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
+    <!-- Override vulnerable transitive version (9.0.6) pulled in by Microsoft.CodeAnalysis.*.Testing via NuGet.Packaging -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.SourceGenerators\Atc.XamlToolkit.SourceGenerators.csproj" />
     <ProjectReference Include="..\..\src\Atc.XamlToolkit\Atc.XamlToolkit.csproj" />
+    <!-- Only used as metadata references when compiling generated code (see GeneratorTestBase.AssertCompilesWithAllGenerators) -->
+    <ProjectReference Include="..\..\src\Atc.XamlToolkit.Avalonia\Atc.XamlToolkit.Avalonia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Atc.XUnit" Version="4.0.0" />
   </ItemGroup>
 
 

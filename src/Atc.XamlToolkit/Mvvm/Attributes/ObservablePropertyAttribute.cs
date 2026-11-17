@@ -168,6 +168,13 @@ public sealed class ObservablePropertyAttribute : Attribute
     public bool GeneratePartialHooks { get; set; }
 
     /// <summary>
+    /// Gets or sets the accessibility of the generated property's setter. The default is
+    /// <see cref="PropertyAccessModifier.Public"/>. Use it for a property that others may
+    /// read but only the class (or the assembly) may change.
+    /// </summary>
+    public PropertyAccessModifier SetterAccessModifier { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the source generator should emit a default
     /// <c>/// &lt;summary&gt;Gets or sets the {PropertyName}.&lt;/summary&gt;</c> comment block
     /// above the generated property when the backing field has no XML documentation comments

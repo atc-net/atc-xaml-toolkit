@@ -80,4 +80,124 @@ public sealed class ElementFormattingTests
         var lines = result.Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Trim().Length > 0).ToArray();
         lines.Length.Should().Be(1);
     }
+
+    [Fact]
+    public void TextContent_WithGreaterThan_IsPreserved()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>File > Open</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        result.Should().Contain("<TextBlock>File > Open</TextBlock>");
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void InlineContent_KeepsSpaceBetweenTextAndInlineElement()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>Hello <Run Text=\"x\" /> world</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello <Run Text=\"x\" />",
+            "        world</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void InlineContent_DoesNotAddSpaceBetweenInlineElementAndText()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>Hello<Run Text=\"x\" />world <Bold>big</Bold>.</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello<Run Text=\"x\" />world <Bold>big</Bold>.</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void InlineContent_OnSeparateLines_KeepsWhitespaceBetweenTextAndInlineElement()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>\n        Hello\n        <Run Text=\"x\" />\n        world\n    </TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello <Run Text=\"x\" />",
+            "        world</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void WhitespaceWithoutLineBreak_BetweenElements_LeavesNoTrailingSpaces()
+    {
+        var xaml = WrapXaml(" <Grid> <Button /> <Button /></Grid> ");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <Grid>",
+            "        <Button />",
+            "        <Button />",
+            "    </Grid>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void WhitespaceWithoutLineBreak_BetweenInlineElements_IsKept()
+    {
+        var xaml = WrapXaml("\n    <TextBlock><Run Text=\"a\" /> <Run Text=\"b\" /></TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        result.Should().Contain("<TextBlock><Run Text=\"a\" /> <Run Text=\"b\" /></TextBlock>");
+    }
+
+    [Fact]
+    public void ElementsWhoseNamesOnlyContainAnInlineTypeName_AreNotTreatedAsInlineContent()
+    {
+        // 'TextBlockHost' is not a TextBlock and 'RunButton' is not a Run.
+        var xaml = "<local:TextBlockHost xmlns:local=\"urn:x\">Hello <local:RunButton /> world</local:TextBlockHost>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        // Formatted like any other element with mixed content, not kept on one line as inline text.
+        result.Should().Be(
+            "<local:TextBlockHost xmlns:local=\"urn:x\">" + Environment.NewLine +
+            "    Hello" + Environment.NewLine +
+            "    <local:RunButton />" + Environment.NewLine +
+            "    world" + Environment.NewLine +
+            "</local:TextBlockHost>");
+    }
+
+    [Fact]
+    public void InlineElementsWithANamespacePrefix_AreStillTreatedAsInlineContent()
+    {
+        var xaml = "<ui:TextBlock xmlns:ui=\"urn:x\">Hello <ui:Run Text=\"x\" /> world</ui:TextBlock>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        result.Should().Contain("Hello <ui:Run Text=\"x\" />");
+    }
 }

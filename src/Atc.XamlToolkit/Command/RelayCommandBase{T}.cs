@@ -8,6 +8,7 @@ namespace Atc.XamlToolkit.Command;
 [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "OK")]
 [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "OK")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "OK")]
+[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1304:Non-private readonly fields should begin with upper-case letter", Justification = "OK")]
 public abstract class RelayCommandBase<T> : IRelayCommand<T>
 {
     protected readonly WeakAction<T>? waExecute;
@@ -61,10 +62,15 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
             return false;
         }
 
-        return parameter switch
+        if (!CommandParameterConverter.TryConvert<T>(parameter, out var val))
+        {
+            return false;
+        }
+
+        return val switch
         {
             null when typeof(T).IsValueType => wfCanExecute.Execute(),
-            null or T => wfCanExecute.Execute((T)parameter!),
+            null or T => wfCanExecute.Execute((T)val!),
             _ => false,
         };
     }
@@ -92,31 +98,18 @@ public abstract class RelayCommandBase<T> : IRelayCommand<T>
     /// </remarks>
     public void Execute(object? parameter)
     {
-        var val = parameter;
-
-        if (parameter is not null &&
-            parameter.GetType() != typeof(T) &&
-            parameter is IConvertible)
+        // A failed conversion (overflow / format / unsupported cast) is treated as
+        // "cannot execute" rather than letting the throw propagate up through the
+        // binding system.
+        if (!CommandParameterConverter.TryConvert<T>(parameter, out var val))
         {
-            // Convert.ChangeType throws on overflow / format / unsupported casts.
-            // Treat a failed conversion as "cannot execute" rather than letting
-            // the throw propagate up through the binding system.
-            try
-            {
-                val = Convert.ChangeType(parameter, typeof(T), provider: null);
-            }
-            catch (InvalidCastException)
-            {
-                return;
-            }
-            catch (FormatException)
-            {
-                return;
-            }
-            catch (OverflowException)
-            {
-                return;
-            }
+            return;
+        }
+
+        // A parameter that is not (convertible to) T can never be passed to the delegate.
+        if (val is not null and not T)
+        {
+            return;
         }
 
         if (!CanExecute(val) ||

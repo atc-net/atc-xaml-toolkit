@@ -2,8 +2,20 @@ namespace Atc.XamlToolkit.XamlStyler.DocumentManipulation;
 
 internal sealed class FormatThicknessService : IProcessElementService
 {
-    private const string XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-    private static readonly XName SetterName = XName.Get("Setter", XamlNamespace);
+    /// <summary>
+    /// The default XML namespaces of the XAML dialects whose Setter element is recognized:
+    /// WPF / WinUI / UWP, Avalonia, .NET MAUI and Xamarin.Forms.
+    /// </summary>
+    [SuppressMessage("Security", "S5332:Using http protocol is insecure", Justification = "OK - XML namespace identifiers, not URLs.")]
+    internal static readonly string[] SetterNamespaces =
+    [
+        "http://schemas.microsoft.com/winfx/2006/xaml/presentation",
+        "https://github.com/avaloniaui",
+        "http://schemas.microsoft.com/dotnet/2021/maui",
+        "http://xamarin.com/schemas/2014/forms",
+    ];
+
+    private static readonly HashSet<XName> SetterNames = new(SetterNamespaces.Select(ns => XName.Get("Setter", ns)));
 
     public FormatThicknessService(
         ThicknessStyle thicknessStyle,
@@ -27,7 +39,7 @@ internal sealed class FormatThicknessService : IProcessElementService
             return;
         }
 
-        if (element.Name == SetterName)
+        if (SetterNames.Contains(element.Name))
         {
             var propertyAttribute = element.Attributes("Property").FirstOrDefault();
             if (propertyAttribute is not null

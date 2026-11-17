@@ -35,7 +35,7 @@ internal static class ViewModelDiagnosticHelper
         var missingPartialClasses = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsMissingPartialTarget(syntaxNode),
-                transform: static (ctx, _) => GetMissingPartialDiagnostic(ctx))
+                transform: static (ctx, _) => UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetMissingPartialDiagnostic(ctx))
             .Where(static d => d is not null)
             .WithTrackingName("ViewModelGenerator.MissingPartialDiagnostic");
 
@@ -59,8 +59,8 @@ internal static class ViewModelDiagnosticHelper
         var invalidObservablePropertyFields = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsObservablePropertyFieldTarget(syntaxNode),
-                transform: static (ctx, _) => GetObservablePropertyFieldDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetObservablePropertyFieldDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ObservablePropertyFieldDiagnostics");
 
         context.RegisterSourceOutput(
@@ -77,8 +77,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyPropertyChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyPropertyChangedForDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyPropertyChangedForDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyPropertyChangedForDiagnostics");
 
         context.RegisterSourceOutput(
@@ -93,8 +93,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyCanExecForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyCanExecuteChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyCanExecuteChangedForDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyCanExecuteChangedForDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyCanExecuteChangedForDiagnostics");
 
         context.RegisterSourceOutput(
@@ -112,8 +112,8 @@ internal static class ViewModelDiagnosticHelper
         var computedPropertyDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithComputedPropertyUsage(syntaxNode),
-                transform: static (ctx, _) => GetComputedPropertyDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetComputedPropertyDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ComputedPropertyDiagnostics");
 
         context.RegisterSourceOutput(
@@ -131,8 +131,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyDataErrorInfoDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyDataErrorInfoUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyDataErrorInfoDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyDataErrorInfoDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyDataErrorInfoDiagnostics");
 
         context.RegisterSourceOutput(
@@ -140,15 +140,79 @@ internal static class ViewModelDiagnosticHelper
             static (spc, diagnostics) => ReportAll(spc, diagnostics));
     }
 
-    private static void ReportAll(
-        SourceProductionContext spc,
-        List<Diagnostic>? diagnostics)
+    // Other MVVM libraries use the same attribute names (ObservableProperty, RelayCommand, ...).
+    // The candidate nodes are found by name only, so this resolves the attributes on the class
+    // and tells whether every one of them belongs to another library. An attribute that cannot
+    // be resolved counts as the toolkit's own, because only its name is known.
+    private static bool UsesGeneratorAttributesOfAnotherLibrary(
+        GeneratorSyntaxContext context)
     {
-        if (diagnostics is null)
+        var typeDeclaration = context.Node.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+        if (typeDeclaration is null)
         {
-            return;
+            return false;
         }
 
+        var foundAttributeOfAnotherLibrary = false;
+
+        foreach (var attribute in typeDeclaration.DescendantNodes().OfType<AttributeSyntax>())
+        {
+            if (attribute.FirstAncestorOrSelf<TypeDeclarationSyntax>() != typeDeclaration ||
+                !IsGeneratorAttributeName(attribute))
+            {
+                continue;
+            }
+
+            var attributeType = context.SemanticModel.GetTypeInfo(attribute).Type;
+            if (attributeType is null || attributeType.IsToolkitTypeOrUnresolved())
+            {
+                return false;
+            }
+
+            foundAttributeOfAnotherLibrary = true;
+        }
+
+        return foundAttributeOfAnotherLibrary;
+    }
+
+    private static bool IsGeneratorAttributeName(AttributeSyntax attribute)
+    {
+        var name = attribute.Name.ToString();
+
+        var lastDot = name.LastIndexOf('.');
+        if (lastDot >= 0)
+        {
+            name = name.Substring(lastDot + 1);
+        }
+
+        const string attributeSuffix = "Attribute";
+        if (name.EndsWith(attributeSuffix, StringComparison.Ordinal))
+        {
+            name = name.Substring(0, name.Length - attributeSuffix.Length);
+        }
+
+        return name
+            is "ObservableProperty"
+            or "RelayCommand"
+            or "ComputedProperty"
+            or "NotifyPropertyChangedFor"
+            or "NotifyCanExecuteChangedFor"
+            or "NotifyDataErrorInfo"
+            or "INotifyPropertyChanged";
+    }
+
+    // A list has reference equality, which would make the pipeline re-run its output on every
+    // compilation change. Diagnostic itself compares by descriptor, message and location.
+    private static EquatableArray<Diagnostic> ToEquatableArray(
+        List<Diagnostic>? diagnostics)
+        => diagnostics is null
+            ? EquatableArray<Diagnostic>.Empty
+            : new EquatableArray<Diagnostic>(diagnostics.ToArray());
+
+    private static void ReportAll(
+        SourceProductionContext spc,
+        EquatableArray<Diagnostic> diagnostics)
+    {
         foreach (var diagnostic in diagnostics)
         {
             spc.ReportDiagnostic(diagnostic);
@@ -264,9 +328,36 @@ internal static class ViewModelDiagnosticHelper
                     fieldName,
                     variable.Identifier.GetLocation()));
             }
+
+            if (GetClassThatCannotRaisePropertyChanged(context, variable) is { } className)
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateObservablePropertyWithoutNotification(
+                    fieldName,
+                    className,
+                    variable.Identifier.GetLocation()));
+            }
         }
 
         return diagnostics;
+    }
+
+    // The name of the field's class when it is partial (a class that is not is reported on
+    // its own) but has neither a toolkit base class nor [INotifyPropertyChanged], so the
+    // generator emits nothing for it.
+    private static string? GetClassThatCannotRaisePropertyChanged(
+        GeneratorSyntaxContext context,
+        VariableDeclaratorSyntax variable)
+    {
+        if (context.SemanticModel.GetDeclaredSymbol(variable) is not IFieldSymbol { ContainingType: { TypeKind: TypeKind.Class } classSymbol } ||
+            !classSymbol.DeclaringSyntaxReferences.Any(x => x.GetSyntax().HasPartialClassDeclaration()) ||
+            classSymbol.CheckBaseClasses().HasAnyBase ||
+            ViewModelGeneratorHelper.ClassHasINotifyPropertyChangedAttribute(classSymbol))
+        {
+            return null;
+        }
+
+        return classSymbol.Name;
     }
 
     private static bool IsClassWithNotifyPropertyChangedForUsage(
@@ -378,7 +469,9 @@ internal static class ViewModelDiagnosticHelper
         INamedTypeSymbol classSymbol)
     {
         var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
+
+        // Members inherited from the base classes exist on the final type too
+        foreach (var member in GetMembersIncludingInherited(classSymbol))
         {
             if (member is IPropertySymbol propertySymbol)
             {
@@ -405,7 +498,9 @@ internal static class ViewModelDiagnosticHelper
         INamedTypeSymbol classSymbol)
     {
         var knownCommandNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
+
+        // Members inherited from the base classes exist on the final type too
+        foreach (var member in GetMembersIncludingInherited(classSymbol))
         {
             // User-declared property whose name ends in "Command" — covers
             // hand-written IRelayCommand properties without forcing us to
@@ -425,6 +520,20 @@ internal static class ViewModelDiagnosticHelper
         }
 
         return knownCommandNames;
+    }
+
+    private static IEnumerable<ISymbol> GetMembersIncludingInherited(
+        INamedTypeSymbol classSymbol)
+    {
+        for (var type = classSymbol;
+             type is not null;
+             type = type.BaseType)
+        {
+            foreach (var member in type.GetMembers())
+            {
+                yield return member;
+            }
+        }
     }
 
     private static bool IsClassWithComputedPropertyUsage(SyntaxNode syntaxNode)

@@ -117,36 +117,15 @@ public sealed partial class ViewModelGeneratorTests
             }
             """;
 
-        // Force-load the runtime library so Atc.XamlToolkit.Mvvm.* types
-        // appear in the test AppDomain and are usable as metadata references.
-        System.Reflection.Assembly.Load("Atc.XamlToolkit");
+        // The attributes are written fully qualified, so the consumer needs no usings at all.
+        AssertCompilesWithAllGeneratorsWithoutGlobalUsings(inputCode);
 
-        var inputCompilation = CSharpCompilation.Create(
-            "compilation",
-            [CSharpSyntaxTree.ParseText(inputCode)],
-            AppDomain.CurrentDomain
-                .GetAssemblies()
-                .Where(a => !a.IsDynamic)
-                .Select(a => MetadataReference.CreateFromFile(a.Location))
-                .ToArray<MetadataReference>(),
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var generatedCode = string.Join(
+            Environment.NewLine,
+            GetSourcesGeneratedForAvaloniaConsumer(inputCode));
 
-        var generator = new ViewModelGenerator();
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-        _ = driver.RunGeneratorsAndUpdateCompilation(
-            inputCompilation,
-            out var outputCompilation,
-            out _);
-
-        var errors = outputCompilation.GetDiagnostics()
-            .Where(d => d.Severity == DiagnosticSeverity.Error)
-            .ToList();
-
-        errors.Should()
-            .BeEmpty(
-                "the combined output of [INotifyPropertyChanged] + [ObservableProperty] must compile cleanly. Errors: {0}",
-                string.Join(Environment.NewLine, errors.Select(e => e.ToString())));
+        Assert.Contains("public event PropertyChangedEventHandler? PropertyChanged;", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("public string FirstName", generatedCode, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -18,4 +18,11 @@ internal sealed record RelayCommandToGenerate(
     bool GenerateDocumentation)
 {
     public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
+
+    /// <summary>
+    /// Gets or sets the name of the user's method when it returns a <c>ValueTask</c>.
+    /// <see cref="MethodName"/> is then the name of a generated adapter method that returns
+    /// a <c>Task</c>, because no command constructor accepts a ValueTask-returning method.
+    /// </summary>
+    public string? ValueTaskMethodName { get; set; }
 }

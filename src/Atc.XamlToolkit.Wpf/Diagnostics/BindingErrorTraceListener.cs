@@ -16,6 +16,7 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     private static BindingErrorTraceListener? listener;
     private readonly StringBuilder errorMessage = new();
     private readonly List<string> ignoreErrorMessages = new();
+    private bool isTracingEvent;
 
     /// <summary>
     /// Prevents a default instance of the <see cref="BindingErrorTraceListener" /> class from being created.
@@ -49,6 +50,10 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     {
         if (listener is null)
         {
+            // WPF only enables its trace sources when a debugger is attached or tracing is turned on
+            // in the registry. Refresh enables them, so binding errors are also traced without a debugger.
+            PresentationTraceSources.Refresh();
+
             listener = new BindingErrorTraceListener();
             _ = PresentationTraceSources.DataBindingSource.Listeners.Add(listener);
         }
@@ -92,28 +97,100 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
     }
 
     /// <inheritdoc />
+    public override void TraceEvent(
+        TraceEventCache? eventCache,
+        string source,
+        TraceEventType eventType,
+        int id,
+        string? message)
+    {
+        if (IsIgnored(message))
+        {
+            return;
+        }
+
+        // The base implementation writes a header, the message and one line per trace option.
+        // They are collected, so the event is raised once with the complete text.
+        isTracingEvent = true;
+        try
+        {
+            base.TraceEvent(eventCache, source, eventType, id, message);
+        }
+        finally
+        {
+            isTracingEvent = false;
+        }
+
+        ReportError();
+    }
+
+    /// <inheritdoc />
+    public override void TraceEvent(
+        TraceEventCache? eventCache,
+        string source,
+        TraceEventType eventType,
+        int id,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? format,
+        params object?[]? args)
+    {
+        var message = format is null || args is null || args.Length == 0
+            ? format
+            : string.Format(CultureInfo.InvariantCulture, format, args);
+
+        TraceEvent(eventCache, source, eventType, id, message);
+    }
+
+    /// <inheritdoc />
     public override void Write(string? message)
     {
         _ = errorMessage.Append(message);
     }
 
     /// <inheritdoc />
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "A subscriber should never break the trace pipeline.")]
     public override void WriteLine(string? message)
     {
+        if (isTracingEvent)
+        {
+            // The header ends with a space and is followed by the message; the trace options follow on their own lines
+            if (errorMessage.Length > 0 && errorMessage[^1] != ' ')
+            {
+                _ = errorMessage.AppendLine();
+            }
+
+            _ = errorMessage.Append(message);
+            return;
+        }
+
         if (string.IsNullOrEmpty(message))
         {
             return;
         }
 
-        if (ignoreErrorMessages.Exists(x => message.Contains(x, StringComparison.Ordinal)))
+        if (IsIgnored(message))
         {
+            // Drop what was written for the ignored message, so it does not end up in the next error
+            errorMessage.Length = 0;
             return;
         }
 
         _ = errorMessage.Append(message);
+        ReportError();
+    }
+
+    private bool IsIgnored(string? message)
+        => message is not null &&
+           ignoreErrorMessages.Exists(x => message.Contains(x, StringComparison.Ordinal));
+
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "A subscriber should never break the trace pipeline.")]
+    private void ReportError()
+    {
         var error = errorMessage.ToString();
         errorMessage.Length = 0;
+
+        if (error.Length == 0)
+        {
+            return;
+        }
 
         // Notify subscribers regardless of the MessageBox UX so loggers always get the event.
         try
@@ -130,7 +207,14 @@ public sealed class BindingErrorTraceListener : DefaultTraceListener
             return;
         }
 
-        _ = Application.Current.Dispatcher.BeginInvoke(
+        // Without an application there is no dispatcher to show the message box on
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null)
+        {
+            return;
+        }
+
+        _ = dispatcher.BeginInvoke(
             DispatcherPriority.Normal,
             new DispatcherOperationCallback(
                 delegate

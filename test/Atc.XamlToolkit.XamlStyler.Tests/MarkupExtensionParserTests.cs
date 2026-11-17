@@ -239,4 +239,75 @@ public sealed class MarkupExtensionParserTests
         success.Should().BeFalse();
         graph.Should().BeNull();
     }
+
+    [Fact]
+    public void TryParse_QuotedValueWithBackslashEscapes_KeepsBackslashes()
+    {
+        // Arrange & Act
+        var success = MarkupExtensionParser.TryParse(
+            @"{Binding Time, StringFormat='hh\\:mm \'x\''}",
+            out var graph);
+
+        // Assert
+        success.Should().BeTrue();
+        var namedArg = graph!.Arguments[1].Should().BeOfType<NamedArgument>().Subject;
+        ((LiteralValue)namedArg.Value).Value.Should().Be(@"'hh\\:mm \'x\''");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void StyleDocument_QuotedValueWithBackslashEscapes_IsUnchanged(
+        bool formatMarkupExtension)
+    {
+        // Arrange
+        var xaml = @"<TextBlock xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" Text=""{Binding Time, StringFormat='hh\\:mm'}"" />";
+        var service = new XamlStylerService(new XamlStylerOptions { FormatMarkupExtension = formatMarkupExtension });
+
+        // Act
+        var result = service.StyleDocument(xaml);
+
+        // Assert
+        result.Should().Be(xaml);
+        service.StyleDocument(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Theory]
+    [InlineData("{0} of {1}")]
+    [InlineData("{Binding Name} items")]
+    [InlineData("{Binding A}{Binding B}")]
+    public void TryParse_TextAfterTheExtension_Fails(string sourceText)
+    {
+        // Arrange & Act
+        var success = MarkupExtensionParser.TryParse(sourceText, out var graph);
+
+        // Assert
+        success.Should().BeFalse();
+        graph.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryParse_SurroundingWhitespace_Succeeds()
+    {
+        // Arrange & Act
+        var success = MarkupExtensionParser.TryParse("  {Binding Name}  ", out var graph);
+
+        // Assert
+        success.Should().BeTrue();
+        graph!.TypeName.Should().Be("Binding");
+    }
+
+    [Fact]
+    public void StyleDocument_AttributeValueWithSeveralBraceGroups_IsUnchanged()
+    {
+        // Arrange
+        var xaml = @"<Button xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" Tag=""{0} of {1}"" />";
+        var service = new XamlStylerService(new XamlStylerOptions());
+
+        // Act
+        var result = service.StyleDocument(xaml);
+
+        // Assert
+        result.Should().Be(xaml);
+    }
 }

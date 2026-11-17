@@ -8,7 +8,7 @@ public class WeakFunc<TResult>
     /// <summary>
     /// Gets a value indicating whether this instance is static.
     /// </summary>
-    public bool IsStatic => staticFunc is not null;
+    public virtual bool IsStatic => staticFunc is not null;
 
     /// <summary>
     /// Gets the name of the method that this WeakFunc represents.
@@ -193,13 +193,18 @@ public class WeakFunc<TResult>
             return default!;
         }
 
-        return (TResult)localMethod.Invoke(funcTarget, parameters: null)!;
+        return (TResult)localMethod.Invoke(
+            funcTarget,
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            parameters: null,
+            culture: null)!;
     }
 
     /// <summary>
     /// Sets the reference that this instance stores to null.
     /// </summary>
-    protected void MarkForDeletion()
+    public virtual void MarkForDeletion()
     {
         Reference = null;
         FuncReference = null;

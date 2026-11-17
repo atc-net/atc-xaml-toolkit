@@ -8,6 +8,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
     private readonly AttributeInfoFactory attributeInfoFactory;
     private readonly AttributeInfoFormatter attributeInfoFormatter;
     private readonly IndentService indentService;
+    private readonly XmlEscapingService xmlEscapingService;
     private readonly IList<string> noNewLineElementsList;
     private readonly IList<string> firstLineAttributes;
     private readonly string[] inlineCollections = ["TextBlock", "RichTextBlock", "Paragraph", "Run", "Span", "InlineUIContainer", "AnchoredBlock"];
@@ -18,8 +19,10 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         XamlLanguageOptions xamlLanguageOptions,
         AttributeInfoFactory attributeInfoFactory,
         AttributeInfoFormatter attributeInfoFormatter,
-        IndentService indentService)
+        IndentService indentService,
+        XmlEscapingService xmlEscapingService)
     {
+        this.xmlEscapingService = xmlEscapingService;
         this.options = options;
         this.xamlLanguageOptions = xamlLanguageOptions;
         this.attributeInfoFactory = attributeInfoFactory;
@@ -51,21 +54,33 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
 
         if (!elementProcessContext.Current.IsPreservingSpace)
         {
-            if (elementProcessContext.Current.Parent?.Name is not null
-                && inlineCollections.Any(c => elementProcessContext.Current.Parent.Name.ContainsOrdinal(c))
-                && inlineTypes.Any(t => elementName.ContainsOrdinal(t)))
+            var parent = elementProcessContext.Current.Parent;
+            var parentIsInlineCollection =
+                parent?.Name is not null
+                && inlineCollections.Any(c => IsNameOfType(parent.Name, c));
+
+            if (parent is not null
+                && parentIsInlineCollection
+                && inlineTypes.Any(t => IsNameOfType(elementName, t)))
             {
-                elementProcessContext.Current.Parent.IsSignificantWhiteSpace = true;
+                parent.IsSignificantWhiteSpace = true;
                 if (output.Length == 0 || output.IsNewLine())
                 {
                     output.Append(currentIndentString);
+                }
+                else if (parent.TextTrailingWhitespaceIndex == output.Length)
+                {
+                    // The preceding text ended with whitespace (e.g. "Hello <Run />"); keep one space.
+                    output.Append(' ');
                 }
             }
             else
             {
                 if (elementProcessContext.Current.Parent is not null)
                 {
-                    elementProcessContext.Current.Parent.IsSignificantWhiteSpace = false;
+                    // The content of an inline collection is text, so a space after any of its
+                    // children is shown and has to stay.
+                    elementProcessContext.Current.Parent.IsSignificantWhiteSpace = parentIsInlineCollection;
                 }
 
                 if (output.Length == 0 || output.IsNewLine())
@@ -115,6 +130,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         else
         {
             output.Append('>');
+            elementProcessContext.Current.StartTagEndIndex = output.Length - 1;
         }
     }
 
@@ -242,9 +258,13 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
             {
                 var pendingAppend = attributeInfoFormatter.ToSingleLineString(attrInfo, xamlLanguageOptions);
 
+                // xmlns declarations carry a temporary "[prefix]" marker that is removed from the final
+                // output, so it must not count towards the line length.
+                var pendingBypassLength = pendingAppend.Length - xmlEscapingService.RestoreXmlnsAliasesBypass(pendingAppend).Length;
+
                 var isAttributeCharLengthExceeded = attributeCountInCurrentLineBuffer > 0
                     && options.MaxAttributeCharactersPerLine > 0
-                    && (currentLineBuffer.Length + pendingAppend.Length - xmlnsAliasesBypassLengthInCurrentLine) > options.MaxAttributeCharactersPerLine;
+                    && (currentLineBuffer.Length + pendingAppend.Length - xmlnsAliasesBypassLengthInCurrentLine - pendingBypassLength) > options.MaxAttributeCharactersPerLine;
 
                 var isAttributeCountExceeded = options.MaxAttributesPerLine > 0
                     && (attributeCountInCurrentLineBuffer + 1) > options.MaxAttributesPerLine;
@@ -264,6 +284,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
 
                 currentLineBuffer.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pendingAppend);
                 attributeCountInCurrentLineBuffer++;
+                xmlnsAliasesBypassLengthInCurrentLine += pendingBypassLength;
             }
 
             lastAttributeInfo = attrInfo;
@@ -337,5 +358,25 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         }
 
         return indentService.GetIndentString(xmlReader.Depth, options.AttributeIndentation);
+    }
+
+    // True for the type itself ("Run", "ui:Run"), for a type named after it as derived types
+    // are ("SelectableTextBlock"), and for their property elements ("TextBlock.Inlines") -
+    // not for other types whose name merely contains it ("RunButton", "TextBlockHost").
+    private static bool IsNameOfType(
+        string elementName,
+        string typeName)
+    {
+        var prefixEnd = elementName.IndexOf(":", StringComparison.Ordinal);
+        var localName = prefixEnd >= 0
+            ? elementName.Substring(prefixEnd + 1)
+            : elementName;
+
+        var propertyStart = localName.IndexOf(".", StringComparison.Ordinal);
+        var ownerName = propertyStart >= 0
+            ? localName.Substring(0, propertyStart)
+            : localName;
+
+        return ownerName.EndsWith(typeName, StringComparison.Ordinal);
     }
 }

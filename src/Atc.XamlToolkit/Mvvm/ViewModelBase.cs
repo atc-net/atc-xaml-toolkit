@@ -41,7 +41,11 @@ public abstract class ViewModelBase : ObservableValidator, IViewModelBase
     protected ViewModelBase(IMessenger? messenger)
         => MessengerInstance = messenger ?? Messenger.Default;
 
-    public static Guid ViewModelId => Guid.NewGuid();
+    /// <summary>
+    /// Gets an identifier that is unique to this ViewModel instance.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Guid ViewModelId { get; } = Guid.NewGuid();
 
     /// <inheritdoc />
     [System.Text.Json.Serialization.JsonIgnore]

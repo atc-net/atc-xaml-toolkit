@@ -76,7 +76,7 @@ The repository is organized into distinct platform-specific and shared packages:
 - **Atc.XamlToolkit.SourceGenerators** - Roslyn source generators (netstandard2.0):
   - ViewModelGenerator - Processes `[ObservableProperty]`, `[ComputedProperty]`, `[RelayCommand]`, `[INotifyPropertyChanged]`
   - ObservableDtoViewModelGenerator - Processes `[ObservableDtoViewModel]`
-  - FrameworkElementGenerator - Processes `[DependencyProperty]`, `[AttachedProperty]`, `[RoutedEvent]` (WPF only)
+  - FrameworkElementGenerator - Processes `[DependencyProperty]`, `[StyledProperty]` (Avalonia), `[AttachedProperty]`, `[RoutedEvent]` (WPF only), `[DefaultStyleKey]` (WPF, Avalonia), `[TemplatePartField]`, `[UseDependencyPropertyTemplate]` / `[DependencyPropertyTemplate]`, and `[RelayCommand]` in controls, behaviors and helpers
 
 ### Test Projects (`./test/`)
 
@@ -163,7 +163,8 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 **Critical Platform-Specific Features:**
 
 1. **DependencyProperty / StyledProperty:**
-   - WPF/WinUI: Use `[DependencyProperty]` → generates `DependencyProperty` with `FrameworkPropertyMetadata`
+   - WPF/WinUI: Use `[DependencyProperty]` → generates `DependencyProperty` with `PropertyMetadata`; on WPF with `FrameworkPropertyMetadata` when `Flags`, `DefaultUpdateSourceTrigger` or `IsAnimationProhibited` is set, or with the class `MetadataType` names
+   - The attribute classes differ per platform (`src/Atc.XamlToolkit.{Wpf,WinUI,Avalonia}/Controls/Attributes/`): the WPF-only options (`Flags`, `CoerceValueCallback`, `ValidateValueCallback`, `IsReadOnly`, `AddOwnerOf`, `MetadataType`, ...) do not exist on the WinUI and Avalonia attributes, so using one there is a compile error, not something the generator ignores
    - Avalonia: Use `[StyledProperty]` → generates `StyledProperty<T>` with `Avalonia.AvaloniaProperty.Register<>()`
    - Avalonia uses plain bool values (no BooleanBoxes) and registers callbacks in static constructor via `.Changed.AddClassHandler<T>()`
 
@@ -176,7 +177,8 @@ Each platform package (Wpf, WinUI, Avalonia) has:
    - WPF: Full support with `EventManager.RegisterRoutedEvent()`, routing strategies (Bubble/Tunnel/Direct)
    - WinUI 3: NOT supported - no `RoutedEvent` or `EventManager` classes exist
    - Avalonia: NOT supported - different event system, cannot create custom routed events
-   - Source generator automatically skips routed event generation for non-WPF platforms (see `FrameworkElementGenerator.cs:195-204`)
+   - `RoutedEventAttribute` only exists in the WPF package, so `[RoutedEvent]` does not compile in a WinUI or Avalonia project
+   - Source generator skips routed event generation for non-WPF platforms (the `XamlPlatform.Wpf` check in `FrameworkElementGenerator.Execute`) and reports `AtcXamlToolkit0010` (`FrameworkElementGeneratorHelper.RegisterRoutedEventOnNonWpfDiagnostic`)
    - Use standard .NET events for WinUI and Avalonia instead
 
 4. **WinUI Threading and DispatcherQueue:**
@@ -201,14 +203,16 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 
 **Platform Detection:**
 - Source generators use `XamlPlatform` enum (Wpf, WinUI, Avalonia) to generate platform-appropriate code
-- Detection logic in `FrameworkElementInspector.GetXamlPlatform()` based on project references
+- Detection logic in `CompilationExtensions.GetXamlPlatform()` based on project references (WinUI is checked first, then WPF, then Avalonia; WPF is the fallback)
 
-**Class Naming Requirements for FrameworkElementGenerator:**
-- Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must:
-  - Inherit from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
-  - Have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"**, OR
-  - Contain `[RoutedEvent]` attributes
-- This requirement is enforced by `HasAnythingAroundFrameworkElement()` in `ClassDeclarationSyntaxExtensions.cs`
+**Which classes FrameworkElementGenerator picks up:**
+- A `partial` class is handled when:
+  - The class or one of its members carries `[DependencyProperty]`, `[StyledProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]`, `[TemplatePartField]` or `[UseDependencyPropertyTemplate]` (any class name, any base class), OR
+  - It inherits from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
+  - Its name ends with **"Attach"**, **"Behavior"**, or **"Helper"**
+- The last two rules only matter for `[RelayCommand]` in a control, behavior or helper; `[RelayCommand]` alone does not qualify a class, so view model commands stay with `ViewModelGenerator`
+- The check is `HasAnythingAroundFrameworkElement()` in `NamedTypeSymbolExtensions.cs`
+- A class marked `[DependencyPropertyTemplate]` gets no code of its own; its attributed fields are generated in every class that names it in `[UseDependencyPropertyTemplate(typeof(...))]` (`PropertyTemplateInspector.cs`, see `docs/SourceGenerators/PropertyTemplate.md`)
 - Common patterns: `DragBehavior`, `WatermarkTextBoxBehavior`, `CheckBoxHelper`
 
 ## Code Style and Rules
@@ -262,7 +266,7 @@ When working on source generators:
    - Extensions provide reusable CodeAnalysis operations
 
 5. **Source Generator Architecture**:
-   - `FrameworkElementGenerator` handles DependencyProperty, AttachedProperty, and RoutedEvent generation
+   - `FrameworkElementGenerator` handles DependencyProperty / StyledProperty, AttachedProperty, RoutedEvent, DefaultStyleKey, TemplatePartField and property template generation
    - `ViewModelGenerator` handles ObservableProperty, ComputedProperty, and RelayCommand generation
    - `ObservableDtoViewModelGenerator` handles DTO wrapper generation
    - All generators in `src/Atc.XamlToolkit.SourceGenerators/Generators/`

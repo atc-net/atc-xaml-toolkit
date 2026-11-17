@@ -37,6 +37,12 @@ internal static class FrameworkElementGeneratorHelper
             return false;
         }
 
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
+        {
+            return false;
+        }
+
         // Quick check: class names ending with common patterns
         var className = classDeclaration.Identifier.Text;
         if (className.EndsWith(NameConstants.Attach, StringComparison.Ordinal) ||
@@ -119,9 +125,9 @@ internal static class FrameworkElementGeneratorHelper
             }
         }
 
-        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
-
-        if (!classSymbol.HasAnythingAroundFrameworkElement())
+        // A property template only declares members for other classes; it gets no code itself.
+        if (PropertyTemplateInspector.IsTemplate(classSymbol) ||
+            !classSymbol.HasAnythingAroundFrameworkElement())
         {
             return null;
         }
@@ -134,52 +140,188 @@ internal static class FrameworkElementGeneratorHelper
 
         var xamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform();
 
-        foreach (var partialClassSyntax in allPartialDeclarations)
+        // The symbol covers every partial declaration of the class, so one inspection is enough.
+        var unusableTemplates = new List<string>();
+        var documentationValues = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var templateMembers = PropertyTemplateInspector.GetTemplateMembers(classSymbol, unusableTemplates, documentationValues);
+
+        var result = FrameworkElementInspector.Inspect(xamlPlatform, classSymbol, templateMembers);
+
+        if (result.FoundAnythingToGenerate)
         {
-            if (context.SemanticModel.Compilation
-                    .GetSemanticModel(partialClassSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(partialClassSyntax) is not { } partialClassSymbol)
-            {
-                continue;
-            }
-
-            var result = FrameworkElementInspector.Inspect(xamlPlatform, partialClassSymbol);
-
-            if (!result.FoundAnythingToGenerate)
-            {
-                continue;
-            }
-
             result.ApplyCommandsAndPropertiesAndEvents(
                 allAttachedProperties,
                 allDependencyProperties,
                 allRoutedEvents,
                 allRelayCommands);
 
-            if (!isStatic)
+            isStatic = result.IsStatic;
+        }
+
+        // The documentation of a template's fields can have placeholders for what the class is about
+        foreach (var property in allAttachedProperties.Cast<BaseFrameworkElementPropertyToGenerate>().Concat(allDependencyProperties))
+        {
+            if (documentationValues.TryGetValue(property.Name, out var values))
             {
-                isStatic = result.IsStatic;
+                property.DocumentationComments = PropertyTemplateInspector.FillPlaceholders(property.DocumentationComments, values);
             }
         }
+
+        foreach (var routedEvent in allRoutedEvents)
+        {
+            if (documentationValues.TryGetValue(routedEvent.Name, out var values))
+            {
+                routedEvent.DocumentationComments = PropertyTemplateInspector.FillPlaceholders(routedEvent.DocumentationComments, values);
+            }
+        }
+
+        // The commands of a view model class are emitted by ViewModelGenerator
+        // (or by ObservableDtoViewModelGenerator), even when the class is named like a helper.
+        if (allRelayCommands.Count > 0 &&
+            (classSymbol.CheckBaseClasses().HasAnyBase ||
+             ViewModelGeneratorHelper.ClassHasINotifyPropertyChangedAttribute(classSymbol)))
+        {
+            allRelayCommands.Clear();
+        }
+
+        var defaultStyleKey = GetDefaultStyleKey(xamlPlatform, classSymbol);
+        var templateParts = TemplatePartInspector.Inspect(classSymbol);
 
         if (allAttachedProperties.Count == 0 &&
             allDependencyProperties.Count == 0 &&
             allRoutedEvents.Count == 0 &&
-            allRelayCommands.Count == 0)
+            allRelayCommands.Count == 0 &&
+            defaultStyleKey is null &&
+            templateParts.Count == 0 &&
+            unusableTemplates.Count == 0)
         {
             return null;
         }
 
         return new FrameworkElementToGenerate(
             XamlPlatform: xamlPlatform,
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             IsStatic: isStatic,
             AttachedPropertiesToGenerate: new EquatableArray<AttachedPropertyToGenerate>(allAttachedProperties.ToArray()),
             DependencyPropertiesToGenerate: new EquatableArray<DependencyPropertyToGenerate>(allDependencyProperties.ToArray()),
             RoutedEventsToGenerate: new EquatableArray<RoutedEventToGenerate>(allRoutedEvents.ToArray()),
-            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()))
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+            DefaultStyleKey = defaultStyleKey,
+            TemplatePartsToGenerate = new EquatableArray<TemplatePartToGenerate>(templateParts.ToArray()),
+            UnusablePropertyTemplates = new EquatableArray<string>(unusableTemplates.ToArray()),
+            ClassAttributes = new EquatableArray<string>(
+                TemplatePartInspector.GetClassAttributes(xamlPlatform, classSymbol, templateParts).ToArray()),
+        };
+    }
+
+    // Reads [DefaultStyleKey] from the class. WinUI sets the style key in the instance
+    // constructor, which generated code cannot add to, so the attribute only exists for
+    // WPF and Avalonia.
+    private static DefaultStyleKeyToGenerate? GetDefaultStyleKey(
+        XamlPlatform xamlPlatform,
+        INamedTypeSymbol classSymbol)
+    {
+        if (xamlPlatform == XamlPlatform.WinUI)
+        {
+            return null;
+        }
+
+        var attribute = classSymbol
+            .GetAttributes()
+            .FirstOrDefault(x => x.GetToolkitAttributeName()
+                is NameConstants.DefaultStyleKeyAttribute
+                or NameConstants.DefaultStyleKey);
+
+        if (attribute is null)
+        {
+            return null;
+        }
+
+        string? styleTypeName = null;
+        var requiredNamespaces = new HashSet<string>(StringComparer.Ordinal);
+
+        if (attribute.ConstructorArguments.Length == 1 &&
+            attribute.ConstructorArguments[0].Value is ITypeSymbol styleType)
+        {
+            styleTypeName = styleType.ToGeneratedCodeTypeName();
+            styleType.AddRequiredNamespacesTo(requiredNamespaces);
+        }
+        else if (attribute.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList.Arguments: { Count: > 0 } arguments } &&
+                 arguments[0].Expression is TypeOfExpressionSyntax typeOfExpression)
+        {
+            // The attribute class cannot be resolved, so only the text as written is known.
+            styleTypeName = typeOfExpression.Type.ToString();
+        }
+
+        var ownStaticConstructor = classSymbol.StaticConstructors.FirstOrDefault(x => !x.IsImplicitlyDeclared);
+
+        var callsOverride = ownStaticConstructor is not null &&
+                            ownStaticConstructor.DeclaringSyntaxReferences.Any(reference => reference
+                                .GetSyntax()
+                                .DescendantNodes()
+                                .OfType<InvocationExpressionSyntax>()
+                                .Any(invocation => invocation.Expression is IdentifierNameSyntax { Identifier.ValueText: NameConstants.OverrideDefaultStyleKey }));
+
+        return new DefaultStyleKeyToGenerate(
+            styleTypeName,
+            new EquatableArray<string>(requiredNamespaces.OrderBy(x => x, StringComparer.Ordinal).ToArray()),
+            HasOwnStaticConstructor: ownStaticConstructor is not null,
+            OwnStaticConstructorCallsOverride: callsOverride);
+    }
+
+    /// <summary>
+    /// Registers the <c>AtcXamlToolkit0002</c> diagnostic for a class that carries a
+    /// framework-element attribute but is not declared partial. The generator cannot add
+    /// members to such a class, and without the diagnostic nothing says why nothing is generated.
+    /// </summary>
+    /// <param name="context">The initialization context.</param>
+    public static void RegisterMissingPartialDiagnostic(
+        IncrementalGeneratorInitializationContext context)
+    {
+        var missingPartialClasses = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) =>
+                    syntaxNode is ClassDeclarationSyntax classDeclaration &&
+                    !classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
+                    (classDeclaration.AttributeLists.Count > 0 ||
+                     classDeclaration.Members.Any(m => m.AttributeLists.Count > 0)),
+                transform: static (ctx, _) => GetMissingPartialDiagnostic(ctx))
+            .Where(static diagnostic => diagnostic is not null)
+            .WithTrackingName("FrameworkElementGenerator.MissingPartialDiagnostic");
+
+        context.RegisterSourceOutput(
+            missingPartialClasses,
+            static (spc, diagnostic) =>
+            {
+                if (diagnostic is not null)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+    }
+
+    private static Diagnostic? GetMissingPartialDiagnostic(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+
+        // A property template only declares members for other classes, so it need not be partial.
+        if (context.SemanticModel.GetDeclaredSymbol(classDeclaration) is not { } classSymbol ||
+            PropertyTemplateInspector.IsTemplate(classSymbol) ||
+            !classSymbol.HasFrameworkElementAttribute())
+        {
+            return null;
+        }
+
+        return DiagnosticFactory.CreateMissingPartialKeywordOnFrameworkElement(
+            classDeclaration.Identifier.Text,
+            classDeclaration.Identifier.GetLocation());
     }
 
     /// <summary>
@@ -198,6 +340,7 @@ internal static class FrameworkElementGeneratorHelper
                 predicate: static (syntaxNode, _) => IsRoutedEventCandidate(syntaxNode),
                 transform: static (ctx, _) => GetRoutedEventLocations(ctx))
             .Where(static result => result is not null && result.Locations.Length > 0)
+            .WithTrackingName("FrameworkElementGenerator.RoutedEventLocations")
             .Combine(context.CompilationProvider.Select(static (c, _) => c.GetXamlPlatform()))
             .Where(static pair => pair.Right != XamlPlatform.Wpf);
 
@@ -269,6 +412,15 @@ internal static class FrameworkElementGeneratorHelper
 
                     // WPF only: RoutedEvent
                     NameConstants.RoutedEvent or NameConstants.RoutedEventAttribute or
+
+                    // WPF & Avalonia: DefaultStyleKey (class level)
+                    NameConstants.DefaultStyleKey or NameConstants.DefaultStyleKeyAttribute or
+
+                    // All platforms: TemplatePartField
+                    NameConstants.TemplatePartField or NameConstants.TemplatePartFieldAttribute or
+
+                    // All platforms: a property template applied to the class
+                    NameConstants.UseDependencyPropertyTemplate or NameConstants.UseDependencyPropertyTemplateAttribute or
 
                     // All platforms: RelayCommand
                     NameConstants.RelayCommand or NameConstants.RelayCommandAttribute)

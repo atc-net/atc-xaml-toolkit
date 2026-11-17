@@ -206,25 +206,47 @@ public static class PropertyMetadataDescriptor
         var bclRange = property.GetCustomAttribute<System.ComponentModel.DataAnnotations.RangeAttribute>();
         if (bclRange is not null)
         {
-            if (bclRange.Minimum is double minD)
-            {
-                info.RangeMinimum = minD;
-            }
-            else if (bclRange.Minimum is int minI)
-            {
-                info.RangeMinimum = minI;
-            }
-
-            if (bclRange.Maximum is double maxD)
-            {
-                info.RangeMaximum = maxD;
-            }
-            else if (bclRange.Maximum is int maxI)
-            {
-                info.RangeMaximum = maxI;
-            }
+            info.RangeMinimum = ToRangeBound(bclRange.Minimum, bclRange.OperandType);
+            info.RangeMaximum = ToRangeBound(bclRange.Maximum, bclRange.OperandType);
         }
     }
+
+    // A RangeAttribute holds int or double bounds, or - for [Range(typeof(T), "min", "max")] -
+    // the bounds as text to be read as T. Only numeric bounds can be expressed as a range.
+    private static double? ToRangeBound(
+        object? bound,
+        Type operandType)
+    {
+        switch (bound)
+        {
+            case double value:
+                return value;
+            case int value:
+                return value;
+            case string text when IsNumeric(operandType):
+                try
+                {
+                    return Convert.ToDouble(
+                        Convert.ChangeType(text, operandType, CultureInfo.InvariantCulture),
+                        CultureInfo.InvariantCulture);
+                }
+                catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+                {
+                    return null;
+                }
+
+            default:
+                return null;
+        }
+    }
+
+    private static bool IsNumeric(Type type)
+        => Type.GetTypeCode(type) is
+            TypeCode.Byte or TypeCode.SByte or
+            TypeCode.Int16 or TypeCode.UInt16 or
+            TypeCode.Int32 or TypeCode.UInt32 or
+            TypeCode.Int64 or TypeCode.UInt64 or
+            TypeCode.Single or TypeCode.Double or TypeCode.Decimal;
 
     private static void ApplyEditorHint(
         PropertyInfo property,

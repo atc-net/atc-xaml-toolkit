@@ -27,6 +27,19 @@ internal static class PropertySymbolExtensions
         return attributes;
     }
 
+    // The copied attributes are written as in the user's file, so their namespaces must be imported.
+    public static EquatableArray<string> ExtractPropertyAttributeNamespaces(
+        this IPropertySymbol propertySymbol)
+    {
+        var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var attribute in propertySymbol.GetAttributes())
+        {
+            attribute.AddRequiredNamespacesTo(requiredNamespaces);
+        }
+
+        return new EquatableArray<string>(requiredNamespaces.ToArray());
+    }
+
     public static List<string>? ExtractPropertyDocumentationComments(
         this IPropertySymbol propertySymbol)
     {

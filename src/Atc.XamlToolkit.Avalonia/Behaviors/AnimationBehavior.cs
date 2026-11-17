@@ -32,7 +32,6 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         AvaloniaProperty.Register<AnimationBehavior, bool>(nameof(AutoStart));
 
     private object? lastTrigger;
-    private IDisposable? subscription;
 
     /// <summary>
     /// Gets or sets the trigger value. When changed, the animation will play.
@@ -79,31 +78,24 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 
         AssociatedObject.AttachedToVisualTree += OnAttachedToVisualTree;
 
-        // Subscribe to property changes on the behavior itself
-        subscription = AnimationTriggerProperty.Changed.Subscribe(new AnimationTriggerObserver(this));
+        // An element that is already in the visual tree does not raise AttachedToVisualTree again
+        if (AutoStart && Avalonia.VisualTree.VisualExtensions.IsAttachedToVisualTree(AssociatedObject))
+        {
+            PlayAnimation();
+        }
     }
 
-    private sealed class AnimationTriggerObserver : IObserver<AvaloniaPropertyChangedEventArgs<object?>>
+    /// <inheritdoc />
+    protected override void OnPropertyChanged(
+        AvaloniaPropertyChangedEventArgs change)
     {
-        private readonly AnimationBehavior behavior;
+        ArgumentNullException.ThrowIfNull(change);
 
-        public AnimationTriggerObserver(AnimationBehavior behavior)
-            => this.behavior = behavior;
+        base.OnPropertyChanged(change);
 
-        public void OnNext(AvaloniaPropertyChangedEventArgs<object?> e)
+        if (change.Property == AnimationTriggerProperty && AssociatedObject is not null)
         {
-            if (ReferenceEquals(e.Sender, behavior))
-            {
-                behavior.OnAnimationTriggerChanged(e.NewValue.GetValueOrDefault());
-            }
-        }
-
-        public void OnError(Exception error)
-        {
-        }
-
-        public void OnCompleted()
-        {
+            OnAnimationTriggerChanged(change.NewValue);
         }
     }
 
@@ -115,17 +107,17 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
             AssociatedObject.AttachedToVisualTree -= OnAttachedToVisualTree;
         }
 
-        subscription?.Dispose();
-        subscription = null;
-
         base.OnDetaching();
     }
 
     private void OnAnimationTriggerChanged(object? newTrigger)
     {
-        if (newTrigger is not null && !Equals(newTrigger, lastTrigger))
+        // Clearing the trigger is remembered too, so setting the same value again plays the animation again
+        var isChanged = !Equals(newTrigger, lastTrigger);
+        lastTrigger = newTrigger;
+
+        if (newTrigger is not null && isChanged)
         {
-            lastTrigger = newTrigger;
             PlayAnimation();
         }
     }

@@ -3,4 +3,33 @@
 namespace Atc.XamlToolkit.Controls.Attributes;
 
 [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-public sealed class AttachedPropertyAttribute : DependencyPropertyBaseAttribute;
+public sealed class AttachedPropertyAttribute : DependencyPropertyBaseAttribute
+{
+    /// <summary>
+    /// Gets or sets the name of the generated property. By default it is the name of the
+    /// field with its first letter in upper case. State it when the field cannot have that
+    /// name, for example because the class has locals or parameters of the same name.
+    /// </summary>
+    public string? PropertyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of the element parameter of the generated <c>Get{Name}</c> and
+    /// <c>Set{Name}</c> methods. The default is <c>DependencyObject</c>.
+    /// </summary>
+    public Type? TargetType { get; set; }
+
+    /// <summary>
+    /// Gets or sets what the generated <c>Get{Name}</c> and <c>Set{Name}</c> methods do when
+    /// they are called with a <see langword="null"/> element. The default is
+    /// <see cref="NullElementHandling.Default"/>: <c>Set{Name}</c> does nothing.
+    /// </summary>
+    public NullElementHandling NullElementHandling { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the element parameter of the generated <c>Get{Name}</c> and
+    /// <c>Set{Name}</c> methods. The default is <c>element</c>. The name is part of the
+    /// method's signature for callers that use named arguments, and it is the parameter
+    /// name an <see cref="ArgumentNullException"/> reports.
+    /// </summary>
+    public string? ElementParameterName { get; set; }
+}

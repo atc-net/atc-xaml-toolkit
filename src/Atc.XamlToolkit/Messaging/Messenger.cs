@@ -5,13 +5,16 @@ namespace Atc.XamlToolkit.Messaging;
 /// </summary>
 public class Messenger : IMessenger
 {
+    private const int MaxRequestsWhileCleanupPending = 64;
     private static readonly Lock CreationLock = new();
+    private static readonly List<Type> NoTypes = [];
     private static IMessenger? defaultInstance;
     private readonly Lock registerLock = new();
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction = new();
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsStrictAction = new();
     private readonly SynchronizationContext? context = SynchronizationContext.Current;
     private int cleanupPending;
+    private int requestsWhileCleanupPending;
 
     /// <summary>
     /// Gets the Messenger's default instance, allowing
@@ -219,6 +222,13 @@ public class Messenger : IMessenger
         // bail out — that thread will run (or has scheduled) the cleanup.
         if (Interlocked.CompareExchange(ref cleanupPending, value: 1, comparand: 0) != 0)
         {
+            // A posted cleanup normally runs shortly. If the context has stopped pumping
+            // it never will, so after enough ignored requests the cleanup runs right here.
+            if (Interlocked.Increment(ref requestsWhileCleanupPending) >= MaxRequestsWhileCleanupPending)
+            {
+                Cleanup();
+            }
+
             return;
         }
 
@@ -228,7 +238,15 @@ public class Messenger : IMessenger
 
         if (context is not null)
         {
-            context.Post(_ => cleanupAction(), state: null);
+            try
+            {
+                context.Post(_ => cleanupAction(), state: null);
+            }
+            catch (InvalidOperationException)
+            {
+                // The context no longer accepts work (for example it has shut down).
+                cleanupAction();
+            }
         }
         else
         {
@@ -251,6 +269,7 @@ public class Messenger : IMessenger
     {
         CleanupList(recipientsOfSubclassesAction);
         CleanupList(recipientsStrictAction);
+        Interlocked.Exchange(ref requestsWhileCleanupPending, value: 0);
         Interlocked.Exchange(ref cleanupPending, value: 0);
     }
 
@@ -298,25 +317,31 @@ public class Messenger : IMessenger
         }
     }
 
-    private static void SendToList<TMessage>(
+    private static bool SendToList<TMessage>(
         TMessage message,
-        IEnumerable<WeakActionAndToken>? weakActionsAndTokens,
+        List<WeakActionAndToken>? weakActionsAndTokens,
         Type? messageTargetType,
         object? token)
     {
         if (weakActionsAndTokens is null)
         {
-            return;
+            return false;
         }
 
-        // Clone to protect from people registering in a "receive message" method.
+        // The caller passes a snapshot taken under the lock, which protects against
+        // people registering in a "receive message" method.
         // Correction Messaging BL0004.007.
-        var listClone = weakActionsAndTokens.ToList();
+        var foundDeadRecipient = false;
 
-        foreach (var item in listClone)
+        foreach (var item in weakActionsAndTokens)
         {
+            if (item.Action is null || !item.Action.IsAlive)
+            {
+                foundDeadRecipient = true;
+                continue;
+            }
+
             if (item.Action is IExecuteWithObject executeAction
-                && item.Action.IsAlive
                 && item.Action.Target is not null
                 && (messageTargetType is null
                     || item.Action.Target.GetType() == messageTargetType
@@ -327,6 +352,8 @@ public class Messenger : IMessenger
                 executeAction.ExecuteWithObject(message);
             }
         }
+
+        return foundDeadRecipient;
     }
 
     [SuppressMessage("Major Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions", Justification = "OK.")]
@@ -335,12 +362,12 @@ public class Messenger : IMessenger
         Dictionary<Type, List<WeakActionAndToken>>? lists)
     {
         if (recipient is null
-            || lists is null
-            || lists.Count == 0)
+            || lists is null)
         {
             return;
         }
 
+        // The dictionary is only ever read or written while holding its lock.
         lock (lists)
         {
             foreach (var messageType in lists.Keys)
@@ -372,15 +399,19 @@ public class Messenger : IMessenger
         var messageType = typeof(TMessage);
 
         if (recipient is null
-            || lists is null
-            || lists.Count == 0
-            || !lists.TryGetValue(messageType, out var list))
+            || lists is null)
         {
             return;
         }
 
+        // The dictionary is only ever read or written while holding its lock.
         lock (lists)
         {
+            if (!lists.TryGetValue(messageType, out var list))
+            {
+                return;
+            }
+
             foreach (var item in list)
             {
                 if (item.Action is WeakAction<TMessage> weakActionCasted
@@ -404,13 +435,18 @@ public class Messenger : IMessenger
         // Snapshot the registered subclass-listener types under the lock —
         // enumerating .Keys without locking can throw if another thread
         // registers/unregisters mid-iteration.
-        List<Type> typesToCheck;
+        List<Type>? typesToCheck = null;
         lock (recipientsOfSubclassesAction)
         {
-            typesToCheck = new List<Type>(recipientsOfSubclassesAction.Keys);
+            if (recipientsOfSubclassesAction.Count > 0)
+            {
+                typesToCheck = new List<Type>(recipientsOfSubclassesAction.Keys);
+            }
         }
 
-        foreach (var type in typesToCheck)
+        var foundDeadRecipient = false;
+
+        foreach (var type in typesToCheck ?? NoTypes)
         {
             // IsAssignableFrom subsumes both reference-equality and IsSubclassOf:
             // it returns true when messageType == type, when messageType is a
@@ -434,7 +470,7 @@ public class Messenger : IMessenger
                 }
             }
 
-            SendToList(message, subclassList, messageTargetType, token);
+            foundDeadRecipient |= SendToList(message, subclassList, messageTargetType, token);
         }
 
         List<WeakActionAndToken>? strictList = null;
@@ -446,11 +482,12 @@ public class Messenger : IMessenger
             }
         }
 
-        if (strictList is not null)
-        {
-            SendToList(message, strictList, messageTargetType, token);
-        }
+        foundDeadRecipient |= SendToList(message, strictList, messageTargetType, token);
 
-        RequestCleanup();
+        // Sending only needs a cleanup when it came across a dead recipient.
+        if (foundDeadRecipient)
+        {
+            RequestCleanup();
+        }
     }
 }

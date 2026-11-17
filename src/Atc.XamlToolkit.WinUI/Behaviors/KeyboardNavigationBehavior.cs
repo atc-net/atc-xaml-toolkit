@@ -78,6 +78,8 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         typeof(KeyboardNavigationBehavior),
         new PropertyMetadata(BooleanBoxes.TrueBox));
 
+    private KeyEventHandler? keyDownHandler;
+
     /// <summary>
     /// Gets or sets the command to execute when the Up arrow key is pressed.
     /// </summary>
@@ -158,7 +160,9 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         if (AssociatedObject is not null)
         {
             // Use AddHandler with handledEventsToo to capture keyboard events even from non-focusable elements
-            AssociatedObject.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnKeyDown), handledEventsToo: true);
+            // RemoveHandler only removes the delegate instance that was added, so it is kept in a field
+            keyDownHandler = new KeyEventHandler(OnKeyDown);
+            AssociatedObject.AddHandler(UIElement.KeyDownEvent, keyDownHandler, handledEventsToo: true);
             AssociatedObject.Loaded += OnLoaded;
             AssociatedObject.GotFocus += OnGotFocus;
         }
@@ -169,7 +173,12 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
     {
         if (AssociatedObject is not null)
         {
-            AssociatedObject.RemoveHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnKeyDown));
+            if (keyDownHandler is not null)
+            {
+                AssociatedObject.RemoveHandler(UIElement.KeyDownEvent, keyDownHandler);
+                keyDownHandler = null;
+            }
+
             AssociatedObject.Loaded -= OnLoaded;
             AssociatedObject.GotFocus -= OnGotFocus;
         }
@@ -192,8 +201,9 @@ public sealed class KeyboardNavigationBehavior : Microsoft.Xaml.Interactivity.Be
         object sender,
         RoutedEventArgs e)
     {
-        // Ensure keyboard focus is set when the element gets focus
-        if (AssociatedObject is not null)
+        // Ensure keyboard focus is set when the element itself gets focus.
+        // GotFocus bubbles, so focus that a child control received must stay with the child.
+        if (AssociatedObject is not null && ReferenceEquals(e.OriginalSource, AssociatedObject))
         {
             AssociatedObject.Focus(FocusState.Programmatic);
         }

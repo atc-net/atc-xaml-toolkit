@@ -17,6 +17,8 @@ public sealed class XamlStylerService
     private readonly XamlLanguageOptions xamlLanguageOptions;
     private readonly XmlEscapingService xmlEscapingService;
     private Dictionary<XmlNodeType, IDocumentProcessor>? documentProcessors;
+    private AttributeOrderRules? attributeOrderRules;
+    private string[]? attributeOrderRulesSource;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="XamlStylerService"/> class.
@@ -83,8 +85,10 @@ public sealed class XamlStylerService
         string originalContent;
         Encoding detectedEncoding;
 
+        // Invalid bytes throw instead of being replaced with U+FFFD: a file in another encoding
+        // (without a byte order mark) must not be rewritten with its content damaged.
         using (var stream = File.OpenRead(filePath))
-        using (var reader = new StreamReader(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), detectEncodingFromByteOrderMarks: true))
+        using (var reader = new StreamReader(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), detectEncodingFromByteOrderMarks: true))
         {
             originalContent = reader.ReadToEnd();
             detectedEncoding = reader.CurrentEncoding;
@@ -118,7 +122,7 @@ public sealed class XamlStylerService
         var markupExtensionFormatter = new MarkupExtensionFormatter(options.NoNewLineMarkupExtensions.ToList());
         var attributeInfoFactory = new AttributeInfoFactory(
             new MarkupExtensionParser(),
-            new AttributeOrderRules(options),
+            GetAttributeOrderRules(),
             ignoredNamespacesPrefixes,
             ignoreDesignTimeReferencePrefix);
         var attributeInfoFormatter = new AttributeInfoFormatter(
@@ -127,7 +131,7 @@ public sealed class XamlStylerService
 
         documentProcessors = new Dictionary<XmlNodeType, IDocumentProcessor>
         {
-            { XmlNodeType.Element, new ElementDocumentProcessor(options, xamlLanguageOptions, attributeInfoFactory, attributeInfoFormatter, indentService) },
+            { XmlNodeType.Element, new ElementDocumentProcessor(options, xamlLanguageOptions, attributeInfoFactory, attributeInfoFormatter, indentService, xmlEscapingService) },
             { XmlNodeType.Text, new TextDocumentProcessor(indentService) },
             { XmlNodeType.CDATA, new CdataDocumentProcessor(indentService) },
             { XmlNodeType.ProcessingInstruction, new ProcessInstructionDocumentProcessor(indentService) },
@@ -137,6 +141,27 @@ public sealed class XamlStylerService
             { XmlNodeType.EndElement, new EndElementDocumentProcessor(options, indentService) },
             { XmlNodeType.XmlDeclaration, new XmlDeclarationDocumentProcessor() },
         };
+    }
+
+    /// <summary>
+    /// Returns the attribute order rules for the current options. Building them compiles one
+    /// regex per rule, so they are reused across documents for as long as the rule groups in
+    /// the options stay the same (the options can be changed between calls).
+    /// </summary>
+    private AttributeOrderRules GetAttributeOrderRules()
+    {
+        var ruleGroups = options.AttributeOrderingRuleGroups;
+
+        if (attributeOrderRules is null
+            || attributeOrderRulesSource is null
+            || ruleGroups is null
+            || !attributeOrderRulesSource.SequenceEqual(ruleGroups, StringComparer.Ordinal))
+        {
+            attributeOrderRules = new AttributeOrderRules(options);
+            attributeOrderRulesSource = ruleGroups?.ToArray();
+        }
+
+        return attributeOrderRules;
     }
 
     private IList<string> FindIgnoredNamespaces(string xamlSource)
@@ -163,7 +188,7 @@ public sealed class XamlStylerService
         }
 
         var ignoredNamespacesPrefixes = new List<string>();
-        while (xmlReader.MoveToNextAttribute())
+        do
         {
             var prefix = xmlReader.LocalName;
             var namespaceUri = xmlReader.Value.ReplaceOrdinal($"[{prefix}]", string.Empty);
@@ -173,6 +198,7 @@ public sealed class XamlStylerService
                 ignoredNamespacesPrefixes.Add(prefix);
             }
         }
+        while (xmlReader.MoveToNextAttribute());
 
         return ignoredNamespacesPrefixes;
     }

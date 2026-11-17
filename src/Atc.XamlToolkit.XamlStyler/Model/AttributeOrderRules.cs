@@ -3,6 +3,7 @@ namespace Atc.XamlToolkit.XamlStyler.Model;
 internal sealed class AttributeOrderRules
 {
     private readonly IList<AttributeOrderRule> rules;
+    private readonly Dictionary<string, AttributeOrderRule> ruleByAttributeName = new(StringComparer.Ordinal);
 
     public AttributeOrderRules(IXamlStylerOptions options)
     {
@@ -32,9 +33,18 @@ internal sealed class AttributeOrderRules
         rules.Add(new AttributeOrderRule("*", groupIndex, 0));
     }
 
-    public AttributeOrderRule GetRuleFor(string attributeName) =>
-        rules
-            .Where(r => r.Name.IsMatch(attributeName))
-            .OrderByDescending(r => r.MatchScore)
-            .First();
+    public AttributeOrderRule GetRuleFor(string attributeName)
+    {
+        // The rules never change after construction, so the result for a name can be remembered.
+        if (!ruleByAttributeName.TryGetValue(attributeName, out var rule))
+        {
+            rule = rules
+                .Where(r => r.Name.IsMatch(attributeName))
+                .OrderByDescending(r => r.MatchScore)
+                .First();
+            ruleByAttributeName[attributeName] = rule;
+        }
+
+        return rule;
+    }
 }

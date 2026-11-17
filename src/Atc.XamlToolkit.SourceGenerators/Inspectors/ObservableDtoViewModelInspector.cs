@@ -11,7 +11,7 @@ internal static class ObservableDtoViewModelInspector
     {
         var attribute = viewModelClassSymbol
             .GetAttributes()
-            .FirstOrDefault(attr => attr.AttributeClass?.Name
+            .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                 is NameConstants.ObservableDtoViewModelAttribute
                 or NameConstants.ObservableDtoViewModel);
 
@@ -75,7 +75,7 @@ internal static class ObservableDtoViewModelInspector
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
         var hasCustomToString = HasCustomToString(dtoTypeSymbol);
-        var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames);
+        var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames, viewModelClassSymbol.ContainingAssembly);
         var methods = dtoTypeSymbol.ExtractMethods(ignoreMethodNames);
 
         // Inspect for custom ObservableProperty and RelayCommand attributes

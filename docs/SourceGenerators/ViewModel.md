@@ -53,6 +53,9 @@ This setup allows the UI to dynamically update when the Name property changes.
 
 The `ObservableProperty` attribute automatically generates properties from private fields, including `INotifyPropertyChanged` support.
 
+- **The class must be able to raise `PropertyChanged`.** The generated setter calls `RaisePropertyChanged`, so the `partial` class has to derive from `ObservableObject` or `ViewModelBase`, or carry `[INotifyPropertyChanged]`. In a class that does neither, for example one that implements `INotifyPropertyChanged` by hand, no property is generated and the field is reported as `AtcXamlToolkit0014`.
+- **The generated setter always has an equality guard.** It starts with `if (field == value) { return; }`, so setting a property to the value it already has does nothing: no `PropertyChanged`, no callbacks, no `IsDirty`. A hand-written setter that raises `PropertyChanged` on every assignment behaves differently and cannot be converted one to one.
+
 **ObservableProperty options:**
 
 - `PropertyName` for customization.
@@ -62,6 +65,7 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `AfterChangedCallback` is executed after the property value changes.
 - `BroadcastOnChange` broadcasts a `PropertyChangedMessage<T>` via the messenger when the property changes.
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
+- `SetterAccessModifier` gives the generated setter another accessibility than `public` (see [Non-public setters](#-non-public-setters)).
 - `IsRequired` emits the C# 11+ `required` modifier on the generated property — forces callers to set it via an object initializer (see [Required properties](#-required-properties)).
 - `GeneratePartialHooks` emits `partial void On{PropertyName}Changing/Changed({Type} value)` declarations and calls — a compile-time-safe alternative to the string-named callbacks (see [Partial-method hooks](#-partial-method-hooks)).
 - `GenerateDocumentation` emits a default `/// <summary>Gets or sets the {PropertyName}.</summary>` block above the generated property when the backing field has no XML doc comments of its own (see [XML documentation generation](#-xml-documentation-generation)).
@@ -349,6 +353,39 @@ var vm = new CustomerViewModel();
 
 `IsRequired` composes freely with the other `[ObservableProperty]` options (callbacks, partial hooks, broadcasting, etc.) — they sit in different parts of the generated output.
 
+### 🔒 Non-public setters
+
+By default the generated property has a public setter. Use `SetterAccessModifier` for a property that others may read but only the class, or the assembly, may change:
+
+```csharp
+public partial class DeviceInfo : ObservableObject
+{
+    [ObservableProperty(SetterAccessModifier = PropertyAccessModifier.Internal)]
+    private string name = string.Empty;
+}
+```
+
+Generated:
+
+```csharp
+public string Name
+{
+    get => name;
+    internal set
+    {
+        if (name == value)
+        {
+            return;
+        }
+
+        name = value;
+        RaisePropertyChanged(nameof(Name));
+    }
+}
+```
+
+`PropertyAccessModifier` (namespace `Atc.XamlToolkit`) has the values `Public` (default), `Internal`, `Protected`, `ProtectedInternal`, `PrivateProtected` and `Private`. Change notification works the same whoever calls the setter. The option also applies to `[ObservableProperty]` fields in an `[ObservableDtoViewModel]` class.
+
 ### 🪝 Partial-method hooks
 
 `GeneratePartialHooks = true` emits compile-time-safe partial-method declarations for change notifications instead of the string-named `BeforeChangedCallback` / `AfterChangedCallback`. The generator emits **declarations** of `partial void On{PropertyName}Changing({Type} value)` and `partial void On{PropertyName}Changed({Type} value)` plus unconditional calls to them in the setter. Implementing the partial methods is optional — when no implementation exists, the C# compiler **elides the call entirely**, so the feature has zero runtime cost when unused.
@@ -540,6 +577,8 @@ public string Name
     }
 }
 ```
+
+`IsDirty` is set **after** `PropertyChanged` is raised for the property. A handler of that `PropertyChanged` event therefore still sees the old `IsDirty` value; listen for the change of `IsDirty` itself to react to the view model becoming dirty.
 
 **Use cases for UseIsDirty on individual properties:**
 
@@ -1675,6 +1714,7 @@ public partial class PersonViewModel
 
 - ✅ Readonly properties are generated as expression-bodied properties
 - ✅ No setter is generated, maintaining immutability
+- ✅ Properties with an `init` accessor or a non-public setter (`private set`, `protected set`, `internal set`) are treated as readonly too; `init` properties from a record's primary constructor stay writable
 - ✅ The property is still accessible in the ViewModel and can be bound in XAML
 - ✅ Useful for calculated properties, timestamps, IDs, or other immutable data
 - ✅ Works with both classes and records
@@ -1746,7 +1786,7 @@ string address = viewModel.FormatAddress("Main St", 12345);
 **Method proxy features:**
 
 - ✅ All public instance methods are proxied
-- ✅ Parameters are preserved with correct types
+- ✅ Parameters are preserved with correct types, including `ref`, `out`, `in`, `params` and default values
 - ✅ Return types are maintained
 - ✅ Methods are generated as expression-bodied members for clarity
 - ✅ `ToString()` method is **excluded** (handled separately by the generator)
@@ -1759,7 +1799,7 @@ string address = viewModel.FormatAddress("Main St", 12345);
 - **State checks** - IsValid(), CanProcess(), etc.
 - **Data formatting** - GetDisplayName(), FormatCurrency(), etc.
 
-**Note:** Static methods, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
+**Note:** Static methods, generic methods, `Equals(object)` / `GetHashCode()` overrides, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
 
 ### 🚫 Selective Generation with IgnorePropertyNames and IgnoreMethodNames
 
@@ -1962,9 +2002,17 @@ The property is named `InnerModel` to:
 **Example with repository pattern:**
 
 ```csharp
-public class PersonEditViewModel : ViewModelBase
+// A nested view model is generated inside its containing types, so they must be partial too.
+public partial class PersonEditViewModel : ViewModelBase
 {
     private readonly IPersonRepository repository;
+    private readonly PersonViewModel person;
+
+    public PersonEditViewModel(IPersonRepository repository, PersonDto dto)
+    {
+        this.repository = repository;
+        person = new PersonViewModel(dto);
+    }
 
     [ObservableDtoViewModel(typeof(PersonDto))]
     public partial class PersonViewModel : ViewModelBase
@@ -1974,16 +2022,16 @@ public class PersonEditViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (!ValidateModel())
+        if (person.HasErrors)
         {
             return;
         }
 
         // Get the DTO and save it
-        await repository.UpdateAsync(PersonViewModel.InnerModel);
+        await repository.UpdateAsync(person.InnerModel);
 
         MessageBox.Show("Person saved successfully!");
-        IsDirty = false;
+        person.IsDirty = false;
     }
 }
 ```

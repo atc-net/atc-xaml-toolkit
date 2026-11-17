@@ -33,9 +33,13 @@ internal sealed class VSMReorderService : IProcessElementService
         NodeCollection? currentNodeCollection = null;
         var collectionAdded = false;
 
-        if (Mode == VisualStateManagerRule.Last && children.Count > 0)
+        // Drop the trailing whitespace (the newline before the closing tag) - never real content.
+        if (Mode == VisualStateManagerRule.Last
+            && children.Count > 0
+            && children[children.Count - 1] is XText lastNode
+            && string.IsNullOrWhiteSpace(lastNode.Value))
         {
-            children.Remove(children[children.Count - 1]);
+            children.RemoveAt(children.Count - 1);
         }
 
         foreach (var child in children)

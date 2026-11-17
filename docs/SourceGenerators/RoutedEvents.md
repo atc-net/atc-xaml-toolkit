@@ -8,7 +8,7 @@ Traditionally, creating a routed event involves writing repetitive boilerplate c
 
 > **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For WinUI and Avalonia, use standard .NET events instead.
 
-> **Important:** Classes using `[RoutedEvent]` must either inherit from `UserControl`, `DependencyObject`, or `FrameworkElement`, OR have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"**. This requirement ensures the source generator can properly detect and process your routed events.
+> **Note:** `[RoutedEvent]` is picked up in any `partial` class of a WPF project, whatever it is called. In a non-static class the generated event calls `AddHandler` / `RemoveHandler`, so the class has to derive from `UIElement` (any control) or `ContentElement` for the generated code to compile. A class that is not `partial` gets no generated code and is reported as `AtcXamlToolkit0002`. The field must be `private`; a field that is not is skipped without a diagnostic.
 
 ---
 
@@ -48,6 +48,8 @@ The source generator automatically detects your target platform and:
 
 `AtcXamlToolkit0010` is the safety net that turns the platform skip from a silent inertness into an explicit message — so you find out at compile time, not at runtime when the event you wrote never raises.
 
+The `[RoutedEvent]` attribute class only exists in the WPF package (`Atc.XamlToolkit.Wpf`). In a WinUI or Avalonia project the attribute itself therefore does not compile (CS0616 on WinUI, where `RoutedEvent` resolves to `Microsoft.UI.Xaml.RoutedEvent`; CS0246 on Avalonia), and `AtcXamlToolkit0010` is reported next to that error to say why. A source file with `[RoutedEvent]` cannot be shared unchanged between a WPF project and a WinUI or Avalonia project; put the field inside `#if` or in a WPF-only file.
+
 ```text
 warning AtcXamlToolkit0010: Field 'tap' is decorated with [RoutedEvent] but the project targets Avalonia. The source generator silently skips routed-event generation on non-WPF platforms because WinUI 3 and Avalonia have no equivalent of WPF's RoutedEvent / EventManager pattern. Replace the field with a standard CLR event (e.g. 'public event RoutedEventHandler ItemSelected;') or remove the attribute.
 ```
@@ -63,7 +65,7 @@ There are two common approaches to declare a routed event using source generatio
 Annotate a *static* `RoutedEvent` field with the `[RoutedEvent]` attribute, allowing the generator to infer the event name from the field name (pascal‑case the first letter):
 
 ```csharp
-public static partial class CustomButton
+public partial class CustomButton : Button
 {
     [RoutedEvent(RoutingStrategy.Bubble)]
     private static readonly RoutedEvent tap;
@@ -93,12 +95,119 @@ public partial class CustomButton
 
 When the field has XML doc comments, the generator copies them to the generated event, and the `{Name}Event` field gets an `Identifies the <see cref="{Name}"/> routed event.` summary.
 
+### 📚 Default documentation
+
+With `GenerateDocumentation = true`, or `[assembly: GenerateDocumentationDefault]` for the whole project, the generated members get default summaries when the field has no XML doc of its own, so a project that reports CS1591 does not have to document every field by hand:
+
+| Member | Summary |
+|--------|---------|
+| `{Name}Event` | `Identifies the <see cref="{Name}"/> routed event.` |
+| `{Name}` event | `Occurs when the {Name} routed event is raised.` |
+| `Raise{Name}` method | `Raises the <see cref="{Name}"/> routed event.` |
+
+`GenerateDocumentation = false` turns it off for one event when the assembly default is on. XML doc comments on the field always win for the event.
+
+### 📣 Generating a method that raises the event
+
+`GenerateRaiseMethod = true` adds a method that creates the event args and raises the event. Its shape follows the handler type:
+
+```csharp
+[RoutedEvent(GenerateRaiseMethod = true)]
+private static readonly RoutedEvent opened;
+
+[RoutedEvent(HandlerType = typeof(RoutedPropertyChangedEventHandler<int>), GenerateRaiseMethod = true)]
+private static readonly RoutedEvent valueChanged;
+
+[RoutedEvent(HandlerType = typeof(EventHandler<DeviceErrorRoutedEventArgs>), GenerateRaiseMethod = true)]
+private static readonly RoutedEvent deviceError;
+```
+
+```csharp
+protected void RaiseOpened()
+    => RaiseEvent(new RoutedEventArgs(OpenedEvent, this));
+
+protected void RaiseValueChanged(int oldValue, int newValue)
+    => RaiseEvent(new RoutedPropertyChangedEventArgs<int>(oldValue, newValue, ValueChangedEvent));
+
+protected void RaiseDeviceError(DeviceErrorRoutedEventArgs e)
+{
+    e.RoutedEvent = DeviceErrorEvent;
+    RaiseEvent(e);
+}
+```
+
+- The handler type of the event is written with its namespace: `public event System.Windows.RoutedPropertyChangedEventHandler<int> ValueChanged`, `public event System.EventHandler<DeviceErrorRoutedEventArgs> DeviceError`.
+- The method is `protected`, or `private` in a sealed class. `RaiseMethodAccessModifier` states another accessibility, for example `RaiseMethodAccessModifier = PropertyAccessModifier.Private` in a public control whose API should not grow a protected method.
+- For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. The generator reports `AtcXamlToolkit0013`; raise the event yourself with `RaiseEvent(...)`.
+
+### 🤝 Sharing an existing event with `AddOwnerOf`
+
+A control that should expose an event another class already registered adds itself as an owner. A handler for the original event then also receives the event raised by the control:
+
+```csharp
+public partial class DrivePicker : UserControl
+{
+    [RoutedEvent(AddOwnerOf = typeof(DevicePickerEvents), HandlerType = typeof(EventHandler<DeviceErrorRoutedEventArgs>))]
+    private static readonly RoutedEvent deviceError;
+}
+```
+
+```csharp
+public static readonly RoutedEvent DeviceErrorEvent = global::DevicePickerEvents.DeviceErrorEvent.AddOwner(typeof(DrivePicker));
+
+public event System.EventHandler<DeviceErrorRoutedEventArgs> DeviceError
+{
+    add => AddHandler(DeviceErrorEvent, value);
+    remove => RemoveHandler(DeviceErrorEvent, value);
+}
+```
+
+The shared event is `{Type}.{Name}Event`, so the field must have the name of the event being shared. The type is written with its full name, `global::` and namespace (`global::MyApp.DevicePickerEvents`). State the `HandlerType` of the shared event; the routing strategy is that of the shared event and the positional argument is ignored, without a diagnostic. `GenerateRaiseMethod` can be combined with `AddOwnerOf`.
+
+### 🧷 Routed events in a static class (attached events)
+
+A static class cannot have an instance event. For a `[RoutedEvent]` field in a static class the generator registers the event and emits methods that attach a handler to an element:
+
+```csharp
+public static partial class DataGridFilter
+{
+    [RoutedEvent(HandlerType = typeof(DataGridFilterChangedEventHandler))]
+    private static readonly RoutedEvent filterChanged;
+}
+```
+
+```csharp
+public static readonly RoutedEvent FilterChangedEvent = EventManager.RegisterRoutedEvent(
+    name: "FilterChanged",
+    routingStrategy: RoutingStrategy.Bubble,
+    handlerType: typeof(DataGridFilterChangedEventHandler),
+    ownerType: typeof(DataGridFilter));
+
+public static void AddFilterChangedHandler(DependencyObject element, DataGridFilterChangedEventHandler handler)
+{
+    if (element is UIElement uiElement)
+    {
+        uiElement.AddHandler(FilterChangedEvent, handler);
+    }
+    else if (element is ContentElement contentElement)
+    {
+        contentElement.AddHandler(FilterChangedEvent, handler);
+    }
+}
+
+// RemoveFilterChangedHandler is generated the same way.
+```
+
+A class that only holds events for other classes to share with `AddOwnerOf` needs no handler methods; `GenerateHandlerMethods = false` leaves them out and generates the `{Name}Event` field alone.
+
+This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `GenerateRaiseMethod` has no effect in a static class and is reported as `AtcXamlToolkit0013`; raise the event on the element with `element.RaiseEvent(...)`.
+
 ### 🛠️ Specifying a custom delegate type
 
 If you want a strongly‑typed event handler (instead of the generic RoutedEventHandler) add the HandlerType named argument:
 
 ```csharp
-public partial class NumericBox
+public partial class NumericBox : Control
 {
     // The event will have the delegate type NumericBoxChangedRoutedEventHandler
     [RoutedEvent(HandlerType = typeof(NumericBoxChangedRoutedEventHandler))]
@@ -114,7 +223,7 @@ public partial class NumericBox
     public static readonly RoutedEvent ValueIncrementedEvent = EventManager.RegisterRoutedEvent(
         name: nameof(ValueIncremented),
         routingStrategy: RoutingStrategy.Bubble,
-        handlerType: typeof(RoutedEventHandler),
+        handlerType: typeof(NumericBoxChangedRoutedEventHandler),
         ownerType: typeof(NumericBox));
 
     public event NumericBoxChangedRoutedEventHandler ValueIncremented
@@ -163,6 +272,11 @@ private void NumericBox_OnValueIncremented(
 |-----------------|---------------|-----------------|----------------------------|--------------------------------------------|
 | routingStrategy | positional    | RoutingStrategy | Bubble                     | How the event propagates.                  |
 | HandlerType     | named         | Type            | typeof(RoutedEventHandler) | CLR delegate type for the generated event. |
+| AddOwnerOf      | named         | Type            | none                       | Share the event of this type instead of registering a new one. |
+| GenerateRaiseMethod | named     | bool            | false                      | Generate a `Raise{Name}` method. |
+| GenerateHandlerMethods | named  | bool            | true                       | In a static class: generate `Add{Name}Handler` / `Remove{Name}Handler`. |
+| RaiseMethodAccessModifier | named | PropertyAccessModifier | protected (private when sealed) | Accessibility of the `Raise{Name}` method. |
+| GenerateDocumentation | named   | bool            | assembly default           | Emit default summaries on the generated members. |
 
 ```csharp
 [RoutedEvent]                         // Bubble + RoutedEventHandler

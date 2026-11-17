@@ -236,12 +236,18 @@ Eliminate boilerplate with powerful code generation:
 - **[StyledProperty]** (Avalonia) - Auto-generate styled properties
 - **[AttachedProperty]** (WPF, WinUI 3 & Avalonia) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF only) - Auto-generate routed events
+- **[DefaultStyleKey]** (WPF & Avalonia) - Auto-generate the default style key override of a custom control
+- **[TemplatePartField]** (WPF, WinUI 3 & Avalonia) - Declare a template part once, on its field, and auto-generate the lookup
+- **[DependencyPropertyTemplate]** / **[UseDependencyPropertyTemplate]** (WPF, WinUI 3 & Avalonia) - Declare a set of properties and routed events once and generate it in several controls
 
-> **Note:** Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must either inherit from `UserControl`/`DependencyObject`/`FrameworkElement`, or have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`).
+> **Note:** Any `partial` class that uses `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]`, `[TemplatePartField]` or `[UseDependencyPropertyTemplate]` is picked up, whatever it is called and whatever it derives from. A class that is not `partial` is reported as `AtcXamlToolkit0002`. For `[RelayCommand]` in a control, behavior or helper, the class must inherit from `UserControl`/`DependencyObject`/`FrameworkElement` or have a name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`); otherwise the command is treated as a view model command.
 
 Learn more about each generator:
 
 - [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
+- [SourceGenerators for the default style key](docs/SourceGenerators/DefaultStyleKey.md)
+- [SourceGenerators for template parts](docs/SourceGenerators/TemplatePartField.md)
+- [SourceGenerators for property templates](docs/SourceGenerators/PropertyTemplate.md)
 - [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
 - [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
 - [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)
@@ -345,6 +351,7 @@ public partial class MainViewModel : ViewModelBase
 ### Get Started
 
 - **[Getting Started Guide](docs/GettingStarted.md)** - Complete walkthrough for beginners
+- **[Upgrading to version 4](docs/UpgradingToV4.md)** - Breaking changes and behaviour changes since version 3
 
 ### Core Concepts
 
@@ -433,6 +440,10 @@ All commands support:
 | `[StyledProperty]` | Avalonia | Auto-generate styled properties (Avalonia's equivalent to DependencyProperty) |
 | `[AttachedProperty]` | WPF, WinUI, Avalonia | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events (WPF's EventManager pattern not available in WinUI/Avalonia) |
+| `[DefaultStyleKey]` | WPF, Avalonia | Auto-generate the default style key override of a custom control |
+| `[TemplatePartField]` | WPF, WinUI, Avalonia | Declare a template part on its field; auto-generate the class's `[TemplatePart]` attribute and the lookup |
+| `[DependencyPropertyTemplate]` | WPF, WinUI, Avalonia | Mark a class whose attributed fields are a reusable set of properties and routed events |
+| `[UseDependencyPropertyTemplate]` | WPF, WinUI, Avalonia | Generate the members of a property template in a control |
 | `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty`, `InnerModel`, automatic validation attribute copying, and `[ComputedProperty]` support |
 
 > **Note on Routed Events:** Routed events are a WPF-exclusive feature that uses `EventManager.RegisterRoutedEvent()` and supports event bubbling/tunneling through the visual tree. WinUI 3 and Avalonia use different event systems and do not support custom routed events. See the [RoutedEvents documentation](docs/SourceGenerators/RoutedEvents.md) for detailed platform comparison.

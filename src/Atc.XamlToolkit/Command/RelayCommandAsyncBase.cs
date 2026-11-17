@@ -10,6 +10,7 @@ namespace Atc.XamlToolkit.Command;
 [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "OK")]
 [SuppressMessage("Naming", "CA1708:Identifiers should differ by more than case", Justification = "OK")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "OK")]
+[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1304:Non-private readonly fields should begin with upper-case letter", Justification = "OK")]
 public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropertyChanged
 {
     protected readonly Func<Task>? execute;
@@ -17,7 +18,10 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
     protected readonly WeakFunc<bool>? wfCanExecute;
     protected readonly IErrorHandler? errorHandler;
     protected bool isExecuting;
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed in Dispose unless a run in progress owns it; that run disposes it when it ends.")]
     protected CancellationTokenSource? cancellationTokenSource;
+    private readonly List<CancellationTokenSource> runningTokenSources = [];
+    private int executionCount;
 
     /// <summary>
     /// Gets a value indicating whether the command is currently executing.
@@ -123,10 +127,28 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
     /// </summary>
     public virtual void Cancel()
     {
-        if (cancellationTokenSource is not null &&
-            !cancellationTokenSource.IsCancellationRequested)
+        // The token sources are cancelled outside the lock: cancelling runs the callbacks
+        // registered on the token, and those must not block other runs from starting or
+        // finishing. A run that ends meanwhile disposes its own source.
+        CancellationTokenSource[] tokenSources;
+        lock (runningTokenSources)
         {
-            cancellationTokenSource.Cancel();
+            tokenSources = runningTokenSources.ToArray();
+        }
+
+        foreach (var tokenSource in tokenSources)
+        {
+            try
+            {
+                if (!tokenSource.IsCancellationRequested)
+                {
+                    tokenSource.Cancel();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // The run finished in the meantime
+            }
         }
     }
 
@@ -153,30 +175,6 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
             return;
         }
 
-        if (execute is null && executeWithCancellation is null)
-        {
-            return;
-        }
-
-        isExecuting = true;
-        OnPropertyChanged(nameof(IsExecuting));
-        RaiseCanExecuteChanged();
-
-        // Always create a fresh cancellation token source if we support cancellation
-        // This ensures that a previously canceled token is never reused
-        if (executeWithCancellation is not null)
-        {
-            if (cancellationTokenSource is not null)
-            {
-                await cancellationTokenSource
-                    .CancelAsync()
-                    .ConfigureAwait(false);
-            }
-
-            cancellationTokenSource?.Dispose();
-            cancellationTokenSource = new CancellationTokenSource();
-        }
-
         try
         {
             await ExecuteAsync(parameter).ConfigureAwait(true);
@@ -189,45 +187,64 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
         {
             errorHandler.HandleError(ex);
         }
-        finally
-        {
-            if (executeWithCancellation is not null)
-            {
-                cancellationTokenSource?.Dispose();
-                cancellationTokenSource = null;
-            }
-
-            isExecuting = false;
-            OnPropertyChanged(nameof(IsExecuting));
-            RaiseCanExecuteChanged();
-        }
     }
 
     /// <summary>
-    /// Executes the command asynchronously.
+    /// Executes the command asynchronously. The execution state (<see cref="IsExecuting"/>,
+    /// <see cref="CanExecuteChanged"/> and the cancellation token) is managed the same way
+    /// as for <see cref="Execute"/>, but exceptions are propagated to the caller.
     /// </summary>
     /// <param name="parameter">The command parameter (ignored in this implementation).</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public Task ExecuteAsync(object? parameter)
+    public async Task ExecuteAsync(object? parameter)
     {
-        // Note: CanExecute is already checked in Execute() before calling this method
-        // We don't check it again here because isExecuting may be true at this point
-        if (executeWithCancellation is not null)
+        if (execute is null && executeWithCancellation is null)
         {
-            // Create a fresh cancellation token source if it doesn't exist or is canceled
-            // This handles the case where ExecuteAsync() is called directly (not from Execute())
-            if (cancellationTokenSource is null || cancellationTokenSource.IsCancellationRequested)
-            {
-                cancellationTokenSource?.Dispose();
-                cancellationTokenSource = new CancellationTokenSource();
-            }
-
-            return executeWithCancellation(cancellationTokenSource.Token);
+            return;
         }
 
-        return execute is not null
-            ? execute()
-            : Task.CompletedTask;
+        // Every run gets its own token source, so a canceled token is never reused.
+        // Cancel() cancels all runs that are in progress.
+        CancellationTokenSource? runTokenSource = null;
+        if (executeWithCancellation is not null)
+        {
+            runTokenSource = new CancellationTokenSource();
+            cancellationTokenSource = runTokenSource;
+
+            lock (runningTokenSources)
+            {
+                runningTokenSources.Add(runTokenSource);
+            }
+        }
+
+        BeginExecution();
+
+        try
+        {
+            if (executeWithCancellation is not null)
+            {
+                await executeWithCancellation(runTokenSource!.Token).ConfigureAwait(true);
+            }
+            else
+            {
+                await execute!().ConfigureAwait(true);
+            }
+        }
+        finally
+        {
+            if (runTokenSource is not null)
+            {
+                Interlocked.CompareExchange(ref cancellationTokenSource, value: null, runTokenSource);
+
+                lock (runningTokenSources)
+                {
+                    runningTokenSources.Remove(runTokenSource);
+                    runTokenSource.Dispose();
+                }
+            }
+
+            EndExecution();
+        }
     }
 
     /// <summary>
@@ -250,7 +267,41 @@ public abstract class RelayCommandAsyncBase : IRelayCommandAsync, INotifyPropert
             return;
         }
 
-        cancellationTokenSource?.Dispose();
+        // A run that is in progress owns its token source and disposes it when it ends.
+        // Disposing it here would make a later Cancel() throw.
+        lock (runningTokenSources)
+        {
+            if (cancellationTokenSource is { } tokenSource &&
+                !runningTokenSources.Contains(tokenSource))
+            {
+                tokenSource.Dispose();
+            }
+        }
+
         cancellationTokenSource = null;
+    }
+
+    private void BeginExecution()
+    {
+        if (Interlocked.Increment(ref executionCount) != 1)
+        {
+            return;
+        }
+
+        isExecuting = true;
+        OnPropertyChanged(nameof(IsExecuting));
+        RaiseCanExecuteChanged();
+    }
+
+    private void EndExecution()
+    {
+        if (Interlocked.Decrement(ref executionCount) != 0)
+        {
+            return;
+        }
+
+        isExecuting = false;
+        OnPropertyChanged(nameof(IsExecuting));
+        RaiseCanExecuteChanged();
     }
 }

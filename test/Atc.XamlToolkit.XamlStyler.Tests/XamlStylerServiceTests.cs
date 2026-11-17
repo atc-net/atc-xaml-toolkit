@@ -533,4 +533,121 @@ public sealed class XamlStylerServiceTests : IDisposable
         File.WriteAllText(path, content);
         return path;
     }
+
+    [Fact]
+    public void StyleFile_NonUtf8FileWithoutBom_ThrowsAndLeavesFileUntouched()
+    {
+        // Arrange — Latin-1 encoded file: 0xE6 ('æ') is not valid UTF-8
+        var xaml = "<Window xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Title=\"Blæk\" Height=\"450\" Width=\"800\"><Grid /></Window>";
+        var filePath = Path.Combine(tempDir, "latin1.xaml");
+        var originalBytes = System.Text.Encoding.Latin1.GetBytes(xaml);
+        File.WriteAllBytes(filePath, originalBytes);
+
+        var service = new XamlStylerService(new XamlStylerOptions());
+
+        // Act
+        var act = () => service.StyleFile(filePath);
+
+        // Assert — the file must not be rewritten with replacement characters
+        act.Should().Throw<System.Text.DecoderFallbackException>();
+        File.ReadAllBytes(filePath).Should().Equal(originalBytes);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StyleDocument_TwoPrefixesForTheSameNamespace_KeepTheirOwnPrefix(
+        bool useSingleQuotes)
+    {
+        // Two prefixes may point at the same namespace. Each element must keep the prefix
+        // it was written with, whichever quote character the declarations use.
+        var quote = useSingleQuotes ? "'" : "\"";
+        var xaml =
+            $"<Grid xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:a={quote}urn:same{quote} xmlns:b={quote}urn:same{quote}>" + Environment.NewLine +
+            "    <a:First />" + Environment.NewLine +
+            "    <b:Second />" + Environment.NewLine +
+            "</Grid>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        result.Should().Contain("<a:First />");
+        result.Should().Contain("<b:Second />");
+        result.Should().Contain("xmlns:a=\"urn:same\"");
+        result.Should().Contain("xmlns:b=\"urn:same\"");
+    }
+
+    [Fact]
+    public void StyleDocument_RemoveDesignTimeReferences_KeepsAPrefixThatIsRedeclaredForAnotherNamespace()
+    {
+        // The nested element reuses the prefix 'd' for a namespace of its own. Only the
+        // design-time namespace declared on the root may be removed.
+        var xaml = "<Grid xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:d=\"http://schemas.microsoft.com/expression/blend/2008\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" mc:Ignorable=\"d\" d:DesignWidth=\"100\">\n    <Button xmlns:d=\"urn:other\" d:Tag=\"x\" />\n</Grid>";
+        var options = new XamlStylerOptions { RemoveDesignTimeReferences = true };
+
+        var result = new XamlStylerService(options).StyleDocument(xaml);
+
+        result.Should().Contain("<Button xmlns:d=\"urn:other\" d:Tag=\"x\" />");
+        result.Should().NotContain("DesignWidth");
+        result.Should().NotContain("[d]");
+    }
+
+    [Fact]
+    public void StyleDocument_RemoveDesignTimeReferences_DoesNotCarryPrefixMappingsToTheNextDocument()
+    {
+        // Arrange — the first document maps the design-time prefix "d" to a namespace that the
+        // second document only uses on a child element; its root maps "d" to something else.
+        var first = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="urn:first" d:DesignWidth="800" />
+            """;
+        var second = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="urn:second">
+                <Button xmlns:d="urn:first" d:Tag="keep" />
+            </Grid>
+            """;
+        var options = new XamlStylerOptions { RemoveDesignTimeReferences = true };
+        var expected = new XamlStylerService(options).StyleDocument(second);
+        var service = new XamlStylerService(options);
+
+        // Act
+        service.StyleDocument(first);
+        var result = service.StyleDocument(second);
+
+        // Assert
+        expected.Should().Contain("Tag=\"keep\"");
+        result.Should().Be(expected);
+    }
+
+    [Fact]
+    public void StyleDocument_RepeatedAndInterleavedCalls_MatchAFreshService()
+    {
+        // Arrange
+        var first = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="1" Margin="2" Height="3" Tag="t" />
+            """;
+        var second = """
+            <Button xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Margin="2" Content="c" Width="1" />
+            """;
+        var options = new XamlStylerOptions();
+        var service = new XamlStylerService(options);
+
+        // Act & Assert — same options, alternating documents
+        var expectedFirst = new XamlStylerService(new XamlStylerOptions()).StyleDocument(first);
+        var expectedSecond = new XamlStylerService(new XamlStylerOptions()).StyleDocument(second);
+        service.StyleDocument(first).Should().Be(expectedFirst);
+        service.StyleDocument(second).Should().Be(expectedSecond);
+        service.StyleDocument(first).Should().Be(expectedFirst);
+
+        // Act & Assert — ordering rules replaced between calls
+        string[] marginFirst = ["Margin", "*"];
+        options.AttributeOrderingRuleGroups = marginFirst;
+        var expectedMarginFirst = new XamlStylerService(new XamlStylerOptions { AttributeOrderingRuleGroups = marginFirst }).StyleDocument(first);
+        expectedMarginFirst.Should().NotBe(expectedFirst);
+        service.StyleDocument(first).Should().Be(expectedMarginFirst);
+
+        // Act & Assert — ordering rules changed in place between calls
+        options.AttributeOrderingRuleGroups[0] = "Tag";
+        var expectedTagFirst = new XamlStylerService(new XamlStylerOptions { AttributeOrderingRuleGroups = ["Tag", "*"] }).StyleDocument(first);
+        expectedTagFirst.Should().NotBe(expectedMarginFirst);
+        service.StyleDocument(first).Should().Be(expectedTagFirst);
+    }
 }

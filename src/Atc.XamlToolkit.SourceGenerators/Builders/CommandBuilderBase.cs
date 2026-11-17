@@ -22,6 +22,8 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine();
 
         AppendPublicProperties(builder, relayCommandsToGenerate);
+
+        AppendValueTaskAdapterMethods(builder, relayCommandsToGenerate);
     }
 
     public virtual void GenerateRelayCommandMethods(
@@ -38,7 +40,76 @@ internal abstract class CommandBuilderBase : BuilderBase
         AppendDisposeCommandsMethod(builder, relayCommandsToGenerate);
     }
 
-    private static void AppendPrivateBackingFields(
+    // Returns the namespaces the generated command code refers to by simple names.
+    public static List<string> GetCommandUsings(
+        XamlPlatform xamlPlatform,
+        EquatableArray<RelayCommandToGenerate> commands)
+    {
+        var namespaces = new List<string>();
+        if (commands.IsEmpty)
+        {
+            return namespaces;
+        }
+
+        namespaces.Add("Atc.XamlToolkit.Command");
+
+        if (commands.Any(c => c.UseTask || c.ExecuteOnBackgroundThread))
+        {
+            // Task and CancellationToken
+            namespaces.Add("System.Threading");
+            namespaces.Add("System.Threading.Tasks");
+        }
+
+        switch (xamlPlatform)
+        {
+            case XamlPlatform.Wpf when commands.Any(c => c.AutoSetIsBusy):
+                // Application.Current and the dispatcher extension methods
+                namespaces.Add("System.Windows");
+                namespaces.Add("System.Windows.Threading");
+                break;
+            case XamlPlatform.WinUI:
+                namespaces.Add("Microsoft.UI.Dispatching");
+                if (commands.Any(c => c.UseTask))
+                {
+                    // INotifyPropertyChanged
+                    namespaces.Add("System.ComponentModel");
+                }
+
+                break;
+        }
+
+        return namespaces;
+    }
+
+    // Emits a Task-returning adapter for each ValueTask-returning command method,
+    // because the command constructors only accept Task-returning delegates.
+    protected static void AppendValueTaskAdapterMethods(
+        CommandBuilderBase builder,
+        EquatableArray<RelayCommandToGenerate> commands)
+    {
+        var emittedAdapters = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var cmd in commands)
+        {
+            // Overloads of one method each need an adapter with their own parameters.
+            if (cmd.ValueTaskMethodName is null ||
+                !emittedAdapters.Add($"{cmd.MethodName}({string.Join(",", cmd.ParameterTypes)})"))
+            {
+                continue;
+            }
+
+            var parameters = new List<string>();
+            for (var i = 0; i < cmd.ParameterNames.Count; i++)
+            {
+                parameters.Add($"{cmd.ParameterTypes[i]} {cmd.ParameterNames[i]}");
+            }
+
+            builder.AppendLine();
+            builder.AppendLine($"private global::System.Threading.Tasks.Task {cmd.MethodName}({string.Join(", ", parameters)})");
+            builder.AppendLine($"    => {cmd.ValueTaskMethodName}({string.Join(", ", cmd.ParameterNames)}).AsTask();");
+        }
+    }
+
+    protected static void AppendPrivateBackingFields(
         CommandBuilderBase builder,
         EquatableArray<RelayCommandToGenerate> commands)
     {
@@ -61,7 +132,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
     }
 
-    private static void AppendPublicProperties(
+    protected static void AppendPublicProperties(
         CommandBuilderBase builder,
         EquatableArray<RelayCommandToGenerate> commands)
     {
@@ -83,7 +154,11 @@ internal abstract class CommandBuilderBase : BuilderBase
             builder.AppendDocumentation(cmd.DocumentationComments, cmd.GenerateDocumentation, $"Gets the {propName}.");
 
             // For WinUI async commands, generate full properties with PropertyChanged subscription
-            var needsPropertyChangedSubscription = builder.XamlPlatform == XamlPlatform.WinUI && cmd.UseTask;
+            // A control, behavior or helper class has no OnPropertyChanged to raise it with.
+            var needsPropertyChangedSubscription =
+                builder.XamlPlatform == XamlPlatform.WinUI &&
+                cmd.UseTask &&
+                builder is not FrameworkElementBuilder;
 
             if (needsPropertyChangedSubscription)
             {
@@ -339,6 +414,14 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         switch (cmd.UseTask)
         {
+            case false when execExpr.StartsWith("Task.Run(", StringComparison.Ordinal):
+                // The work runs on a background thread: wait for it, so IsBusy stays set until it is done
+                builder.AppendLine(
+                    execExprContainParameters
+                        ? "async x =>"
+                        : "async () =>");
+                useDispatcherInvokeAsync = true;
+                break;
             case false:
                 builder.AppendLine(
                     execExprContainParameters
@@ -346,16 +429,28 @@ internal abstract class CommandBuilderBase : BuilderBase
                         : "() =>");
                 useDispatcherInvoke = true;
                 break;
-            case true when execExprContainParameters:
-                builder.AppendLine("async x =>");
+            case true when supportsCancellation &&
+                           (parameterNamesWithoutCt.Length > 1 ||
+                            (parameterNamesWithoutCt.Length == 1 && cmd.ExecuteOnBackgroundThread)):
+                // When AutoSetIsBusy + SupportsCancellation with multiple parameters (or with one
+                // parameter on a background thread), the lambda must accept the parameter(s) as x
+                // AND CancellationToken
+                builder.AppendLine("async (x, cancellationToken) =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
             case true when supportsCancellation && parameterNamesWithoutCt.Length > 0:
                 // When AutoSetIsBusy + SupportsCancellation with parameters,
-                // the lambda must accept the parameters AND CancellationToken
+                // the lambda must accept the parameters AND CancellationToken.
+                // This case comes before the "(x" text check below: a method parameter
+                // that is itself named x would otherwise be mistaken for the lambda parameter.
                 var paramList = string.Join(", ", parameterNamesWithoutCt);
                 builder.AppendLine($"async ({paramList}, cancellationToken) =>");
+                useAwait = true;
+                useDispatcherInvokeAsync = true;
+                break;
+            case true when execExprContainParameters:
+                builder.AppendLine("async x =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
@@ -439,7 +534,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         {
             if (execExpr.StartsWith("Task.Run(", StringComparison.Ordinal))
             {
-                builder.AppendLine("_ = Task");
+                builder.AppendLine("await Task");
                 builder.IncreaseIndent();
                 builder.AppendLine($".Run({execExpr.RemoveTaskDotRun()})");
                 builder.AppendLine(".ConfigureAwait(false);");
@@ -585,6 +680,17 @@ internal abstract class CommandBuilderBase : BuilderBase
         // we need to wrap it in a lambda that accepts the CancellationToken (but doesn't use it)
         if (cmd.SupportsCancellation && !hasCt)
         {
+            if (cmd.ExecuteOnBackgroundThread)
+            {
+                // Task.Run stops waiting for the method when the command is cancelled
+                return filteredParameterTypes.Length switch
+                {
+                    0 => $"ct => Task.Run(() => {cmd.MethodName}(), ct)",
+                    1 => $"(x, ct) => Task.Run(() => {cmd.MethodName}(x), ct)",
+                    _ => $"(x, ct) => Task.Run(() => {cmd.MethodName}({cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated()}), ct)",
+                };
+            }
+
             if (filteredParameterTypes.Length == 0)
             {
                 // async (ct) => await MethodAsync()
@@ -618,6 +724,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                     return $"x => Task.Run(() => {cmd.MethodName}{paramCall})";
                 }
 
+                // When SupportsCancellation = true and ExecuteOnBackgroundThread = true,
+                // run the method on a background thread with the command's token
+                if (cmd.SupportsCancellation && hasCt && cmd.ExecuteOnBackgroundThread)
+                {
+                    return $"(x, cancellationToken) => Task.Run(() => {cmd.MethodName}(x, cancellationToken), cancellationToken)";
+                }
+
                 // When SupportsCancellation = true and method has CancellationToken, pass method with explicit cast
                 if (cmd.SupportsCancellation && hasCt)
                 {
@@ -640,15 +753,16 @@ internal abstract class CommandBuilderBase : BuilderBase
             // don't wrap in Task.Run
             if (cmd.ExecuteOnBackgroundThread && !(cmd.SupportsCancellation && hasCt))
             {
-                return $"Task.Run(() => {cmd.MethodName}{call})";
+                return $"x => Task.Run(() => {cmd.MethodName}{call})";
             }
 
-            // When SupportsCancellation = true and method has CancellationToken
+            // When SupportsCancellation = true and method has CancellationToken,
+            // pass the command's token on instead of CancellationToken.None
             if (cmd.SupportsCancellation && hasCt)
             {
-                // Remove CancellationToken.None from the call
-                var ctFreeCall = args is not null ? $"({args})" : "()";
-                return $"x => {cmd.MethodName}{ctFreeCall}";
+                return cmd.ExecuteOnBackgroundThread
+                    ? $"(x, cancellationToken) => Task.Run(() => {cmd.MethodName}({args}, cancellationToken), cancellationToken)"
+                    : $"(x, cancellationToken) => {cmd.MethodName}({args}, cancellationToken)";
             }
 
             return $"x => {cmd.MethodName}{call}";
@@ -661,6 +775,13 @@ internal abstract class CommandBuilderBase : BuilderBase
             return hasCt
                 ? $"() => Task.Run(() => {cmd.MethodName}({NameConstants.CancellationTokenNone}))"
                 : $"() => Task.Run({cmd.MethodName})";
+        }
+
+        // When SupportsCancellation = true and ExecuteOnBackgroundThread = true,
+        // run the method on a background thread with the command's token
+        if (cmd.SupportsCancellation && hasCt && cmd.ExecuteOnBackgroundThread)
+        {
+            return $"cancellationToken => Task.Run(() => {cmd.MethodName}(cancellationToken), cancellationToken)";
         }
 
         // When SupportsCancellation = true and method has CancellationToken, pass method with explicit cast
@@ -694,6 +815,12 @@ internal abstract class CommandBuilderBase : BuilderBase
             {
                 if (cmd.ExecuteOnBackgroundThread)
                 {
+                    // With SupportsCancellation the lambda provides the command's token
+                    if (cmd.SupportsCancellation && hasCt)
+                    {
+                        return $"Task.Run(() => {cmd.MethodName}(x, cancellationToken), cancellationToken)";
+                    }
+
                     var paramCall = hasCt
                         ? $"(x, {NameConstants.CancellationTokenNone})"
                         : "(x)";
@@ -716,28 +843,35 @@ internal abstract class CommandBuilderBase : BuilderBase
                     : $"{cmd.MethodName}(x)";
             }
 
+            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
+
             // When both AutoSetIsBusy and SupportsCancellation are true with multiple parameters,
-            // the lambda will provide the actual parameter names, so use them
+            // the lambda receives the parameters as one tuple (x) plus the CancellationToken
             if (cmd.SupportsCancellation && hasCt)
             {
-                var paramNames = cmd.GetParameterNamesWithoutCancellationToken();
-                var paramList = string.Join(", ", paramNames);
-                return $"{cmd.MethodName}({paramList}, cancellationToken)";
+                return cmd.ExecuteOnBackgroundThread
+                    ? $"Task.Run(() => {cmd.MethodName}({args}, cancellationToken), cancellationToken)"
+                    : $"{cmd.MethodName}({args}, cancellationToken)";
             }
-
-            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
 
             var call = hasCt
                 ? $"({args}, {NameConstants.CancellationTokenNone})"
                 : $"({args})";
 
+            // The lambda parameter (x) is emitted by AppendAutoSetIsBusyBlock
             return cmd.ExecuteOnBackgroundThread
                 ? $"Task.Run(() => {cmd.MethodName}{call})"
-                : $"x => {cmd.MethodName}{call}";
+                : $"{cmd.MethodName}{call}";
         }
 
         if (cmd.ExecuteOnBackgroundThread)
         {
+            // With SupportsCancellation the lambda provides the command's token
+            if (cmd.SupportsCancellation && hasCt)
+            {
+                return $"Task.Run(() => {cmd.MethodName}(cancellationToken), cancellationToken)";
+            }
+
             return hasCt
                 ? $"Task.Run(() => {cmd.MethodName}({NameConstants.CancellationTokenNone}))"
                 : $"Task.Run({cmd.MethodName})";
@@ -770,7 +904,11 @@ internal abstract class CommandBuilderBase : BuilderBase
 
         if (!cmd.ParameterValues.IsEmpty)
         {
-            return $"{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
+            // The command takes no parameter - the fixed values are passed in a lambda.
+            var negation = cmd.InvertCanExecute ? "!" : string.Empty;
+            return cmd.UsePropertyForCanExecute
+                ? $"() => {negation}{cmd.CanExecuteName}"
+                : $"() => {negation}{cmd.CanExecuteName}({cmd.GetParameterValuesAsCommaSeparated()})";
         }
 
         var types = cmd.ParameterTypes;
@@ -807,8 +945,9 @@ internal abstract class CommandBuilderBase : BuilderBase
             switch (filteredParameterTypes.Length)
             {
                 case 1:
+                    // A method group cannot be negated - wrap it in a lambda.
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"x => !{cmd.CanExecuteName}(x)"
                         : cmd.CanExecuteName;
                     break;
                 case > 1:
@@ -823,7 +962,7 @@ internal abstract class CommandBuilderBase : BuilderBase
 
                 default:
                     expr = cmd.InvertCanExecute
-                        ? $"!{cmd.CanExecuteName}"
+                        ? $"() => !{cmd.CanExecuteName}()"
                         : cmd.CanExecuteName;
                     break;
             }

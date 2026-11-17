@@ -5,15 +5,30 @@ namespace Atc.XamlToolkit.SourceGenerators.Models.ViewModel;
 /// the namespace, class name, and access modifier of the partial class that should
 /// gain the INPC scaffolding (event + RaisePropertyChanged + OnPropertyChanged + Set&lt;T&gt;).
 /// </summary>
+/// <param name="NamespaceName">The namespace of the target class.</param>
+/// <param name="ClassName">The name of the target class.</param>
+/// <param name="AccessModifier">The access modifier of the target class.</param>
 [SuppressMessage("Naming", "S101:Types should be named in PascalCase", Justification = "Name intentionally mirrors the System.ComponentModel.INotifyPropertyChanged interface for symmetry with the public attribute.")]
-internal sealed class INotifyPropertyChangedTarget(
-    string namespaceName,
-    string className,
-    string accessModifier)
+internal sealed record INotifyPropertyChangedTarget(
+    string NamespaceName,
+    string ClassName,
+    string AccessModifier)
 {
-    public string NamespaceName { get; } = namespaceName;
+    public string TypeParameterList { get; set; } = string.Empty;
 
-    public string ClassName { get; } = className;
+    public EquatableArray<string> ContainingTypeDeclarations { get; set; } = EquatableArray<string>.Empty;
 
-    public string AccessModifier { get; } = accessModifier;
+    public string? HintName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the class is sealed. Its helper methods are
+    /// then private: a protected member in a sealed class is reported by the compiler.
+    /// </summary>
+    public bool IsSealed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the generated members get XML summaries,
+    /// as asked for with <c>[assembly: GenerateDocumentationDefault]</c>.
+    /// </summary>
+    public bool GenerateDocumentation { get; set; }
 }

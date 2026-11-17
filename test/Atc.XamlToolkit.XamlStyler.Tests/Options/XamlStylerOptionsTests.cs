@@ -120,4 +120,43 @@ public sealed class XamlStylerOptionsTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void FindConfigFile_RelativePath_SearchesWorkingDirectoryAndAbove()
+    {
+        // Arrange - a config file in the working directory and a relative start directory below it
+        var workingDirectory = Directory.GetCurrentDirectory();
+        var relativeDir = Guid.NewGuid().ToString();
+        var configPath = Path.Combine(workingDirectory, "Settings.XamlStyler");
+        Directory.CreateDirectory(Path.Combine(workingDirectory, relativeDir));
+        File.WriteAllText(configPath, "{}");
+
+        try
+        {
+            // Act
+            var result = XamlStylerOptions.FindConfigFile(relativeDir);
+
+            // Assert
+            result.Should().NotBeNull();
+            Path.GetFullPath(result!).Should().Be(configPath);
+        }
+        finally
+        {
+            File.Delete(configPath);
+            Directory.Delete(Path.Combine(workingDirectory, relativeDir), true);
+        }
+    }
+
+    [Fact]
+    public void Clone_CopiesLineEnding()
+    {
+        // Arrange
+        var original = new XamlStylerOptions { LineEnding = LineEnding.LF };
+
+        // Act
+        var clone = original.Clone();
+
+        // Assert
+        clone.LineEnding.Should().Be(LineEnding.LF);
+    }
 }

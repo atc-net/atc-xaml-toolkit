@@ -27,7 +27,24 @@ internal sealed record ObservablePropertyToGenerate(
 
     public bool ValidatesOnChange { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the setter must compare with
+    /// <c>EqualityComparer&lt;T&gt;.Default</c> because the type has no <c>==</c> operator.
+    /// </summary>
+    public bool UseEqualityComparer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the C# modifier of the property's setter, e.g. <c>private</c>;
+    /// empty for a setter that is as accessible as the property.
+    /// </summary>
+    public string SetterAccessModifier { get; set; } = string.Empty;
+
     public EquatableArray<string> CustomAttributes { get; set; } = EquatableArray<string>.Empty;
+
+    /// <summary>
+    /// Gets or sets the namespaces the generated file must import for the copied attributes.
+    /// </summary>
+    public EquatableArray<string> RequiredNamespaces { get; set; } = EquatableArray<string>.Empty;
 
     public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
 }

@@ -71,4 +71,89 @@ public sealed class RelayCommandGenericTests
         // Assert
         Assert.Equal(expected, actual);
     }
+
+    [Theory]
+    [InlineData(true, "42")]
+    [InlineData(false, "7")]
+    [InlineData(false, "abc")]
+    public void CanExecute_ConvertsParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        var command = new RelayCommand<int>(_ => { }, number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void Execute_ConvertsStringParameter_WithInvariantCulture()
+    {
+        // Arrange - a XAML CommandParameter literal is culture-invariant text.
+        var originalCulture = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("da-DK");
+
+        try
+        {
+            var actual = 0d;
+            var command = new RelayCommand<double>(value => actual = value);
+
+            // Act
+            command.Execute("1.5");
+
+            // Assert
+            Assert.Equal(1.5, actual);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public void Execute_ConvertsStringParameter_ToEnum()
+    {
+        // Arrange
+        DayOfWeek? actual = null;
+        var command = new RelayCommand<DayOfWeek>(value => actual = value);
+
+        // Act
+        command.Execute("Friday");
+
+        // Assert
+        Assert.Equal(DayOfWeek.Friday, actual);
+    }
+
+    [Fact]
+    public void Execute_ConvertsStringParameter_ToNullableValueType()
+    {
+        // Arrange
+        int? actual = null;
+        var command = new RelayCommand<int?>(value => actual = value);
+
+        // Act
+        command.Execute("5");
+
+        // Assert
+        Assert.Equal(5, actual);
+    }
+
+    [Fact]
+    public void Execute_IsIgnored_WhenParameterHasWrongType_AndNoCanExecute()
+    {
+        // Arrange
+        var executed = false;
+        var command = new RelayCommand<string>(_ => executed = true);
+
+        // Act
+        var exception = Record.Exception(() => command.Execute(new object()));
+
+        // Assert
+        Assert.Null(exception);
+        Assert.False(executed);
+    }
 }

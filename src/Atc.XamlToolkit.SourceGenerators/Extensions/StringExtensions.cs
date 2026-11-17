@@ -230,6 +230,17 @@ public static class StringExtensions
         return value.Substring(0, value.Length - 1);
     }
 
+    /// <summary>
+    /// Prefixes the identifier with '@' when it is a C# keyword, e.g. a field named <c>@class</c>,
+    /// whose symbol name is <c>class</c>.
+    /// </summary>
+    /// <param name="identifier">The identifier as returned by a symbol's name.</param>
+    /// <returns>The identifier as it must be written in source code.</returns>
+    public static string EscapeKeyword(this string identifier)
+        => SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None
+            ? "@" + identifier
+            : identifier;
+
     public static string RemovePrefixFromField(this string fieldName)
     {
         if (fieldName is null)
@@ -317,13 +328,43 @@ public static class StringExtensions
 
             var argsStart = open + 1;
             var argList = typeName.Substring(argsStart, typeName.Length - argsStart - 1); // drop '>'
-            var args = SplitArguments(argList).Select(EnsureCSharpAliasIfNeededParse);
+            var args = SplitTypeArguments(argList).Select(EnsureCSharpAliasIfNeededParse);
 
             return outer + "<" + string.Join(", ", args) + ">";
         }
 
         // Plain (non‑generic) identifier
         return EnsureCSharpAliasIfNeededSimplifyToken(typeName);
+    }
+
+    // Splits a type argument list on the commas that are not nested in another
+    // type argument list, tuple or array rank specifier.
+    private static List<string> SplitTypeArguments(string value)
+    {
+        var args = new List<string>();
+        var depth = 0;
+        var start = 0;
+
+        for (var i = 0; i < value.Length; i++)
+        {
+            switch (value[i])
+            {
+                case '<' or '(' or '[':
+                    depth++;
+                    break;
+                case '>' or ')' or ']':
+                    depth--;
+                    break;
+                case ',' when depth == 0:
+                    args.Add(value.Substring(start, i - start).Trim());
+                    start = i + 1;
+                    break;
+            }
+        }
+
+        args.Add(value.Substring(start).Trim());
+
+        return args;
     }
 
     private static string EnsureCSharpAliasIfNeededSimplifyToken(string token)

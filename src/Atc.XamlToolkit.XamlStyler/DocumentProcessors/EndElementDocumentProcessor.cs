@@ -44,7 +44,10 @@ internal sealed class EndElementDocumentProcessor : IDocumentProcessor
         else if (elementProcessContext.Current.ContentType == ContentTypes.SingleLineTextOnly
             && !elementProcessContext.Current.IsMultlineStartTag)
         {
-            var bracketIndex = output.LastIndexOf('>');
+            // The text itself may contain '>', so use the recorded end of the start tag instead of searching for it.
+            var bracketIndex = elementProcessContext.Current.StartTagEndIndex >= 0
+                ? elementProcessContext.Current.StartTagEndIndex
+                : output.LastIndexOf('>');
             var text = output.Substring(bracketIndex + 1, output.Length - bracketIndex - 1).Trim();
 
             output.Length = bracketIndex + 1;

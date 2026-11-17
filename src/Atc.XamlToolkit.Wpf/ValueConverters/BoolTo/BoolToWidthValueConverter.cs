@@ -8,6 +8,8 @@ public sealed class BoolToWidthValueConverter :
 {
     public static readonly BoolToWidthValueConverter Instance = new();
 
+    private static readonly LengthConverter LengthConverter = new();
+
     public override double Convert(
         bool value,
         object? parameter,
@@ -24,17 +26,14 @@ public sealed class BoolToWidthValueConverter :
             return double.NaN;
         }
 
-        var s = parameter.ToString();
+        // The parameter is written in XAML, so it is read with the invariant culture - not the current one
+        var s = System.Convert.ToString(parameter, CultureInfo.InvariantCulture);
         if (s is null)
         {
             return 0;
         }
 
-        var lengthConverter = new LengthConverter();
-        var converted = lengthConverter.ConvertFromString(s);
-
-        return converted is not null &&
-               double.TryParse(converted.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
+        return LengthConverter.ConvertFromInvariantString(s) is double result
             ? result
             : 0;
     }

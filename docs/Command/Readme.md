@@ -57,6 +57,8 @@ private void Delete(Customer customer)
 
 The toolkit converts the `object?` parameter from the binding to `T` via `IConvertible` when possible. Conversion failures (overflow, wrong type, bad format) are caught — the command becomes a no-op rather than throwing — and async commands additionally route the conversion exception through the registered `IErrorHandler`.
 
+Text is converted with the invariant culture, as XAML literals are (`CommandParameter="1.5"` is 1.5 on every machine). Enum and nullable value types are supported (`"Edit"` for a `RelayCommand<Mode>`, `"5"` for a `RelayCommand<int?>`). `CanExecute` converts the parameter the same way as `Execute`. A parameter of another type that cannot be converted to `T` is ignored.
+
 **Null pass-through.** When the binding evaluates to `null` and `T` is a reference type, the toolkit invokes your delegate with `null`. The .NET runtime cannot distinguish `Customer` from `Customer?` (both resolve to the same `Type`), so the toolkit can't conditionally skip execution based on declared nullability — guard the parameter inside your delegate if `null` is unsafe. When `T` is a value type, a null parameter is replaced with `default(T)`.
 
 ### Async command with `IsBusy` + cancellation

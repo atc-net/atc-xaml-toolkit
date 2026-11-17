@@ -119,7 +119,8 @@ public class EventToCommandBehavior : Avalonia.Xaml.Interactivity.Behavior<Avalo
             throw new InvalidOperationException($"Event '{EventName}' not found on type '{AssociatedObject.GetType().Name}'");
         }
 
-        var methodInfo = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        // The handler is private, so it is looked up on this type - not on the type of a derived behavior
+        var methodInfo = typeof(EventToCommandBehavior).GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         eventHandler = Delegate.CreateDelegate(eventInfo.EventHandlerType!, this, methodInfo!);
         eventInfo.AddEventHandler(AssociatedObject, eventHandler);
     }

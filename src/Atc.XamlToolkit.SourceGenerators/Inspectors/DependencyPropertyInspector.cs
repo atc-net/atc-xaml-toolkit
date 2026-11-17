@@ -43,8 +43,8 @@ internal static class DependencyPropertyInspector<T>
         var classAttributes = classSymbol.GetAttributes();
         var propertyAttributes = classAttributes
             .Where(x =>
-                x.AttributeClass?.Name == primaryAttributeName ||
-                x.AttributeClass?.Name == secondaryAttributeName);
+                x.GetToolkitAttributeName() == primaryAttributeName ||
+                x.GetToolkitAttributeName() == secondaryAttributeName);
 
         return FrameworkElementInspectorHelper.InspectPropertyAttributes<T>(
             classSymbol,
@@ -81,8 +81,8 @@ internal static class DependencyPropertyInspector<T>
             var fieldAttributes = fieldSymbol.GetAttributes();
             var fieldPropertyAttribute = fieldAttributes
                 .FirstOrDefault(x =>
-                    x.AttributeClass?.Name == primaryAttributeName ||
-                    x.AttributeClass?.Name == secondaryAttributeName);
+                    x.GetToolkitAttributeName() == primaryAttributeName ||
+                    x.GetToolkitAttributeName() == secondaryAttributeName);
 
             if (fieldPropertyAttribute is null)
             {

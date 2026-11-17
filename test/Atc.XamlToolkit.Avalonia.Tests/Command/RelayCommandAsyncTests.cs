@@ -77,6 +77,117 @@ public sealed class RelayCommandAsyncTests
         Assert.Equal(expected, actual);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_SetsIsExecuting_WhileRunning()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var isExecutingChangedCount = 0;
+
+        using var command = new RelayCommandAsync(() => gate.Task);
+        command.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == "IsExecuting")
+            {
+                isExecutingChangedCount++;
+            }
+        };
+
+        // Act
+        var task = command.ExecuteAsync(null);
+
+        // Assert
+        Assert.True(command.IsExecuting);
+        Assert.False(command.CanExecute(null));
+
+        gate.SetResult();
+        await task;
+
+        Assert.False(command.IsExecuting);
+        Assert.True(command.CanExecute(null));
+        Assert.Equal(2, isExecutingChangedCount);
+    }
+
+    [Fact]
+    public async Task Execute_IsIgnored_WhileExecuteAsyncRuns()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var executeCount = 0;
+
+        using var command = new RelayCommandAsync(() =>
+        {
+            executeCount++;
+            return gate.Task;
+        });
+
+        // Act
+        var task = command.ExecuteAsync(null);
+        ((System.Windows.Input.ICommand)command).Execute(null);
+
+        gate.SetResult();
+        await task;
+
+        // Assert
+        Assert.Equal(1, executeCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CancelThenRestart_CancelsOnlyPreviousRun()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync(cancellationToken =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        // Act
+        var first = command.ExecuteAsync(null);
+        command.Cancel();
+        var second = command.ExecuteAsync(null);
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.False(tokens[1].IsCancellationRequested);
+        Assert.True(command.IsExecuting);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+
+        Assert.False(command.IsExecuting);
+    }
+
+    [Fact]
+    public async Task Cancel_CancelsEveryRunningExecution_WhenRunsOverlap()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync(cancellationToken =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        var first = command.ExecuteAsync(null);
+        var second = command.ExecuteAsync(null);
+
+        // Act
+        command.Cancel();
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.True(tokens[1].IsCancellationRequested);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+    }
+
     private static Task MyTask()
         => Task.Delay(1);
 

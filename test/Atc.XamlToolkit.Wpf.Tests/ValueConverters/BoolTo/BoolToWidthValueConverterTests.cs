@@ -18,6 +18,35 @@ public sealed class BoolToWidthValueConverterTests
             expected,
             converter.Convert(input, targetType: null, parameter, culture: null));
 
+    [Theory]
+    [InlineData(10.5, "10.5", "en-US")]
+    [InlineData(10.5, "10.5", "da-DK")]
+    [InlineData(10.5, 10.5, "da-DK")]
+    [InlineData(96, "1in", "en-US")]
+    [InlineData(96, "1in", "da-DK")]
+    [InlineData(144, "1.5in", "da-DK")]
+    public void Convert_IsIndependentOfCurrentCulture(
+        double expected,
+        object parameter,
+        string cultureName)
+    {
+        // Arrange
+        var originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+        try
+        {
+            // Act
+            var actual = converter.Convert(value: true, targetType: null, parameter, culture: null);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
     [Fact]
     public void ConvertBack_Should_Throw_Exception()
     {

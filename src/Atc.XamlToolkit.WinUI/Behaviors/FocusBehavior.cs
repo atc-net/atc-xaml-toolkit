@@ -169,13 +169,21 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
 
     private void SetFocus()
     {
-        if (AssociatedObject is not null)
+        // Capture the element: the behavior can be detached before the deferred callback runs
+        var target = AssociatedObject;
+        if (target is not null)
         {
-            AssociatedObject.DispatcherQueue.TryEnqueue(
+            target.DispatcherQueue.TryEnqueue(
                 Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,
                 () =>
                 {
-                    AssociatedObject.Focus(FocusState.Programmatic);
+                    // The request is dropped when the behavior was detached (or moved) in the meantime
+                    if (!ReferenceEquals(AssociatedObject, target))
+                    {
+                        return;
+                    }
+
+                    target.Focus(FocusState.Programmatic);
                 });
         }
     }

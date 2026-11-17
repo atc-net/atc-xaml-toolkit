@@ -835,10 +835,22 @@ private void NavigateUp(object parameter)
 }
 ```
 
+## Key Event Routing per Platform
+
+The behavior listens for a different key event on each platform, so the same XAML can behave differently when a child control (for example a `TextBox`) also handles the key:
+
+| Platform | Event | When the behavior sees the key |
+|---|---|---|
+| WPF | `PreviewKeyDown` (tunnelling) | Before child controls. A child cannot stop the behavior from seeing the key. |
+| WinUI | `KeyDown` (bubbling), also for handled events | After child controls, and also when a child has marked the key as handled. |
+| Avalonia | `KeyDown` (bubbling) | After child controls, and only when no child has marked the key as handled. |
+
+Setting `e.Handled = true` in a command (as shown above) marks the key as handled for the rest of its route on all three platforms.
+
 ## Performance Considerations
 
 - **Lightweight behavior** - Minimal overhead on UI thread
-- **Event handling** - Uses PreviewKeyDown for early interception
+- **Event handling** - Listens for the key event on the associated element; when in the route it sees the key differs per platform (see below)
 - **Command execution** - Only executes when CanExecute returns true
 - **Works with virtualization** - Compatible with virtualized controls
 

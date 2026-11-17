@@ -37,6 +37,12 @@ internal static class ViewModelGeneratorHelper
             return false;
         }
 
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
+        {
+            return false;
+        }
+
         // Accept 'if' has base list (might be inheriting from ViewModelBase/ObservableObject)
         // This is important for multi-file scenarios where base list and attributes are in different files
         if (classDeclaration.BaseList is not null)
@@ -157,7 +163,13 @@ internal static class ViewModelGeneratorHelper
             }
         }
 
-        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
+        // A class that ObservableDtoViewModelGenerator emits is owned by that generator,
+        // which also emits its [ObservableProperty] and [RelayCommand] members. When it emits
+        // nothing for the class (no base class, or a DTO without properties), they stay here.
+        if (ObservableDtoViewModelGeneratorHelper.EmitsClass(context.SemanticModel.Compilation, classSymbol))
+        {
+            return null;
+        }
 
         var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
 
@@ -173,24 +185,13 @@ internal static class ViewModelGeneratorHelper
         var allRelayCommands = new List<RelayCommandToGenerate>();
         var allComputedProperties = new List<ComputedPropertyToGenerate>();
 
-        foreach (var partialClassSyntax in allPartialDeclarations)
+        // The symbol covers every partial declaration of the class, so one inspection is enough.
+        var result = ViewModelInspector.Inspect(
+            classSymbol,
+            inheritFromViewModel);
+
+        if (result.FoundAnythingToGenerate)
         {
-            if (context.SemanticModel.Compilation
-                    .GetSemanticModel(partialClassSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(partialClassSyntax) is not { } partialClassSymbol)
-            {
-                continue;
-            }
-
-            var result = ViewModelInspector.Inspect(
-                partialClassSymbol,
-                inheritFromViewModel);
-
-            if (!result.FoundAnythingToGenerate)
-            {
-                continue;
-            }
-
             result.ApplyCommandsAndProperties(
                 allObservableProperties,
                 allRelayCommands,
@@ -206,12 +207,17 @@ internal static class ViewModelGeneratorHelper
         ComputedPropertyInspector.LinkToObservableProperties(allObservableProperties, allComputedProperties);
 
         return new ViewModelToGenerate(
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform(),
             PropertiesToGenerate: new EquatableArray<ObservablePropertyToGenerate>(allObservableProperties.ToArray()),
-            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()))
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>
@@ -228,6 +234,12 @@ internal static class ViewModelGeneratorHelper
         }
 
         if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
         {
             return false;
         }
@@ -252,6 +264,13 @@ internal static class ViewModelGeneratorHelper
             return null;
         }
 
+        // The syntax predicate only knows the attribute's name. Another MVVM library has an
+        // attribute of the same name, which is none of this generator's business.
+        if (!ClassHasINotifyPropertyChangedAttribute(classSymbol))
+        {
+            return null;
+        }
+
         // Only emit once per type — pick the first qualifying partial declaration.
         foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
         {
@@ -269,9 +288,16 @@ internal static class ViewModelGeneratorHelper
         }
 
         return new INotifyPropertyChangedTarget(
-            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
-            className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier());
+            NamespaceName: classSymbol.GetNamespaceName(),
+            ClassName: classSymbol.Name,
+            AccessModifier: classSymbol.GetAccessModifier())
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+            IsSealed = classSymbol.IsSealed,
+            GenerateDocumentation = FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol),
+        };
     }
 
     /// <summary>
@@ -312,7 +338,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in classSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.INotifyPropertyChanged
                 or NameConstants.INotifyPropertyChangedAttribute)
             {
@@ -335,7 +361,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in fieldSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.ObservableProperty
                 or NameConstants.ObservablePropertyAttribute)
             {
@@ -356,7 +382,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in fieldSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name is not (
+            if (attribute.GetToolkitAttributeName() is not (
                 NameConstants.ObservableProperty
                 or NameConstants.ObservablePropertyAttribute))
             {
@@ -386,7 +412,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.RelayCommand
                 or NameConstants.RelayCommandAttribute)
             {
@@ -411,7 +437,7 @@ internal static class ViewModelGeneratorHelper
 
         foreach (var attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name is not (
+            if (attribute.GetToolkitAttributeName() is not (
                 NameConstants.RelayCommand
                 or NameConstants.RelayCommandAttribute))
             {

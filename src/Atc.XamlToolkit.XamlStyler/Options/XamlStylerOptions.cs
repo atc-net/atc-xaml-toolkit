@@ -152,7 +152,11 @@ public sealed class XamlStylerOptions : IXamlStylerOptions
     public XamlStylerOptions Clone()
     {
         var json = JsonSerializer.Serialize(this, JsonOptions);
-        return JsonSerializer.Deserialize<XamlStylerOptions>(json, JsonOptions) ?? new XamlStylerOptions();
+        var clone = JsonSerializer.Deserialize<XamlStylerOptions>(json, JsonOptions) ?? new XamlStylerOptions();
+
+        // LineEnding is not part of the JSON configuration ([JsonIgnore]), so copy it explicitly.
+        clone.LineEnding = LineEnding;
+        return clone;
     }
 
     /// <summary>
@@ -172,6 +176,15 @@ public sealed class XamlStylerOptions : IXamlStylerOptions
     /// <returns>The path to the configuration file, or null if not found.</returns>
     public static string? FindConfigFile(string startPath)
     {
+        if (string.IsNullOrWhiteSpace(startPath))
+        {
+            return null;
+        }
+
+        // Resolve relative paths first; otherwise the walk ends at the first path segment
+        // and never reaches the working directory or its parents.
+        startPath = Path.GetFullPath(startPath);
+
         var directory = File.Exists(startPath)
             ? Path.GetDirectoryName(startPath)
             : startPath;

@@ -39,6 +39,27 @@ public sealed class RelayCommandAsyncGenericTests
         Assert.Equal(expected, canExecuteChangedCalled);
     }
 
+    [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
+    public void RaiseCanExecuteChanged_WithoutCanExecute_NotifiesSubscribers()
+    {
+        // Arrange
+        var canExecuteChangedCalled = 0;
+        var canExecuteChangedEventHandler = new EventHandler((_, _) => canExecuteChangedCalled++);
+
+        using var command = new RelayCommandAsync<string>(_ => MyTask());
+        command.CanExecuteChanged += canExecuteChangedEventHandler;
+
+        // Act
+        command.RaiseCanExecuteChanged();
+
+        // Forces processing of CommandManager.InvalidateRequerySuggested by dispatching an empty action at background priority.
+        _ = Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
+
+        // Assert
+        Assert.Equal(1, canExecuteChangedCalled);
+    }
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, false)]
@@ -117,6 +138,217 @@ public sealed class RelayCommandAsyncGenericTests
 
         handled.Should().NotBeNull();
         handled.Should().BeOfType<OverflowException>();
+    }
+
+    [Theory]
+    [InlineData(true, "go")]
+    [InlineData(false, "stop")]
+    [InlineData(false, null)]
+    public void CanExecute_PassesParameter(
+        bool expected,
+        string? parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<string>(_ => MyTask(), text => text == "go");
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, 42)]
+    [InlineData(false, 7)]
+    [InlineData(false, null)]
+    public void CanExecute_PassesParameter_ValueType(
+        bool expected,
+        object? parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<int>(_ => MyTask(), number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, "42")]
+    [InlineData(false, "7")]
+    [InlineData(false, "abc")]
+    public void CanExecute_ConvertsParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        using var command = new RelayCommandAsync<int>(_ => MyTask(), number => number == 42);
+
+        // Act
+        var actual = command.CanExecute(parameter);
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(true, "go")]
+    [InlineData(false, "stop")]
+    public void Execute_UsesCanExecuteWithParameter(
+        bool expected,
+        string parameter)
+    {
+        // Arrange
+        var executed = false;
+        using var command = new RelayCommandAsync<string>(
+            _ =>
+            {
+                executed = true;
+                return Task.CompletedTask;
+            },
+            text => text == "go");
+
+        // Act
+        command.Execute(parameter);
+
+        // Assert
+        Assert.Equal(expected, executed);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SetsIsExecuting_WhileRunning()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var isExecutingChangedCount = 0;
+
+        using var command = new RelayCommandAsync<string>(_ => gate.Task);
+        command.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == "IsExecuting")
+            {
+                isExecutingChangedCount++;
+            }
+        };
+
+        // Act
+        var task = command.ExecuteAsync("x");
+
+        // Assert
+        Assert.True(command.IsExecuting);
+        Assert.False(command.CanExecute("x"));
+
+        gate.SetResult();
+        await task;
+
+        Assert.False(command.IsExecuting);
+        Assert.True(command.CanExecute("x"));
+        Assert.Equal(2, isExecutingChangedCount);
+    }
+
+    [Fact]
+    public async Task Execute_IsIgnored_WhileExecuteAsyncRuns()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var executeCount = 0;
+
+        using var command = new RelayCommandAsync<string>(_ =>
+        {
+            executeCount++;
+            return gate.Task;
+        });
+
+        // Act
+        var task = command.ExecuteAsync("x");
+        ((System.Windows.Input.ICommand)command).Execute("x");
+
+        gate.SetResult();
+        await task;
+
+        // Assert
+        Assert.Equal(1, executeCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CancelThenRestart_CancelsOnlyPreviousRun()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync<string>((_, cancellationToken) =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        // Act
+        var first = command.ExecuteAsync("x");
+        command.Cancel();
+        var second = command.ExecuteAsync("x");
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.False(tokens[1].IsCancellationRequested);
+        Assert.True(command.IsExecuting);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+
+        Assert.False(command.IsExecuting);
+    }
+
+    [Fact]
+    public void Execute_IsIgnored_WhenParameterHasWrongType_AndNoCanExecute()
+    {
+        // Arrange
+        var executed = false;
+        var errorHandler = Substitute.For<IErrorHandler>();
+        using var command = new RelayCommandAsync<string>(
+            _ =>
+            {
+                executed = true;
+                return Task.CompletedTask;
+            },
+            errorHandler: errorHandler);
+
+        // Act
+        ((System.Windows.Input.ICommand)command).Execute(new object());
+
+        // Assert
+        Assert.False(executed);
+        errorHandler.DidNotReceive().HandleError(Arg.Any<Exception>());
+    }
+
+    [Fact]
+    public async Task Cancel_CancelsEveryRunningExecution_WhenRunsOverlap()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync<string>((_, cancellationToken) =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        var first = command.ExecuteAsync("x");
+        var second = command.ExecuteAsync("x");
+
+        // Act
+        command.Cancel();
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.True(tokens[1].IsCancellationRequested);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
     }
 
     private delegate void OpDelegate(string op);

@@ -35,7 +35,7 @@ internal static class ObservablePropertyInspector
             var fieldSymbolAttributes = fieldSymbol.GetAttributes();
 
             var fieldPropertyAttribute = fieldSymbolAttributes
-                .FirstOrDefault(x => x.AttributeClass?.Name
+                .FirstOrDefault(x => x.GetToolkitAttributeName()
                     is NameConstants.ObservablePropertyAttribute
                     or NameConstants.ObservableProperty);
 
@@ -67,7 +67,7 @@ internal static class ObservablePropertyInspector
 
         foreach (var attribute in assemblySymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.GenerateDocumentationDefault
                 or NameConstants.GenerateDocumentationDefaultAttribute)
             {
@@ -87,7 +87,10 @@ internal static class ObservablePropertyInspector
         bool generateDocumentationDefault,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
-        var backingFieldName = fieldSymbol.Name;
+        // A field named 'value' would be hidden by the setter's implicit parameter.
+        var backingFieldName = fieldSymbol.Name == "value"
+            ? "this.value"
+            : fieldSymbol.Name.EscapeKeyword();
         var propertyType = fieldSymbol.Type.ToString();
 
         var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();
@@ -96,7 +99,7 @@ internal static class ObservablePropertyInspector
             ? nameValue!
                 .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper()
-            : backingFieldName
+            : fieldSymbol.Name
                 .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper();
 
@@ -125,7 +128,8 @@ internal static class ObservablePropertyInspector
                     or NameConstants.UseIsDirty
                     or NameConstants.IsRequired
                     or NameConstants.GeneratePartialHooks
-                    or NameConstants.GenerateDocumentation)
+                    or NameConstants.GenerateDocumentation
+                    or NameConstants.SetterAccessModifier)
                 {
                     continue;
                 }
@@ -183,7 +187,7 @@ internal static class ObservablePropertyInspector
 
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is not NameConstants.NotifyPropertyChangedForAttribute
                 and not NameConstants.NotifyPropertyChangedFor)
             {
@@ -207,7 +211,7 @@ internal static class ObservablePropertyInspector
         List<string>? extraCommandNames = null;
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is not NameConstants.NotifyCanExecuteChangedForAttribute
                 and not NameConstants.NotifyCanExecuteChangedFor)
             {
@@ -239,7 +243,7 @@ internal static class ObservablePropertyInspector
         var validatesOnChange = false;
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is NameConstants.NotifyDataErrorInfoAttribute
                 or NameConstants.NotifyDataErrorInfo)
             {
@@ -249,6 +253,17 @@ internal static class ObservablePropertyInspector
         }
 
         var customAttributes = fieldSymbol.ExtractCustomAttributes();
+
+        // The copied attributes are written as in the user's file, so their namespaces are imported.
+        var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
+        if (customAttributes is not null)
+        {
+            foreach (var attr in fieldSymbolAttributes)
+            {
+                attr.AddRequiredNamespacesTo(requiredNamespaces);
+            }
+        }
+
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
         propertiesToGenerate.Add(
@@ -268,7 +283,10 @@ internal static class ObservablePropertyInspector
                 GeneratePartialHooks = generatePartialHooks,
                 GenerateDocumentation = generateDocumentation,
                 ValidatesOnChange = validatesOnChange,
+                UseEqualityComparer = !fieldSymbol.Type.SupportsEqualityOperator(),
+                SetterAccessModifier = fieldSymbol.ContainingType.NarrowAccessModifier(fieldPropertyAttribute.ExtractSetterAccessModifier()),
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
+                RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray()),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
             });
     }

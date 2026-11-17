@@ -6,7 +6,8 @@ internal static class NamedTypeSymbolExtensions
 {
     public static List<DtoPropertyInfo> ExtractProperties(
         this INamedTypeSymbol namedTypeSymbol,
-        List<string>? ignorePropertyNames = null)
+        List<string>? ignorePropertyNames = null,
+        IAssemblySymbol? accessingAssembly = null)
     {
         var ignoreSet = ignorePropertyNames is not null
             ? new HashSet<string>(ignorePropertyNames, StringComparer.Ordinal)
@@ -42,20 +43,41 @@ internal static class NamedTypeSymbolExtensions
                 var isRecordParameter = isRecord &&
                                         primaryConstructorParameters.Contains(p.Name);
 
-                var isReadOnly = p.SetMethod is null;
+                // A setter the view model cannot call makes the property read-only.
+                // Init-only record parameters are still writable through a 'with' expression.
+                var isReadOnly = p.SetMethod is null ||
+                                 !IsCallableFromAnotherType(p.SetMethod, accessingAssembly) ||
+                                 (p.SetMethod.IsInitOnly && !isRecordParameter);
                 var attributes = p.ExtractPropertyAttributes();
                 var documentationComments = p.ExtractPropertyDocumentationComments();
 
                 return new DtoPropertyInfo(
-                    p.Name,
+                    p.Name.EscapeKeyword(),
                     p.Type.ToString(),
                     isRecordParameter,
                     isReadOnly,
                     new EquatableArray<string>(attributes.ToArray()),
-                    new EquatableArray<string>(documentationComments?.ToArray() ?? []));
+                    new EquatableArray<string>(documentationComments?.ToArray() ?? []))
+                {
+                    UseEqualityComparer = !p.Type.SupportsEqualityOperator(),
+                    RequiredNamespaces = p.ExtractPropertyAttributeNamespaces(),
+                };
             })
             .ToList();
     }
+
+    // Public always; internal (and protected internal) when the caller is in the same assembly.
+    private static bool IsCallableFromAnotherType(
+        IMethodSymbol methodSymbol,
+        IAssemblySymbol? accessingAssembly)
+        => methodSymbol.DeclaredAccessibility switch
+        {
+            Accessibility.Public => true,
+            Accessibility.Internal or Accessibility.ProtectedOrInternal =>
+                accessingAssembly is not null &&
+                SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, accessingAssembly),
+            _ => false,
+        };
 
     public static List<DtoMethodInfo> ExtractMethods(
         this INamedTypeSymbol namedTypeSymbol,
@@ -71,13 +93,17 @@ internal static class NamedTypeSymbolExtensions
             .Where(m => m.DeclaredAccessibility == Accessibility.Public &&
                         m is { IsStatic: false, MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false } &&
                         m.Name != "ToString" &&
+                        !m.IsGenericMethod &&
+                        !OverridesObjectMember(m) &&
                         !ignoreSet.Contains(m.Name))
             .Select(m =>
             {
                 var parameters = m.Parameters
                     .Select(p => new DtoMethodParameterInfo(
                         p.Name,
-                        p.Type.ToString()))
+                        p.Type.ToString(),
+                        GetParameterModifier(p),
+                        GetParameterDefaultValue(p)))
                     .ToArray();
 
                 return new DtoMethodInfo(
@@ -87,6 +113,195 @@ internal static class NamedTypeSymbolExtensions
             })
             .ToList();
     }
+
+    // Equals(object) and GetHashCode() overrides cannot be forwarded without 'override'.
+    private static bool OverridesObjectMember(IMethodSymbol methodSymbol)
+    {
+        if (!methodSymbol.IsOverride)
+        {
+            return false;
+        }
+
+        var rootMethod = methodSymbol;
+        while (rootMethod.OverriddenMethod is not null)
+        {
+            rootMethod = rootMethod.OverriddenMethod;
+        }
+
+        return rootMethod.ContainingType.SpecialType == SpecialType.System_Object;
+    }
+
+    private static string GetParameterModifier(IParameterSymbol parameterSymbol)
+    {
+        if (parameterSymbol.IsParams)
+        {
+            return "params";
+        }
+
+        return parameterSymbol.RefKind switch
+        {
+            RefKind.Ref => "ref",
+            RefKind.Out => "out",
+            RefKind.In => "in",
+            _ => string.Empty,
+        };
+    }
+
+    // SymbolDisplay.FormatPrimitive drops the suffix of a decimal or float literal and
+    // writes NaN and the infinities as bare words, none of which compiles.
+    private static string FormatLiteral(object value)
+        => value switch
+        {
+            decimal d => d.ToString(CultureInfo.InvariantCulture) + "m",
+            float f when float.IsNaN(f) => "float.NaN",
+            float f when float.IsPositiveInfinity(f) => "float.PositiveInfinity",
+            float f when float.IsNegativeInfinity(f) => "float.NegativeInfinity",
+            float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
+            double d when double.IsNaN(d) => "double.NaN",
+            double d when double.IsPositiveInfinity(d) => "double.PositiveInfinity",
+            double d when double.IsNegativeInfinity(d) => "double.NegativeInfinity",
+            _ => SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false) ?? "default",
+        };
+
+    private static string? GetParameterDefaultValue(
+        IParameterSymbol parameterSymbol)
+    {
+        if (!parameterSymbol.HasExplicitDefaultValue)
+        {
+            return null;
+        }
+
+        var type = parameterSymbol.Type;
+        var isNullableValueType = type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+
+        var value = parameterSymbol.ExplicitDefaultValue;
+        if (value is null)
+        {
+            return type.IsReferenceType || isNullableValueType
+                ? "null"
+                : "default";
+        }
+
+        var literal = FormatLiteral(value);
+
+        if (isNullableValueType && type is INamedTypeSymbol { TypeArguments.Length: 1 } nullableType)
+        {
+            type = nullableType.TypeArguments[0];
+        }
+
+        // The default value of an enum parameter is its underlying number.
+        return type.TypeKind == TypeKind.Enum
+            ? $"({type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})({literal})"
+            : literal;
+    }
+
+    /// <summary>
+    /// Gets the namespace of the type; empty for a type in the global namespace.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The namespace name, or an empty string.</returns>
+    public static string GetNamespaceName(this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace
+            ? containingNamespace.ToDisplayString()
+            : string.Empty;
+
+    /// <summary>
+    /// Gets the type parameter list of the type, e.g. <c>&lt;TKey, TValue&gt;</c>;
+    /// empty for a non-generic type.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The type parameter list, or an empty string.</returns>
+    public static string GetTypeParameterList(
+        this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol.TypeParameters.Length == 0
+            ? string.Empty
+            : $"<{string.Join(", ", namedTypeSymbol.TypeParameters.Select(x => x.Name.EscapeKeyword()))}>";
+
+    /// <summary>
+    /// Gets the partial declarations of the types the type is nested in, outermost first.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The declarations, e.g. <c>partial class Outer&lt;T&gt;</c>.</returns>
+    public static EquatableArray<string> GetContainingTypeDeclarations(
+        this INamedTypeSymbol namedTypeSymbol)
+    {
+        var declarations = new List<string>();
+
+        for (var containingType = namedTypeSymbol.ContainingType;
+             containingType is not null;
+             containingType = containingType.ContainingType)
+        {
+            var keyword = containingType.TypeKind switch
+            {
+                TypeKind.Struct => containingType.IsRecord ? "record struct" : "struct",
+                TypeKind.Interface => "interface",
+                _ => containingType.IsRecord ? "record" : "class",
+            };
+
+            declarations.Insert(0, $"partial {keyword} {containingType.Name.EscapeKeyword()}{containingType.GetTypeParameterList()}");
+        }
+
+        return new EquatableArray<string>(declarations.ToArray());
+    }
+
+    /// <summary>
+    /// Gets a file name stem that is unique for the type: namespace, containing types and
+    /// name, where generic types get their arity appended (<c>Name`1</c>).
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The hint name without extension.</returns>
+    public static string GetHintName(this INamedTypeSymbol namedTypeSymbol)
+    {
+        var parts = new List<string>();
+
+        for (var type = namedTypeSymbol;
+             type is not null;
+             type = type.ContainingType)
+        {
+            parts.Insert(0, type.MetadataName);
+        }
+
+        var namespaceName = namedTypeSymbol.GetNamespaceName();
+        if (namespaceName.Length > 0)
+        {
+            parts.Insert(0, namespaceName);
+        }
+
+        // A hint name only takes a limited set of characters; a keyword-escaped namespace
+        // ("@event") and a file-local type (whose metadata name has '<' and '>') have others.
+        var hintName = new StringBuilder(string.Join(".", parts));
+        for (var i = 0; i < hintName.Length; i++)
+        {
+            var c = hintName[i];
+            if (!char.IsLetterOrDigit(c) && c is not ('.' or '_' or '`' or '-' or '+'))
+            {
+                hintName[i] = '_';
+            }
+        }
+
+        return hintName.ToString();
+    }
+
+    /// <summary>
+    /// Narrows a C# access modifier to what it means in a sealed class, where nothing can
+    /// derive: <c>protected</c> and <c>private protected</c> are <c>private</c>, and
+    /// <c>protected internal</c> is <c>internal</c>. The compiler reports a protected member
+    /// in a sealed class (CS0628).
+    /// </summary>
+    /// <param name="namedTypeSymbol">The class the member is generated in.</param>
+    /// <param name="modifier">The modifier; empty for public.</param>
+    /// <returns>The modifier to write.</returns>
+    public static string NarrowAccessModifier(
+        this INamedTypeSymbol namedTypeSymbol,
+        string modifier)
+        => namedTypeSymbol.IsSealed
+            ? modifier switch
+            {
+                "protected" or "private protected" => "private",
+                "protected internal" => "internal",
+                _ => modifier,
+            }
+            : modifier;
 
     public static string GetAccessModifier(
         this INamedTypeSymbol namedTypeSymbol)
@@ -103,7 +318,7 @@ internal static class NamedTypeSymbolExtensions
         this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol
             .GetAttributes()
-            .FirstOrDefault(attr => attr.AttributeClass?.Name
+            .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                 is NameConstants.ObservableDtoViewModelAttribute
                 or NameConstants.ObservableDtoViewModel) is not null;
 
@@ -145,15 +360,6 @@ internal static class NamedTypeSymbolExtensions
         return false;
     }
 
-    [SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "OK")]
-    public static IList<ClassDeclarationSyntax> GetAllPartialClassDeclarations(
-        this INamedTypeSymbol classSymbol)
-        => classSymbol
-            .DeclaringSyntaxReferences
-            .Select(r => r.GetSyntax())
-            .OfType<ClassDeclarationSyntax>()
-            .ToList();
-
     /// <summary>
     /// Checks if the class symbol inherits from ViewModelBase or ObservableObject.
     /// Since all partial declarations resolve to the same type symbol, checking
@@ -168,7 +374,7 @@ internal static class NamedTypeSymbolExtensions
     public static (bool HasAnyBase, bool HasViewModelBase) CheckBaseClasses(
         this INamedTypeSymbol classSymbol)
     {
-        if (classSymbol.InheritsFrom(
+        if (classSymbol.InheritsFromToolkitType(
                 NameConstants.ViewModelBase,
                 NameConstants.MainWindowViewModelBase,
                 NameConstants.ViewModelDialogBase))
@@ -176,14 +382,35 @@ internal static class NamedTypeSymbolExtensions
             return (true, true);
         }
 
-        return classSymbol.InheritsFrom(NameConstants.ObservableObject)
+        return classSymbol.InheritsFromToolkitType(NameConstants.ObservableObject)
             ? (true, false)
             : (false, false);
     }
 
+    // Like InheritsFrom, but a same-named base class of another library does not count.
+    private static bool InheritsFromToolkitType(
+        this INamedTypeSymbol namedTypeSymbol,
+        params string[] baseClassNames)
+    {
+        var baseType = namedTypeSymbol.BaseType;
+        while (baseType is not null)
+        {
+            if (baseClassNames.Contains(baseType.Name, StringComparer.Ordinal) &&
+                baseType.IsToolkitTypeOrUnresolved())
+            {
+                return true;
+            }
+
+            baseType = baseType.BaseType;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Checks if the class symbol is a valid framework element target for source generation.
-    /// This checks inheritance, naming conventions, and the presence of RoutedEvent attributes.
+    /// This checks inheritance, naming conventions, and the presence of one of the toolkit's
+    /// framework-element attributes on the class or on a member.
     /// </summary>
     /// <param name="classSymbol">The class symbol to check.</param>
     /// <returns>True if the class is a valid framework element target; otherwise, false.</returns>
@@ -205,11 +432,37 @@ internal static class NamedTypeSymbolExtensions
             return true;
         }
 
-        // Symbol-based check replaces SyntaxTree.ToString().Contains("[RoutedEvent")
-        return classSymbol.GetMembers()
-            .Any(m => m.GetAttributes()
-                .Any(a => a.AttributeClass?.Name
-                    is NameConstants.RoutedEventAttribute
-                    or NameConstants.RoutedEvent));
+        // One of the toolkit's framework-element attributes says what the class is,
+        // whatever it is called and whatever it derives from. [RelayCommand] is not in the
+        // list on purpose: on its own it marks a view model, which ViewModelGenerator handles.
+        return classSymbol.HasFrameworkElementAttribute();
     }
+
+    /// <summary>
+    /// Determines whether the class, or one of its members, carries one of the toolkit's
+    /// framework-element attributes.
+    /// </summary>
+    /// <param name="classSymbol">The class symbol to check.</param>
+    /// <returns>True if such an attribute is present; otherwise, false.</returns>
+    public static bool HasFrameworkElementAttribute(
+        this INamedTypeSymbol classSymbol)
+        => classSymbol.GetAttributes().Any(IsFrameworkElementAttribute) ||
+           classSymbol.GetMembers().Any(m => m.GetAttributes().Any(IsFrameworkElementAttribute));
+
+    private static bool IsFrameworkElementAttribute(AttributeData attributeData)
+        => attributeData.GetToolkitAttributeName()
+            is NameConstants.DependencyPropertyAttribute
+            or NameConstants.DependencyProperty
+            or NameConstants.AttachedPropertyAttribute
+            or NameConstants.AttachedProperty
+            or NameConstants.StyledPropertyAttribute
+            or NameConstants.StyledProperty
+            or NameConstants.RoutedEventAttribute
+            or NameConstants.RoutedEvent
+            or NameConstants.DefaultStyleKeyAttribute
+            or NameConstants.DefaultStyleKey
+            or NameConstants.TemplatePartFieldAttribute
+            or NameConstants.TemplatePartField
+            or NameConstants.UseDependencyPropertyTemplateAttribute
+            or NameConstants.UseDependencyPropertyTemplate;
 }

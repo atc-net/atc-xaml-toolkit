@@ -11,5 +11,9 @@
     <ProjectReference Include="..\..\src\Atc.XamlToolkit.Wpf\Atc.XamlToolkit.Wpf.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Atc.XUnit" Version="4.0.0" />
+  </ItemGroup>
+
 
 </Project>

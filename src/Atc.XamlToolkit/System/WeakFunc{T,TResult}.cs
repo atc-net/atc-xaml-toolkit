@@ -74,6 +74,9 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
 #endif
     }
 
+    /// <inheritdoc />
+    public override bool IsStatic => staticFunc is not null;
+
     /// <summary>
     /// Gets the name of the method that this WeakFunc represents.
     /// </summary>
@@ -135,7 +138,10 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
 
         return (TResult)localMethod.Invoke(
             funcTarget,
-            new object[] { parameter! })!;
+            BindingFlags.DoNotWrapExceptions,
+            binder: null,
+            new object[] { parameter! },
+            culture: null)!;
     }
 
     /// <summary>
@@ -158,7 +164,7 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     /// which is a signal for containing objects that this WeakFunc
     /// should be deleted.
     /// </summary>
-    public new void MarkForDeletion()
+    public override void MarkForDeletion()
     {
         staticFunc = null;
         base.MarkForDeletion();

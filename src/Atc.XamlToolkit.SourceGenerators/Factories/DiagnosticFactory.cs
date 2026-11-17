@@ -93,6 +93,64 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "WPF's RoutedEvent / EventManager.RegisterRoutedEvent infrastructure does not exist on WinUI 3 or Avalonia. The source generator therefore emits routed-event code only when the compilation references WPF. Without this diagnostic the [RoutedEvent] attribute would be silently inert on the wrong platform — the developer would expect an event to materialize and find nothing, with no build-time clue.");
 
+    private static readonly DiagnosticDescriptor DefaultStyleKeyOverrideNotCalledDescriptor =
+        new(
+            id: "AtcXamlToolkit0011",
+            title: "[DefaultStyleKey] override is not called",
+            messageFormat: "Class '{0}' is decorated with [DefaultStyleKey] and has a static constructor of its own, but that constructor does not call OverrideDefaultStyleKey(). Call it from the static constructor, or remove the constructor so that one is generated.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "A class can only have one static constructor. When a class with [DefaultStyleKey] declares its own, the source generator emits a private static OverrideDefaultStyleKey() method instead of a static constructor. If that method is never called, the default style key is not overridden and the control is shown without its default style.");
+
+    private static readonly DiagnosticDescriptor UnusablePropertyTemplateDescriptor = new(
+        id: "AtcXamlToolkit0012",
+        title: "The type cannot be used as a property template",
+        messageFormat: "'{0}' cannot be applied to '{1}' as a property template: it must be a class marked with [DependencyPropertyTemplate], declared in the same project, with at least one attributed field",
+        category: "Usage",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "[UseDependencyPropertyTemplate] takes a class marked with [DependencyPropertyTemplate] and generates its attributed fields in the annotated class. The source generator reads those fields from source, so the template has to be declared in the same project as the class that uses it. Nothing is generated for a type that is not a usable template.");
+
+    public static Diagnostic CreateUnusablePropertyTemplate(
+        string templateName,
+        string className)
+        => Diagnostic.Create(
+            UnusablePropertyTemplateDescriptor,
+            Location.None,
+            templateName,
+            className);
+
+    private static readonly DiagnosticDescriptor IgnoredOptionDescriptor = new(
+        id: "AtcXamlToolkit0013",
+        title: "The option has no effect",
+        messageFormat: "'{0}' on '{1}' in '{2}' has no effect: {3}",
+        category: "Usage",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "An option was set on a source generator attribute in a combination where it cannot be applied. The generator ignores it; remove the option, or change the combination, so the code says what is generated.");
+
+    public static Diagnostic CreateIgnoredOption(
+        string option,
+        string memberName,
+        string className,
+        string reason,
+        Location? location = null)
+        => Diagnostic.Create(
+            IgnoredOptionDescriptor,
+            location ?? Location.None,
+            option,
+            memberName,
+            className,
+            reason);
+
+    public static Diagnostic CreateDefaultStyleKeyOverrideNotCalled(
+        string className)
+        => Diagnostic.Create(
+            DefaultStyleKeyOverrideNotCalledDescriptor,
+            Location.None,
+            className);
+
     public static Diagnostic CreateContainsDuplicateNamesForRelayCommand()
         => Diagnostic.Create(
             new DiagnosticDescriptor(
@@ -104,10 +162,41 @@ internal static class DiagnosticFactory
                 isEnabledByDefault: true),
             Location.None);
 
+    private static readonly DiagnosticDescriptor MissingPartialKeywordOnFrameworkElementDescriptor =
+        new(
+            id: "AtcXamlToolkit0002",
+            title: "Class must be partial",
+            messageFormat: "Class '{0}' uses a source generator attribute such as [DependencyProperty], [AttachedProperty], [RoutedEvent], [DefaultStyleKey] or [TemplatePartField] but is not declared 'partial'. Add the 'partial' keyword so the source generator can emit the corresponding members.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "The source generator can only add members to a class that is declared partial. Without the 'partial' keyword it skips the class and the expected properties and events never exist.");
+
+    public static Diagnostic CreateMissingPartialKeywordOnFrameworkElement(
+        string className,
+        Location location)
+        => Diagnostic.Create(MissingPartialKeywordOnFrameworkElementDescriptor, location, className);
+
     public static Diagnostic CreateMissingPartialKeyword(
         string className,
         Location location)
         => Diagnostic.Create(MissingPartialKeywordDescriptor, location, className);
+
+    private static readonly DiagnosticDescriptor ObservablePropertyWithoutNotificationDescriptor =
+        new(
+            id: "AtcXamlToolkit0014",
+            title: "[ObservableProperty] needs a class that can raise PropertyChanged",
+            messageFormat: "Field '{0}' is decorated with [ObservableProperty], but class '{1}' neither derives from ObservableObject (or ViewModelBase) nor has [INotifyPropertyChanged]. No property is generated. Derive from ObservableObject, or add [INotifyPropertyChanged] to the class.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "The generated property calls RaisePropertyChanged, which comes from ObservableObject or from [INotifyPropertyChanged]. A class that implements INotifyPropertyChanged by hand, or derives from something else, has no such method the generator knows of, so it generates nothing for the class.");
+
+    public static Diagnostic CreateObservablePropertyWithoutNotification(
+        string fieldName,
+        string className,
+        Location location)
+        => Diagnostic.Create(ObservablePropertyWithoutNotificationDescriptor, location, fieldName, className);
 
     public static Diagnostic CreateObservablePropertyFieldNotPrivate(
         string fieldName,

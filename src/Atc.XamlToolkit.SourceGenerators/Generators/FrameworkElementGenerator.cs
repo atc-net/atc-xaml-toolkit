@@ -30,19 +30,16 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
                 .GroupBy(vm => vm!.GeneratedFileName, StringComparer.Ordinal)
                 .Select(static group => group.First())
                 .ToImmutableArray())
-            .WithTrackingName("FrameworkElementGenerator.Deduplicated");
+            .WithTrackingName("FrameworkElementGenerator.Deduplicated")
+            .SelectMany(static (viewModels, _) => viewModels);
 
+        // One output per class: an edit only regenerates the files of the classes whose model changed.
         context.RegisterSourceOutput(
             viewModelsToGenerate,
-            static (spc, sources) =>
-            {
-                foreach (var source in sources)
-                {
-                    Execute(spc, source);
-                }
-            });
+            static (spc, source) => Execute(spc, source));
 
         FrameworkElementGeneratorHelper.RegisterRoutedEventOnNonWpfDiagnostic(context);
+        FrameworkElementGeneratorHelper.RegisterMissingPartialDiagnostic(context);
     }
 
     /// <summary>
@@ -54,14 +51,20 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         SourceProductionContext context,
         FrameworkElementToGenerate? frameworkElementToGenerate)
     {
-        if (frameworkElementToGenerate is null)
+        if (frameworkElementToGenerate is null ||
+            !ReportProblems(context, frameworkElementToGenerate))
         {
             return;
         }
 
-        var frameworkElementBuilder = new FrameworkElementBuilder();
+        var frameworkElementBuilder = new FrameworkElementBuilder
+        {
+            XamlPlatform = frameworkElementToGenerate.XamlPlatform,
+        };
 
         frameworkElementBuilder.GenerateStart(frameworkElementToGenerate);
+
+        GenerateDefaultStyleKey(context, frameworkElementBuilder, frameworkElementToGenerate);
 
         if (frameworkElementToGenerate.AttachedPropertiesToGenerate.Count > 0)
         {
@@ -89,7 +92,12 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         if (frameworkElementToGenerate.RelayCommandsToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateRelayCommands(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
+
+            // The cancel methods the cancel commands call, and DisposeCommands().
+            frameworkElementBuilder.GenerateRelayCommandMethods(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
         }
+
+        frameworkElementBuilder.GenerateTemplateParts(frameworkElementToGenerate);
 
         frameworkElementBuilder.GenerateEnd();
 
@@ -98,5 +106,67 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         context.AddSource(
             frameworkElementToGenerate.GeneratedFileName,
             sourceText);
+    }
+
+    // Reports what was asked for but cannot be generated.
+    // Returns whether there is still code to emit for the class.
+    private static bool ReportProblems(
+        SourceProductionContext context,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        var className = frameworkElementToGenerate.ClassName;
+
+        foreach (var templateName in frameworkElementToGenerate.UnusablePropertyTemplates)
+        {
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateUnusablePropertyTemplate(templateName, className));
+        }
+
+        var ignoredOptions = frameworkElementToGenerate
+            .AttachedPropertiesToGenerate
+            .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation)))
+            .Concat(frameworkElementToGenerate
+                .DependencyPropertiesToGenerate
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation))))
+            .Concat(frameworkElementToGenerate
+                .RoutedEventsToGenerate
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation))));
+
+        foreach (var (memberName, ignoredOption, location) in ignoredOptions)
+        {
+            var separator = ignoredOption.IndexOf('|');
+
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateIgnoredOption(
+                    ignoredOption.Substring(0, separator),
+                    memberName,
+                    className,
+                    ignoredOption.Substring(separator + 1),
+                    location?.ToLocation()));
+        }
+
+        return frameworkElementToGenerate.HasAnythingToGenerate;
+    }
+
+    private static void GenerateDefaultStyleKey(
+        SourceProductionContext context,
+        FrameworkElementBuilder frameworkElementBuilder,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        if (frameworkElementToGenerate.DefaultStyleKey is not { } defaultStyleKey)
+        {
+            return;
+        }
+
+        frameworkElementBuilder.GenerateDefaultStyleKey(frameworkElementToGenerate);
+
+        // The class has a static constructor of its own, so only a method was generated.
+        // Unless that constructor calls it, the style key is never overridden.
+        if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.Wpf &&
+            defaultStyleKey is { HasOwnStaticConstructor: true, OwnStaticConstructorCallsOverride: false })
+        {
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateDefaultStyleKeyOverrideNotCalled(frameworkElementToGenerate.ClassName));
+        }
     }
 }
