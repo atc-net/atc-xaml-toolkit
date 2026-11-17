@@ -37,7 +37,7 @@ internal static class FrameworkElementInspectorHelper
 
             object? defaultValue = null;
 
-            var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue);
+            var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue, out var isNullableValueType);
 
             propertyAttribute.EscapeLiteralArgumentValues(argumentValues, type);
 
@@ -61,24 +61,27 @@ internal static class FrameworkElementInspectorHelper
                 out var generateDocumentation,
                 ref defaultValue);
 
-            propertiesToGenerate.Add(
-                BaseFrameworkElementPropertyToGenerate.Create<T>(
-                    classSymbol.IsStatic,
-                    ownerType,
-                    propertyName,
-                    type,
-                    isReadOnly,
-                    useNewKeyword,
-                    defaultValue,
-                    propertyChangedCallback,
-                    coerceValueCallback,
-                    validateValueCallback,
-                    flags,
-                    defaultUpdateSourceTrigger,
-                    isAnimationProhibited,
-                    category,
-                    description,
-                    generateDocumentation));
+            var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
+                classSymbol.IsStatic,
+                ownerType,
+                propertyName,
+                type,
+                isReadOnly,
+                useNewKeyword,
+                defaultValue,
+                propertyChangedCallback,
+                coerceValueCallback,
+                validateValueCallback,
+                flags,
+                defaultUpdateSourceTrigger,
+                isAnimationProhibited,
+                category,
+                description,
+                generateDocumentation);
+
+            propertyToGenerate.IsNullableValueType = isNullableValueType;
+
+            propertiesToGenerate.Add(propertyToGenerate);
         }
 
         return propertiesToGenerate;
@@ -150,6 +153,8 @@ internal static class FrameworkElementInspectorHelper
             category,
             description,
             generateDocumentation);
+
+        propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
         propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);

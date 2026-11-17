@@ -145,7 +145,7 @@ internal static class FrameworkElementBuilderExtensions
         {
             XamlPlatform.WinUI => "Microsoft.UI.Xaml.DependencyProperty",
             XamlPlatform.Avalonia when isAttached => "Avalonia.AvaloniaProperty",
-            XamlPlatform.Avalonia => $"StyledProperty<{p.Type.TrimNullableForTypeOf()}>",
+            XamlPlatform.Avalonia => $"StyledProperty<{p.TypeForTypeOf}>",
             _ => "DependencyProperty", // WPF
         };
 
@@ -160,8 +160,8 @@ internal static class FrameworkElementBuilderExtensions
         if (xamlPlatform == XamlPlatform.Avalonia)
         {
             var genericParams = isAttached
-                ? $"<{p.OwnerType.RemoveNullableSuffix()}, AvaloniaObject, {p.Type.TrimNullableForTypeOf()}>"
-                : $"<{p.OwnerType.RemoveNullableSuffix()}, {p.Type.TrimNullableForTypeOf()}>";
+                ? $"<{p.OwnerType.RemoveNullableSuffix()}, AvaloniaObject, {p.TypeForTypeOf}>"
+                : $"<{p.OwnerType.RemoveNullableSuffix()}, {p.TypeForTypeOf}>";
 
             // For non-attached properties (StyledProperty), use AvaloniaProperty.Register, not StyledProperty<T>.Register
             const string registrationClass = "Avalonia.AvaloniaProperty";
@@ -198,7 +198,7 @@ internal static class FrameworkElementBuilderExtensions
         // Skip typeof() lines for Avalonia (it uses generics instead)
         if (xamlPlatform != XamlPlatform.Avalonia)
         {
-            builder.AppendLine($"typeof({p.Type.TrimNullableForTypeOf()}),");
+            builder.AppendLine($"typeof({p.TypeForTypeOf}),");
         }
     }
 

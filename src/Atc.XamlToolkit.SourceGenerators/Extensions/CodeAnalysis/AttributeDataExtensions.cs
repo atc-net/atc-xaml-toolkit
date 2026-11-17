@@ -19,8 +19,11 @@ internal static class AttributeDataExtensions
 
     public static string ExtractClassFirstArgumentType(
         this AttributeData propertyAttribute,
-        ref object? defaultValue)
+        ref object? defaultValue,
+        out bool? isNullableValueType)
     {
+        isNullableValueType = null;
+
         var type = "int";
         if (propertyAttribute.AttributeClass is not { TypeArguments.Length: 1 })
         {
@@ -28,6 +31,7 @@ internal static class AttributeDataExtensions
         }
 
         var typeSymbol = propertyAttribute.AttributeClass.TypeArguments[0];
+        isNullableValueType = typeSymbol.IsNullableValueTypeOrUnknown();
         type = typeSymbol
             .ToDisplayString()
             .EnsureCSharpAliasIfNeeded();

@@ -20,6 +20,24 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
 {
     public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the type is a <c>Nullable&lt;T&gt;</c> value type,
+    /// a type where a trailing '?' is only a nullability annotation, or unknown (<c>null</c>).
+    /// </summary>
+    public bool? IsNullableValueType { get; set; }
+
+    /// <summary>
+    /// Gets the type as it must be written in a <c>typeof</c> expression or as a type argument:
+    /// a nullable value type keeps its '?', a nullable reference type loses it.
+    /// </summary>
+    public string TypeForTypeOf
+        => IsNullableValueType switch
+        {
+            true => Type,
+            false => Type.RemoveNullableSuffix(),
+            _ => Type.TrimNullableForTypeOf(),
+        };
+
     public bool HasAnyMetadata
         => DefaultValue is not null ||
            PropertyChangedCallback is not null ||
