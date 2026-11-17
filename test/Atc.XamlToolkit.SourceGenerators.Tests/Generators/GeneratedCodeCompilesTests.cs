@@ -373,6 +373,73 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void RelayCommand_CanExecuteOnPrefixedObservableField_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private bool _canSave;
+
+                [ObservableProperty]
+                private bool m_canOpen;
+
+                [RelayCommand(CanExecute = nameof(CanSave))]
+                private void Save()
+                {
+                }
+
+                [RelayCommand(CanExecute = nameof(CanOpen))]
+                private void Open(string path)
+                {
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
+    public void RelayCommand_CanExecuteOnInheritedProperty_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public abstract partial class BaseViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private bool canOpen;
+
+                public bool CanSave { get; set; }
+            }
+
+            public partial class TestViewModel : BaseViewModel
+            {
+                [RelayCommand(CanExecute = nameof(CanSave))]
+                private void Save()
+                {
+                }
+
+                [RelayCommand(CanExecute = nameof(CanOpen))]
+                private void Open()
+                {
+                }
+
+                [RelayCommand(CanExecute = nameof(IsBusy))]
+                private void Refresh()
+                {
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

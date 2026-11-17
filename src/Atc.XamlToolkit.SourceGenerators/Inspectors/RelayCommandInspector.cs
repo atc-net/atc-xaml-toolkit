@@ -30,6 +30,7 @@ internal static class RelayCommandInspector
                 }
 
                 AppendRelayCommandToGenerate(
+                    classSymbol,
                     methodSymbol,
                     memberSymbols,
                     attr,
@@ -55,6 +56,26 @@ internal static class RelayCommandInspector
             if (attribute.AttributeClass?.Name
                 is NameConstants.GenerateDocumentationDefault
                 or NameConstants.GenerateDocumentationDefaultAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // True when a base class declares the property, or an [ObservableProperty] field for it.
+    private static bool HasInheritedPropertyName(
+        INamedTypeSymbol classSymbol,
+        string name)
+    {
+        for (var baseType = classSymbol.BaseType;
+             baseType is not null;
+             baseType = baseType.BaseType)
+        {
+            var baseMemberSymbols = baseType.GetMembers();
+            if (baseMemberSymbols.HasPropertyName(name) ||
+                baseMemberSymbols.HasObservablePropertyOrFieldName(name))
             {
                 return true;
             }
@@ -106,6 +127,7 @@ internal static class RelayCommandInspector
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void AppendRelayCommandToGenerate(
+        INamedTypeSymbol classSymbol,
         IMethodSymbol methodSymbol,
         ImmutableArray<ISymbol> memberSymbols,
         AttributeData relayCommandAttribute,
@@ -146,7 +168,8 @@ internal static class RelayCommandInspector
         if (canExecuteName is not null)
         {
             usePropertyForCanExecute = memberSymbols.HasPropertyName(canExecuteName) ||
-                                       memberSymbols.HasObservablePropertyOrFieldName(canExecuteName);
+                                       memberSymbols.HasObservablePropertyOrFieldName(canExecuteName) ||
+                                       HasInheritedPropertyName(classSymbol, canExecuteName);
         }
 
         var parameterValues = ExtractParameterValues(relayCommandAttribute, relayCommandArgumentValues);

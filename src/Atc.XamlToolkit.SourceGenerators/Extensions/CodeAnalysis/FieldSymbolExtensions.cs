@@ -33,7 +33,7 @@ internal static class FieldSymbolExtensions
     public static bool HasObservableFieldName(
         this IFieldSymbol fieldSymbol,
         string name)
-        => fieldSymbol.Name == name.EnsureFirstCharacterToLower() &&
+        => fieldSymbol.Name.RemovePrefixFromField() == name.EnsureFirstCharacterToLower() &&
            fieldSymbol
                .GetAttributes()
                .FirstOrDefault(attr => attr.AttributeClass?.Name
