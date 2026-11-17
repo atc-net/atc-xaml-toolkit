@@ -1333,7 +1333,7 @@ internal static class FrameworkElementBuilderExtensions
         }
 
         var typeArgument = re.HandlerTypeArgument;
-        var accessModifier = re.IsOwnerTypeSealed ? "private" : "protected";
+        var accessModifier = re.RaiseMethodAccessModifier ?? (re.IsOwnerTypeSealed ? "private" : "protected");
 
         switch (re.HandlerSimpleName)
         {

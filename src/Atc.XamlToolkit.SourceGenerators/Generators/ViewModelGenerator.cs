@@ -155,6 +155,22 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
+    private static void AppendSummary(
+        StringBuilder sb,
+        INotifyPropertyChangedTarget target,
+        string indent,
+        string summary)
+    {
+        if (!target.GenerateDocumentation)
+        {
+            return;
+        }
+
+        sb.AppendLine($"{indent}    /// <summary>");
+        sb.AppendLine($"{indent}    /// {summary}");
+        sb.AppendLine($"{indent}    /// </summary>");
+    }
+
     private static void AppendINotifyPropertyChangedClass(
         StringBuilder sb,
         INotifyPropertyChangedTarget target,
@@ -165,17 +181,24 @@ public sealed class ViewModelGenerator : IIncrementalGenerator
             ? "T"
             : "TPropertyValue";
 
+        // A protected member in a sealed class is reported by the compiler (CS0628).
+        var helperAccessModifier = target.IsSealed ? "private" : "protected";
+
         sb.AppendLine($"{indent}{target.AccessModifier} partial class {target.ClassName}{target.TypeParameterList} : INotifyPropertyChanged");
         sb.AppendLine($"{indent}{{");
+        AppendSummary(sb, target, indent, "Occurs when a property value changes.");
         sb.AppendLine($"{indent}    public event PropertyChangedEventHandler? PropertyChanged;");
         sb.AppendLine();
-        sb.AppendLine($"{indent}    protected void RaisePropertyChanged([CallerMemberName] string? propertyName = null)");
+        AppendSummary(sb, target, indent, "Raises the <see cref=\"PropertyChanged\"/> event for a property.");
+        sb.AppendLine($"{indent}    {helperAccessModifier} void RaisePropertyChanged([CallerMemberName] string? propertyName = null)");
         sb.AppendLine($"{indent}        => PropertyChanged?.Invoke(this, Atc.XamlToolkit.Mvvm.PropertyChangedEventArgsCache.Get(propertyName));");
         sb.AppendLine();
-        sb.AppendLine($"{indent}    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)");
+        AppendSummary(sb, target, indent, "Raises the <see cref=\"PropertyChanged\"/> event for a property.");
+        sb.AppendLine($"{indent}    {helperAccessModifier} void OnPropertyChanged([CallerMemberName] string? propertyName = null)");
         sb.AppendLine($"{indent}        => RaisePropertyChanged(propertyName);");
         sb.AppendLine();
-        sb.AppendLine($"{indent}    protected bool Set<{setTypeParameter}>(ref {setTypeParameter} field, {setTypeParameter} newValue, [CallerMemberName] string? propertyName = null)");
+        AppendSummary(sb, target, indent, "Sets the field and raises the <see cref=\"PropertyChanged\"/> event when the value is different.");
+        sb.AppendLine($"{indent}    {helperAccessModifier} bool Set<{setTypeParameter}>(ref {setTypeParameter} field, {setTypeParameter} newValue, [CallerMemberName] string? propertyName = null)");
         sb.AppendLine($"{indent}    {{");
         sb.AppendLine($"{indent}        if (EqualityComparer<{setTypeParameter}>.Default.Equals(field, newValue))");
         sb.AppendLine($"{indent}        {{");

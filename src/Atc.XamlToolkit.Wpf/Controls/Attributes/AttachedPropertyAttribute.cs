@@ -6,6 +6,13 @@ namespace Atc.XamlToolkit.Controls.Attributes;
 public sealed class AttachedPropertyAttribute : DependencyPropertyBaseAttribute
 {
     /// <summary>
+    /// Gets or sets the name of the generated property. By default it is the name of the
+    /// field with its first letter in upper case. State it when the field cannot have that
+    /// name, for example because the class has locals or parameters of the same name.
+    /// </summary>
+    public string? PropertyName { get; set; }
+
+    /// <summary>
     /// Gets or sets the type of the element parameter of the generated <c>Get{Name}</c> and
     /// <c>Set{Name}</c> methods. The default is <c>DependencyObject</c>.
     /// </summary>

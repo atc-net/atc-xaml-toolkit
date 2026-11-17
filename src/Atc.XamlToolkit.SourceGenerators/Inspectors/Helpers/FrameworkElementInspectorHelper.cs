@@ -111,7 +111,7 @@ internal static class FrameworkElementInspectorHelper
             ApplyMetadataType(propertyToGenerate, metadataType, ignoredMetadataType);
             ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
-            ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
+            ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
             propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -142,6 +142,14 @@ internal static class FrameworkElementInspectorHelper
         }
 
         propertyName = propertyName.EnsureFirstCharacterToUpper();
+
+        // PropertyName names the property independently of the field.
+        var statedPropertyName = propertyAttribute.ExtractStringArgument(NameConstants.PropertyName);
+        if (statedPropertyName is not null &&
+            SyntaxFacts.IsValidIdentifier(statedPropertyName))
+        {
+            propertyName = statedPropertyName;
+        }
 
         var type = fieldSymbol
             .Type
@@ -219,7 +227,7 @@ internal static class FrameworkElementInspectorHelper
         ApplyMetadataType(propertyToGenerate, metadataType, ignoredMetadataType);
         ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
-        ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
+        ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
         propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
         propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -388,6 +396,7 @@ internal static class FrameworkElementInspectorHelper
     // them. The setter writes through the key and is private unless stated otherwise.
     private static void ApplyReadOnlyKey(
         BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        AttributeData propertyAttribute,
         IDictionary<string, string?> argumentValues,
         XamlPlatform xamlPlatform)
     {
@@ -401,7 +410,9 @@ internal static class FrameworkElementInspectorHelper
 
         propertyToGenerate.UsesPropertyKey = true;
 
-        if (propertyToGenerate.SetterAccessModifier.Length == 0)
+        // An explicit SetterAccessModifier = Public reads as "no modifier" too, so look at
+        // whether the option was stated at all.
+        if (propertyAttribute.ExtractEnumArgumentName(NameConstants.SetterAccessModifier) is null)
         {
             propertyToGenerate.SetterAccessModifier = "private";
         }

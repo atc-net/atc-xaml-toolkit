@@ -145,6 +145,7 @@ internal static class RoutedEventInspector
                 IsOwnerTypeSealed = classSymbol.IsSealed,
                 AddOwnerOf = fieldPropertyAttribute.ExtractAddOwnerOf(),
                 GenerateRaiseMethod = generateRaiseMethod,
+                RaiseMethodAccessModifier = GetRaiseMethodAccessModifier(fieldPropertyAttribute),
                 GenerateDocumentation = generateDocumentation,
             };
 
@@ -162,6 +163,19 @@ internal static class RoutedEventInspector
            bool.TryParse(value, out var generateDocumentation)
             ? generateDocumentation
             : FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol);
+
+    // Public reads as an empty modifier, so look at whether the option was stated at all.
+    private static string? GetRaiseMethodAccessModifier(
+        AttributeData fieldPropertyAttribute)
+    {
+        if (fieldPropertyAttribute.ExtractEnumArgumentName(NameConstants.RaiseMethodAccessModifier) is null)
+        {
+            return null;
+        }
+
+        var modifier = fieldPropertyAttribute.ExtractAccessModifier(NameConstants.RaiseMethodAccessModifier);
+        return modifier.Length == 0 ? "public" : modifier;
+    }
 
     private static void NoteRaiseMethodThatCannotBeGenerated(
         RoutedEventToGenerate routedEvent)

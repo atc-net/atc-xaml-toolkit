@@ -19,4 +19,16 @@ internal sealed record INotifyPropertyChangedTarget(
     public EquatableArray<string> ContainingTypeDeclarations { get; set; } = EquatableArray<string>.Empty;
 
     public string? HintName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the class is sealed. Its helper methods are
+    /// then private: a protected member in a sealed class is reported by the compiler.
+    /// </summary>
+    public bool IsSealed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the generated members get XML summaries,
+    /// as asked for with <c>[assembly: GenerateDocumentationDefault]</c>.
+    /// </summary>
+    public bool GenerateDocumentation { get; set; }
 }

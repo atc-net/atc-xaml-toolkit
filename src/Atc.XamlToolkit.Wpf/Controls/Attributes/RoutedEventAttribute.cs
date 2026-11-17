@@ -40,6 +40,12 @@ public sealed class RoutedEventAttribute(RoutingStrategy routingStrategy) : Attr
     public bool GenerateRaiseMethod { get; init; }
 
     /// <summary>
+    /// Gets the accessibility of the generated <c>Raise{Name}</c> method. When it is not
+    /// stated the method is <c>protected</c>, or <c>private</c> in a sealed class.
+    /// </summary>
+    public PropertyAccessModifier RaiseMethodAccessModifier { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether to emit default <c>/// &lt;summary&gt;</c> XML
     /// comments on the generated members when the field has no XML doc of its own.
     /// Defaults to <c>false</c>; can be flipped per-assembly via

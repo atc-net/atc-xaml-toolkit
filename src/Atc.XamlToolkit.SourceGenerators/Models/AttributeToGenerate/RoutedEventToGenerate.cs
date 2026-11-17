@@ -31,6 +31,12 @@ internal sealed record RoutedEventToGenerate(
     public bool GenerateRaiseMethod { get; set; }
 
     /// <summary>
+    /// Gets or sets the C# modifier of the <c>Raise{Name}</c> method when the attribute
+    /// states one; <c>null</c> for the default.
+    /// </summary>
+    public string? RaiseMethodAccessModifier { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether default summaries are emitted when the
     /// field has no XML doc of its own.
     /// </summary>

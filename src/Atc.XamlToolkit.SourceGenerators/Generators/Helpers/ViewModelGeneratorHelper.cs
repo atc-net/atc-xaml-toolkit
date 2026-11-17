@@ -282,6 +282,8 @@ internal static class ViewModelGeneratorHelper
             TypeParameterList = classSymbol.GetTypeParameterList(),
             ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
             HintName = classSymbol.GetHintName(),
+            IsSealed = classSymbol.IsSealed,
+            GenerateDocumentation = FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol),
         };
     }
 

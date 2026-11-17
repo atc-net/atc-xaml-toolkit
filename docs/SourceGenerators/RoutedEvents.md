@@ -134,7 +134,7 @@ protected void RaiseDeviceError(DeviceErrorRoutedEventArgs e)
 }
 ```
 
-- The method is `protected`, or `private` in a sealed class.
+- The method is `protected`, or `private` in a sealed class. `RaiseMethodAccessModifier` states another accessibility, for example `RaiseMethodAccessModifier = PropertyAccessModifier.Private` in a public control whose API should not grow a protected method.
 - For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. The generator reports `AtcXamlToolkit0013`; raise the event yourself with `RaiseEvent(...)`.
 
 ### 🤝 Sharing an existing event with `AddOwnerOf`
@@ -269,6 +269,7 @@ private void NumericBox_OnValueIncremented(
 | HandlerType     | named         | Type            | typeof(RoutedEventHandler) | CLR delegate type for the generated event. |
 | AddOwnerOf      | named         | Type            | none                       | Share the event of this type instead of registering a new one. |
 | GenerateRaiseMethod | named     | bool            | false                      | Generate a `Raise{Name}` method. |
+| RaiseMethodAccessModifier | named | PropertyAccessModifier | protected (private when sealed) | Accessibility of the `Raise{Name}` method. |
 | GenerateDocumentation | named   | bool            | assembly default           | Emit default summaries on the generated members. |
 
 ```csharp

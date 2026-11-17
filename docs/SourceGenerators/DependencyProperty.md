@@ -112,6 +112,17 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🏷️ Naming the property with `PropertyName`
+
+The property is named after the field, with the first letter in upper case (`private int count;` gives `Count`). That ties the field's name to the property's, which gets in the way when the class has a local or a parameter of the same name: analyzers report a local `state` that hides a field `state`. `PropertyName` names the property, so the field can be called anything:
+
+```csharp
+[DependencyProperty(PropertyName = "State")]
+private DataGridFilterState stateValue;
+```
+
+This generates `StateProperty` and `public DataGridFilterState State`. The option exists on `[DependencyProperty]`, `[StyledProperty]` and `[AttachedProperty]` on fields, on all three platforms. A value that is not a valid identifier is ignored.
+
 ## 🔒 Non-public setters
 
 `SetterAccessModifier` restricts the setter of the generated CLR property, for a value the control computes itself and consumers should only read from code:
@@ -158,6 +169,7 @@ public static readonly DependencyProperty GridBrushProperty = DependencyProperty
     new PropertyMetadata(defaultValue: CreateFrozenBrush(40)));
 ```
 
+- **Do not refer to a static field of the same class.** The generated registration is a static field initialiser in another file of the partial class, and the order in which static fields in different files are initialised is not defined: the registration can run first and capture `null` or `0`. Refer to a constant, a static property or a method instead.
 - The expression is evaluated once, in the static field initialiser, so it can only use static members. Names are resolved in the generated file: use a member of the class, a fully qualified name, or a type covered by the project's global usings.
 - The value is **shared by every instance** of the control. Use something immutable: a frozen brush, an empty array, a value type. A mutable default such as `new List<string>()` or an unfrozen brush would be one object shared by all controls.
 - When both `DefaultValue` and `DefaultValueExpression` are set, the expression is used.
@@ -251,7 +263,7 @@ public string SummaryText
 ```
 
 - The key is named `{Name}PropertyKey` and is private.
-- The setter is `private` by default. `SetterAccessModifier` changes that, for example `SetterAccessModifier = PropertyAccessModifier.Internal`.
+- The setter is `private` by default. `SetterAccessModifier` changes that, for example `SetterAccessModifier = PropertyAccessModifier.Internal`; an explicit `SetterAccessModifier = PropertyAccessModifier.Public` gives a public setter that writes through the key.
 - Declare the field `readonly` to get no setter at all: `[DependencyProperty(IsReadOnly = true)] private readonly string summaryText;`. The class then writes with `SetValue(SummaryTextPropertyKey, value)`.
 - Nothing outside the class can set the property: `SetValue(SummaryTextProperty, ...)`, XAML, styles and bindings that write to it all fail. Bindings that read it work as usual.
 - `DefaultValue`, the callbacks and the metadata options work as for an ordinary property.
