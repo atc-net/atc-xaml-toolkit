@@ -32,11 +32,22 @@ public sealed class MultiBoolToBoolValueConverter :
         Type targetType,
         object? parameter,
         CultureInfo culture)
-        => ((IMultiValueConverter)this).Convert(
+    {
+        ArgumentNullException.ThrowIfNull(values);
+
+        // Avalonia passes UnsetValue for a child binding that has not produced a value yet.
+        // Leave the target unset as well.
+        if (values.Contains(AvaloniaProperty.UnsetValue))
+        {
+            return AvaloniaProperty.UnsetValue;
+        }
+
+        return ((IMultiValueConverter)this).Convert(
             values.ToArray(),
             targetType,
             parameter,
             culture);
+    }
 
     public override object[] ConvertBack(
         bool value,

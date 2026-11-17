@@ -21,26 +21,23 @@ public abstract class MultiValueConverterBase<TInput, TOutput>
     {
         ArgumentNullException.ThrowIfNull(values);
 
-        try
-        {
-            var typedValues = new TInput[values.Length];
+        var typedValues = new TInput[values.Length];
 
-            for (var i = 0; i < values.Length; i++)
+        for (var i = 0; i < values.Length; i++)
+        {
+            typedValues[i] = values[i] switch
             {
-                if (values[i] is not TInput typed)
-                {
-                    throw new UnexpectedTypeException(values[i]?.GetType() ?? typeof(object), typeof(TInput));
-                }
+                TInput typed => typed,
 
-                typedValues[i] = typed;
-            }
+                // A null input is passed on when TInput can hold null (reference type or Nullable<T>).
+                null when default(TInput) is null => default!,
+                null => throw new UnexpectedTypeException(typeof(object), typeof(TInput)),
+                var other => throw new UnexpectedTypeException(other.GetType(), typeof(TInput)),
+            };
+        }
 
-            return Convert(typedValues, parameter, culture);
-        }
-        catch (Exception ex)
-        {
-            throw new UnexpectedTypeException("Failed to convert multi-value inputs.", ex);
-        }
+        // Exceptions from the converter itself are not caught: they are not type errors.
+        return Convert(typedValues, parameter, culture);
     }
 
     object?[]? IMultiValueConverter.ConvertBack(
@@ -49,10 +46,15 @@ public abstract class MultiValueConverterBase<TInput, TOutput>
         object? parameter,
         CultureInfo culture)
     {
-        if (value is not TOutput typedValue)
+        var typedValue = value switch
         {
-            throw new UnexpectedTypeException(value?.GetType() ?? typeof(object), typeof(TInput));
-        }
+            TOutput typed => typed,
+
+            // A null value is passed on when TOutput can hold null (reference type or Nullable<T>).
+            null when default(TOutput) is null => default!,
+            null => throw new UnexpectedTypeException(typeof(object), typeof(TOutput)),
+            _ => throw new UnexpectedTypeException(value.GetType(), typeof(TOutput)),
+        };
 
         return ConvertBack(
             typedValue,
