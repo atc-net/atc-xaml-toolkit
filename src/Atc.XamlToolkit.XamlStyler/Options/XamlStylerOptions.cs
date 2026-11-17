@@ -152,7 +152,11 @@ public sealed class XamlStylerOptions : IXamlStylerOptions
     public XamlStylerOptions Clone()
     {
         var json = JsonSerializer.Serialize(this, JsonOptions);
-        return JsonSerializer.Deserialize<XamlStylerOptions>(json, JsonOptions) ?? new XamlStylerOptions();
+        var clone = JsonSerializer.Deserialize<XamlStylerOptions>(json, JsonOptions) ?? new XamlStylerOptions();
+
+        // LineEnding is not part of the JSON configuration ([JsonIgnore]), so copy it explicitly.
+        clone.LineEnding = LineEnding;
+        return clone;
     }
 
     /// <summary>

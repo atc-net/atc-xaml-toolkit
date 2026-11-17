@@ -146,4 +146,17 @@ public sealed class XamlStylerOptionsTests
             Directory.Delete(Path.Combine(workingDirectory, relativeDir), true);
         }
     }
+
+    [Fact]
+    public void Clone_CopiesLineEnding()
+    {
+        // Arrange
+        var original = new XamlStylerOptions { LineEnding = LineEnding.LF };
+
+        // Act
+        var clone = original.Clone();
+
+        // Assert
+        clone.LineEnding.Should().Be(LineEnding.LF);
+    }
 }
