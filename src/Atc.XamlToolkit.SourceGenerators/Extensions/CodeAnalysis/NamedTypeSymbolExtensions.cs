@@ -372,9 +372,19 @@ internal static class NamedTypeSymbolExtensions
         // One of the toolkit's framework-element attributes says what the class is,
         // whatever it is called and whatever it derives from. [RelayCommand] is not in the
         // list on purpose: on its own it marks a view model, which ViewModelGenerator handles.
-        return classSymbol.GetAttributes().Any(IsFrameworkElementAttribute) ||
-               classSymbol.GetMembers().Any(m => m.GetAttributes().Any(IsFrameworkElementAttribute));
+        return classSymbol.HasFrameworkElementAttribute();
     }
+
+    /// <summary>
+    /// Determines whether the class, or one of its members, carries one of the toolkit's
+    /// framework-element attributes.
+    /// </summary>
+    /// <param name="classSymbol">The class symbol to check.</param>
+    /// <returns>True if such an attribute is present; otherwise, false.</returns>
+    public static bool HasFrameworkElementAttribute(
+        this INamedTypeSymbol classSymbol)
+        => classSymbol.GetAttributes().Any(IsFrameworkElementAttribute) ||
+           classSymbol.GetMembers().Any(m => m.GetAttributes().Any(IsFrameworkElementAttribute));
 
     private static bool IsFrameworkElementAttribute(AttributeData attributeData)
         => attributeData.GetToolkitAttributeName()

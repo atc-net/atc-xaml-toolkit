@@ -412,6 +412,16 @@ public abstract class GeneratorTestBase
                 .Where(x => x.Severity == DiagnosticSeverity.Error)
                 .Select(x => $"Compile error: {x.Id} {x.GetMessage(System.Globalization.CultureInfo.InvariantCulture)} @ {x.Location.GetLineSpan()}"));
 
+        // Consumers commonly build with warnings as errors, so a warning inside generated
+        // code breaks their build just like an error. Warnings in the test input are the
+        // input's own business.
+        problems.AddRange(
+            outputCompilation
+                .GetDiagnostics()
+                .Where(x => x.Severity == DiagnosticSeverity.Warning &&
+                            x.Location.SourceTree?.FilePath.EndsWith(".g.cs", StringComparison.Ordinal) == true)
+                .Select(x => $"Warning in generated code: {x.Id} {x.GetMessage(System.Globalization.CultureInfo.InvariantCulture)} @ {x.Location.GetLineSpan()}"));
+
         if (problems.Count > 0)
         {
             problems.AddRange(

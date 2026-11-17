@@ -112,6 +112,7 @@ internal static class FrameworkElementInspectorHelper
             ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
+            DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
             propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -228,6 +229,7 @@ internal static class FrameworkElementInspectorHelper
         ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
+        DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
         propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
         propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -320,6 +322,51 @@ internal static class FrameworkElementInspectorHelper
                 NameConstants.IsReadOnly,
                 "a property shared with AddOwnerOf is as writable as the shared property");
         }
+    }
+
+    // What can reach a member with a given modifier, as a set: 1 = derived types in other
+    // assemblies, 2 = other types in this assembly, 4 = derived types in this assembly,
+    // 8 = everything else.
+    private static int GetAccessibilityDomain(string modifier)
+        => modifier switch
+        {
+            "private" => 0,
+            "private protected" => 4,
+            "internal" => 2 | 4,
+            "protected" => 1 | 4,
+            "protected internal" => 1 | 2 | 4,
+            _ => 1 | 2 | 4 | 8,
+        };
+
+    // C# only accepts an accessor modifier that is more restrictive than the property
+    // (CS0273). The Get and Set methods of an attached property are separate methods, so
+    // the rule does not apply to them.
+    private static void DropSetterModifierThatIsNotMoreRestrictive(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        AttributeData propertyAttribute)
+    {
+        if (propertyToGenerate is AttachedPropertyToGenerate ||
+            propertyToGenerate.IsOwnerTypeStatic ||
+            propertyAttribute.ExtractEnumArgumentName(NameConstants.SetterAccessModifier) is null ||
+            propertyToGenerate.SetterAccessModifier == propertyToGenerate.AccessModifier)
+        {
+            return;
+        }
+
+        var propertyDomain = GetAccessibilityDomain(propertyToGenerate.AccessModifier);
+        var setterDomain = GetAccessibilityDomain(propertyToGenerate.SetterAccessModifier);
+
+        if ((setterDomain & propertyDomain) == setterDomain &&
+            setterDomain != propertyDomain)
+        {
+            return;
+        }
+
+        propertyToGenerate.SetterAccessModifier = string.Empty;
+        AddIgnoredOption(
+            propertyToGenerate,
+            NameConstants.SetterAccessModifier,
+            "the setter of a property has to be more restrictive than the property, which AccessModifier sets");
     }
 
     private static void AddIgnoredOption(

@@ -17,18 +17,17 @@ internal static class FrameworkElementBuilderExtensions
 
         var namespaces = CommandBuilderBase.GetCommandUsings(xamlPlatform, frameworkElementToGenerate.RelayCommandsToGenerate);
 
-        // Only WPF supports UpdateSourceTrigger
-        if (xamlPlatform == XamlPlatform.Wpf &&
-            !frameworkElementToGenerate.DependencyPropertiesToGenerate.IsEmpty &&
-            frameworkElementToGenerate.DependencyPropertiesToGenerate.Any(x => x.DefaultUpdateSourceTrigger is not null))
-        {
-            namespaces.Add("System.Windows.Data");
-        }
-
         var properties = frameworkElementToGenerate.AttachedPropertiesToGenerate
             .Cast<BaseFrameworkElementPropertyToGenerate>()
             .Concat(frameworkElementToGenerate.DependencyPropertiesToGenerate)
             .ToList();
+
+        // Only WPF supports UpdateSourceTrigger
+        if (xamlPlatform == XamlPlatform.Wpf &&
+            properties.Any(x => x.DefaultUpdateSourceTrigger is not null))
+        {
+            namespaces.Add("System.Windows.Data");
+        }
 
         if (properties.Count > 0 ||
             (xamlPlatform == XamlPlatform.Wpf && !frameworkElementToGenerate.RoutedEventsToGenerate.IsEmpty))
@@ -445,7 +444,7 @@ internal static class FrameworkElementBuilderExtensions
         {
             XamlPlatform.WinUI => "Microsoft.UI.Xaml.DependencyProperty",
             XamlPlatform.Avalonia when isAttached => "Avalonia.AvaloniaProperty",
-            XamlPlatform.Avalonia => $"StyledProperty<{p.TypeForTypeOf}>",
+            XamlPlatform.Avalonia => $"StyledProperty<{p.Type}>",
             _ => "DependencyProperty", // WPF
         };
 
@@ -481,12 +480,14 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
         }
 
-        // Avalonia uses generic type parameters, WPF/WinUI use typeof() parameters
+        // Avalonia uses generic type parameters, WPF/WinUI use typeof() parameters. A type
+        // argument keeps the '?' of a nullable reference type, which typeof() cannot have:
+        // StyledProperty<string> does not take the string? value of the generated property.
         if (xamlPlatform == XamlPlatform.Avalonia)
         {
             var genericParams = isAttached
-                ? $"<{p.OwnerType.RemoveNullableSuffix()}, AvaloniaObject, {p.TypeForTypeOf}>"
-                : $"<{p.OwnerType.RemoveNullableSuffix()}, {p.TypeForTypeOf}>";
+                ? $"<{p.OwnerType.RemoveNullableSuffix()}, AvaloniaObject, {p.Type}>"
+                : $"<{p.OwnerType.RemoveNullableSuffix()}, {p.Type}>";
 
             // For non-attached properties (StyledProperty), use AvaloniaProperty.Register, not StyledProperty<T>.Register
             const string registrationClass = "Avalonia.AvaloniaProperty";

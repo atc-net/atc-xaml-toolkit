@@ -161,6 +161,21 @@ internal static class DiagnosticFactory
                 isEnabledByDefault: true),
             Location.None);
 
+    private static readonly DiagnosticDescriptor MissingPartialKeywordOnFrameworkElementDescriptor =
+        new(
+            id: "AtcXamlToolkit0002",
+            title: "Class must be partial",
+            messageFormat: "Class '{0}' uses a source generator attribute such as [DependencyProperty], [AttachedProperty], [RoutedEvent], [DefaultStyleKey] or [TemplatePartField] but is not declared 'partial'. Add the 'partial' keyword so the source generator can emit the corresponding members.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "The source generator can only add members to a class that is declared partial. Without the 'partial' keyword it skips the class and the expected properties and events never exist.");
+
+    public static Diagnostic CreateMissingPartialKeywordOnFrameworkElement(
+        string className,
+        Location location)
+        => Diagnostic.Create(MissingPartialKeywordOnFrameworkElementDescriptor, location, className);
+
     public static Diagnostic CreateMissingPartialKeyword(
         string className,
         Location location)

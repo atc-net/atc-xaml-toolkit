@@ -39,6 +39,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             static (spc, source) => Execute(spc, source));
 
         FrameworkElementGeneratorHelper.RegisterRoutedEventOnNonWpfDiagnostic(context);
+        FrameworkElementGeneratorHelper.RegisterMissingPartialDiagnostic(context);
     }
 
     /// <summary>

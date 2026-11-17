@@ -90,6 +90,7 @@ internal static class RoutedEventInspector
         return null;
     }
 
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "OK.")]
     private static void AppendRoutedEventToGenerate(
         INamedTypeSymbol classSymbol,
         IFieldSymbol fieldSymbol,
@@ -125,13 +126,16 @@ internal static class RoutedEventInspector
 
         handlerTypeName = GetHandlerTypeClosedByTemplate(fieldSymbol, fieldPropertyAttribute) ?? handlerTypeName;
 
+        // A handler type that is still an unbound generic (typeof(X<>)) cannot be the type of
+        // an event. It is only closed in a generic property template with as many type
+        // parameters.
+        var hasUnboundHandlerType = handlerTypeName.Contains("<>") || handlerTypeName.Contains("<,");
+        if (hasUnboundHandlerType)
+        {
+            handlerTypeName = NameConstants.RoutedEventHandler;
+        }
+
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
-
-        var generateDocumentation = ResolveGenerateDocumentation(classSymbol, fieldArgumentValues);
-
-        var generateRaiseMethod =
-            fieldArgumentValues.TryGetValue(NameConstants.GenerateRaiseMethod, out var generateRaiseMethodValue) &&
-            "true".Equals(generateRaiseMethodValue, StringComparison.OrdinalIgnoreCase);
 
         var routedEvent =
             new RoutedEventToGenerate(
@@ -144,18 +148,33 @@ internal static class RoutedEventInspector
                 IsOwnerTypeStatic = classSymbol.IsStatic,
                 IsOwnerTypeSealed = classSymbol.IsSealed,
                 AddOwnerOf = fieldPropertyAttribute.ExtractAddOwnerOf(),
-                GenerateRaiseMethod = generateRaiseMethod,
-                GenerateHandlerMethods =
-                    !fieldArgumentValues.TryGetValue(NameConstants.GenerateHandlerMethods, out var generateHandlerMethods) ||
-                    !"false".Equals(generateHandlerMethods, StringComparison.OrdinalIgnoreCase),
+                GenerateRaiseMethod = IsOptionSet(fieldArgumentValues, NameConstants.GenerateRaiseMethod, defaultValue: false),
+                GenerateHandlerMethods = IsOptionSet(fieldArgumentValues, NameConstants.GenerateHandlerMethods, defaultValue: true),
                 RaiseMethodAccessModifier = GetRaiseMethodAccessModifier(fieldPropertyAttribute),
-                GenerateDocumentation = generateDocumentation,
+                GenerateDocumentation = ResolveGenerateDocumentation(classSymbol, fieldArgumentValues),
             };
 
         NoteRaiseMethodThatCannotBeGenerated(routedEvent);
 
+        if (hasUnboundHandlerType)
+        {
+            routedEvent.IgnoredOptions = new EquatableArray<string>(
+                routedEvent.IgnoredOptions
+                    .Append($"{NameConstants.HandlerType}|an unbound generic handler type is only closed in a generic property template with as many type parameters; RoutedEventHandler is used")
+                    .ToArray());
+        }
+
         routedEventToGenerate.Add(routedEvent);
     }
+
+    private static bool IsOptionSet(
+        IDictionary<string, string?> fieldArgumentValues,
+        string name,
+        bool defaultValue)
+        => fieldArgumentValues.TryGetValue(name, out var value) &&
+           bool.TryParse(value, out var result)
+            ? result
+            : defaultValue;
 
     // An explicit per-attribute value wins; otherwise the assembly-level
     // [GenerateDocumentationDefault] decides.

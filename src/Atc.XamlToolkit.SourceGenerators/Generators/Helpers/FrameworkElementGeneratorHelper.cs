@@ -252,6 +252,55 @@ internal static class FrameworkElementGeneratorHelper
     }
 
     /// <summary>
+    /// Registers the <c>AtcXamlToolkit0002</c> diagnostic for a class that carries a
+    /// framework-element attribute but is not declared partial. The generator cannot add
+    /// members to such a class, and without the diagnostic nothing says why nothing is generated.
+    /// </summary>
+    /// <param name="context">The initialization context.</param>
+    public static void RegisterMissingPartialDiagnostic(
+        IncrementalGeneratorInitializationContext context)
+    {
+        var missingPartialClasses = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (syntaxNode, _) =>
+                    syntaxNode is ClassDeclarationSyntax classDeclaration &&
+                    !classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
+                    (classDeclaration.AttributeLists.Count > 0 ||
+                     classDeclaration.Members.Any(m => m.AttributeLists.Count > 0)),
+                transform: static (ctx, _) => GetMissingPartialDiagnostic(ctx))
+            .Where(static diagnostic => diagnostic is not null)
+            .WithTrackingName("FrameworkElementGenerator.MissingPartialDiagnostic");
+
+        context.RegisterSourceOutput(
+            missingPartialClasses,
+            static (spc, diagnostic) =>
+            {
+                if (diagnostic is not null)
+                {
+                    spc.ReportDiagnostic(diagnostic);
+                }
+            });
+    }
+
+    private static Diagnostic? GetMissingPartialDiagnostic(
+        GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+
+        // A property template only declares members for other classes, so it need not be partial.
+        if (context.SemanticModel.GetDeclaredSymbol(classDeclaration) is not { } classSymbol ||
+            PropertyTemplateInspector.IsTemplate(classSymbol) ||
+            !classSymbol.HasFrameworkElementAttribute())
+        {
+            return null;
+        }
+
+        return DiagnosticFactory.CreateMissingPartialKeywordOnFrameworkElement(
+            classDeclaration.Identifier.Text,
+            classDeclaration.Identifier.GetLocation());
+    }
+
+    /// <summary>
     /// Registers the <c>AtcXamlToolkit0010</c> diagnostic pipeline that surfaces a build-time
     /// warning when <c>[RoutedEvent]</c> is detected on a WinUI 3 or Avalonia compilation.
     /// Without this, the generator would silently emit no code — the developer would expect the
