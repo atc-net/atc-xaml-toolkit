@@ -10,6 +10,18 @@ internal static class StringExtensions
         ["\""] = "&quot;",
     };
 
+    /// <summary>
+    /// Escapes the characters that are reserved in XML.
+    /// </summary>
+    /// <param name="input">The text to encode.</param>
+    /// <param name="unescapedCharacters">
+    /// The reserved characters to leave as they are. <see langword="null"/> leaves ALL of them
+    /// as they are - it does not mean "escape everything". Text nodes are encoded that way:
+    /// the entities of the document are masked before it is parsed and restored afterwards,
+    /// so they must not be escaped a second time here.
+    /// </param>
+    /// <param name="ignoreCarrier">If true, line breaks are kept; otherwise they are written as character references.</param>
+    /// <returns>The encoded text.</returns>
     public static string ToXmlEncodedString(
         this string input,
         ISet<char>? unescapedCharacters = null,
@@ -17,14 +29,17 @@ internal static class StringExtensions
     {
         var buffer = new StringBuilder(input);
 
-        foreach (var escapedCharacter in EscapedCharacters)
+        if (unescapedCharacters is not null)
         {
-            if (unescapedCharacters?.Contains(escapedCharacter.Key[0]) != false)
+            foreach (var escapedCharacter in EscapedCharacters)
             {
-                continue;
-            }
+                if (unescapedCharacters.Contains(escapedCharacter.Key[0]))
+                {
+                    continue;
+                }
 
-            buffer.Replace(escapedCharacter.Key, escapedCharacter.Value);
+                buffer.Replace(escapedCharacter.Key, escapedCharacter.Value);
+            }
         }
 
         if (!ignoreCarrier)
