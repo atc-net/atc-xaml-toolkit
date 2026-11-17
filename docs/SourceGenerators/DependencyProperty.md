@@ -112,6 +112,50 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🪝 Typed change hooks
+
+A `PropertyChangedCallback` has to be a static method that receives the object and untyped event args, so it usually starts by casting both:
+
+```csharp
+[DependencyProperty(PropertyChangedCallback = nameof(OnIsReadOnlyChanged))]
+private bool isReadOnly;
+
+private static void OnIsReadOnlyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+{
+    if (d is Rating control)
+    {
+        control.UpdateVisualState();
+    }
+}
+```
+
+With `GeneratePartialHooks = true` the generator writes that static method and calls a typed partial method on the instance instead:
+
+```csharp
+[DependencyProperty(GeneratePartialHooks = true)]
+private bool isReadOnly;
+
+partial void OnIsReadOnlyChanged(bool oldValue, bool newValue)
+    => UpdateVisualState();
+```
+
+Generated (WPF and WinUI):
+
+```csharp
+private static void OnIsReadOnlyPropertyChangedCallback(
+    DependencyObject d,
+    DependencyPropertyChangedEventArgs e)
+    => ((Rating)d).OnIsReadOnlyChanged((bool)e.OldValue, (bool)e.NewValue);
+
+partial void OnIsReadOnlyChanged(bool oldValue, bool newValue);
+```
+
+- The hook is named `On{PropertyName}Changed` and gets the old and the new value in the property's type.
+- If you do not implement the partial method, the compiler removes the call, so the option costs nothing when unused.
+- On Avalonia use `[StyledProperty(GeneratePartialHooks = true)]`; the hook has the same shape and the generator subscribes it in the static constructor it already generates for callbacks.
+- `PropertyChangedCallback = nameof(...)` still works, for example for one callback shared by several properties. When both are set, the named callback runs first and the hook second.
+- For attached properties see [AttachedProperty.md](AttachedProperty.md#-typed-change-hooks).
+
 ## 📚 XML documentation generation
 
 When the backing field has XML doc comments, the generator copies them to the generated CLR property, and the `{Name}Property` field gets an "Identifies the ... dependency property." summary:

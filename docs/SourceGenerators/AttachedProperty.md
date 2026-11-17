@@ -91,6 +91,39 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🪝 Typed change hooks
+
+`GeneratePartialHooks = true` generates the static property-changed callback and calls a typed partial method. An attached property has no owner instance, so the hook is static and receives the object the property is attached to:
+
+```csharp
+public static partial class DragBehavior
+{
+    [AttachedProperty(GeneratePartialHooks = true)]
+    private static bool isDraggable;
+
+    static partial void OnIsDraggableChanged(DependencyObject d, bool oldValue, bool newValue)
+    {
+        if (d is UIElement element)
+        {
+            // attach or detach the drag handlers
+        }
+    }
+}
+```
+
+Generated (WPF and WinUI):
+
+```csharp
+private static void OnIsDraggablePropertyChangedCallback(
+    DependencyObject d,
+    DependencyPropertyChangedEventArgs e)
+    => OnIsDraggableChanged(d, (bool)e.OldValue, (bool)e.NewValue);
+
+static partial void OnIsDraggableChanged(DependencyObject d, bool oldValue, bool newValue);
+```
+
+On Avalonia the first parameter is an `AvaloniaObject`. `PropertyChangedCallback = nameof(...)` can still be used, alone or together with the hook (the named callback then runs first). The hook for ordinary dependency properties is described in [DependencyProperty.md](DependencyProperty.md#-typed-change-hooks).
+
 ## 📚 XML documentation generation
 
 When the backing field has XML doc comments, the generator copies them to the generated `Get{Name}` / `Set{Name}` methods, and the `{Name}Property` field gets an "Identifies the {Name} attached property." summary:

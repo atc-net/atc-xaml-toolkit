@@ -21,6 +21,19 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
 
     /// <summary>
+    /// Gets or sets a value indicating whether a typed <c>On{Name}Changed</c> partial method is
+    /// generated. When true, <see cref="PropertyChangedCallback"/> names the generated static
+    /// callback that calls it.
+    /// </summary>
+    public bool GeneratePartialHooks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback the user named in the attribute, when
+    /// <see cref="GeneratePartialHooks"/> replaced it with the generated one.
+    /// </summary>
+    public string? UserPropertyChangedCallback { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the type is a <c>Nullable&lt;T&gt;</c> value type,
     /// a type where a trailing '?' is only a nullability annotation, or unknown (<c>null</c>).
     /// </summary>

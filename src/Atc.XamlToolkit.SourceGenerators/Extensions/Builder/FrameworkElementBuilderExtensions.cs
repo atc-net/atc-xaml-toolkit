@@ -270,6 +270,7 @@ internal static class FrameworkElementBuilderExtensions
         }
 
         GenerateClrAttachedMethods(builder, p, xamlPlatform);
+        GeneratePartialHook(builder, p, isAttached: true, xamlPlatform);
     }
 
     private static void GenerateDependencyProperty(
@@ -280,6 +281,88 @@ internal static class FrameworkElementBuilderExtensions
         GenerateDependencyPropertyHeader(builder, p, isAttached: false, xamlPlatform);
         GenerateDependencyPropertyBody(builder, p, xamlPlatform);
         GenerateClrDependencyProperty(builder, p, xamlPlatform);
+        GeneratePartialHook(builder, p, isAttached: false, xamlPlatform);
+    }
+
+    // Emits the static callback that is registered with the property system, and the typed
+    // partial method it calls. An attached property has no owner instance, so its hook is
+    // static and receives the object the property is attached to.
+    private static void GeneratePartialHook(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        bool isAttached,
+        XamlPlatform xamlPlatform)
+    {
+        if (!p.GeneratePartialHooks)
+        {
+            return;
+        }
+
+        var isAvalonia = xamlPlatform == XamlPlatform.Avalonia;
+        var hookName = $"On{p.Name}Changed";
+
+        // The object the callback receives: the owner for a styled property on Avalonia
+        // (AddClassHandler<Owner>), otherwise the platform's base object.
+        string senderType;
+        if (!isAvalonia)
+        {
+            senderType = "DependencyObject";
+        }
+        else if (isAttached)
+        {
+            senderType = "AvaloniaObject";
+        }
+        else
+        {
+            senderType = p.OwnerType;
+        }
+
+        var senderName = isAvalonia && !isAttached ? "sender" : "d";
+        var eventArgsType = isAvalonia ? "AvaloniaPropertyChangedEventArgs" : "DependencyPropertyChangedEventArgs";
+
+        var oldValue = isAvalonia ? $"e.GetOldValue<{p.Type}>()" : $"({p.Type})e.OldValue";
+        var newValue = isAvalonia ? $"e.GetNewValue<{p.Type}>()" : $"({p.Type})e.NewValue";
+
+        string hookCall;
+        if (isAttached)
+        {
+            hookCall = $"{hookName}({senderName}, {oldValue}, {newValue})";
+        }
+        else if (isAvalonia)
+        {
+            hookCall = $"{senderName}.{hookName}({oldValue}, {newValue})";
+        }
+        else
+        {
+            hookCall = $"(({p.OwnerType}){senderName}).{hookName}({oldValue}, {newValue})";
+        }
+
+        builder.AppendLine();
+        builder.AppendLine($"private static void {p.PropertyChangedCallback}(");
+        builder.IncreaseIndent();
+        builder.AppendLine($"{senderType} {senderName},");
+        builder.AppendLine($"{eventArgsType} e)");
+
+        if (string.IsNullOrEmpty(p.UserPropertyChangedCallback))
+        {
+            builder.AppendLine($"=> {hookCall};");
+            builder.DecreaseIndent();
+        }
+        else
+        {
+            builder.DecreaseIndent();
+            builder.AppendLine("{");
+            builder.IncreaseIndent();
+            builder.AppendLine($"{p.UserPropertyChangedCallback}({senderName}, e);");
+            builder.AppendLine($"{hookCall};");
+            builder.DecreaseIndent();
+            builder.AppendLine("}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine(isAttached
+            ? $"static partial void {hookName}({senderType} {senderName}, {p.Type} oldValue, {p.Type} newValue);"
+            : $"partial void {hookName}({p.Type} oldValue, {p.Type} newValue);");
     }
 
     private static void GenerateDependencyPropertyHeader(

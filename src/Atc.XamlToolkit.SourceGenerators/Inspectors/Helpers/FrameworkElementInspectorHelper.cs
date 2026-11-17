@@ -63,6 +63,13 @@ internal static class FrameworkElementInspectorHelper
                 out var generateDocumentation,
                 ref defaultValue);
 
+            var userPropertyChangedCallback = propertyChangedCallback;
+            var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
+            if (generatePartialHooks)
+            {
+                propertyChangedCallback = GetGeneratedPropertyChangedCallbackName(propertyName);
+            }
+
             var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
                 classSymbol.IsStatic,
                 ownerType,
@@ -82,6 +89,8 @@ internal static class FrameworkElementInspectorHelper
                 generateDocumentation);
 
             propertyToGenerate.IsNullableValueType = isNullableValueType;
+            propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
+            propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
             propertiesToGenerate.Add(propertyToGenerate);
@@ -138,6 +147,13 @@ internal static class FrameworkElementInspectorHelper
             out var generateDocumentation,
             ref defaultValue);
 
+        var userPropertyChangedCallback = propertyChangedCallback;
+        var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
+        if (generatePartialHooks)
+        {
+            propertyChangedCallback = GetGeneratedPropertyChangedCallbackName(propertyName);
+        }
+
         var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
             classSymbol.IsStatic,
             ownerType,
@@ -157,6 +173,8 @@ internal static class FrameworkElementInspectorHelper
             generateDocumentation);
 
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
+        propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
+        propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
 
         var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
         fieldSymbol.Type.AddRequiredNamespacesTo(requiredNamespaces);
@@ -167,6 +185,17 @@ internal static class FrameworkElementInspectorHelper
 
         return propertyToGenerate;
     }
+
+    private static bool HasGeneratePartialHooks(
+        IDictionary<string, string?> argumentValues)
+        => argumentValues.TryGetValue(NameConstants.GeneratePartialHooks, out var value) &&
+           "true".Equals(value, StringComparison.OrdinalIgnoreCase);
+
+    // The generated static callback that is registered with the property system and
+    // calls the typed On{Name}Changed partial method.
+    private static string GetGeneratedPropertyChangedCallbackName(
+        string propertyName)
+        => $"On{propertyName}PropertyChangedCallback";
 
     private static bool HasGenerateDocumentationDefaultAttribute(
         INamedTypeSymbol classSymbol)
