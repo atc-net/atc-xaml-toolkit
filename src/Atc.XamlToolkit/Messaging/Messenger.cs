@@ -335,12 +335,12 @@ public class Messenger : IMessenger
         Dictionary<Type, List<WeakActionAndToken>>? lists)
     {
         if (recipient is null
-            || lists is null
-            || lists.Count == 0)
+            || lists is null)
         {
             return;
         }
 
+        // The dictionary is only ever read or written while holding its lock.
         lock (lists)
         {
             foreach (var messageType in lists.Keys)
@@ -372,15 +372,19 @@ public class Messenger : IMessenger
         var messageType = typeof(TMessage);
 
         if (recipient is null
-            || lists is null
-            || lists.Count == 0
-            || !lists.TryGetValue(messageType, out var list))
+            || lists is null)
         {
             return;
         }
 
+        // The dictionary is only ever read or written while holding its lock.
         lock (lists)
         {
+            if (!lists.TryGetValue(messageType, out var list))
+            {
+                return;
+            }
+
             foreach (var item in list)
             {
                 if (item.Action is WeakAction<TMessage> weakActionCasted
