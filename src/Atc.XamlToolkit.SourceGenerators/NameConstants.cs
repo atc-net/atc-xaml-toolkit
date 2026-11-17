@@ -80,7 +80,10 @@ internal static class NameConstants
     public const string DefaultStyleKeyAttribute = nameof(DefaultStyleKeyAttribute);
     public const string OverrideDefaultStyleKey = nameof(OverrideDefaultStyleKey);
     public const string ResolveTemplateParts = nameof(ResolveTemplateParts);
+    public const string AccessModifier = nameof(AccessModifier);
     public const string AddOwnerOf = nameof(AddOwnerOf);
+    public const string GenerateClrAccessors = nameof(GenerateClrAccessors);
+    public const string TargetType = nameof(TargetType);
     public const string GenerateCoerceHook = nameof(GenerateCoerceHook);
     public const string GenerateRaiseMethod = nameof(GenerateRaiseMethod);
     public const string IsReadOnly = nameof(IsReadOnly);

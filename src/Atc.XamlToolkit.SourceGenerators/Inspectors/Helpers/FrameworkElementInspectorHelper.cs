@@ -98,6 +98,7 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.IsNullableValueType = isNullableValueType;
             propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
             propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+            ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
@@ -194,6 +195,7 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+        ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
@@ -208,6 +210,20 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);
 
         return propertyToGenerate;
+    }
+
+    // AccessModifier, GenerateClrAccessors and TargetType decide how the generated members
+    // are declared; they do not change the registration.
+    private static void ApplyAccessOptions(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        AttributeData propertyAttribute,
+        IDictionary<string, string?> argumentValues)
+    {
+        propertyToGenerate.AccessModifier = propertyAttribute.ExtractAccessModifier(NameConstants.AccessModifier);
+        propertyToGenerate.TargetType = propertyAttribute.ExtractTypeOfArgument(NameConstants.TargetType);
+        propertyToGenerate.GenerateClrAccessors =
+            !argumentValues.TryGetValue(NameConstants.GenerateClrAccessors, out var value) ||
+            !"false".Equals(value, StringComparison.OrdinalIgnoreCase);
     }
 
     // AddOwnerOf = typeof(X) shares the existing property of X instead of registering a new

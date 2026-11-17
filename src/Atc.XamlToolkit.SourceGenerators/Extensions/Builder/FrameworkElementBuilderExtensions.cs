@@ -346,7 +346,7 @@ internal static class FrameworkElementBuilderExtensions
         }
 
         var newModifier = p.UseNewKeyword ? "new " : string.Empty;
-        builder.AppendLine($"public static {newModifier}readonly DependencyProperty {p.Name}Property = {p.Name}PropertyKey.DependencyProperty;");
+        builder.AppendLine($"{p.MemberAccessModifier} static {newModifier}readonly DependencyProperty {p.Name}Property = {p.Name}PropertyKey.DependencyProperty;");
     }
 
     // Emits the static callback that is registered with the property system, and the typed
@@ -460,7 +460,7 @@ internal static class FrameworkElementBuilderExtensions
             }
 
             var newModifier = p.UseNewKeyword ? "new " : string.Empty;
-            builder.AppendLine($"public static {newModifier}readonly DependencyProperty {p.Name}Property = {p.AddOwnerOf}.{p.Name}Property.AddOwner(");
+            builder.AppendLine($"{p.MemberAccessModifier} static {newModifier}readonly DependencyProperty {p.Name}Property = {p.AddOwnerOf}.{p.Name}Property.AddOwner(");
             builder.IncreaseIndent();
             return;
         }
@@ -471,7 +471,7 @@ internal static class FrameworkElementBuilderExtensions
             // public identifier is taken from the key after the registration.
             builder.AppendLine($"private static readonly DependencyPropertyKey {p.Name}PropertyKey = DependencyProperty.{registerMethod}ReadOnly(");
             builder.IncreaseIndent();
-            builder.AppendLine(isAttached || p.IsOwnerTypeStatic ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
+            builder.AppendLine(isAttached || p.IsOwnerTypeStatic || !p.GenerateClrAccessors ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
             builder.AppendLine($"typeof({p.TypeForTypeOf}),");
             return;
         }
@@ -493,15 +493,15 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine(
                 p.UseNewKeyword
-                    ? $"public static new readonly {dependencyPropertyType} {p.Name}Property = {registrationClass}.{registerMethod}{genericParams}("
-                    : $"public static readonly {dependencyPropertyType} {p.Name}Property = {registrationClass}.{registerMethod}{genericParams}(");
+                    ? $"{p.MemberAccessModifier} static new readonly {dependencyPropertyType} {p.Name}Property = {registrationClass}.{registerMethod}{genericParams}("
+                    : $"{p.MemberAccessModifier} static readonly {dependencyPropertyType} {p.Name}Property = {registrationClass}.{registerMethod}{genericParams}(");
         }
         else
         {
             builder.AppendLine(
                 p.UseNewKeyword
-                    ? $"public static new readonly {dependencyPropertyType} {p.Name}Property = {dependencyPropertyType}.{registerMethod}("
-                    : $"public static readonly {dependencyPropertyType} {p.Name}Property = {dependencyPropertyType}.{registerMethod}(");
+                    ? $"{p.MemberAccessModifier} static new readonly {dependencyPropertyType} {p.Name}Property = {dependencyPropertyType}.{registerMethod}("
+                    : $"{p.MemberAccessModifier} static readonly {dependencyPropertyType} {p.Name}Property = {dependencyPropertyType}.{registerMethod}(");
         }
 
         builder.IncreaseIndent();
@@ -511,8 +511,9 @@ internal static class FrameworkElementBuilderExtensions
         var hasDefaultValue = p.DefaultValue is not null && !"null".Equals(p.DefaultValue);
         var needsComma = xamlPlatform != XamlPlatform.Avalonia || hasDefaultValue;
 
-        if (isAttached || p.IsOwnerTypeStatic)
+        if (isAttached || p.IsOwnerTypeStatic || !p.GenerateClrAccessors)
         {
+            // Without a CLR property there is no {Name} member for nameof to point at.
             builder.AppendLine(needsComma ? $"\"{p.Name}\"," : $"\"{p.Name}\"");
         }
         else
@@ -537,6 +538,13 @@ internal static class FrameworkElementBuilderExtensions
         if (isAttached || p.IsOwnerTypeStatic)
         {
             return $"Identifies the {p.Name} attached property.";
+        }
+
+        if (!p.GenerateClrAccessors)
+        {
+            return xamlPlatform == XamlPlatform.Avalonia
+                ? $"Identifies the {p.Name} styled property."
+                : $"Identifies the {p.Name} dependency property.";
         }
 
         return xamlPlatform == XamlPlatform.Avalonia
@@ -934,6 +942,11 @@ internal static class FrameworkElementBuilderExtensions
         DependencyPropertyToGenerate p,
         XamlPlatform xamlPlatform)
     {
+        if (!p.GenerateClrAccessors)
+        {
+            return;
+        }
+
         var elementType = xamlPlatform switch
         {
             XamlPlatform.Avalonia => NameConstants.AvaloniaObject,
@@ -956,7 +969,7 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"Get: {p.Description}\")]");
             }
 
-            builder.AppendLine($"public static {p.Type} Get{p.Name}({elementType} element)");
+            builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} element)");
             builder.IncreaseIndent();
 
             // For Avalonia with non-nullable reference/value types, add null-forgiving operator
@@ -986,7 +999,7 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
             }
 
-            builder.AppendLine($"public static void Set{p.Name}({elementType} element, {p.Type} value)");
+            builder.AppendLine($"{p.SetMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
             builder.IncreaseIndent();
             builder.AppendLine(
                 p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
@@ -1010,8 +1023,8 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine(
                 p.UseNewKeyword
-                    ? $"public new {p.Type} {p.Name}"
-                    : $"public {p.Type} {p.Name}");
+                    ? $"{p.MemberAccessModifier} new {p.Type} {p.Name}"
+                    : $"{p.MemberAccessModifier} {p.Type} {p.Name}");
             builder.AppendLine("{");
             builder.IncreaseIndent();
 
@@ -1028,7 +1041,7 @@ internal static class FrameworkElementBuilderExtensions
 
             if (!p.IsReadOnly)
             {
-                var setter = p.SetterAccessModifier.Length == 0 ? "set" : $"{p.SetterAccessModifier} set";
+                var setter = p.SetterKeyword;
 
                 builder.AppendLine(
                     p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
@@ -1046,7 +1059,12 @@ internal static class FrameworkElementBuilderExtensions
         AttachedPropertyToGenerate p,
         XamlPlatform xamlPlatform)
     {
-        var elementType = xamlPlatform switch
+        if (!p.GenerateClrAccessors)
+        {
+            return;
+        }
+
+        var elementType = p.TargetType ?? xamlPlatform switch
         {
             XamlPlatform.Avalonia => NameConstants.AvaloniaObject,
             _ => NameConstants.DependencyObject, // WPF and WinUI
@@ -1066,7 +1084,7 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"[Description(\"Get: {p.Description}\")]");
         }
 
-        builder.AppendLine($"public static {p.Type} Get{p.Name}({elementType} element)");
+        builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} element)");
         builder.IncreaseIndent();
 
         // For Avalonia with non-nullable reference/value types, add null-forgiving operator
@@ -1098,9 +1116,7 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
             }
 
-            var setMethodAccessModifier = p.SetterAccessModifier.Length == 0 ? "public" : p.SetterAccessModifier;
-
-            builder.AppendLine($"{setMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
+            builder.AppendLine($"{p.SetMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
             builder.IncreaseIndent();
             builder.AppendLine(
                 p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia

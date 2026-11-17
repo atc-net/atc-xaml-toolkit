@@ -91,6 +91,49 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🎯 Typing the accessors with `TargetType` (WPF, WinUI)
+
+By default the generated `Get{Name}` and `Set{Name}` methods take a `DependencyObject`. `TargetType` narrows the parameter to the kind of element the property is meant for:
+
+```csharp
+public static partial class CheckBoxHelper
+{
+    [AttachedProperty(TargetType = typeof(UIElement))]
+    private static CornerRadius checkCornerRadius;
+}
+```
+
+```csharp
+public static CornerRadius GetCheckCornerRadius(UIElement element)
+    => (CornerRadius)element.GetValue(CheckCornerRadiusProperty);
+
+public static void SetCheckCornerRadius(UIElement element, CornerRadius value)
+    => element?.SetValue(CheckCornerRadiusProperty, value);
+```
+
+This only changes the signature of the two methods. The property can still be set on any object from XAML, and the change hooks still receive a `DependencyObject`.
+
+## 🙈 Non-public attached properties and per-element state
+
+`AccessModifier` sets the accessibility of the `{Name}Property` field and of the `Get{Name}` / `Set{Name}` methods; `SetterAccessModifier` can give the `Set{Name}` method a different one. `GenerateClrAccessors = false` generates only the field. Together they cover an attached property that a class uses to keep its own state on an element:
+
+```csharp
+public static partial class DataGridFilter
+{
+    [AttachedProperty(AccessModifier = PropertyAccessModifier.Private, GenerateClrAccessors = false)]
+    private static DataGridFilterState state;
+}
+```
+
+```csharp
+private static readonly DependencyProperty StateProperty = DependencyProperty.RegisterAttached(
+    "State",
+    typeof(DataGridFilterState),
+    typeof(DataGridFilter));
+```
+
+Both options work on WPF, WinUI and Avalonia.
+
 ## 🔐 Read-only attached properties (WPF)
 
 `[AttachedProperty(IsReadOnly = true)]` registers the property with `RegisterAttachedReadOnly`. The generator emits a private `{Name}PropertyKey`, the public `{Name}Property` taken from the key, a public `Get{Name}` method, and a `Set{Name}` method that writes through the key and is `private` unless `SetterAccessModifier` says otherwise:

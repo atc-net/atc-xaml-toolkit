@@ -35,6 +35,22 @@ public abstract class StyledPropertyBaseAttribute : Attribute
     public PropertyAccessModifier SetterAccessModifier { get; set; }
 
     /// <summary>
+    /// Gets or sets the accessibility of the generated members: the property identifier
+    /// field and the CLR property, or the <c>Get{Name}</c> / <c>Set{Name}</c> methods of an
+    /// attached property. The default is <see cref="PropertyAccessModifier.Public"/>.
+    /// <see cref="SetterAccessModifier"/> can restrict the setter further.
+    /// </summary>
+    public PropertyAccessModifier AccessModifier { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the CLR property, or the <c>Get{Name}</c> /
+    /// <c>Set{Name}</c> methods of an attached property, are generated. Set it to
+    /// <c>false</c> to generate only the property identifier field, for a property that is
+    /// read and written with <c>GetValue</c> / <c>SetValue</c>. The default is <c>true</c>.
+    /// </summary>
+    public bool GenerateClrAccessors { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the category for design-time tools.
     /// </summary>
     public string? Category { get; set; }

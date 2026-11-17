@@ -98,11 +98,22 @@ internal static class AttributeDataExtensions
     /// <param name="attributeData">The attribute data.</param>
     /// <returns>The type name as it can be written in the generated code; <c>null</c> when the option is not set.</returns>
     public static string? ExtractAddOwnerOf(this AttributeData attributeData)
+        => attributeData.ExtractTypeOfArgument(NameConstants.AddOwnerOf);
+
+    /// <summary>
+    /// Reads a named <c>typeof(...)</c> argument of an attribute.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <param name="argumentName">The name of the argument.</param>
+    /// <returns>The type name as it can be written in the generated code; <c>null</c> when the argument is not set.</returns>
+    public static string? ExtractTypeOfArgument(
+        this AttributeData attributeData,
+        string argumentName)
     {
         // The attribute is resolved: the value is the type symbol.
         foreach (var namedArgument in attributeData.NamedArguments)
         {
-            if (namedArgument.Key == NameConstants.AddOwnerOf &&
+            if (namedArgument.Key == argumentName &&
                 namedArgument.Value.Value is ITypeSymbol typeSymbol)
             {
                 return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -114,7 +125,7 @@ internal static class AttributeDataExtensions
         {
             foreach (var argument in argumentList.Arguments)
             {
-                if (argument.NameEquals?.Name.Identifier.ValueText == NameConstants.AddOwnerOf &&
+                if (argument.NameEquals?.Name.Identifier.ValueText == argumentName &&
                     argument.Expression is TypeOfExpressionSyntax typeOfExpression)
                 {
                     return typeOfExpression.Type.ToString();
@@ -132,11 +143,22 @@ internal static class AttributeDataExtensions
     /// <returns>The C# modifier for the setter, e.g. <c>private</c>; empty for a public setter.</returns>
     public static string ExtractSetterAccessModifier(
         this AttributeData attributeData)
+        => attributeData.ExtractAccessModifier(NameConstants.SetterAccessModifier);
+
+    /// <summary>
+    /// Reads a named <c>PropertyAccessModifier</c> argument of an attribute.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <param name="argumentName">The name of the argument.</param>
+    /// <returns>The C# modifier, e.g. <c>private</c>; empty for public.</returns>
+    public static string ExtractAccessModifier(
+        this AttributeData attributeData,
+        string argumentName)
     {
         // The attribute is resolved: the value is the enum's number.
         foreach (var namedArgument in attributeData.NamedArguments)
         {
-            if (namedArgument.Key == NameConstants.SetterAccessModifier &&
+            if (namedArgument.Key == argumentName &&
                 namedArgument.Value.Value is int value &&
                 value >= 0 &&
                 value < SetterAccessModifiers.Length)
@@ -150,7 +172,7 @@ internal static class AttributeDataExtensions
         {
             foreach (var argument in argumentList.Arguments)
             {
-                if (argument.NameEquals?.Name.Identifier.ValueText != NameConstants.SetterAccessModifier)
+                if (argument.NameEquals?.Name.Identifier.ValueText != argumentName)
                 {
                     continue;
                 }

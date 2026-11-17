@@ -47,6 +47,46 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? UserCoerceValueCallback { get; set; }
 
     /// <summary>
+    /// Gets or sets the C# modifier of the generated members, e.g. <c>internal</c>; empty
+    /// for public.
+    /// </summary>
+    public string AccessModifier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the C# modifier of the generated identifier field, CLR property and
+    /// <c>Get{Name}</c> method.
+    /// </summary>
+    public string MemberAccessModifier
+        => AccessModifier.Length == 0 ? "public" : AccessModifier;
+
+    /// <summary>
+    /// Gets the C# modifier of the generated <c>Set{Name}</c> method.
+    /// </summary>
+    public string SetMethodAccessModifier
+        => SetterAccessModifier.Length == 0 ? MemberAccessModifier : SetterAccessModifier;
+
+    /// <summary>
+    /// Gets the setter of the generated CLR property with its modifier. An accessor modifier
+    /// must be more restrictive than the property, so it is left out when it is the same.
+    /// </summary>
+    public string SetterKeyword
+        => SetterAccessModifier.Length == 0 || SetterAccessModifier == AccessModifier
+            ? "set"
+            : $"{SetterAccessModifier} set";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the CLR property, or the accessor methods of
+    /// an attached property, are generated.
+    /// </summary>
+    public bool GenerateClrAccessors { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the type of the element parameter of the accessor methods of an attached
+    /// property; <c>null</c> for the platform's default.
+    /// </summary>
+    public string? TargetType { get; set; }
+
+    /// <summary>
     /// Gets or sets the type whose existing dependency property is shared with
     /// <c>AddOwner</c> instead of registering a new one (WPF only); <c>null</c> otherwise.
     /// </summary>

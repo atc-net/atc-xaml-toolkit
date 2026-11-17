@@ -135,6 +135,34 @@ public string SelectedStateMessage
 
 This only hides the C# setter. The property is still an ordinary, writable dependency property: XAML can set it and so can `SetValue(SelectedStateMessageProperty, ...)`. It is not a read-only dependency property with a `DependencyPropertyKey`.
 
+## 🙈 Non-public properties and properties without a CLR wrapper
+
+`AccessModifier` sets the accessibility of everything generated for the property: the `{Name}Property` field and the CLR property. Use it for a property that is an implementation detail of the control:
+
+```csharp
+[DependencyProperty(AccessModifier = PropertyAccessModifier.Private)]
+private double internalViewportZoom;
+```
+
+```csharp
+private static readonly DependencyProperty InternalViewportZoomProperty = DependencyProperty.Register(
+    nameof(InternalViewportZoom),
+    typeof(double),
+    typeof(ZoomBox),
+    new PropertyMetadata(defaultValue: 0d));
+
+private double InternalViewportZoom
+{
+    get => (double)GetValue(InternalViewportZoomProperty);
+    set => SetValue(InternalViewportZoomProperty, value);
+}
+```
+
+- `SetterAccessModifier` can restrict the setter further, for example an `Internal` property with a `Private` setter. C# requires the setter to be more restrictive than the property; when both are the same, the generator leaves the modifier off the setter.
+- `GenerateClrAccessors = false` generates only the `{Name}Property` field, for a property that is read and written with `GetValue` / `SetValue`. The property is then registered under its name as a string, because there is no CLR property for `nameof`.
+- Both options work on WPF, WinUI and Avalonia (`[StyledProperty]`).
+- A non-public property is still registered with the property system under its name; the modifier only limits what C# code can reach.
+
 ## 🔐 Read-only dependency properties (WPF)
 
 A value that only the control may set, such as a computed summary or a state flag, should be a read-only dependency property. With `IsReadOnly = true` the generator registers it with `RegisterReadOnly` and writes through a `DependencyPropertyKey`:
