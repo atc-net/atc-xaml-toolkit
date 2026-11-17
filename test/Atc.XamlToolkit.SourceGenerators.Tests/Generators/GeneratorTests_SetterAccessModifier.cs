@@ -111,6 +111,27 @@ public sealed class GeneratorTests_SetterAccessModifier : GeneratorTestBase
     }
 
     [Fact]
+    public void AttachedProperty_SetterAccessModifier_Wpf_IsAppliedToTheSetMethod()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public static partial class DragBehavior
+            {
+                [AttachedProperty(SetterAccessModifier = PropertyAccessModifier.Internal)]
+                private static bool isDraggable;
+            }
+            """;
+
+        var generatedCode = Assert.Single(RunGenerator<FrameworkElementGenerator>(inputCode).GeneratorResult.GeneratedSources).SourceText.ToString();
+
+        Assert.Contains("public static bool GetIsDraggable(DependencyObject element)", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("internal static void SetIsDraggable(DependencyObject element, bool value)", generatedCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("PropertyKey", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ObservableDtoViewModel_CustomProperty_SetterAccessModifier_IsApplied()
     {
         const string inputCode =

@@ -258,6 +258,7 @@ internal static class FrameworkElementBuilderExtensions
     {
         GenerateDependencyPropertyHeader(builder, p, isAttached: true, xamlPlatform);
         GenerateDependencyPropertyBody(builder, p, xamlPlatform);
+        GeneratePropertyIdentifierFromKey(builder, p, isAttached: true, xamlPlatform);
 
         if (xamlPlatform == XamlPlatform.Avalonia &&
             !string.IsNullOrEmpty(p.PropertyChangedCallback))
@@ -280,8 +281,32 @@ internal static class FrameworkElementBuilderExtensions
     {
         GenerateDependencyPropertyHeader(builder, p, isAttached: false, xamlPlatform);
         GenerateDependencyPropertyBody(builder, p, xamlPlatform);
+        GeneratePropertyIdentifierFromKey(builder, p, isAttached: false, xamlPlatform);
         GenerateClrDependencyProperty(builder, p, xamlPlatform);
         GeneratePartialHook(builder, p, isAttached: false, xamlPlatform);
+    }
+
+    // The public {Name}Property of a read-only dependency property comes from its key.
+    private static void GeneratePropertyIdentifierFromKey(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        bool isAttached,
+        XamlPlatform xamlPlatform)
+    {
+        if (!p.UsesPropertyKey)
+        {
+            return;
+        }
+
+        builder.AppendLine();
+
+        if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
+        {
+            builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
+        }
+
+        var newModifier = p.UseNewKeyword ? "new " : string.Empty;
+        builder.AppendLine($"public static {newModifier}readonly DependencyProperty {p.Name}Property = {p.Name}PropertyKey.DependencyProperty;");
     }
 
     // Emits the static callback that is registered with the property system, and the typed
@@ -385,6 +410,17 @@ internal static class FrameworkElementBuilderExtensions
         };
 
         builder.AppendLineBeforeMember();
+
+        if (p.UsesPropertyKey)
+        {
+            // A read-only dependency property: the registration returns the key, and the
+            // public identifier is taken from the key after the registration.
+            builder.AppendLine($"private static readonly DependencyPropertyKey {p.Name}PropertyKey = DependencyProperty.{registerMethod}ReadOnly(");
+            builder.IncreaseIndent();
+            builder.AppendLine(isAttached || p.IsOwnerTypeStatic ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
+            builder.AppendLine($"typeof({p.TypeForTypeOf}),");
+            return;
+        }
 
         if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
         {
@@ -559,8 +595,20 @@ internal static class FrameworkElementBuilderExtensions
             {
                 case true when p.HasAnyValidateValueCallback:
                     builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
+                    if (p.UsesPropertyKey)
+                    {
+                        // RegisterReadOnly has no overload without metadata
+                        builder.AppendLine("new PropertyMetadata(),");
+                    }
+
                     builder.DecreaseIndent();
                     builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
+                    break;
+                case true when p.UsesPropertyKey:
+                    // RegisterReadOnly has no overload without metadata
+                    builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
+                    builder.AppendLine("new PropertyMetadata());");
+                    builder.DecreaseIndent();
                     break;
                 case false:
                     // WinUI requires PropertyMetadata parameter even if empty
@@ -863,8 +911,8 @@ internal static class FrameworkElementBuilderExtensions
 
                 builder.AppendLine(
                     p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                        ? $"{setter} => SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                        : $"{setter} => SetValue({p.Name}Property, value);");
+                        ? $"{setter} => SetValue({p.WritablePropertyIdentifier}, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                        : $"{setter} => SetValue({p.WritablePropertyIdentifier}, value);");
             }
 
             builder.DecreaseIndent();
@@ -929,12 +977,14 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
             }
 
-            builder.AppendLine($"public static void Set{p.Name}({elementType} element, {p.Type} value)");
+            var setMethodAccessModifier = p.SetterAccessModifier.Length == 0 ? "public" : p.SetterAccessModifier;
+
+            builder.AppendLine($"{setMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
             builder.IncreaseIndent();
             builder.AppendLine(
                 p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                    ? $"=> element?.SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                    : $"=> element?.SetValue({p.Name}Property, value);");
+                    ? $"=> element?.SetValue({p.WritablePropertyIdentifier}, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                    : $"=> element?.SetValue({p.WritablePropertyIdentifier}, value);");
         }
 
         builder.DecreaseIndent();

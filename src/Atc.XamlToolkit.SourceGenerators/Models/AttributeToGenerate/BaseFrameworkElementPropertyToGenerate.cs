@@ -34,6 +34,19 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? UserPropertyChangedCallback { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the property is registered as a read-only
+    /// dependency property with a <c>DependencyPropertyKey</c> (WPF only).
+    /// </summary>
+    public bool UsesPropertyKey { get; set; }
+
+    /// <summary>
+    /// Gets the field the generated code writes through: the key of a read-only dependency
+    /// property, otherwise the property identifier itself.
+    /// </summary>
+    public string WritablePropertyIdentifier
+        => UsesPropertyKey ? $"{Name}PropertyKey" : $"{Name}Property";
+
+    /// <summary>
     /// Gets or sets the C# modifier of the property's setter, e.g. <c>private</c>;
     /// empty for a setter that is as accessible as the property.
     /// </summary>

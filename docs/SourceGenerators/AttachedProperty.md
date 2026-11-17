@@ -91,6 +91,23 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🔐 Read-only attached properties (WPF)
+
+`[AttachedProperty(IsReadOnly = true)]` registers the property with `RegisterAttachedReadOnly`. The generator emits a private `{Name}PropertyKey`, the public `{Name}Property` taken from the key, a public `Get{Name}` method, and a `Set{Name}` method that writes through the key and is `private` unless `SetterAccessModifier` says otherwise:
+
+```csharp
+public static partial class DataGridFilter
+{
+    [AttachedProperty(IsReadOnly = true)]
+    private static bool isFiltered;
+
+    internal static void MarkAsFiltered(DependencyObject element)
+        => SetIsFiltered(element, true);
+}
+```
+
+`SetterAccessModifier` can also be used without `IsReadOnly`, to make the `Set{Name}` method of an ordinary attached property non-public.
+
 ## 🪝 Typed change hooks
 
 `GeneratePartialHooks = true` generates the static property-changed callback and calls a typed partial method. An attached property has no owner instance, so the hook is static and receives the object the property is attached to:

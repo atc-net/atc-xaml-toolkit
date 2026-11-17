@@ -135,6 +135,40 @@ public string SelectedStateMessage
 
 This only hides the C# setter. The property is still an ordinary, writable dependency property: XAML can set it and so can `SetValue(SelectedStateMessageProperty, ...)`. It is not a read-only dependency property with a `DependencyPropertyKey`.
 
+## 🔐 Read-only dependency properties (WPF)
+
+A value that only the control may set, such as a computed summary or a state flag, should be a read-only dependency property. With `IsReadOnly = true` the generator registers it with `RegisterReadOnly` and writes through a `DependencyPropertyKey`:
+
+```csharp
+[DependencyProperty(IsReadOnly = true)]
+private string summaryText;
+```
+
+Generated:
+
+```csharp
+private static readonly DependencyPropertyKey SummaryTextPropertyKey = DependencyProperty.RegisterReadOnly(
+    nameof(SummaryText),
+    typeof(string),
+    typeof(MyControl),
+    new PropertyMetadata());
+
+public static readonly DependencyProperty SummaryTextProperty = SummaryTextPropertyKey.DependencyProperty;
+
+public string SummaryText
+{
+    get => (string)GetValue(SummaryTextProperty);
+    private set => SetValue(SummaryTextPropertyKey, value);
+}
+```
+
+- The key is named `{Name}PropertyKey` and is private.
+- The setter is `private` by default. `SetterAccessModifier` changes that, for example `SetterAccessModifier = PropertyAccessModifier.Internal`.
+- Nothing outside the class can set the property: `SetValue(SummaryTextProperty, ...)`, XAML, styles and bindings that write to it all fail. Bindings that read it work as usual.
+- `DefaultValue`, the callbacks and the metadata options work as for an ordinary property.
+- This is different from `SetterAccessModifier` alone, which only hides the C# setter of an ordinary, writable property.
+- **WPF only.** WinUI has no read-only dependency properties, and Avalonia's equivalent is a direct property, which the generator does not produce. The option does not exist on the WinUI attribute or on `[StyledProperty]`.
+
 ## 🪝 Typed change hooks
 
 A `PropertyChangedCallback` has to be a static method that receives the object and untyped event args, so it usually starts by casting both:

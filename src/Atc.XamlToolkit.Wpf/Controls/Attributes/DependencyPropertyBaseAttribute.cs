@@ -17,6 +17,17 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public bool GeneratePartialHooks { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the property is a read-only dependency
+    /// property. It is then registered with <c>RegisterReadOnly</c> (or
+    /// <c>RegisterAttachedReadOnly</c>): the generator emits a private
+    /// <c>{Name}PropertyKey</c>, the public <c>{Name}Property</c> taken from the key, and a
+    /// setter that writes through the key. The setter is <c>private</c> unless
+    /// <see cref="SetterAccessModifier"/> says otherwise. Nothing outside the class can set
+    /// the property - not XAML, a style or a binding either.
+    /// </summary>
+    public bool IsReadOnly { get; set; }
+
+    /// <summary>
     /// Gets or sets the accessibility of the generated CLR property's setter. The default is
     /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
     /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.

@@ -91,6 +91,7 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.IsNullableValueType = isNullableValueType;
             propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
             propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+            ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
@@ -176,6 +177,7 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+        ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
 
         var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
@@ -186,6 +188,28 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);
 
         return propertyToGenerate;
+    }
+
+    // IsReadOnly = true registers a read-only dependency property with a key. Only WPF has
+    // them. The setter writes through the key and is private unless stated otherwise.
+    private static void ApplyReadOnlyKey(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        IDictionary<string, string?> argumentValues,
+        XamlPlatform xamlPlatform)
+    {
+        if (xamlPlatform != XamlPlatform.Wpf ||
+            !argumentValues.TryGetValue(NameConstants.IsReadOnly, out var value) ||
+            !"true".Equals(value, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        propertyToGenerate.UsesPropertyKey = true;
+
+        if (propertyToGenerate.SetterAccessModifier.Length == 0)
+        {
+            propertyToGenerate.SetterAccessModifier = "private";
+        }
     }
 
     private static bool HasGeneratePartialHooks(

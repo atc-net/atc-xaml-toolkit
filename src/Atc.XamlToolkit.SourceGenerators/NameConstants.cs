@@ -80,6 +80,7 @@ internal static class NameConstants
     public const string DefaultStyleKeyAttribute = nameof(DefaultStyleKeyAttribute);
     public const string OverrideDefaultStyleKey = nameof(OverrideDefaultStyleKey);
     public const string ResolveTemplateParts = nameof(ResolveTemplateParts);
+    public const string IsReadOnly = nameof(IsReadOnly);
     public const string RoutedEvent = nameof(RoutedEvent);
     public const string SetterAccessModifier = nameof(SetterAccessModifier);
     public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
