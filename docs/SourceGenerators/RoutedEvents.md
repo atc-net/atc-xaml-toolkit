@@ -195,6 +195,8 @@ public static void AddFilterChangedHandler(DependencyObject element, DataGridFil
 // RemoveFilterChangedHandler is generated the same way.
 ```
 
+A class that only holds events for other classes to share with `AddOwnerOf` needs no handler methods; `GenerateHandlerMethods = false` leaves them out and generates the `{Name}Event` field alone.
+
 This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `GenerateRaiseMethod` has no effect in a static class and is reported as `AtcXamlToolkit0013`; raise the event on the element with `element.RaiseEvent(...)`.
 
 ### 🛠️ Specifying a custom delegate type
@@ -269,6 +271,7 @@ private void NumericBox_OnValueIncremented(
 | HandlerType     | named         | Type            | typeof(RoutedEventHandler) | CLR delegate type for the generated event. |
 | AddOwnerOf      | named         | Type            | none                       | Share the event of this type instead of registering a new one. |
 | GenerateRaiseMethod | named     | bool            | false                      | Generate a `Raise{Name}` method. |
+| GenerateHandlerMethods | named  | bool            | true                       | In a static class: generate `Add{Name}Handler` / `Remove{Name}Handler`. |
 | RaiseMethodAccessModifier | named | PropertyAccessModifier | protected (private when sealed) | Accessibility of the `Raise{Name}` method. |
 | GenerateDocumentation | named   | bool            | assembly default           | Emit default summaries on the generated members. |
 

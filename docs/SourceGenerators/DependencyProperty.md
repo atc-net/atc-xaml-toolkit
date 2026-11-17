@@ -296,7 +296,7 @@ public double MaxDropDownHeight
 ```
 
 - The shared property is `{Type}.{Name}Property`, so the field must have the name and type of the property being shared.
-- Without further options no metadata is passed, and the default value and callbacks of the shared property stay as they are.
+- Without further options no metadata is passed, and the default value and callbacks of the shared property stay as they are. The new owner then gets the metadata it inherits. For an owner that does not derive from the type that registered the property, that is the property's default metadata, whose class may differ from what a hand-written `AddOwner(typeof(X), new FrameworkPropertyMetadata(...))` gave; state `MetadataType = DependencyPropertyMetadataType.FrameworkPropertyMetadata` to pass a `FrameworkPropertyMetadata` that keeps the shared default.
 - `DefaultValue`, `PropertyChangedCallback`, `CoerceValueCallback`, `GeneratePartialHooks` and `GenerateCoerceHook` override the metadata for the new owner only:
 
   ```csharp

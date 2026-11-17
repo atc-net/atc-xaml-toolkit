@@ -40,6 +40,14 @@ public sealed class RoutedEventAttribute(RoutingStrategy routingStrategy) : Attr
     public bool GenerateRaiseMethod { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether <c>Add{Name}Handler</c> and
+    /// <c>Remove{Name}Handler</c> methods are generated for an event in a static class.
+    /// The default is <c>true</c>. Set it to <c>false</c> for a class that only holds
+    /// events for other classes to share with <see cref="AddOwnerOf"/>.
+    /// </summary>
+    public bool GenerateHandlerMethods { get; init; } = true;
+
+    /// <summary>
     /// Gets the accessibility of the generated <c>Raise{Name}</c> method. When it is not
     /// stated the method is <c>protected</c>, or <c>private</c> in a sealed class.
     /// </summary>

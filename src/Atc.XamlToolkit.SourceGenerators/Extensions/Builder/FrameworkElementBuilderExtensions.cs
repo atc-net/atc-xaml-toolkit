@@ -1271,8 +1271,12 @@ internal static class FrameworkElementBuilderExtensions
         if (re.IsOwnerTypeStatic)
         {
             // A static class cannot have an instance event; handlers are attached to an element.
-            GenerateRoutedEventHandlerMethod(builder, re, "Add", "Adds");
-            GenerateRoutedEventHandlerMethod(builder, re, "Remove", "Removes");
+            if (re.GenerateHandlerMethods)
+            {
+                GenerateRoutedEventHandlerMethod(builder, re, "Add", "Adds");
+                GenerateRoutedEventHandlerMethod(builder, re, "Remove", "Removes");
+            }
+
             return;
         }
 

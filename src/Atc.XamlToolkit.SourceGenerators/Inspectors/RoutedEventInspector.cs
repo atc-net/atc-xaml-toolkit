@@ -145,6 +145,9 @@ internal static class RoutedEventInspector
                 IsOwnerTypeSealed = classSymbol.IsSealed,
                 AddOwnerOf = fieldPropertyAttribute.ExtractAddOwnerOf(),
                 GenerateRaiseMethod = generateRaiseMethod,
+                GenerateHandlerMethods =
+                    !fieldArgumentValues.TryGetValue(NameConstants.GenerateHandlerMethods, out var generateHandlerMethods) ||
+                    !"false".Equals(generateHandlerMethods, StringComparison.OrdinalIgnoreCase),
                 RaiseMethodAccessModifier = GetRaiseMethodAccessModifier(fieldPropertyAttribute),
                 GenerateDocumentation = generateDocumentation,
             };

@@ -31,6 +31,12 @@ internal sealed record RoutedEventToGenerate(
     public bool GenerateRaiseMethod { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether an event in a static class gets
+    /// <c>Add{Name}Handler</c> / <c>Remove{Name}Handler</c> methods.
+    /// </summary>
+    public bool GenerateHandlerMethods { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the C# modifier of the <c>Raise{Name}</c> method when the attribute
     /// states one; <c>null</c> for the default.
     /// </summary>
