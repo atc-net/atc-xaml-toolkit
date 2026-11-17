@@ -378,7 +378,9 @@ internal static class ViewModelDiagnosticHelper
         INamedTypeSymbol classSymbol)
     {
         var knownPropertyNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
+
+        // Members inherited from the base classes exist on the final type too
+        foreach (var member in GetMembersIncludingInherited(classSymbol))
         {
             if (member is IPropertySymbol propertySymbol)
             {
@@ -405,7 +407,9 @@ internal static class ViewModelDiagnosticHelper
         INamedTypeSymbol classSymbol)
     {
         var knownCommandNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var member in classSymbol.GetMembers())
+
+        // Members inherited from the base classes exist on the final type too
+        foreach (var member in GetMembersIncludingInherited(classSymbol))
         {
             // User-declared property whose name ends in "Command" — covers
             // hand-written IRelayCommand properties without forcing us to
@@ -425,6 +429,20 @@ internal static class ViewModelDiagnosticHelper
         }
 
         return knownCommandNames;
+    }
+
+    private static IEnumerable<ISymbol> GetMembersIncludingInherited(
+        INamedTypeSymbol classSymbol)
+    {
+        for (var type = classSymbol;
+             type is not null;
+             type = type.BaseType)
+        {
+            foreach (var member in type.GetMembers())
+            {
+                yield return member;
+            }
+        }
     }
 
     private static bool IsClassWithComputedPropertyUsage(SyntaxNode syntaxNode)
