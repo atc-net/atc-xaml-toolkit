@@ -8,7 +8,7 @@ Traditionally, creating a routed event involves writing repetitive boilerplate c
 
 > **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For WinUI and Avalonia, use standard .NET events instead.
 
-> **Important:** Classes using `[RoutedEvent]` must either inherit from `UserControl`, `DependencyObject`, or `FrameworkElement`, OR have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"**. This requirement ensures the source generator can properly detect and process your routed events.
+> **Note:** `[RoutedEvent]` works in any `partial` class of a WPF project, whatever it is called and whatever it derives from.
 
 ---
 

@@ -346,7 +346,8 @@ internal static class NamedTypeSymbolExtensions
 
     /// <summary>
     /// Checks if the class symbol is a valid framework element target for source generation.
-    /// This checks inheritance, naming conventions, and the presence of RoutedEvent attributes.
+    /// This checks inheritance, naming conventions, and the presence of one of the toolkit's
+    /// framework-element attributes on the class or on a member.
     /// </summary>
     /// <param name="classSymbol">The class symbol to check.</param>
     /// <returns>True if the class is a valid framework element target; otherwise, false.</returns>
@@ -368,22 +369,25 @@ internal static class NamedTypeSymbolExtensions
             return true;
         }
 
-        // [DefaultStyleKey] is only ever written on a control.
-        if (classSymbol.GetAttributes()
-            .Any(a => a.GetToolkitAttributeName()
-                is NameConstants.DefaultStyleKeyAttribute
-                or NameConstants.DefaultStyleKey))
-        {
-            return true;
-        }
-
-        // Symbol-based check replaces SyntaxTree.ToString().Contains("[RoutedEvent")
-        return classSymbol.GetMembers()
-            .Any(m => m.GetAttributes()
-                .Any(a => a.GetToolkitAttributeName()
-                    is NameConstants.RoutedEventAttribute
-                    or NameConstants.RoutedEvent
-                    or NameConstants.TemplatePartFieldAttribute
-                    or NameConstants.TemplatePartField));
+        // One of the toolkit's framework-element attributes says what the class is,
+        // whatever it is called and whatever it derives from. [RelayCommand] is not in the
+        // list on purpose: on its own it marks a view model, which ViewModelGenerator handles.
+        return classSymbol.GetAttributes().Any(IsFrameworkElementAttribute) ||
+               classSymbol.GetMembers().Any(m => m.GetAttributes().Any(IsFrameworkElementAttribute));
     }
+
+    private static bool IsFrameworkElementAttribute(AttributeData attributeData)
+        => attributeData.GetToolkitAttributeName()
+            is NameConstants.DependencyPropertyAttribute
+            or NameConstants.DependencyProperty
+            or NameConstants.AttachedPropertyAttribute
+            or NameConstants.AttachedProperty
+            or NameConstants.StyledPropertyAttribute
+            or NameConstants.StyledProperty
+            or NameConstants.RoutedEventAttribute
+            or NameConstants.RoutedEvent
+            or NameConstants.DefaultStyleKeyAttribute
+            or NameConstants.DefaultStyleKey
+            or NameConstants.TemplatePartFieldAttribute
+            or NameConstants.TemplatePartField;
 }

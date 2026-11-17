@@ -203,12 +203,13 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 - Source generators use `XamlPlatform` enum (Wpf, WinUI, Avalonia) to generate platform-appropriate code
 - Detection logic in `FrameworkElementInspector.GetXamlPlatform()` based on project references
 
-**Class Naming Requirements for FrameworkElementGenerator:**
-- Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must:
-  - Inherit from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
-  - Have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"**, OR
-  - Contain `[RoutedEvent]` attributes
-- This requirement is enforced by `HasAnythingAroundFrameworkElement()` in `ClassDeclarationSyntaxExtensions.cs`
+**Which classes FrameworkElementGenerator picks up:**
+- A `partial` class is handled when:
+  - The class or one of its members carries `[DependencyProperty]`, `[StyledProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` (any class name, any base class), OR
+  - It inherits from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
+  - Its name ends with **"Attach"**, **"Behavior"**, or **"Helper"**
+- The last two rules only matter for `[RelayCommand]` in a control, behavior or helper; `[RelayCommand]` alone does not qualify a class, so view model commands stay with `ViewModelGenerator`
+- The check is `HasAnythingAroundFrameworkElement()` in `NamedTypeSymbolExtensions.cs`
 - Common patterns: `DragBehavior`, `WatermarkTextBoxBehavior`, `CheckBoxHelper`
 
 ## Code Style and Rules

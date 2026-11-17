@@ -239,7 +239,7 @@ Eliminate boilerplate with powerful code generation:
 - **[DefaultStyleKey]** (WPF & Avalonia) - Auto-generate the default style key override of a custom control
 - **[TemplatePartField]** (WPF, WinUI 3 & Avalonia) - Declare a template part once, on its field, and auto-generate the lookup
 
-> **Note:** Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must either inherit from `UserControl`/`DependencyObject`/`FrameworkElement`, or have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`).
+> **Note:** Any `partial` class that uses `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` is picked up, whatever it is called and whatever it derives from. For `[RelayCommand]` in a control, behavior or helper, the class must inherit from `UserControl`/`DependencyObject`/`FrameworkElement` or have a name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`); otherwise the command is treated as a view model command.
 
 Learn more about each generator:
 
