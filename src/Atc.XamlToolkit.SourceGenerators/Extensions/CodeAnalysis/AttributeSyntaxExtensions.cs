@@ -16,6 +16,9 @@ internal static class AttributeSyntaxExtensions
     public static string GetSimpleAttributeName(this AttributeSyntax attribute)
         => attribute.Name switch
         {
+            // A name written with its namespace: only the last part is the attribute name.
+            QualifiedNameSyntax qualifiedName => qualifiedName.Right.Identifier.Text,
+            AliasQualifiedNameSyntax aliasQualifiedName => aliasQualifiedName.Name.Identifier.Text,
             GenericNameSyntax genericName => genericName.Identifier.Text,
             _ => attribute.Name.ToString(),
         };

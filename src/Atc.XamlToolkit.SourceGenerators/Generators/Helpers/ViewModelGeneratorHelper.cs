@@ -251,6 +251,13 @@ internal static class ViewModelGeneratorHelper
             return null;
         }
 
+        // The syntax predicate only knows the attribute's name. Another MVVM library has an
+        // attribute of the same name, which is none of this generator's business.
+        if (!ClassHasINotifyPropertyChangedAttribute(classSymbol))
+        {
+            return null;
+        }
+
         // Only emit once per type — pick the first qualifying partial declaration.
         foreach (var declRef in classSymbol.DeclaringSyntaxReferences)
         {

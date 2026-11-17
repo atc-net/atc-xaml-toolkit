@@ -320,9 +320,41 @@ public abstract class GeneratorTestBase
         Assert.Fail(string.Join(Environment.NewLine, problems));
     }
 
+    /// <summary>
+    /// Runs all three generators together on the given sources, in the same minimal Avalonia
+    /// consumer compilation as <see cref="AssertCompilesWithAllGenerators"/>, and returns the
+    /// generated source texts.
+    /// </summary>
+    /// <param name="inputCodes">Source files to compile.</param>
+    /// <returns>The text of every generated file.</returns>
+    internal static IReadOnlyList<string> GetSourcesGeneratedForAvaloniaConsumer(
+        params string[] inputCodes)
+        => RunAllGeneratorsForConsumer(useConsumerGlobalUsings: true, inputCodes, out _)
+            .Results
+            .SelectMany(x => x.GeneratedSources)
+            .Select(x => x.SourceText.ToString())
+            .ToList();
+
     private static IReadOnlyList<string> CompileWithAllGenerators(
         bool useConsumerGlobalUsings,
         string[] inputCodes)
+    {
+        var runResult = RunAllGeneratorsForConsumer(useConsumerGlobalUsings, inputCodes, out var outputCompilation);
+
+        var problems = new List<string>();
+
+        foreach (var result in runResult.Results.Where(x => x.Exception is not null))
+        {
+            problems.Add($"Generator exception: {result.Exception!.GetType().Name}: {result.Exception.Message}");
+        }
+
+        return CollectCompileProblems(runResult, outputCompilation, problems);
+    }
+
+    private static GeneratorDriverRunResult RunAllGeneratorsForConsumer(
+        bool useConsumerGlobalUsings,
+        string[] inputCodes,
+        out Compilation outputCompilation)
     {
         const string consumerGlobalUsings =
             """
@@ -356,18 +388,17 @@ public abstract class GeneratorTestBase
 
         driver = driver.RunGeneratorsAndUpdateCompilation(
             inputCompilation,
-            out var outputCompilation,
+            out outputCompilation,
             out _);
 
-        var runResult = driver.GetRunResult();
+        return driver.GetRunResult();
+    }
 
-        var problems = new List<string>();
-
-        foreach (var result in runResult.Results.Where(x => x.Exception is not null))
-        {
-            problems.Add($"Generator exception: {result.Exception!.GetType().Name}: {result.Exception.Message}");
-        }
-
+    private static IReadOnlyList<string> CollectCompileProblems(
+        GeneratorDriverRunResult runResult,
+        Compilation outputCompilation,
+        List<string> problems)
+    {
         problems.AddRange(
             outputCompilation
                 .GetDiagnostics()
