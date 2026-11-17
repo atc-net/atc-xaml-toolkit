@@ -440,6 +440,109 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableDtoViewModel_InitOnlyAndNonPublicSetters_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Person
+            {
+                public string Name { get; set; } = string.Empty;
+
+                public int Id { get; init; }
+
+                public int Age { get; private set; }
+
+                public string Code { get; protected set; } = string.Empty;
+            }
+
+            [ObservableDtoViewModel(typeof(Person))]
+            public partial class PersonViewModel : ViewModelBase
+            {
+            }
+
+            public static class Consumer
+            {
+                public static string Use(PersonViewModel viewModel)
+                {
+                    viewModel.Name = "x";
+                    return $"{viewModel.Id} {viewModel.Age} {viewModel.Code}";
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
+    public void ObservableDtoViewModel_MethodsWithSpecialSignatures_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public enum Unit
+            {
+                None,
+                Meter,
+            }
+
+            public class Person
+            {
+                public string Name { get; set; } = string.Empty;
+
+                public T Convert<T>(T value) where T : struct => value;
+
+                public bool TryGetAge(out int age)
+                {
+                    age = 1;
+                    return true;
+                }
+
+                public void Swap(ref int left, ref int right) => (left, right) = (right, left);
+
+                public int Sum(in int first, params int[] rest) => first + rest.Length;
+
+                public string Format(string prefix = "p", int width = 3, double scale = 0.5, Unit unit = Unit.Meter, string? suffix = null, bool upper = true, char pad = ' ', System.DateTime when = default) => prefix;
+
+                public override int GetHashCode() => 1;
+
+                public override bool Equals(object? obj) => true;
+            }
+
+            [ObservableDtoViewModel(typeof(Person))]
+            public partial class PersonViewModel : ViewModelBase
+            {
+            }
+
+            public static class Consumer
+            {
+                public static string Use(PersonViewModel viewModel)
+                {
+                    var left = 1;
+                    var right = 2;
+                    viewModel.Swap(ref left, ref right);
+                    viewModel.TryGetAge(out var age);
+                    return viewModel.Format() + viewModel.Sum(in age, 1, 2, 3);
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+
+        var generatedCode = RunGenerator<ObservableDtoViewModelGenerator>(inputCode)
+            .GeneratorResult
+            .GeneratedSources[0]
+            .SourceText
+            .ToString();
+
+        // Forwarding these without 'override' would hide the inherited members (CS0114).
+        Assert.DoesNotContain("GetHashCode", generatedCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("Equals(", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

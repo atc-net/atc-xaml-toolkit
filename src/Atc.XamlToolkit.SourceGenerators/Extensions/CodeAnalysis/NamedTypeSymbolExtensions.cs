@@ -42,7 +42,11 @@ internal static class NamedTypeSymbolExtensions
                 var isRecordParameter = isRecord &&
                                         primaryConstructorParameters.Contains(p.Name);
 
-                var isReadOnly = p.SetMethod is null;
+                // A setter the view model cannot call makes the property read-only.
+                // Init-only record parameters are still writable through a 'with' expression.
+                var isReadOnly = p.SetMethod is null ||
+                                 p.SetMethod.DeclaredAccessibility != Accessibility.Public ||
+                                 (p.SetMethod.IsInitOnly && !isRecordParameter);
                 var attributes = p.ExtractPropertyAttributes();
                 var documentationComments = p.ExtractPropertyDocumentationComments();
 
@@ -74,13 +78,17 @@ internal static class NamedTypeSymbolExtensions
             .Where(m => m.DeclaredAccessibility == Accessibility.Public &&
                         m is { IsStatic: false, MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false } &&
                         m.Name != "ToString" &&
+                        !m.IsGenericMethod &&
+                        !OverridesObjectMember(m) &&
                         !ignoreSet.Contains(m.Name))
             .Select(m =>
             {
                 var parameters = m.Parameters
                     .Select(p => new DtoMethodParameterInfo(
                         p.Name,
-                        p.Type.ToString()))
+                        p.Type.ToString(),
+                        GetParameterModifier(p),
+                        GetParameterDefaultValue(p)))
                     .ToArray();
 
                 return new DtoMethodInfo(
@@ -89,6 +97,71 @@ internal static class NamedTypeSymbolExtensions
                     new EquatableArray<DtoMethodParameterInfo>(parameters));
             })
             .ToList();
+    }
+
+    // Equals(object) and GetHashCode() overrides cannot be forwarded without 'override'.
+    private static bool OverridesObjectMember(IMethodSymbol methodSymbol)
+    {
+        if (!methodSymbol.IsOverride)
+        {
+            return false;
+        }
+
+        var rootMethod = methodSymbol;
+        while (rootMethod.OverriddenMethod is not null)
+        {
+            rootMethod = rootMethod.OverriddenMethod;
+        }
+
+        return rootMethod.ContainingType.SpecialType == SpecialType.System_Object;
+    }
+
+    private static string GetParameterModifier(IParameterSymbol parameterSymbol)
+    {
+        if (parameterSymbol.IsParams)
+        {
+            return "params";
+        }
+
+        return parameterSymbol.RefKind switch
+        {
+            RefKind.Ref => "ref",
+            RefKind.Out => "out",
+            RefKind.In => "in",
+            _ => string.Empty,
+        };
+    }
+
+    private static string? GetParameterDefaultValue(
+        IParameterSymbol parameterSymbol)
+    {
+        if (!parameterSymbol.HasExplicitDefaultValue)
+        {
+            return null;
+        }
+
+        var type = parameterSymbol.Type;
+        var isNullableValueType = type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+
+        var value = parameterSymbol.ExplicitDefaultValue;
+        if (value is null)
+        {
+            return type.IsReferenceType || isNullableValueType
+                ? "null"
+                : "default";
+        }
+
+        var literal = SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false);
+
+        if (isNullableValueType && type is INamedTypeSymbol { TypeArguments.Length: 1 } nullableType)
+        {
+            type = nullableType.TypeArguments[0];
+        }
+
+        // The default value of an enum parameter is its underlying number.
+        return type.TypeKind == TypeKind.Enum
+            ? $"({type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})({literal})"
+            : literal;
     }
 
     public static string GetAccessModifier(

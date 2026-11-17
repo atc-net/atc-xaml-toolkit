@@ -178,13 +178,32 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
         {
             AppendLine();
 
-            var parameters = string.Join(", ", method.Parameters.Select(p => $"{p.Type} {p.Name}"));
-            var arguments = string.Join(", ", method.Parameters.Select(p => p.Name));
+            var parameters = string.Join(", ", method.Parameters.Select(FormatMethodParameter));
+            var arguments = string.Join(", ", method.Parameters.Select(FormatMethodArgument));
 
             AppendLine($"public {method.ReturnType} {method.Name}({parameters})");
             AppendLine($"    => dto.{method.Name}({arguments});");
         }
     }
+
+    private static string FormatMethodParameter(
+        DtoMethodParameterInfo parameter)
+    {
+        var modifier = parameter.Modifier.Length > 0
+            ? parameter.Modifier + " "
+            : string.Empty;
+
+        var defaultValue = parameter.DefaultValue is not null
+            ? " = " + parameter.DefaultValue
+            : string.Empty;
+
+        return $"{modifier}{parameter.Type} {parameter.Name}{defaultValue}";
+    }
+
+    private static string FormatMethodArgument(DtoMethodParameterInfo parameter)
+        => parameter.Modifier is "ref" or "out" or "in"
+            ? $"{parameter.Modifier} {parameter.Name}"
+            : parameter.Name;
 
     public void GenerateCustomCommandProperties(
         ObservableDtoViewModelToGenerate viewModelToGenerate)

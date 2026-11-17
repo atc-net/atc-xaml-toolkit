@@ -1675,6 +1675,7 @@ public partial class PersonViewModel
 
 - ✅ Readonly properties are generated as expression-bodied properties
 - ✅ No setter is generated, maintaining immutability
+- ✅ Properties with an `init` accessor or a non-public setter (`private set`, `protected set`, `internal set`) are treated as readonly too; `init` properties from a record's primary constructor stay writable
 - ✅ The property is still accessible in the ViewModel and can be bound in XAML
 - ✅ Useful for calculated properties, timestamps, IDs, or other immutable data
 - ✅ Works with both classes and records
@@ -1746,7 +1747,7 @@ string address = viewModel.FormatAddress("Main St", 12345);
 **Method proxy features:**
 
 - ✅ All public instance methods are proxied
-- ✅ Parameters are preserved with correct types
+- ✅ Parameters are preserved with correct types, including `ref`, `out`, `in`, `params` and default values
 - ✅ Return types are maintained
 - ✅ Methods are generated as expression-bodied members for clarity
 - ✅ `ToString()` method is **excluded** (handled separately by the generator)
@@ -1759,7 +1760,7 @@ string address = viewModel.FormatAddress("Main St", 12345);
 - **State checks** - IsValid(), CanProcess(), etc.
 - **Data formatting** - GetDisplayName(), FormatCurrency(), etc.
 
-**Note:** Static methods, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
+**Note:** Static methods, generic methods, `Equals(object)` / `GetHashCode()` overrides, property accessors, and compiler-generated methods are not proxied. The generator focuses on explicit public instance methods you've defined.
 
 ### 🚫 Selective Generation with IgnorePropertyNames and IgnoreMethodNames
 
