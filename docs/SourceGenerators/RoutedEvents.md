@@ -63,7 +63,7 @@ There are two common approaches to declare a routed event using source generatio
 Annotate a *static* `RoutedEvent` field with the `[RoutedEvent]` attribute, allowing the generator to infer the event name from the field name (pascal‑case the first letter):
 
 ```csharp
-public static partial class CustomButton
+public partial class CustomButton : Button
 {
     [RoutedEvent(RoutingStrategy.Bubble)]
     private static readonly RoutedEvent tap;
@@ -92,6 +92,110 @@ public partial class CustomButton
 ```
 
 When the field has XML doc comments, the generator copies them to the generated event, and the `{Name}Event` field gets an `Identifies the <see cref="{Name}"/> routed event.` summary.
+
+### 📚 Default documentation
+
+With `GenerateDocumentation = true`, or `[assembly: GenerateDocumentationDefault]` for the whole project, the generated members get default summaries when the field has no XML doc of its own, so a project that reports CS1591 does not have to document every field by hand:
+
+| Member | Summary |
+|--------|---------|
+| `{Name}Event` | `Identifies the <see cref="{Name}"/> routed event.` |
+| `{Name}` event | `Occurs when the {Name} routed event is raised.` |
+| `Raise{Name}` method | `Raises the <see cref="{Name}"/> routed event.` |
+
+`GenerateDocumentation = false` turns it off for one event when the assembly default is on. XML doc comments on the field always win for the event.
+
+### 📣 Generating a method that raises the event
+
+`GenerateRaiseMethod = true` adds a method that creates the event args and raises the event. Its shape follows the handler type:
+
+```csharp
+[RoutedEvent(GenerateRaiseMethod = true)]
+private static readonly RoutedEvent opened;
+
+[RoutedEvent(HandlerType = typeof(RoutedPropertyChangedEventHandler<int>), GenerateRaiseMethod = true)]
+private static readonly RoutedEvent valueChanged;
+
+[RoutedEvent(HandlerType = typeof(EventHandler<DeviceErrorRoutedEventArgs>), GenerateRaiseMethod = true)]
+private static readonly RoutedEvent deviceError;
+```
+
+```csharp
+protected void RaiseOpened()
+    => RaiseEvent(new RoutedEventArgs(OpenedEvent, this));
+
+protected void RaiseValueChanged(int oldValue, int newValue)
+    => RaiseEvent(new RoutedPropertyChangedEventArgs<int>(oldValue, newValue, ValueChangedEvent));
+
+protected void RaiseDeviceError(DeviceErrorRoutedEventArgs e)
+{
+    e.RoutedEvent = DeviceErrorEvent;
+    RaiseEvent(e);
+}
+```
+
+- The method is `protected`, or `private` in a sealed class.
+- For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. Raise the event yourself with `RaiseEvent(...)`.
+
+### 🤝 Sharing an existing event with `AddOwnerOf`
+
+A control that should expose an event another class already registered adds itself as an owner. A handler for the original event then also receives the event raised by the control:
+
+```csharp
+public partial class DrivePicker : UserControl
+{
+    [RoutedEvent(AddOwnerOf = typeof(DevicePickerEvents), HandlerType = typeof(EventHandler<DeviceErrorRoutedEventArgs>))]
+    private static readonly RoutedEvent deviceError;
+}
+```
+
+```csharp
+public static readonly RoutedEvent DeviceErrorEvent = DevicePickerEvents.DeviceErrorEvent.AddOwner(typeof(DrivePicker));
+
+public event EventHandler<DeviceErrorRoutedEventArgs> DeviceError
+{
+    add => AddHandler(DeviceErrorEvent, value);
+    remove => RemoveHandler(DeviceErrorEvent, value);
+}
+```
+
+The shared event is `{Type}.{Name}Event`, so the field must have the name of the event being shared. State the `HandlerType` of the shared event; the routing strategy is that of the shared event and the positional argument is ignored.
+
+### 🧷 Routed events in a static class (attached events)
+
+A static class cannot have an instance event. For a `[RoutedEvent]` field in a static class the generator registers the event and emits methods that attach a handler to an element:
+
+```csharp
+public static partial class DataGridFilter
+{
+    [RoutedEvent(HandlerType = typeof(DataGridFilterChangedEventHandler))]
+    private static readonly RoutedEvent filterChanged;
+}
+```
+
+```csharp
+public static readonly RoutedEvent FilterChangedEvent = EventManager.RegisterRoutedEvent(
+    name: "FilterChanged",
+    routingStrategy: RoutingStrategy.Bubble,
+    handlerType: typeof(DataGridFilterChangedEventHandler),
+    ownerType: typeof(DataGridFilter));
+
+public static void AddFilterChangedHandler(DependencyObject element, DataGridFilterChangedEventHandler handler)
+{
+    if (element is UIElement uiElement)
+    {
+        uiElement.AddHandler(FilterChangedEvent, handler);
+    }
+    else if (element is ContentElement contentElement)
+    {
+        contentElement.AddHandler(FilterChangedEvent, handler);
+    }
+}
+
+// RemoveFilterChangedHandler is generated the same way.
+```
+
+This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `GenerateRaiseMethod` has no effect in a static class; raise the event on the element with `element.RaiseEvent(...)`.
 
 ### 🛠️ Specifying a custom delegate type
 
@@ -163,6 +267,9 @@ private void NumericBox_OnValueIncremented(
 |-----------------|---------------|-----------------|----------------------------|--------------------------------------------|
 | routingStrategy | positional    | RoutingStrategy | Bubble                     | How the event propagates.                  |
 | HandlerType     | named         | Type            | typeof(RoutedEventHandler) | CLR delegate type for the generated event. |
+| AddOwnerOf      | named         | Type            | none                       | Share the event of this type instead of registering a new one. |
+| GenerateRaiseMethod | named     | bool            | false                      | Generate a `Raise{Name}` method. |
+| GenerateDocumentation | named   | bool            | assembly default           | Emit default summaries on the generated members. |
 
 ```csharp
 [RoutedEvent]                         // Bubble + RoutedEventHandler

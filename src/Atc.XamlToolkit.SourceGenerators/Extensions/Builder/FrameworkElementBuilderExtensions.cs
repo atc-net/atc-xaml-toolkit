@@ -1117,23 +1117,43 @@ internal static class FrameworkElementBuilderExtensions
     {
         builder.AppendLineBeforeMember();
 
-        // RoutedEvent has no GenerateDocumentation flag, so only document it when the field has docs.
-        if (!re.DocumentationComments.IsEmpty)
+        if (!re.DocumentationComments.IsEmpty || re.GenerateDocumentation)
         {
-            builder.AppendSummary($"Identifies the <see cref=\"{re.Name}\"/> routed event.");
+            // A static class has no {Name} event for a cref to point at.
+            builder.AppendSummary(re.IsOwnerTypeStatic
+                ? $"Identifies the {re.Name} attached routed event."
+                : $"Identifies the <see cref=\"{re.Name}\"/> routed event.");
         }
 
-        builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
-        builder.IncreaseIndent();
-        builder.AppendLine($"name: nameof({re.Name}),");
-        builder.AppendLine(string.IsNullOrEmpty(re.RoutingStrategy)
-            ? "routingStrategy: RoutingStrategy.Bubble,"
-            : $"routingStrategy: RoutingStrategy.{re.RoutingStrategy},");
-        builder.AppendLine($"handlerType: typeof({re.HandlerTypeName}),");
-        builder.AppendLine($"ownerType: typeof({re.OwnerType}));");
-        builder.DecreaseIndent();
+        if (re.AddOwnerOf is not null)
+        {
+            builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = {re.AddOwnerOf}.{re.Name}Event.AddOwner(typeof({re.OwnerType}));");
+        }
+        else
+        {
+            builder.AppendLine($"public static readonly RoutedEvent {re.Name}Event = EventManager.RegisterRoutedEvent(");
+            builder.IncreaseIndent();
+            builder.AppendLine(re.IsOwnerTypeStatic
+                ? $"name: \"{re.Name}\","
+                : $"name: nameof({re.Name}),");
+            builder.AppendLine(string.IsNullOrEmpty(re.RoutingStrategy)
+                ? "routingStrategy: RoutingStrategy.Bubble,"
+                : $"routingStrategy: RoutingStrategy.{re.RoutingStrategy},");
+            builder.AppendLine($"handlerType: typeof({re.HandlerTypeName}),");
+            builder.AppendLine($"ownerType: typeof({re.OwnerType}));");
+            builder.DecreaseIndent();
+        }
+
+        if (re.IsOwnerTypeStatic)
+        {
+            // A static class cannot have an instance event; handlers are attached to an element.
+            GenerateRoutedEventHandlerMethod(builder, re, "Add", "Adds");
+            GenerateRoutedEventHandlerMethod(builder, re, "Remove", "Removes");
+            return;
+        }
+
         builder.AppendLine();
-        builder.AppendDocumentation(re.DocumentationComments, generateDocumentation: false, fallbackSummary: string.Empty);
+        builder.AppendDocumentation(re.DocumentationComments, re.GenerateDocumentation, $"Occurs when the {re.Name} routed event is raised.");
         builder.AppendLine($"public event {re.HandlerTypeName} {re.Name}");
         builder.AppendLine("{");
         builder.IncreaseIndent();
@@ -1141,6 +1161,108 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendLine($"remove => RemoveHandler({re.Name}Event, value);");
         builder.DecreaseIndent();
         builder.AppendLine("}");
+
+        GenerateRoutedEventRaiseMethod(builder, re);
+    }
+
+    // Add{Name}Handler / Remove{Name}Handler for a routed event declared in a static class.
+    private static void GenerateRoutedEventHandlerMethod(
+        FrameworkElementBuilder builder,
+        RoutedEventToGenerate re,
+        string action,
+        string actionInSummary)
+    {
+        builder.AppendLine();
+
+        if (!re.DocumentationComments.IsEmpty || re.GenerateDocumentation)
+        {
+            builder.AppendSummary($"{actionInSummary} a handler for the {re.Name} attached routed event.");
+        }
+
+        builder.AppendLine($"public static void {action}{re.Name}Handler(DependencyObject element, {re.HandlerTypeName} handler)");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine("if (element is UIElement uiElement)");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine($"uiElement.{action}Handler({re.Name}Event, handler);");
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+        builder.AppendLine("else if (element is ContentElement contentElement)");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine($"contentElement.{action}Handler({re.Name}Event, handler);");
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+    }
+
+    // Raise{Name} for the handler types whose event args can be created without guessing.
+    private static void GenerateRoutedEventRaiseMethod(
+        FrameworkElementBuilder builder,
+        RoutedEventToGenerate re)
+    {
+        if (!re.GenerateRaiseMethod || string.IsNullOrEmpty(re.HandlerTypeName))
+        {
+            return;
+        }
+
+        var handlerTypeName = re.HandlerTypeName!;
+        var typeArgumentStart = handlerTypeName.IndexOf('<');
+        var typeArgumentEnd = handlerTypeName.LastIndexOf('>');
+        var hasTypeArgument = typeArgumentStart > 0 && typeArgumentEnd > typeArgumentStart;
+
+        var handlerName = hasTypeArgument
+            ? handlerTypeName.Substring(0, typeArgumentStart)
+            : handlerTypeName;
+        handlerName = handlerName.Substring(handlerName.LastIndexOfAny(['.', ':']) + 1);
+
+        var typeArgument = hasTypeArgument
+            ? handlerTypeName.Substring(typeArgumentStart + 1, typeArgumentEnd - typeArgumentStart - 1)
+            : string.Empty;
+
+        var accessModifier = re.IsOwnerTypeSealed ? "private" : "protected";
+
+        switch (handlerName)
+        {
+            case NameConstants.RoutedEventHandler when !hasTypeArgument:
+                AppendRaiseMethodSummary(builder, re);
+                builder.AppendLine($"{accessModifier} void Raise{re.Name}()");
+                builder.IncreaseIndent();
+                builder.AppendLine($"=> RaiseEvent(new RoutedEventArgs({re.Name}Event, this));");
+                builder.DecreaseIndent();
+                break;
+            case "RoutedPropertyChangedEventHandler" when hasTypeArgument:
+                AppendRaiseMethodSummary(builder, re);
+                builder.AppendLine($"{accessModifier} void Raise{re.Name}({typeArgument} oldValue, {typeArgument} newValue)");
+                builder.IncreaseIndent();
+                builder.AppendLine($"=> RaiseEvent(new RoutedPropertyChangedEventArgs<{typeArgument}>(oldValue, newValue, {re.Name}Event));");
+                builder.DecreaseIndent();
+                break;
+            case "EventHandler" when hasTypeArgument:
+                AppendRaiseMethodSummary(builder, re);
+                builder.AppendLine($"{accessModifier} void Raise{re.Name}({typeArgument} e)");
+                builder.AppendLine("{");
+                builder.IncreaseIndent();
+                builder.AppendLine($"e.RoutedEvent = {re.Name}Event;");
+                builder.AppendLine("RaiseEvent(e);");
+                builder.DecreaseIndent();
+                builder.AppendLine("}");
+                break;
+        }
+    }
+
+    private static void AppendRaiseMethodSummary(
+        FrameworkElementBuilder builder,
+        RoutedEventToGenerate re)
+    {
+        builder.AppendLine();
+
+        if (!re.DocumentationComments.IsEmpty || re.GenerateDocumentation)
+        {
+            builder.AppendSummary($"Raises the <see cref=\"{re.Name}\"/> routed event.");
+        }
     }
 
     private static void GenerateAvaloniaPropertyBody(

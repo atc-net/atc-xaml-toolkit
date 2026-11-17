@@ -275,7 +275,7 @@ internal static class FrameworkElementInspectorHelper
         string propertyName)
         => $"On{propertyName}PropertyChangedCallback";
 
-    private static bool HasGenerateDocumentationDefaultAttribute(
+    internal static bool HasGenerateDocumentationDefaultAttribute(
         INamedTypeSymbol classSymbol)
     {
         var assemblySymbol = classSymbol.ContainingAssembly;

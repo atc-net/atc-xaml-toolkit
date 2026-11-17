@@ -92,6 +92,18 @@ internal static class RoutedEventInspector
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
+        // An explicit per-attribute value wins; otherwise the assembly-level
+        // [GenerateDocumentationDefault] decides.
+        var generateDocumentation =
+            fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
+            bool.TryParse(generateDocumentationValue, out var generateDocumentationValueAsBool)
+                ? generateDocumentationValueAsBool
+                : FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol);
+
+        var generateRaiseMethod =
+            fieldArgumentValues.TryGetValue(NameConstants.GenerateRaiseMethod, out var generateRaiseMethodValue) &&
+            "true".Equals(generateRaiseMethodValue, StringComparison.OrdinalIgnoreCase);
+
         routedEventToGenerate.Add(
             new RoutedEventToGenerate(
                 OwnerType: classSymbol.Name,
@@ -100,6 +112,11 @@ internal static class RoutedEventInspector
                 HandlerTypeName: handlerTypeName)
             {
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
+                IsOwnerTypeStatic = classSymbol.IsStatic,
+                IsOwnerTypeSealed = classSymbol.IsSealed,
+                AddOwnerOf = fieldPropertyAttribute.ExtractAddOwnerOf(),
+                GenerateRaiseMethod = generateRaiseMethod,
+                GenerateDocumentation = generateDocumentation,
             });
     }
 }
