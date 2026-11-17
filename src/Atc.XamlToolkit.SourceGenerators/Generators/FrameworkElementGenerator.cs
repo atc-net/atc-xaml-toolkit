@@ -62,6 +62,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
 
         frameworkElementBuilder.GenerateStart(frameworkElementToGenerate);
 
+        GenerateDefaultStyleKey(context, frameworkElementBuilder, frameworkElementToGenerate);
+
         if (frameworkElementToGenerate.AttachedPropertiesToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateAttachedProperties(
@@ -100,5 +102,27 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         context.AddSource(
             frameworkElementToGenerate.GeneratedFileName,
             sourceText);
+    }
+
+    private static void GenerateDefaultStyleKey(
+        SourceProductionContext context,
+        FrameworkElementBuilder frameworkElementBuilder,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        if (frameworkElementToGenerate.DefaultStyleKey is not { } defaultStyleKey)
+        {
+            return;
+        }
+
+        frameworkElementBuilder.GenerateDefaultStyleKey(frameworkElementToGenerate);
+
+        // The class has a static constructor of its own, so only a method was generated.
+        // Unless that constructor calls it, the style key is never overridden.
+        if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.Wpf &&
+            defaultStyleKey is { HasOwnStaticConstructor: true, OwnStaticConstructorCallsOverride: false })
+        {
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateDefaultStyleKeyOverrideNotCalled(frameworkElementToGenerate.ClassName));
+        }
     }
 }

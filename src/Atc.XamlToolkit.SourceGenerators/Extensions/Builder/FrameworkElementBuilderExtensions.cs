@@ -42,6 +42,18 @@ internal static class FrameworkElementBuilderExtensions
             });
         }
 
+        if (frameworkElementToGenerate.DefaultStyleKey is { } defaultStyleKey)
+        {
+            if (xamlPlatform == XamlPlatform.Wpf)
+            {
+                // FrameworkPropertyMetadata
+                namespaces.Add("System.Windows");
+            }
+
+            // The style type is written by its simple name
+            namespaces.AddRange(defaultStyleKey.RequiredNamespaces);
+        }
+
         foreach (var property in properties)
         {
             // The property type is written by its simple name
@@ -58,6 +70,58 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendUsings(namespaces, frameworkElementToGenerate.NamespaceName);
 
         builder.AppendTypeStart(frameworkElementToGenerate);
+    }
+
+    public static void GenerateDefaultStyleKey(
+        this FrameworkElementBuilder builder,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        if (frameworkElementToGenerate.DefaultStyleKey is not { } defaultStyleKey)
+        {
+            return;
+        }
+
+        var ownerType = frameworkElementToGenerate.ClassName + frameworkElementToGenerate.TypeParameterList;
+        var styleType = defaultStyleKey.StyleTypeName ?? ownerType;
+
+        builder.AppendLineBeforeMember();
+
+        if (frameworkElementToGenerate.XamlPlatform == XamlPlatform.Avalonia)
+        {
+            builder.AppendLine("/// <inheritdoc />");
+            builder.AppendLine($"protected override global::System.Type StyleKeyOverride => typeof({styleType});");
+            return;
+        }
+
+        if (defaultStyleKey.HasOwnStaticConstructor)
+        {
+            // A class can only have one static constructor, so the hand-written one has to call this.
+            builder.AppendLine("/// <summary>");
+            builder.AppendLine(defaultStyleKey.StyleTypeName is null
+                ? "/// Makes this type its own default style key. Call it from the static constructor."
+                : $"/// Makes <see cref=\"{styleType.Replace('<', '{').Replace('>', '}')}\"/> the default style key of this type. Call it from the static constructor.");
+            builder.AppendLine("/// </summary>");
+            builder.AppendLine($"private static void {NameConstants.OverrideDefaultStyleKey}()");
+            builder.IncreaseIndent();
+            builder.AppendLine("=> DefaultStyleKeyProperty.OverrideMetadata(");
+            builder.IncreaseIndent();
+            builder.AppendLine($"typeof({ownerType}),");
+            builder.AppendLine($"new FrameworkPropertyMetadata(typeof({styleType})));");
+            builder.DecreaseIndent();
+            builder.DecreaseIndent();
+            return;
+        }
+
+        builder.AppendLine($"static {frameworkElementToGenerate.ClassName}()");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine("DefaultStyleKeyProperty.OverrideMetadata(");
+        builder.IncreaseIndent();
+        builder.AppendLine($"typeof({ownerType}),");
+        builder.AppendLine($"new FrameworkPropertyMetadata(typeof({styleType})));");
+        builder.DecreaseIndent();
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
     }
 
     public static void GenerateAttachedProperties(

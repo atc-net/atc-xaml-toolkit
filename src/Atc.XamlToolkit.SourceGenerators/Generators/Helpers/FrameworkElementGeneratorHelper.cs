@@ -155,10 +155,13 @@ internal static class FrameworkElementGeneratorHelper
             allRelayCommands.Clear();
         }
 
+        var defaultStyleKey = GetDefaultStyleKey(xamlPlatform, classSymbol);
+
         if (allAttachedProperties.Count == 0 &&
             allDependencyProperties.Count == 0 &&
             allRoutedEvents.Count == 0 &&
-            allRelayCommands.Count == 0)
+            allRelayCommands.Count == 0 &&
+            defaultStyleKey is null)
         {
             return null;
         }
@@ -177,7 +180,63 @@ internal static class FrameworkElementGeneratorHelper
             TypeParameterList = classSymbol.GetTypeParameterList(),
             ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
             HintName = classSymbol.GetHintName(),
+            DefaultStyleKey = defaultStyleKey,
         };
+    }
+
+    // Reads [DefaultStyleKey] from the class. WinUI sets the style key in the instance
+    // constructor, which generated code cannot add to, so the attribute only exists for
+    // WPF and Avalonia.
+    private static DefaultStyleKeyToGenerate? GetDefaultStyleKey(
+        XamlPlatform xamlPlatform,
+        INamedTypeSymbol classSymbol)
+    {
+        if (xamlPlatform == XamlPlatform.WinUI)
+        {
+            return null;
+        }
+
+        var attribute = classSymbol
+            .GetAttributes()
+            .FirstOrDefault(x => x.GetToolkitAttributeName()
+                is NameConstants.DefaultStyleKeyAttribute
+                or NameConstants.DefaultStyleKey);
+
+        if (attribute is null)
+        {
+            return null;
+        }
+
+        string? styleTypeName = null;
+        var requiredNamespaces = new HashSet<string>(StringComparer.Ordinal);
+
+        if (attribute.ConstructorArguments.Length == 1 &&
+            attribute.ConstructorArguments[0].Value is ITypeSymbol styleType)
+        {
+            styleTypeName = styleType.ToGeneratedCodeTypeName();
+            styleType.AddRequiredNamespacesTo(requiredNamespaces);
+        }
+        else if (attribute.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList.Arguments: { Count: > 0 } arguments } &&
+                 arguments[0].Expression is TypeOfExpressionSyntax typeOfExpression)
+        {
+            // The attribute class cannot be resolved, so only the text as written is known.
+            styleTypeName = typeOfExpression.Type.ToString();
+        }
+
+        var ownStaticConstructor = classSymbol.StaticConstructors.FirstOrDefault(x => !x.IsImplicitlyDeclared);
+
+        var callsOverride = ownStaticConstructor is not null &&
+                            ownStaticConstructor.DeclaringSyntaxReferences.Any(reference => reference
+                                .GetSyntax()
+                                .DescendantNodes()
+                                .OfType<InvocationExpressionSyntax>()
+                                .Any(invocation => invocation.Expression is IdentifierNameSyntax { Identifier.ValueText: NameConstants.OverrideDefaultStyleKey }));
+
+        return new DefaultStyleKeyToGenerate(
+            styleTypeName,
+            new EquatableArray<string>(requiredNamespaces.OrderBy(x => x, StringComparer.Ordinal).ToArray()),
+            HasOwnStaticConstructor: ownStaticConstructor is not null,
+            OwnStaticConstructorCallsOverride: callsOverride);
     }
 
     /// <summary>
@@ -268,6 +327,9 @@ internal static class FrameworkElementGeneratorHelper
 
                     // WPF only: RoutedEvent
                     NameConstants.RoutedEvent or NameConstants.RoutedEventAttribute or
+
+                    // WPF & Avalonia: DefaultStyleKey (class level)
+                    NameConstants.DefaultStyleKey or NameConstants.DefaultStyleKeyAttribute or
 
                     // All platforms: RelayCommand
                     NameConstants.RelayCommand or NameConstants.RelayCommandAttribute)

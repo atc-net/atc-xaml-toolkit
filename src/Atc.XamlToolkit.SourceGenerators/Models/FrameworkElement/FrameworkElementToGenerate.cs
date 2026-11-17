@@ -11,4 +11,10 @@ internal sealed record FrameworkElementToGenerate(
     EquatableArray<DependencyPropertyToGenerate> DependencyPropertiesToGenerate,
     EquatableArray<RoutedEventToGenerate> RoutedEventsToGenerate,
     EquatableArray<RelayCommandToGenerate> RelayCommandsToGenerate)
-    : GenerateBase(NamespaceName, ClassName, ClassAccessModifier, IsStatic);
+    : GenerateBase(NamespaceName, ClassName, ClassAccessModifier, IsStatic)
+{
+    /// <summary>
+    /// Gets or sets what <c>[DefaultStyleKey]</c> on the class asks for; null when the attribute is absent.
+    /// </summary>
+    public DefaultStyleKeyToGenerate? DefaultStyleKey { get; set; }
+}

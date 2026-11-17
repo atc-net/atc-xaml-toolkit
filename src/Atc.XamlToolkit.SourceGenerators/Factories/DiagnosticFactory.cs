@@ -93,6 +93,23 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "WPF's RoutedEvent / EventManager.RegisterRoutedEvent infrastructure does not exist on WinUI 3 or Avalonia. The source generator therefore emits routed-event code only when the compilation references WPF. Without this diagnostic the [RoutedEvent] attribute would be silently inert on the wrong platform — the developer would expect an event to materialize and find nothing, with no build-time clue.");
 
+    private static readonly DiagnosticDescriptor DefaultStyleKeyOverrideNotCalledDescriptor =
+        new(
+            id: "AtcXamlToolkit0011",
+            title: "[DefaultStyleKey] override is not called",
+            messageFormat: "Class '{0}' is decorated with [DefaultStyleKey] and has a static constructor of its own, but that constructor does not call OverrideDefaultStyleKey(). Call it from the static constructor, or remove the constructor so that one is generated.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "A class can only have one static constructor. When a class with [DefaultStyleKey] declares its own, the source generator emits a private static OverrideDefaultStyleKey() method instead of a static constructor. If that method is never called, the default style key is not overridden and the control is shown without its default style.");
+
+    public static Diagnostic CreateDefaultStyleKeyOverrideNotCalled(
+        string className)
+        => Diagnostic.Create(
+            DefaultStyleKeyOverrideNotCalledDescriptor,
+            Location.None,
+            className);
+
     public static Diagnostic CreateContainsDuplicateNamesForRelayCommand()
         => Diagnostic.Create(
             new DiagnosticDescriptor(

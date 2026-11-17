@@ -16,6 +16,7 @@
 | Generate an Avalonia `StyledProperty` | `[StyledProperty]` | Custom control / behavior | (see [DependencyProperty.md](DependencyProperty.md) — same generator, Avalonia branch) |
 | Generate an attached property | `[AttachedProperty]` | Static helper / behavior | [AttachedProperty.md](AttachedProperty.md) |
 | Generate a WPF routed event | `[RoutedEvent]` | Custom control | [RoutedEvents.md](RoutedEvents.md) |
+| Set a control's default style key | `[DefaultStyleKey]` | Custom control (class) | [DefaultStyleKey.md](DefaultStyleKey.md) |
 
 ## Platform support matrix
 
@@ -31,6 +32,7 @@
 | `[StyledProperty]` | ❌ | ❌ | ✅ | Generates `AvaloniaProperty.Register<T,…>(...)`. Use this on Avalonia where you'd use `[DependencyProperty]` on WPF/WinUI. |
 | `[AttachedProperty]` | ✅ | ✅ | ✅ | On Avalonia the owner class **must not** be `static` and must inherit from `AvaloniaObject`. |
 | `[RoutedEvent]` | ✅ | ❌ (skipped) | ❌ (skipped) | Generator emits no code on non-WPF platforms — use plain .NET events on WinUI/Avalonia. |
+| `[DefaultStyleKey]` | ✅ | ❌ | ✅ | Class-level attribute. WPF: static constructor with `DefaultStyleKeyProperty.OverrideMetadata`. Avalonia: `StyleKeyOverride`. Not available on WinUI, where the key is set in the instance constructor. |
 
 ## How class-naming gates the framework-element generator
 
@@ -38,7 +40,8 @@
 
 1. Classes inheriting from `UserControl`, `DependencyObject`, `FrameworkElement`, **or**
 2. Class names ending in `Attach`, `Behavior`, or `Helper`, **or**
-3. Classes that contain `[RoutedEvent]` attributes.
+3. Classes that contain `[RoutedEvent]` attributes, **or**
+4. Classes that carry the `[DefaultStyleKey]` attribute.
 
 If you put `[DependencyProperty]` on, say, `MyService` and nothing happens, this is why — rename to `MyServiceHelper` or inherit from `DependencyObject`.
 
@@ -75,6 +78,7 @@ The generator surfaces these diagnostics at compile time so common misuses are c
 | `AtcXamlToolkit0008` | Warning | Two or more `[ComputedProperty]` getters mutually reference each other (`A => B + 1` and `B => A + 1`, or any longer cycle). The generator's incremental invalidation graph doesn't trigger an update loop, but evaluating any of them at runtime infinitely recurses until the stack overflows. The diagnostic message includes the shortest cycle path. | Break the cycle by extracting shared computation into a non-computed helper, or by making one of the properties an `[ObservableProperty]`-backed value. |
 | `AtcXamlToolkit0009` | Warning | `[NotifyDataErrorInfo]` is on a field whose containing class doesn't transitively derive from `ObservableValidator` (the only base type that exposes the protected `ValidateProperty` method the generator calls in the setter). Combinations like `[INotifyPropertyChanged]` (plain class) + `[NotifyDataErrorInfo]` would otherwise produce an opaque `CS0103: name 'ValidateProperty' does not exist` inside the generated file. | Change the base class to `ObservableValidator` or `ViewModelBase`, or remove `[NotifyDataErrorInfo]`. |
 | `AtcXamlToolkit0010` | Warning | `[RoutedEvent]` is on a field in a project that targets WinUI 3 or Avalonia. WPF's `RoutedEvent` / `EventManager` infrastructure does not exist on those platforms, so the generator skips routed-event emission — the field would otherwise look like it should produce an event but produce nothing. | Replace the field with a standard CLR event (e.g. `public event RoutedEventHandler ItemSelected;`) or remove the attribute. |
+| `AtcXamlToolkit0011` | Warning | A class with `[DefaultStyleKey]` has a static constructor of its own that does not call the generated `OverrideDefaultStyleKey()` method. A class can only have one static constructor, so the generator emits that method for the hand-written constructor to call; if it is not called, the control is shown without its default style. | Call `OverrideDefaultStyleKey()` from the static constructor, or remove the constructor so that one is generated. |
 
 ## Architecture & decisions
 

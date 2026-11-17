@@ -368,6 +368,15 @@ internal static class NamedTypeSymbolExtensions
             return true;
         }
 
+        // [DefaultStyleKey] is only ever written on a control.
+        if (classSymbol.GetAttributes()
+            .Any(a => a.GetToolkitAttributeName()
+                is NameConstants.DefaultStyleKeyAttribute
+                or NameConstants.DefaultStyleKey))
+        {
+            return true;
+        }
+
         // Symbol-based check replaces SyntaxTree.ToString().Contains("[RoutedEvent")
         return classSymbol.GetMembers()
             .Any(m => m.GetAttributes()
