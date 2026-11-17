@@ -635,6 +635,99 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void SameNamedTypesOfAnotherMvvmLibrary_AreLeftAlone()
+    {
+        // Another MVVM library uses the same simple names; its members belong to its own generator.
+        const string inputCode =
+            """
+            namespace CommunityToolkit.Mvvm.ComponentModel
+            {
+                public abstract class ObservableObject
+                {
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Field)]
+                public sealed class ObservablePropertyAttribute : System.Attribute
+                {
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Class)]
+                public sealed class INotifyPropertyChangedAttribute : System.Attribute
+                {
+                }
+            }
+
+            namespace CommunityToolkit.Mvvm.Input
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method)]
+                public sealed class RelayCommandAttribute : System.Attribute
+                {
+                }
+            }
+
+            namespace TestNamespace
+            {
+                public partial class ToolkitViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+                {
+                    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+                    private string name = string.Empty;
+
+                    [CommunityToolkit.Mvvm.Input.RelayCommand]
+                    private void Save()
+                    {
+                    }
+                }
+
+                [CommunityToolkit.Mvvm.ComponentModel.INotifyPropertyChanged]
+                public partial class ToolkitItem
+                {
+                    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+                    private int count;
+                }
+
+                public partial class ToolkitBehavior
+                {
+                    [CommunityToolkit.Mvvm.Input.RelayCommand]
+                    private void Save()
+                    {
+                    }
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+
+        AssertGeneratorRunResultIsEmpty(RunGenerator<ViewModelGenerator>(inputCode));
+        AssertGeneratorRunResultIsEmpty(RunGenerator<FrameworkElementGenerator>(inputCode));
+    }
+
+    [Fact]
+    public void FullyQualifiedGeneratorAttributes_AreNotCopiedToTheProperty()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : Atc.XamlToolkit.Mvvm.ViewModelBase
+            {
+                [Atc.XamlToolkit.Mvvm.ObservableProperty]
+                [Atc.XamlToolkit.Mvvm.NotifyPropertyChangedFor(nameof(FullName))]
+                [global::Atc.XamlToolkit.Mvvm.NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+                private string name = string.Empty;
+
+                public string FullName => Name;
+
+                [Atc.XamlToolkit.Mvvm.RelayCommand]
+                private void Save()
+                {
+                }
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

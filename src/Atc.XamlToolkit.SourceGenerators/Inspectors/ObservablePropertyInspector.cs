@@ -35,7 +35,7 @@ internal static class ObservablePropertyInspector
             var fieldSymbolAttributes = fieldSymbol.GetAttributes();
 
             var fieldPropertyAttribute = fieldSymbolAttributes
-                .FirstOrDefault(x => x.AttributeClass?.Name
+                .FirstOrDefault(x => x.GetToolkitAttributeName()
                     is NameConstants.ObservablePropertyAttribute
                     or NameConstants.ObservableProperty);
 
@@ -67,7 +67,7 @@ internal static class ObservablePropertyInspector
 
         foreach (var attribute in assemblySymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.GenerateDocumentationDefault
                 or NameConstants.GenerateDocumentationDefaultAttribute)
             {
@@ -183,7 +183,7 @@ internal static class ObservablePropertyInspector
 
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is not NameConstants.NotifyPropertyChangedForAttribute
                 and not NameConstants.NotifyPropertyChangedFor)
             {
@@ -207,7 +207,7 @@ internal static class ObservablePropertyInspector
         List<string>? extraCommandNames = null;
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is not NameConstants.NotifyCanExecuteChangedForAttribute
                 and not NameConstants.NotifyCanExecuteChangedFor)
             {
@@ -239,7 +239,7 @@ internal static class ObservablePropertyInspector
         var validatesOnChange = false;
         foreach (var attr in fieldSymbolAttributes)
         {
-            if (attr.AttributeClass?.Name
+            if (attr.GetToolkitAttributeName()
                 is NameConstants.NotifyDataErrorInfoAttribute
                 or NameConstants.NotifyDataErrorInfo)
             {

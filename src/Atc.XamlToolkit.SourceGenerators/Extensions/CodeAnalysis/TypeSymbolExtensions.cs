@@ -2,6 +2,28 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 
 internal static class TypeSymbolExtensions
 {
+    private const string ToolkitNamespace = "Atc.XamlToolkit";
+
+    /// <summary>
+    /// Determines whether the type is declared in an <c>Atc.XamlToolkit</c> namespace.
+    /// A type that cannot be resolved is accepted, because only its simple name is known.
+    /// </summary>
+    /// <param name="typeSymbol">The type to check.</param>
+    /// <returns>False for a resolved type of another library; otherwise true.</returns>
+    public static bool IsToolkitTypeOrUnresolved(this ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol.TypeKind == TypeKind.Error ||
+            typeSymbol.ContainingNamespace is null)
+        {
+            return true;
+        }
+
+        var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+
+        return namespaceName.Equals(ToolkitNamespace, StringComparison.Ordinal) ||
+               namespaceName.StartsWith(ToolkitNamespace + ".", StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// Tells whether the type is a <c>Nullable&lt;T&gt;</c> value type.
     /// Returns <c>null</c> when the type cannot be resolved, so the caller has to guess.

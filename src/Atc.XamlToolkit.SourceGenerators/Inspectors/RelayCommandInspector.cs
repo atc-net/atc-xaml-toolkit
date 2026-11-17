@@ -22,7 +22,7 @@ internal static class RelayCommandInspector
 
             foreach (var attr in methodSymbol.GetAttributes())
             {
-                if (attr.AttributeClass?.Name
+                if (attr.GetToolkitAttributeName()
                     is not NameConstants.RelayCommandAttribute
                     and not NameConstants.RelayCommand)
                 {
@@ -53,7 +53,7 @@ internal static class RelayCommandInspector
 
         foreach (var attribute in assemblySymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.GenerateDocumentationDefault
                 or NameConstants.GenerateDocumentationDefaultAttribute)
             {

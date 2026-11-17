@@ -3,6 +3,20 @@ namespace Atc.XamlToolkit.SourceGenerators.Extensions.CodeAnalysis;
 
 internal static class AttributeDataExtensions
 {
+    /// <summary>
+    /// Gets the simple name of the attribute class when it is one of this toolkit's attributes.
+    /// Other libraries use the same simple names (e.g. <c>ObservableProperty</c>,
+    /// <c>RelayCommand</c>); their attributes return <c>null</c> so they never match.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <returns>The attribute class name, or null for an attribute of another library.</returns>
+    public static string? GetToolkitAttributeName(
+        this AttributeData attributeData)
+        => attributeData.AttributeClass is { } attributeClass &&
+           attributeClass.IsToolkitTypeOrUnresolved()
+            ? attributeClass.Name
+            : null;
+
     public static IDictionary<string, string?> ExtractConstructorArgumentValues(
         this AttributeData attributeData)
     {

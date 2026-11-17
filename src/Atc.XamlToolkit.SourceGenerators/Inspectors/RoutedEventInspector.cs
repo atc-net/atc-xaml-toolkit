@@ -38,7 +38,7 @@ internal static class RoutedEventInspector
             var fieldSymbolAttributes = fieldSymbol.GetAttributes();
 
             var fieldPropertyAttribute = fieldSymbolAttributes
-                .FirstOrDefault(x => x.AttributeClass?.Name
+                .FirstOrDefault(x => x.GetToolkitAttributeName()
                     is NameConstants.RoutedEventAttribute
                     or NameConstants.RoutedEvent);
 

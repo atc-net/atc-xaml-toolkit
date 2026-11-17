@@ -11,7 +11,7 @@ internal static class ObservableDtoViewModelInspector
     {
         var attribute = viewModelClassSymbol
             .GetAttributes()
-            .FirstOrDefault(attr => attr.AttributeClass?.Name
+            .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                 is NameConstants.ObservableDtoViewModelAttribute
                 or NameConstants.ObservableDtoViewModel);
 

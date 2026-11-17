@@ -30,7 +30,7 @@ internal static class ComputedPropertyInspector
             var propertyAttributes = propertySymbol.GetAttributes();
 
             var computedPropertyAttribute = propertyAttributes
-                .FirstOrDefault(x => x.AttributeClass?.Name
+                .FirstOrDefault(x => x.GetToolkitAttributeName()
                     is NameConstants.ComputedPropertyAttribute
                     or NameConstants.ComputedProperty);
 

@@ -329,7 +329,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in classSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.INotifyPropertyChanged
                 or NameConstants.INotifyPropertyChangedAttribute)
             {
@@ -352,7 +352,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in fieldSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.ObservableProperty
                 or NameConstants.ObservablePropertyAttribute)
             {
@@ -373,7 +373,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in fieldSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name is not (
+            if (attribute.GetToolkitAttributeName() is not (
                 NameConstants.ObservableProperty
                 or NameConstants.ObservablePropertyAttribute))
             {
@@ -403,7 +403,7 @@ internal static class ViewModelGeneratorHelper
     {
         foreach (var attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name
+            if (attribute.GetToolkitAttributeName()
                 is NameConstants.RelayCommand
                 or NameConstants.RelayCommandAttribute)
             {
@@ -428,7 +428,7 @@ internal static class ViewModelGeneratorHelper
 
         foreach (var attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name is not (
+            if (attribute.GetToolkitAttributeName() is not (
                 NameConstants.RelayCommand
                 or NameConstants.RelayCommandAttribute))
             {

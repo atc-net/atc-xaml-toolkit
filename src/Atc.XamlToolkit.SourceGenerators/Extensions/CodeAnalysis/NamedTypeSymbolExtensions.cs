@@ -254,7 +254,7 @@ internal static class NamedTypeSymbolExtensions
         this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol
             .GetAttributes()
-            .FirstOrDefault(attr => attr.AttributeClass?.Name
+            .FirstOrDefault(attr => attr.GetToolkitAttributeName()
                 is NameConstants.ObservableDtoViewModelAttribute
                 or NameConstants.ObservableDtoViewModel) is not null;
 
@@ -319,7 +319,7 @@ internal static class NamedTypeSymbolExtensions
     public static (bool HasAnyBase, bool HasViewModelBase) CheckBaseClasses(
         this INamedTypeSymbol classSymbol)
     {
-        if (classSymbol.InheritsFrom(
+        if (classSymbol.InheritsFromToolkitType(
                 NameConstants.ViewModelBase,
                 NameConstants.MainWindowViewModelBase,
                 NameConstants.ViewModelDialogBase))
@@ -327,9 +327,29 @@ internal static class NamedTypeSymbolExtensions
             return (true, true);
         }
 
-        return classSymbol.InheritsFrom(NameConstants.ObservableObject)
+        return classSymbol.InheritsFromToolkitType(NameConstants.ObservableObject)
             ? (true, false)
             : (false, false);
+    }
+
+    // Like InheritsFrom, but a same-named base class of another library does not count.
+    private static bool InheritsFromToolkitType(
+        this INamedTypeSymbol namedTypeSymbol,
+        params string[] baseClassNames)
+    {
+        var baseType = namedTypeSymbol.BaseType;
+        while (baseType is not null)
+        {
+            if (baseClassNames.Contains(baseType.Name, StringComparer.Ordinal) &&
+                baseType.IsToolkitTypeOrUnresolved())
+            {
+                return true;
+            }
+
+            baseType = baseType.BaseType;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -359,7 +379,7 @@ internal static class NamedTypeSymbolExtensions
         // Symbol-based check replaces SyntaxTree.ToString().Contains("[RoutedEvent")
         return classSymbol.GetMembers()
             .Any(m => m.GetAttributes()
-                .Any(a => a.AttributeClass?.Name
+                .Any(a => a.GetToolkitAttributeName()
                     is NameConstants.RoutedEventAttribute
                     or NameConstants.RoutedEvent));
     }
