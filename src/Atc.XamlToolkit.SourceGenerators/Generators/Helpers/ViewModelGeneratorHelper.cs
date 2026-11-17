@@ -37,6 +37,12 @@ internal static class ViewModelGeneratorHelper
             return false;
         }
 
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
+        {
+            return false;
+        }
+
         // Accept 'if' has base list (might be inheriting from ViewModelBase/ObservableObject)
         // This is important for multi-file scenarios where base list and attributes are in different files
         if (classDeclaration.BaseList is not null)
@@ -157,9 +163,10 @@ internal static class ViewModelGeneratorHelper
             }
         }
 
-        // A class with [ObservableDtoViewModel] is owned by ObservableDtoViewModelGenerator,
-        // which also emits its [ObservableProperty] and [RelayCommand] members.
-        if (classSymbol.HasObservableDtoViewModelAttribute())
+        // A class that ObservableDtoViewModelGenerator emits is owned by that generator,
+        // which also emits its [ObservableProperty] and [RelayCommand] members. When it emits
+        // nothing for the class (no base class, or a DTO without properties), they stay here.
+        if (ObservableDtoViewModelGeneratorHelper.EmitsClass(context.SemanticModel.Compilation, classSymbol))
         {
             return null;
         }
@@ -227,6 +234,12 @@ internal static class ViewModelGeneratorHelper
         }
 
         if (!classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+        {
+            return false;
+        }
+
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
         {
             return false;
         }

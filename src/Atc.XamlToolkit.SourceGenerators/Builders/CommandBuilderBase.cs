@@ -90,8 +90,9 @@ internal abstract class CommandBuilderBase : BuilderBase
         var emittedAdapters = new HashSet<string>(StringComparer.Ordinal);
         foreach (var cmd in commands)
         {
+            // Overloads of one method each need an adapter with their own parameters.
             if (cmd.ValueTaskMethodName is null ||
-                !emittedAdapters.Add(cmd.MethodName))
+                !emittedAdapters.Add($"{cmd.MethodName}({string.Join(",", cmd.ParameterTypes)})"))
             {
                 continue;
             }
@@ -153,7 +154,11 @@ internal abstract class CommandBuilderBase : BuilderBase
             builder.AppendDocumentation(cmd.DocumentationComments, cmd.GenerateDocumentation, $"Gets the {propName}.");
 
             // For WinUI async commands, generate full properties with PropertyChanged subscription
-            var needsPropertyChangedSubscription = builder.XamlPlatform == XamlPlatform.WinUI && cmd.UseTask;
+            // A control, behavior or helper class has no OnPropertyChanged to raise it with.
+            var needsPropertyChangedSubscription =
+                builder.XamlPlatform == XamlPlatform.WinUI &&
+                cmd.UseTask &&
+                builder is not FrameworkElementBuilder;
 
             if (needsPropertyChangedSubscription)
             {

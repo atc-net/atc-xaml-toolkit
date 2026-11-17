@@ -284,7 +284,7 @@ internal static class ObservablePropertyInspector
                 GenerateDocumentation = generateDocumentation,
                 ValidatesOnChange = validatesOnChange,
                 UseEqualityComparer = !fieldSymbol.Type.SupportsEqualityOperator(),
-                SetterAccessModifier = fieldPropertyAttribute.ExtractSetterAccessModifier(),
+                SetterAccessModifier = fieldSymbol.ContainingType.NarrowAccessModifier(fieldPropertyAttribute.ExtractSetterAccessModifier()),
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
                 RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray()),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),

@@ -113,6 +113,8 @@ internal static class FrameworkElementInspectorHelper
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
+            propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
+            propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
             propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -230,6 +232,8 @@ internal static class FrameworkElementInspectorHelper
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
+        propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
+        propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
         propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
         propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;

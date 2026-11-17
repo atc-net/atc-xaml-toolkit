@@ -75,7 +75,7 @@ internal static class ObservableDtoViewModelInspector
         var dtoTypeName = dtoTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isRecord = dtoTypeSymbol.IsRecord;
         var hasCustomToString = HasCustomToString(dtoTypeSymbol);
-        var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames);
+        var properties = dtoTypeSymbol.ExtractProperties(ignorePropertyNames, viewModelClassSymbol.ContainingAssembly);
         var methods = dtoTypeSymbol.ExtractMethods(ignoreMethodNames);
 
         // Inspect for custom ObservableProperty and RelayCommand attributes

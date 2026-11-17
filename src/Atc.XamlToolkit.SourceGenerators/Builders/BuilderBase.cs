@@ -196,8 +196,8 @@ internal abstract class BuilderBase
 
     public SourceText ToSourceText()
     {
-        var str = sb.ToString();
-        str = str.Substring(0, str.Length - 2);
+        // Drop the final line break. It is one character on Unix and two on Windows.
+        var str = sb.ToString().TrimEnd('\r', '\n');
         return SourceText.From(
             str,
             Encoding.UTF8);

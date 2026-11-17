@@ -6,7 +6,8 @@ internal static class NamedTypeSymbolExtensions
 {
     public static List<DtoPropertyInfo> ExtractProperties(
         this INamedTypeSymbol namedTypeSymbol,
-        List<string>? ignorePropertyNames = null)
+        List<string>? ignorePropertyNames = null,
+        IAssemblySymbol? accessingAssembly = null)
     {
         var ignoreSet = ignorePropertyNames is not null
             ? new HashSet<string>(ignorePropertyNames, StringComparer.Ordinal)
@@ -45,7 +46,7 @@ internal static class NamedTypeSymbolExtensions
                 // A setter the view model cannot call makes the property read-only.
                 // Init-only record parameters are still writable through a 'with' expression.
                 var isReadOnly = p.SetMethod is null ||
-                                 p.SetMethod.DeclaredAccessibility != Accessibility.Public ||
+                                 !IsCallableFromAnotherType(p.SetMethod, accessingAssembly) ||
                                  (p.SetMethod.IsInitOnly && !isRecordParameter);
                 var attributes = p.ExtractPropertyAttributes();
                 var documentationComments = p.ExtractPropertyDocumentationComments();
@@ -64,6 +65,19 @@ internal static class NamedTypeSymbolExtensions
             })
             .ToList();
     }
+
+    // Public always; internal (and protected internal) when the caller is in the same assembly.
+    private static bool IsCallableFromAnotherType(
+        IMethodSymbol methodSymbol,
+        IAssemblySymbol? accessingAssembly)
+        => methodSymbol.DeclaredAccessibility switch
+        {
+            Accessibility.Public => true,
+            Accessibility.Internal or Accessibility.ProtectedOrInternal =>
+                accessingAssembly is not null &&
+                SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, accessingAssembly),
+            _ => false,
+        };
 
     public static List<DtoMethodInfo> ExtractMethods(
         this INamedTypeSymbol namedTypeSymbol,
@@ -133,6 +147,22 @@ internal static class NamedTypeSymbolExtensions
         };
     }
 
+    // SymbolDisplay.FormatPrimitive drops the suffix of a decimal or float literal and
+    // writes NaN and the infinities as bare words, none of which compiles.
+    private static string FormatLiteral(object value)
+        => value switch
+        {
+            decimal d => d.ToString(CultureInfo.InvariantCulture) + "m",
+            float f when float.IsNaN(f) => "float.NaN",
+            float f when float.IsPositiveInfinity(f) => "float.PositiveInfinity",
+            float f when float.IsNegativeInfinity(f) => "float.NegativeInfinity",
+            float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
+            double d when double.IsNaN(d) => "double.NaN",
+            double d when double.IsPositiveInfinity(d) => "double.PositiveInfinity",
+            double d when double.IsNegativeInfinity(d) => "double.NegativeInfinity",
+            _ => SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false) ?? "default",
+        };
+
     private static string? GetParameterDefaultValue(
         IParameterSymbol parameterSymbol)
     {
@@ -152,7 +182,7 @@ internal static class NamedTypeSymbolExtensions
                 : "default";
         }
 
-        var literal = SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false);
+        var literal = FormatLiteral(value);
 
         if (isNullableValueType && type is INamedTypeSymbol { TypeArguments.Length: 1 } nullableType)
         {
@@ -237,8 +267,41 @@ internal static class NamedTypeSymbolExtensions
             parts.Insert(0, namespaceName);
         }
 
-        return string.Join(".", parts);
+        // A hint name only takes a limited set of characters; a keyword-escaped namespace
+        // ("@event") and a file-local type (whose metadata name has '<' and '>') have others.
+        var hintName = new StringBuilder(string.Join(".", parts));
+        for (var i = 0; i < hintName.Length; i++)
+        {
+            var c = hintName[i];
+            if (!char.IsLetterOrDigit(c) && c is not ('.' or '_' or '`' or '-' or '+'))
+            {
+                hintName[i] = '_';
+            }
+        }
+
+        return hintName.ToString();
     }
+
+    /// <summary>
+    /// Narrows a C# access modifier to what it means in a sealed class, where nothing can
+    /// derive: <c>protected</c> and <c>private protected</c> are <c>private</c>, and
+    /// <c>protected internal</c> is <c>internal</c>. The compiler reports a protected member
+    /// in a sealed class (CS0628).
+    /// </summary>
+    /// <param name="namedTypeSymbol">The class the member is generated in.</param>
+    /// <param name="modifier">The modifier; empty for public.</param>
+    /// <returns>The modifier to write.</returns>
+    public static string NarrowAccessModifier(
+        this INamedTypeSymbol namedTypeSymbol,
+        string modifier)
+        => namedTypeSymbol.IsSealed
+            ? modifier switch
+            {
+                "protected" or "private protected" => "private",
+                "protected internal" => "internal",
+                _ => modifier,
+            }
+            : modifier;
 
     public static string GetAccessModifier(
         this INamedTypeSymbol namedTypeSymbol)

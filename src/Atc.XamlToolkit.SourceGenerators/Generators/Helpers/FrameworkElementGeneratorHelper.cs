@@ -37,6 +37,12 @@ internal static class FrameworkElementGeneratorHelper
             return false;
         }
 
+        // A file-local type cannot have a partial declaration in a generated file
+        if (classDeclaration.Modifiers.Any(m => m.Text == "file"))
+        {
+            return false;
+        }
+
         // Quick check: class names ending with common patterns
         var className = classDeclaration.Identifier.Text;
         if (className.EndsWith(NameConstants.Attach, StringComparison.Ordinal) ||
