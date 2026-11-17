@@ -48,7 +48,7 @@ internal static class TypeSymbolExtensions
 
         // Keyword types (int, string, T?, ...) and unresolved types need no import.
         if (typeSymbol.TypeKind is TypeKind.Error or TypeKind.TypeParameter ||
-            typeSymbol.OriginalDefinition.SpecialType != SpecialType.None ||
+            IsWrittenWithAKeyword(typeSymbol.OriginalDefinition.SpecialType) ||
             typeSymbol.ContainingNamespace is not { IsGlobalNamespace: false } containingNamespace)
         {
             return;
@@ -56,6 +56,29 @@ internal static class TypeSymbolExtensions
 
         namespaces.Add(containingNamespace.ToDisplayString());
     }
+
+    // Only some of the compiler's special types have a C# keyword. The others, such as
+    // DateTime, IEnumerable, IList<T> and IDisposable, are written by name and need their
+    // namespace like any other type.
+    private static bool IsWrittenWithAKeyword(SpecialType specialType)
+        => specialType
+            is SpecialType.System_Object
+            or SpecialType.System_Void
+            or SpecialType.System_Boolean
+            or SpecialType.System_Char
+            or SpecialType.System_SByte
+            or SpecialType.System_Byte
+            or SpecialType.System_Int16
+            or SpecialType.System_UInt16
+            or SpecialType.System_Int32
+            or SpecialType.System_UInt32
+            or SpecialType.System_Int64
+            or SpecialType.System_UInt64
+            or SpecialType.System_Decimal
+            or SpecialType.System_Single
+            or SpecialType.System_Double
+            or SpecialType.System_String
+            or SpecialType.System_Nullable_T;
 
     /// <summary>
     /// Determines whether the type is declared in an <c>Atc.XamlToolkit</c> namespace.
