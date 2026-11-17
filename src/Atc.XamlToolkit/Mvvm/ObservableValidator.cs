@@ -33,6 +33,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     private readonly Dictionary<string, List<string>> errors = new(StringComparer.Ordinal);
     private Dictionary<string, PropertyValidationMetadata> validationCache = NoValidationMetadata;
     private bool validationCacheBuilt;
+    private bool lastReportedHasErrors;
 
     /// <summary>
     /// Occurs when the validation errors have changed for a property or for the entire entity.
@@ -113,12 +114,11 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
 
         EnsureValidationCacheBuilt();
 
-        ClearErrors(propertyName!);
-
         var validationAttributes = GetValidationAttributes(propertyName!);
 
         if (validationAttributes.Count == 0)
         {
+            ClearErrors(propertyName!);
             return true;
         }
 
@@ -127,29 +127,42 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
             MemberName = propertyName,
         };
 
-        var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
-
-        var isValid = true;
+        // Work out the complete new error list first and publish it in one step, so
+        // listeners never see the property as valid in between and are only notified
+        // when its errors actually change.
+        List<string>? newErrors = null;
         foreach (var attribute in validationAttributes)
         {
             var result = attribute.GetValidationResult(value, validationContext);
             if (result != System.ComponentModel.DataAnnotations.ValidationResult.Success &&
                 result is not null)
             {
-                isValid = false;
-                validationResults.Add(result);
+                var error = result.ErrorMessage ?? "Validation error";
+
+                newErrors ??= [];
+                if (!newErrors.Contains(error, StringComparer.Ordinal))
+                {
+                    newErrors.Add(error);
+                }
             }
         }
 
-        if (!isValid)
+        if (newErrors is null)
         {
-            foreach (var validationResult in validationResults)
-            {
-                AddError(propertyName!, validationResult.ErrorMessage ?? "Validation error");
-            }
+            ClearErrors(propertyName!);
+            return true;
         }
 
-        return isValid;
+        if (errors.TryGetValue(propertyName!, out var currentErrors) &&
+            currentErrors.SequenceEqual(newErrors, StringComparer.Ordinal))
+        {
+            return false;
+        }
+
+        errors[propertyName!] = newErrors;
+        OnErrorsChanged(propertyName!);
+
+        return false;
     }
 
     /// <summary>
@@ -237,7 +250,15 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     {
         ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
 
-        // Raise PropertyChanged for HasErrors so bindings and commands can react to validation state changes
+        // Raise PropertyChanged for HasErrors so bindings and commands can react to validation
+        // state changes - only when the value actually changes.
+        var hasErrors = HasErrors;
+        if (hasErrors == lastReportedHasErrors)
+        {
+            return;
+        }
+
+        lastReportedHasErrors = hasErrors;
         RaisePropertyChanged(nameof(HasErrors));
     }
 

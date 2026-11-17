@@ -127,6 +127,46 @@ public sealed class ObservableValidatorTests
     }
 
     [Fact]
+    public void Revalidation_DoesNotReportHasErrorsFalse_WhileThePropertyStaysInvalid()
+    {
+        var sut = new TestPersonValidator(validateOnPropertyChanged: true);
+        var reportedHasErrors = new List<bool>();
+        sut.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ObservableValidator.HasErrors))
+            {
+                reportedHasErrors.Add(sut.HasErrors);
+            }
+        };
+
+        sut.FirstName = "A"; // invalid: too short
+        sut.FirstName = "B"; // still invalid, same error
+        sut.FirstName = "C"; // still invalid, same error
+
+        reportedHasErrors
+            .Should()
+            .Equal([true], "HasErrors flipped once and never went back to false");
+    }
+
+    [Fact]
+    public void Validation_RaisesErrorsChangedOnce_PerChangeOfAPropertysErrors()
+    {
+        var sut = new TestPersonValidator(validateOnPropertyChanged: true);
+        sut.FirstName = "Alice";
+        var notifications = new List<string?>();
+        sut.ErrorsChanged += (_, e) => notifications.Add(e.PropertyName);
+
+        sut.FirstName = string.Empty; // two errors at once: required + minimum length
+        sut.FirstName = string.Empty; // unchanged value: no property change, no validation
+        sut.RunValidateFirstName(string.Empty); // same errors again
+        sut.FirstName = "Alice"; // valid again
+
+        notifications
+            .Should()
+            .Equal([nameof(TestPersonValidator.FirstName), nameof(TestPersonValidator.FirstName)], "once when the errors appeared and once when they were cleared");
+    }
+
+    [Fact]
     public void ValidationMetadata_IsDiscoveredOncePerType_NotOncePerInstance()
     {
         // Reading a property's attributes through reflection constructs the attribute,
@@ -254,5 +294,8 @@ public sealed class ObservableValidatorTests
 
         public bool RunValidateAllProperties()
             => ValidateAllProperties();
+
+        public void RunValidateFirstName(string value)
+            => ValidateProperty(value, nameof(FirstName));
     }
 }
