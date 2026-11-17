@@ -47,6 +47,18 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? UserCoerceValueCallback { get; set; }
 
     /// <summary>
+    /// Gets or sets the type whose existing dependency property is shared with
+    /// <c>AddOwner</c> instead of registering a new one (WPF only); <c>null</c> otherwise.
+    /// </summary>
+    public string? AddOwnerOf { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the attribute states a default value, as
+    /// opposed to <see cref="DefaultValue"/> being derived from the property type.
+    /// </summary>
+    public bool HasExplicitDefaultValue { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the property is registered as a read-only
     /// dependency property with a <c>DependencyPropertyKey</c> (WPF only).
     /// </summary>

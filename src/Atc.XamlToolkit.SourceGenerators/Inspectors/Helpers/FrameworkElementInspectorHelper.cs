@@ -98,6 +98,7 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.IsNullableValueType = isNullableValueType;
             propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
             propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+            ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
@@ -193,6 +194,7 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+        ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
         propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
@@ -208,6 +210,23 @@ internal static class FrameworkElementInspectorHelper
         return propertyToGenerate;
     }
 
+    // AddOwnerOf = typeof(X) shares the existing property of X instead of registering a new
+    // one. Only WPF has AddOwner in this form.
+    private static void ApplyAddOwner(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        AttributeData propertyAttribute,
+        IDictionary<string, string?> argumentValues,
+        XamlPlatform xamlPlatform)
+    {
+        if (xamlPlatform != XamlPlatform.Wpf)
+        {
+            return;
+        }
+
+        propertyToGenerate.AddOwnerOf = propertyAttribute.ExtractAddOwnerOf();
+        propertyToGenerate.HasExplicitDefaultValue = argumentValues.ContainsKey(NameConstants.DefaultValue);
+    }
+
     // IsReadOnly = true registers a read-only dependency property with a key. Only WPF has
     // them. The setter writes through the key and is private unless stated otherwise.
     private static void ApplyReadOnlyKey(
@@ -216,6 +235,7 @@ internal static class FrameworkElementInspectorHelper
         XamlPlatform xamlPlatform)
     {
         if (xamlPlatform != XamlPlatform.Wpf ||
+            propertyToGenerate.AddOwnerOf is not null ||
             !argumentValues.TryGetValue(NameConstants.IsReadOnly, out var value) ||
             !"true".Equals(value, StringComparison.OrdinalIgnoreCase))
         {

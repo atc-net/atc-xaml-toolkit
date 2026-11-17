@@ -27,6 +27,16 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public bool GenerateCoerceHook { get; set; }
 
     /// <summary>
+    /// Gets or sets the type whose existing dependency property of the same name is shared,
+    /// instead of registering a new one. The generator emits
+    /// <c>{Type}.{Name}Property.AddOwner(typeof(Owner))</c> and the CLR property. Metadata is
+    /// only passed when a default value, a callback or another metadata option is set, and
+    /// is then a <c>FrameworkPropertyMetadata</c>. <see cref="ValidateValueCallback"/> does
+    /// not apply, because validation belongs to the registration of the shared property.
+    /// </summary>
+    public Type? AddOwnerOf { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the property is a read-only dependency
     /// property. It is then registered with <c>RegisterReadOnly</c> (or
     /// <c>RegisterAttachedReadOnly</c>): the generator emits a private

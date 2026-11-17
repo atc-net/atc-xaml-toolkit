@@ -451,6 +451,20 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLineBeforeMember();
 
+        if (p.AddOwnerOf is not null)
+        {
+            // An existing property is shared: no name and no property type are passed.
+            if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
+            {
+                builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
+            }
+
+            var newModifier = p.UseNewKeyword ? "new " : string.Empty;
+            builder.AppendLine($"public static {newModifier}readonly DependencyProperty {p.Name}Property = {p.AddOwnerOf}.{p.Name}Property.AddOwner(");
+            builder.IncreaseIndent();
+            return;
+        }
+
         if (p.UsesPropertyKey)
         {
             // A read-only dependency property: the registration returns the key, and the
@@ -539,6 +553,12 @@ internal static class FrameworkElementBuilderExtensions
         if (xamlPlatform == XamlPlatform.Avalonia)
         {
             GenerateAvaloniaPropertyBody(builder, p);
+            return;
+        }
+
+        if (p.AddOwnerOf is not null)
+        {
+            GenerateAddOwnerBody(builder, p);
             return;
         }
 
@@ -663,6 +683,67 @@ internal static class FrameworkElementBuilderExtensions
                     break;
             }
         }
+    }
+
+    // The arguments of AddOwner: the new owner and, only when the attribute states something
+    // to override, metadata. The metadata must be of the shared property's metadata type or a
+    // type derived from it, so it is always FrameworkPropertyMetadata. A default value that
+    // was merely derived from the property type is not passed; it would replace the default
+    // of the shared property.
+    private static void GenerateAddOwnerBody(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p)
+    {
+        var ownerType = $"typeof({p.OwnerType.RemoveNullableSuffix()})";
+
+        var hasFrameworkOptions =
+            !string.IsNullOrEmpty(p.Flags) ||
+            !string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger) ||
+            p.IsAnimationProhibited is not null;
+
+        if (hasFrameworkOptions)
+        {
+            builder.AppendLine($"{ownerType},");
+            GenerateFrameworkPropertyMetadata(builder, p, endWithComma: false);
+            builder.DecreaseIndent();
+            builder.DecreaseIndent();
+            return;
+        }
+
+        var hasPropertyChangedCallback = !string.IsNullOrEmpty(p.PropertyChangedCallback);
+        var hasCoerceValueCallback = !string.IsNullOrEmpty(p.CoerceValueCallback);
+
+        var arguments = new List<string>();
+        if (p.HasExplicitDefaultValue)
+        {
+            arguments.Add($"defaultValue: {p.DefaultValue ?? "null"}");
+        }
+
+        if (hasPropertyChangedCallback)
+        {
+            arguments.Add($"propertyChangedCallback: {p.PropertyChangedCallback}");
+        }
+        else if (hasCoerceValueCallback)
+        {
+            // There is no constructor that takes a coerce callback without a changed callback
+            arguments.Add("propertyChangedCallback: null");
+        }
+
+        if (hasCoerceValueCallback)
+        {
+            arguments.Add($"coerceValueCallback: {p.CoerceValueCallback}");
+        }
+
+        if (arguments.Count == 0)
+        {
+            builder.AppendLine($"{ownerType});");
+            builder.DecreaseIndent();
+            return;
+        }
+
+        builder.AppendLine($"{ownerType},");
+        builder.AppendLine($"new FrameworkPropertyMetadata({string.Join(", ", arguments)}));");
+        builder.DecreaseIndent();
     }
 
     private static void GeneratePropertyMetadataExtended(

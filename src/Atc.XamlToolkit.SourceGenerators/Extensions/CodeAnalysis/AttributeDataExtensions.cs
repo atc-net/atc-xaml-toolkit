@@ -93,6 +93,39 @@ internal static class AttributeDataExtensions
     }
 
     /// <summary>
+    /// Reads the <c>AddOwnerOf</c> option of an attribute.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <returns>The type name as it can be written in the generated code; <c>null</c> when the option is not set.</returns>
+    public static string? ExtractAddOwnerOf(this AttributeData attributeData)
+    {
+        // The attribute is resolved: the value is the type symbol.
+        foreach (var namedArgument in attributeData.NamedArguments)
+        {
+            if (namedArgument.Key == NameConstants.AddOwnerOf &&
+                namedArgument.Value.Value is ITypeSymbol typeSymbol)
+            {
+                return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            }
+        }
+
+        // The attribute is not resolved: only the text is known, e.g. typeof(ComboBox).
+        if (attributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList: { } argumentList })
+        {
+            foreach (var argument in argumentList.Arguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText == NameConstants.AddOwnerOf &&
+                    argument.Expression is TypeOfExpressionSyntax typeOfExpression)
+                {
+                    return typeOfExpression.Type.ToString();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Reads the <c>SetterAccessModifier</c> option of an attribute.
     /// </summary>
     /// <param name="attributeData">The attribute data.</param>

@@ -169,6 +169,52 @@ public string SummaryText
 - This is different from `SetterAccessModifier` alone, which only hides the C# setter of an ordinary, writable property.
 - **WPF only.** WinUI has no read-only dependency properties, and Avalonia's equivalent is a direct property, which the generator does not produce. The option does not exist on the WinUI attribute or on `[StyledProperty]`.
 
+## 🤝 Sharing an existing property with `AddOwnerOf` (WPF)
+
+A control that should expose a property another class already registered, such as `ComboBox.MaxDropDownHeight`, shares that property instead of registering a new one. Styles, inheritance and triggers written for the original property then also apply to the control:
+
+```csharp
+public partial class TokenBox : Control
+{
+    [DependencyProperty(AddOwnerOf = typeof(ComboBox))]
+    private double maxDropDownHeight;
+}
+```
+
+Generated:
+
+```csharp
+public static readonly DependencyProperty MaxDropDownHeightProperty = ComboBox.MaxDropDownHeightProperty.AddOwner(
+    typeof(TokenBox));
+
+public double MaxDropDownHeight
+{
+    get => (double)GetValue(MaxDropDownHeightProperty);
+    set => SetValue(MaxDropDownHeightProperty, value);
+}
+```
+
+- The shared property is `{Type}.{Name}Property`, so the field must have the name and type of the property being shared.
+- Without further options no metadata is passed, and the default value and callbacks of the shared property stay as they are.
+- `DefaultValue`, `PropertyChangedCallback`, `CoerceValueCallback`, `GeneratePartialHooks` and `GenerateCoerceHook` override the metadata for the new owner only:
+
+  ```csharp
+  [DependencyProperty(AddOwnerOf = typeof(Path), PropertyChangedCallback = nameof(OnDataChanged))]
+  private Geometry data;
+  ```
+
+  ```csharp
+  public static readonly DependencyProperty DataProperty = Path.DataProperty.AddOwner(
+      typeof(PathIcon),
+      new FrameworkPropertyMetadata(propertyChangedCallback: OnDataChanged));
+  ```
+
+- The metadata is always a `FrameworkPropertyMetadata`, because WPF requires the metadata type of the shared property or a type derived from it.
+- `Flags`, `DefaultUpdateSourceTrigger` and `IsAnimationProhibited` can be set too. The metadata constructors that take them also take a default value, so state `DefaultValue` together with them; otherwise the default of the property type is passed.
+- `ValidateValueCallback` is ignored: validation belongs to the registration of the shared property.
+- `IsReadOnly` cannot be combined with `AddOwnerOf` and is ignored.
+- **WPF only.**
+
 ## 🪝 Typed change hooks
 
 A `PropertyChangedCallback` has to be a static method that receives the object and untyped event args, so it usually starts by casting both:
