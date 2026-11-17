@@ -1,0 +1,87 @@
+namespace Atc.XamlToolkit.SourceGenerators.Inspectors;
+
+/// <summary>
+/// Finds the members a class takes over from the property templates it uses with
+/// <c>[UseDependencyPropertyTemplate]</c>.
+/// </summary>
+internal static class PropertyTemplateInspector
+{
+    public static bool IsTemplate(INamedTypeSymbol classSymbol)
+        => classSymbol.GetAttributes().Any(x => x.GetToolkitAttributeName()
+            is NameConstants.DependencyPropertyTemplateAttribute
+            or NameConstants.DependencyPropertyTemplate);
+
+    /// <summary>
+    /// Gets the attributed fields of every template the class uses. For a generic template
+    /// they are the fields of the constructed type, so their types have the type arguments
+    /// filled in.
+    /// </summary>
+    /// <param name="classSymbol">The class that uses the templates.</param>
+    /// <param name="unusableTemplates">Receives the name of each template that cannot be applied.</param>
+    /// <returns>The fields, in the order the templates are listed and the fields are declared.</returns>
+    public static ImmutableArray<ISymbol> GetTemplateMembers(
+        INamedTypeSymbol classSymbol,
+        List<string> unusableTemplates)
+    {
+        var result = ImmutableArray.CreateBuilder<ISymbol>();
+
+        foreach (var attribute in classSymbol.GetAttributes())
+        {
+            if (attribute.GetToolkitAttributeName()
+                    is not (NameConstants.UseDependencyPropertyTemplateAttribute
+                    or NameConstants.UseDependencyPropertyTemplate) ||
+                attribute.ConstructorArguments.Length == 0 ||
+                attribute.ConstructorArguments[0].Value is not INamedTypeSymbol templateType)
+            {
+                continue;
+            }
+
+            var members = templateType
+                .GetMembers()
+                .Where(x => x is IFieldSymbol { IsImplicitlyDeclared: false } && x.GetAttributes().Length > 0)
+                .ToList();
+
+            // A template in another assembly shows no fields: private members are not
+            // part of what the compiler lets a referencing project see.
+            if (!IsTemplate(templateType.OriginalDefinition) || members.Count == 0)
+            {
+                unusableTemplates.Add(templateType.Name);
+                continue;
+            }
+
+            var excludedNames = GetExcludedNames(attribute);
+            result.AddRange(members.Where(x => !excludedNames.Contains(GetGeneratedName(x.Name))));
+        }
+
+        return result.ToImmutable();
+    }
+
+    private static HashSet<string> GetExcludedNames(AttributeData attribute)
+    {
+        var result = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var namedArgument in attribute.NamedArguments)
+        {
+            if (namedArgument.Key != NameConstants.Exclude ||
+                namedArgument.Value.Kind != TypedConstantKind.Array)
+            {
+                continue;
+            }
+
+            foreach (var value in namedArgument.Value.Values)
+            {
+                if (value.Value is string name)
+                {
+                    result.Add(GetGeneratedName(name));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // The name of the property or event generated from a field: no leading underscore,
+    // first letter in upper case.
+    private static string GetGeneratedName(string fieldName)
+        => fieldName.TrimStart('_').EnsureFirstCharacterToUpper();
+}

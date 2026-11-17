@@ -18,6 +18,7 @@
 | Generate a WPF routed event | `[RoutedEvent]` | Custom control | [RoutedEvents.md](RoutedEvents.md) |
 | Set a control's default style key | `[DefaultStyleKey]` | Custom control (class) | [DefaultStyleKey.md](DefaultStyleKey.md) |
 | Declare and look up the named parts of a control template | `[TemplatePartField]` | Custom control (field) | [TemplatePartField.md](TemplatePartField.md) |
+| Declare a set of properties and events once and apply it to several controls | `[DependencyPropertyTemplate]`, `[UseDependencyPropertyTemplate]` | Template class, control (class) | [PropertyTemplate.md](PropertyTemplate.md) |
 
 ## Platform support matrix
 

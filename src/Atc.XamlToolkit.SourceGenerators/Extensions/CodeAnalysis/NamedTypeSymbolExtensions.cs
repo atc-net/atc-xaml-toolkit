@@ -389,5 +389,7 @@ internal static class NamedTypeSymbolExtensions
             or NameConstants.DefaultStyleKeyAttribute
             or NameConstants.DefaultStyleKey
             or NameConstants.TemplatePartFieldAttribute
-            or NameConstants.TemplatePartField;
+            or NameConstants.TemplatePartField
+            or NameConstants.UseDependencyPropertyTemplateAttribute
+            or NameConstants.UseDependencyPropertyTemplate;
 }

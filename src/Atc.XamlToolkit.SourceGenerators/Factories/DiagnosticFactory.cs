@@ -103,6 +103,24 @@ internal static class DiagnosticFactory
             isEnabledByDefault: true,
             description: "A class can only have one static constructor. When a class with [DefaultStyleKey] declares its own, the source generator emits a private static OverrideDefaultStyleKey() method instead of a static constructor. If that method is never called, the default style key is not overridden and the control is shown without its default style.");
 
+    private static readonly DiagnosticDescriptor UnusablePropertyTemplateDescriptor = new(
+        id: "AtcXamlToolkit0012",
+        title: "The type cannot be used as a property template",
+        messageFormat: "'{0}' cannot be applied to '{1}' as a property template: it must be a class marked with [DependencyPropertyTemplate], declared in the same project, with at least one attributed field",
+        category: "Usage",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "[UseDependencyPropertyTemplate] takes a class marked with [DependencyPropertyTemplate] and generates its attributed fields in the annotated class. The source generator reads those fields from source, so the template has to be declared in the same project as the class that uses it. Nothing is generated for a type that is not a usable template.");
+
+    public static Diagnostic CreateUnusablePropertyTemplate(
+        string templateName,
+        string className)
+        => Diagnostic.Create(
+            UnusablePropertyTemplateDescriptor,
+            Location.None,
+            templateName,
+            className);
+
     public static Diagnostic CreateDefaultStyleKeyOverrideNotCalled(
         string className)
         => Diagnostic.Create(

@@ -335,6 +335,13 @@ public abstract class GeneratorTestBase
             .Select(x => x.SourceText.ToString())
             .ToList();
 
+    internal static IReadOnlyList<string> GetGeneratorDiagnosticIdsForAvaloniaConsumer(
+        params string[] inputCodes)
+        => RunAllGeneratorsForConsumer(useConsumerGlobalUsings: true, inputCodes, out _)
+            .Diagnostics
+            .Select(x => x.Id)
+            .ToList();
+
     private static IReadOnlyList<string> CompileWithAllGenerators(
         bool useConsumerGlobalUsings,
         string[] inputCodes)

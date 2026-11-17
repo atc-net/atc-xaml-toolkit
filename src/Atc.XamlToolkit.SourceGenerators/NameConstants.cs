@@ -76,6 +76,11 @@ internal static class NameConstants
     public const string RelayCommandAttribute = nameof(RelayCommandAttribute);
     public const string TemplatePartField = nameof(TemplatePartField);
     public const string TemplatePartFieldAttribute = nameof(TemplatePartFieldAttribute);
+    public const string DependencyPropertyTemplate = nameof(DependencyPropertyTemplate);
+    public const string DependencyPropertyTemplateAttribute = nameof(DependencyPropertyTemplateAttribute);
+    public const string UseDependencyPropertyTemplate = nameof(UseDependencyPropertyTemplate);
+    public const string UseDependencyPropertyTemplateAttribute = nameof(UseDependencyPropertyTemplateAttribute);
+    public const string Exclude = nameof(Exclude);
     public const string DefaultStyleKey = nameof(DefaultStyleKey);
     public const string DefaultStyleKeyAttribute = nameof(DefaultStyleKeyAttribute);
     public const string OverrideDefaultStyleKey = nameof(OverrideDefaultStyleKey);

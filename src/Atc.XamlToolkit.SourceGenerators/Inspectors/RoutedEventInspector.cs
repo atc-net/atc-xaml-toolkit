@@ -57,6 +57,39 @@ internal static class RoutedEventInspector
         return result;
     }
 
+    private static readonly SymbolDisplayFormat ClosedHandlerTypeFormat = SymbolDisplayFormat
+        .FullyQualifiedFormat
+        .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
+    // An attribute argument cannot use a type parameter, so a routed event in a generic
+    // property template names its handler as an unbound generic type, for example
+    // typeof(RoutedPropertyChangedEventHandler<>). It is closed with the type arguments
+    // the template is used with.
+    private static string? GetHandlerTypeClosedByTemplate(
+        IFieldSymbol fieldSymbol,
+        AttributeData fieldPropertyAttribute)
+    {
+        if (fieldSymbol.ContainingType is not { IsGenericType: true } templateType)
+        {
+            return null;
+        }
+
+        foreach (var namedArgument in fieldPropertyAttribute.NamedArguments)
+        {
+            if (namedArgument.Key == NameConstants.HandlerType &&
+                namedArgument.Value.Value is INamedTypeSymbol { IsUnboundGenericType: true } handlerType &&
+                handlerType.Arity == templateType.TypeArguments.Length)
+            {
+                return handlerType
+                    .OriginalDefinition
+                    .Construct(templateType.TypeArguments, templateType.TypeArgumentNullableAnnotations)
+                    .ToDisplayString(ClosedHandlerTypeFormat);
+            }
+        }
+
+        return null;
+    }
+
     private static void AppendRoutedEventToGenerate(
         INamedTypeSymbol classSymbol,
         IFieldSymbol fieldSymbol,
@@ -89,6 +122,8 @@ internal static class RoutedEventInspector
                 handlerTypeName = handlerTypeNameValue!.ExtractInnerContent();
             }
         }
+
+        handlerTypeName = GetHandlerTypeClosedByTemplate(fieldSymbol, fieldPropertyAttribute) ?? handlerTypeName;
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 

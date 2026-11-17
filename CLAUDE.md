@@ -205,11 +205,12 @@ Each platform package (Wpf, WinUI, Avalonia) has:
 
 **Which classes FrameworkElementGenerator picks up:**
 - A `partial` class is handled when:
-  - The class or one of its members carries `[DependencyProperty]`, `[StyledProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` (any class name, any base class), OR
+  - The class or one of its members carries `[DependencyProperty]`, `[StyledProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]`, `[TemplatePartField]` or `[UseDependencyPropertyTemplate]` (any class name, any base class), OR
   - It inherits from `UserControl`, `DependencyObject`, `FrameworkElement`, OR
   - Its name ends with **"Attach"**, **"Behavior"**, or **"Helper"**
 - The last two rules only matter for `[RelayCommand]` in a control, behavior or helper; `[RelayCommand]` alone does not qualify a class, so view model commands stay with `ViewModelGenerator`
 - The check is `HasAnythingAroundFrameworkElement()` in `NamedTypeSymbolExtensions.cs`
+- A class marked `[DependencyPropertyTemplate]` gets no code of its own; its attributed fields are generated in every class that names it in `[UseDependencyPropertyTemplate(typeof(...))]` (`PropertyTemplateInspector.cs`, see `docs/SourceGenerators/PropertyTemplate.md`)
 - Common patterns: `DragBehavior`, `WatermarkTextBoxBehavior`, `CheckBoxHelper`
 
 ## Code Style and Rules

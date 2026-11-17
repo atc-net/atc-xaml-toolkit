@@ -5,8 +5,15 @@ internal static class FrameworkElementInspector
     public static FrameworkElementInspectorResult Inspect(
         XamlPlatform xamlPlatform,
         INamedTypeSymbol classSymbol)
+        => Inspect(xamlPlatform, classSymbol, ImmutableArray<ISymbol>.Empty);
+
+    public static FrameworkElementInspectorResult Inspect(
+        XamlPlatform xamlPlatform,
+        INamedTypeSymbol classSymbol,
+        ImmutableArray<ISymbol> templateMembers)
     {
-        var memberSymbols = classSymbol.GetMembers();
+        // The fields of the property templates the class uses are treated as its own.
+        var memberSymbols = templateMembers.AddRange(classSymbol.GetMembers());
 
         var attachedPropertiesToGenerate = DependencyPropertyInspector<AttachedPropertyToGenerate>.Inspect(
             xamlPlatform,

@@ -246,6 +246,7 @@ Learn more about each generator:
 - [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
 - [SourceGenerators for the default style key](docs/SourceGenerators/DefaultStyleKey.md)
 - [SourceGenerators for template parts](docs/SourceGenerators/TemplatePartField.md)
+- [SourceGenerators for property templates](docs/SourceGenerators/PropertyTemplate.md)
 - [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
 - [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
 - [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)

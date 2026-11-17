@@ -119,7 +119,9 @@ internal static class FrameworkElementGeneratorHelper
             }
         }
 
-        if (!classSymbol.HasAnythingAroundFrameworkElement())
+        // A property template only declares members for other classes; it gets no code itself.
+        if (PropertyTemplateInspector.IsTemplate(classSymbol) ||
+            !classSymbol.HasAnythingAroundFrameworkElement())
         {
             return null;
         }
@@ -133,7 +135,10 @@ internal static class FrameworkElementGeneratorHelper
         var xamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform();
 
         // The symbol covers every partial declaration of the class, so one inspection is enough.
-        var result = FrameworkElementInspector.Inspect(xamlPlatform, classSymbol);
+        var unusableTemplates = new List<string>();
+        var templateMembers = PropertyTemplateInspector.GetTemplateMembers(classSymbol, unusableTemplates);
+
+        var result = FrameworkElementInspector.Inspect(xamlPlatform, classSymbol, templateMembers);
 
         if (result.FoundAnythingToGenerate)
         {
@@ -163,7 +168,8 @@ internal static class FrameworkElementGeneratorHelper
             allRoutedEvents.Count == 0 &&
             allRelayCommands.Count == 0 &&
             defaultStyleKey is null &&
-            templateParts.Count == 0)
+            templateParts.Count == 0 &&
+            unusableTemplates.Count == 0)
         {
             return null;
         }
@@ -184,6 +190,7 @@ internal static class FrameworkElementGeneratorHelper
             HintName = classSymbol.GetHintName(),
             DefaultStyleKey = defaultStyleKey,
             TemplatePartsToGenerate = new EquatableArray<TemplatePartToGenerate>(templateParts.ToArray()),
+            UnusablePropertyTemplates = new EquatableArray<string>(unusableTemplates.ToArray()),
             ClassAttributes = new EquatableArray<string>(
                 TemplatePartInspector.GetClassAttributes(xamlPlatform, classSymbol, templateParts).ToArray()),
         };
@@ -338,6 +345,9 @@ internal static class FrameworkElementGeneratorHelper
 
                     // All platforms: TemplatePartField
                     NameConstants.TemplatePartField or NameConstants.TemplatePartFieldAttribute or
+
+                    // All platforms: a property template applied to the class
+                    NameConstants.UseDependencyPropertyTemplate or NameConstants.UseDependencyPropertyTemplateAttribute or
 
                     // All platforms: RelayCommand
                     NameConstants.RelayCommand or NameConstants.RelayCommandAttribute)

@@ -50,7 +50,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         SourceProductionContext context,
         FrameworkElementToGenerate? frameworkElementToGenerate)
     {
-        if (frameworkElementToGenerate is null)
+        if (frameworkElementToGenerate is null ||
+            !ReportUnusablePropertyTemplates(context, frameworkElementToGenerate))
         {
             return;
         }
@@ -104,6 +105,20 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         context.AddSource(
             frameworkElementToGenerate.GeneratedFileName,
             sourceText);
+    }
+
+    // Returns whether there is still code to emit for the class.
+    private static bool ReportUnusablePropertyTemplates(
+        SourceProductionContext context,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        foreach (var templateName in frameworkElementToGenerate.UnusablePropertyTemplates)
+        {
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateUnusablePropertyTemplate(templateName, frameworkElementToGenerate.ClassName));
+        }
+
+        return frameworkElementToGenerate.HasAnythingToGenerate;
     }
 
     private static void GenerateDefaultStyleKey(
