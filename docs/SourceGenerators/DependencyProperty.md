@@ -262,7 +262,7 @@ private double InternalViewportZoom
 ```
 
 - `SetterAccessModifier` can restrict the setter further, for example an `Internal` property with a `Private` setter. C# requires the setter to be more restrictive than the property; when both are the same, the generator leaves the modifier off the setter. A `SetterAccessModifier` that is not more restrictive than `AccessModifier` (a `Private` property with a `Public` setter, or `Protected` with `Internal`, which C# cannot compare) is also left off, and reported as `AtcXamlToolkit0013`.
-- In a `sealed` class, `Protected` is written as `private`, for `AccessModifier` and for `SetterAccessModifier`.
+- In a `sealed` class, `Protected` and `PrivateProtected` are written as `private` and `ProtectedInternal` as `internal`, for `AccessModifier`, `SetterAccessModifier` and `PropertyKeyAccessModifier`, since the compiler reports a protected member in a sealed class.
 - `GenerateClrAccessors = false` generates only the `{Name}Property` field, for a property that is read and written with `GetValue` / `SetValue`. The property is then registered under its name as a string, because there is no CLR property for `nameof`. XML documentation written on the attributed field goes to the `{Name}Property` field, as there is no other member to carry it.
 - Both options work on WPF, WinUI and Avalonia (`[StyledProperty]`).
 - A non-public property is still registered with the property system under its name; the modifier only limits what C# code can reach.

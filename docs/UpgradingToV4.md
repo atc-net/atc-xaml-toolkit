@@ -41,6 +41,7 @@ The toolkit packages depend on `Atc` 4.1.0 (was 3.0.186). A project that referen
 |------|--------|-----|
 | An exception thrown by a weakly held instance delegate (`WeakAction`, `WeakFunc`) | Wrapped in `TargetInvocationException` | The original exception. A `catch` block or `IErrorHandler` that unwrapped it has to be adjusted |
 | `IsStatic` on a generic weak delegate created from a static method | `false` | `true` |
+| `MarkForDeletion` on weak delegates | `WeakFunc<TResult>.MarkForDeletion` was protected, and `WeakAction<T>` / `WeakFunc<T, TResult>` hid the base method, so through a base reference a static delegate was not cleared | Public and virtual on the base classes, overridden in the generic ones |
 | `Messenger` clean-up of dead recipients | Requested on every `Send` | Requested when a dead recipient is met; after 64 requests that could not be scheduled it runs on the calling thread |
 
 ### MVVM
@@ -88,6 +89,9 @@ The toolkit packages depend on `Atc` 4.1.0 (was 3.0.186). A project that referen
 | Generated file names | `Namespace.Class.g.cs` | Include the containing types of a nested class and the arity of a generic class |
 | A class that is not `partial` but uses `[DependencyProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` | Nothing was generated and nothing was reported | Warning `AtcXamlToolkit0002` |
 | `[ObservableProperty]` in a partial class without `ObservableObject` or `[INotifyPropertyChanged]` | Nothing was generated and nothing was reported | Warning `AtcXamlToolkit0014` |
+| A property of an enum or struct type with `PropertyChangedCallback`, `CoerceValueCallback` or `Flags` and no `DefaultValue` | Registered with `defaultValue: null`, which throws when the class is first used | Registered with the default of the type |
+| A string `DefaultValue` on a property of type `object` | Written without quotes, which did not compile | Written as a string literal |
+| `[DependencyProperty]` with metadata in a static class | Compiled, and threw when the class was first used | Warning `AtcXamlToolkit0013`; use `[AttachedProperty]` in a static class |
 | Avalonia: `[StyledProperty]` of a nullable reference type | Registered as `StyledProperty<string>`, with a compiler warning in the generated file | Registered as `StyledProperty<string?>` |
 
 A project that builds with warnings as errors will fail on the new warnings where the generator used to skip a class silently. In each case the class was not getting its generated members before either.
