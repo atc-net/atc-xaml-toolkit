@@ -230,6 +230,18 @@ internal static class ObjectExtensions
                 }
 
                 break;
+            case "nint" or "nuint":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
+                }
+                else if (long.TryParse(strDefaultValue, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
+                {
+                    // A boxed int is not a valid default value for a native-sized integer property.
+                    strDefaultValue = $"({lastPart}){strDefaultValue}";
+                }
+
+                break;
             case "char":
                 if (strDefaultValue.Length == 0)
                 {

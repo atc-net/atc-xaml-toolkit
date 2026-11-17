@@ -4,6 +4,24 @@ internal static class TypeSymbolExtensions
 {
     private const string ToolkitNamespace = "Atc.XamlToolkit";
 
+    // The type as it is written in generated code: C# keywords for the built-in types,
+    // no namespace (the generated file imports it), but containing types kept.
+    private static readonly SymbolDisplayFormat GeneratedCodeTypeNameFormat = new(
+        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
+    /// <summary>
+    /// Gets the name of the type as it should be written in generated code.
+    /// </summary>
+    /// <param name="typeSymbol">The type.</param>
+    /// <returns>The type name without namespace, including containing types, type arguments and array ranks.</returns>
+    public static string ToGeneratedCodeTypeName(this ITypeSymbol typeSymbol)
+        => typeSymbol.TypeKind == TypeKind.Error
+            ? typeSymbol.ToDisplayString().EnsureCSharpAliasIfNeeded() // unresolved: only the written name is known
+            : typeSymbol.ToDisplayString(GeneratedCodeTypeNameFormat);
+
     /// <summary>
     /// Adds the namespaces that must be imported to write the type by its simple name:
     /// the namespace of the type itself, of its type arguments and of an array's element type.

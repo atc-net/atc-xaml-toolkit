@@ -112,8 +112,7 @@ internal static class FrameworkElementInspectorHelper
 
         var type = fieldSymbol
             .Type
-            .ToDisplayString()
-            .EnsureCSharpAliasIfNeeded();
+            .ToGeneratedCodeTypeName();
 
         propertyAttribute.EscapeLiteralArgumentValues(argumentValues, type);
 

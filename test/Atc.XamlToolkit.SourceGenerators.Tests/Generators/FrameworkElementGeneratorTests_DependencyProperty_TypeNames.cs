@@ -195,4 +195,77 @@ public sealed partial class FrameworkElementGeneratorTests
 
         AssertGeneratorRunResultAsEqual(expectedCode, generatorResult);
     }
+
+    [Fact]
+    public void DependencyProperty_Field_ArrayOfGenericType_KeepsTheArraySuffix()
+    {
+        const string inputCode =
+            """
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                [DependencyProperty]
+                private List<string>[] lists;
+            }
+            """;
+
+        var generatedCode = RunGenerator<FrameworkElementGenerator>(inputCode)
+            .GeneratorResult.GeneratedSources[0].SourceText.ToString();
+
+        Assert.Contains("typeof(List<string>[]),", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("public List<string>[] Lists", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("get => (List<string>[])GetValue(ListsProperty);", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DependencyProperty_Field_NestedType_KeepsTheContainingType()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Outer
+            {
+                public class Inner
+                {
+                }
+            }
+
+            public partial class MyControl : UserControl
+            {
+                [DependencyProperty]
+                private Outer.Inner nested;
+            }
+            """;
+
+        var generatedCode = RunGenerator<FrameworkElementGenerator>(inputCode)
+            .GeneratorResult.GeneratedSources[0].SourceText.ToString();
+
+        Assert.Contains("typeof(Outer.Inner),", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("public Outer.Inner Nested", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DependencyProperty_Field_NativeIntegerDefaultValue_IsCastToThePropertyType()
+    {
+        // A boxed int is not a valid default value for an nint property.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                [DependencyProperty(DefaultValue = 5)]
+                private nint handle;
+            }
+            """;
+
+        var generatedCode = RunGenerator<FrameworkElementGenerator>(inputCode)
+            .GeneratorResult.GeneratedSources[0].SourceText.ToString();
+
+        Assert.Contains("new PropertyMetadata(defaultValue: (nint)5)", generatedCode, StringComparison.Ordinal);
+    }
 }

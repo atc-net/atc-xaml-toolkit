@@ -98,9 +98,7 @@ internal static class AttributeDataExtensions
         var typeSymbol = propertyAttribute.AttributeClass.TypeArguments[0];
         isNullableValueType = typeSymbol.IsNullableValueTypeOrUnknown();
         typeSymbol.AddRequiredNamespacesTo(requiredNamespaces);
-        type = typeSymbol
-            .ToDisplayString()
-            .EnsureCSharpAliasIfNeeded();
+        type = typeSymbol.ToGeneratedCodeTypeName();
 
         if (type == "bool")
         {
