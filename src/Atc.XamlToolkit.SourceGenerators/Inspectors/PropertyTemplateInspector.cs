@@ -64,7 +64,7 @@ internal static class PropertyTemplateInspector
             }
 
             var excludedNames = GetExcludedNames(attribute);
-            var appliedMembers = members.Where(x => !excludedNames.Contains(GetGeneratedName(x.Name))).ToList();
+            var appliedMembers = members.Where(x => !excludedNames.Contains(GetGeneratedName(x))).ToList();
             result.AddRange(appliedMembers);
 
             var values = GetStringArray(attribute, NameConstants.DocumentationValues);
@@ -72,7 +72,7 @@ internal static class PropertyTemplateInspector
             {
                 foreach (var member in appliedMembers)
                 {
-                    documentationValues[GetGeneratedName(member.Name)] = values;
+                    documentationValues[GetGeneratedName(member)] = values;
                 }
             }
         }
@@ -100,12 +100,10 @@ internal static class PropertyTemplateInspector
                 continue;
             }
 
+            // A null element keeps its place, so the values after it keep their index
             foreach (var value in namedArgument.Value.Values)
             {
-                if (value.Value is string text)
-                {
-                    result.Add(text);
-                }
+                result.Add(value.Value as string ?? string.Empty);
             }
         }
 
@@ -131,13 +129,36 @@ internal static class PropertyTemplateInspector
             var line = comment;
             for (var i = 0; i < values.Length; i++)
             {
-                line = line.Replace("{" + i.ToString(CultureInfo.InvariantCulture) + "}", values[i]);
+                // The value is text in an XML comment
+                var text = values[i]
+                    .Replace("&", "&amp;")
+                    .Replace("<", "&lt;")
+                    .Replace(">", "&gt;");
+
+                line = line.Replace("{" + i.ToString(CultureInfo.InvariantCulture) + "}", text);
             }
 
             result[index++] = line;
         }
 
         return new EquatableArray<string>(result);
+    }
+
+    // The name of the member generated from a template field: the PropertyName its
+    // attribute states, otherwise the name derived from the field.
+    private static string GetGeneratedName(ISymbol member)
+    {
+        foreach (var attribute in member.GetAttributes())
+        {
+            if (attribute.ExtractStringArgument(NameConstants.PropertyName) is { } propertyName &&
+                SyntaxFacts.IsValidIdentifier(propertyName) &&
+                SyntaxFacts.GetKeywordKind(propertyName) == SyntaxKind.None)
+            {
+                return propertyName;
+            }
+        }
+
+        return GetGeneratedName(member.Name);
     }
 
     // The name of the property or event generated from a field: no leading underscore,

@@ -316,8 +316,11 @@ internal static class FrameworkElementBuilderExtensions
             ? $"{hookName}(d, {value})"
             : $"(({p.OwnerType})d).{hookName}({value})";
 
+        // The result of a named callback is passed on, and it may be declared as object?
+        var returnType = hasUserCallback ? "object?" : objectType;
+
         builder.AppendLine();
-        builder.AppendLine($"private static {objectType} {p.CoerceValueCallback}(");
+        builder.AppendLine($"private static {returnType} {p.CoerceValueCallback}(");
         builder.IncreaseIndent();
         builder.AppendLine("DependencyObject d,");
         builder.AppendLine($"{objectType} baseValue)");

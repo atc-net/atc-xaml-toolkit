@@ -170,6 +170,81 @@ public sealed class GeneratorTests_ConversionFindings : GeneratorTestBase
     }
 
     [Fact]
+    public void PropertyTemplate_MemberWithAPropertyName_IsExcludedAndDocumentedByThatName()
+    {
+        // Exclude and DocumentationValues go by the name of the generated member, which
+        // PropertyName sets - not by the name of the field.
+        const string inputCode =
+            """
+            using Atc.XamlToolkit.Controls.Attributes;
+            using Avalonia.Controls;
+
+            namespace TestNamespace;
+
+            [DependencyPropertyTemplate]
+            internal abstract class PickerMembers
+            {
+                /// <summary>
+                /// Gets or sets the selected {0}.
+                /// </summary>
+                [StyledProperty(PropertyName = "Selected")]
+                private string? item;
+
+                [StyledProperty(PropertyName = "Hidden")]
+                private int secret;
+            }
+
+            [UseDependencyPropertyTemplate(typeof(PickerMembers), Exclude = ["Hidden"], DocumentationValues = ["drive"])]
+            public partial class DrivePicker : UserControl
+            {
+            }
+            """;
+
+        AssertCompilesWithAllGeneratorsWithoutGlobalUsings(inputCode);
+
+        var generatedCode = GetSourcesGeneratedForAvaloniaConsumer(inputCode)
+            .Single(x => x.Contains("partial class DrivePicker", StringComparison.Ordinal));
+
+        Assert.Contains("/// Gets or sets the selected drive.", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("public string? Selected", generatedCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hidden", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PropertyTemplate_DocumentationValues_KeepTheirPositionAndAreWrittenAsXmlText()
+    {
+        const string inputCode =
+            """
+            using Atc.XamlToolkit.Controls.Attributes;
+            using Avalonia.Controls;
+
+            namespace TestNamespace;
+
+            [DependencyPropertyTemplate]
+            internal abstract class PickerMembers
+            {
+                /// <summary>
+                /// First {0}, second {1}, third {2}.
+                /// </summary>
+                [StyledProperty]
+                private int count;
+            }
+
+            [UseDependencyPropertyTemplate(typeof(PickerMembers), DocumentationValues = [null!, "a < b & c", "x"])]
+            public partial class DrivePicker : UserControl
+            {
+            }
+            """;
+
+        AssertCompilesWithAllGeneratorsWithoutGlobalUsings(inputCode);
+
+        var generatedCode = GetSourcesGeneratedForAvaloniaConsumer(inputCode)
+            .Single(x => x.Contains("partial class DrivePicker", StringComparison.Ordinal));
+
+        Assert.Contains("/// First , second a &lt; b &amp; c, third x.", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void PropertyTemplate_DocumentationValues_FillThePlaceholdersInTheTemplateDocumentation()
     {
         const string inputCode =

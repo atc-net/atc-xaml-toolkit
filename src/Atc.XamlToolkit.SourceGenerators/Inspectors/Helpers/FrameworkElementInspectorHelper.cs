@@ -122,6 +122,7 @@ internal static class FrameworkElementInspectorHelper
             DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
             propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
             propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
+            propertyToGenerate.PropertyKeyAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.PropertyKeyAccessModifier);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
             propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -254,6 +255,7 @@ internal static class FrameworkElementInspectorHelper
         DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
         propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
         propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
+        propertyToGenerate.PropertyKeyAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.PropertyKeyAccessModifier);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
         propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
         propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
@@ -542,6 +544,12 @@ internal static class FrameworkElementInspectorHelper
             !argumentValues.TryGetValue(NameConstants.IsReadOnly, out var value) ||
             !"true".Equals(value, StringComparison.OrdinalIgnoreCase))
         {
+            if (xamlPlatform == XamlPlatform.Wpf &&
+                propertyAttribute.ExtractEnumArgumentName(NameConstants.PropertyKeyAccessModifier) is not null)
+            {
+                AddIgnoredOption(propertyToGenerate, NameConstants.PropertyKeyAccessModifier, "only a read-only property (IsReadOnly = true, without AddOwnerOf) has a key");
+            }
+
             return;
         }
 

@@ -143,7 +143,7 @@ public sealed class GeneratorTests_FrameworkElementReviewFindings : GeneratorTes
 
         Assert.Contains(
             """
-                private static object CoerceAmountPropertyCallback(
+                private static object? CoerceAmountPropertyCallback(
                     DependencyObject d,
                     object baseValue)
                 {
@@ -225,6 +225,76 @@ public sealed class GeneratorTests_FrameworkElementReviewFindings : GeneratorTes
 
         Assert.Equal([IgnoredOptionDiagnosticId], diagnostics.Select(x => x.Id), StringComparer.Ordinal);
         Assert.Contains(expected, generatedCode, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("[DependencyProperty(PropertyKeyAccessModifier = PropertyAccessModifier.Internal)] private int count;")]
+    [InlineData("[DependencyProperty(AddOwnerOf = typeof(RangeBase), PropertyKeyAccessModifier = PropertyAccessModifier.Internal)] private double minimum;")]
+    [InlineData("[RoutedEvent(RaiseMethodAccessModifier = PropertyAccessModifier.Internal)] private static readonly RoutedEvent tap;")]
+    [InlineData("[RoutedEvent(GenerateHandlerMethods = false)] private static readonly RoutedEvent tap;")]
+    public void OptionThatNeedsAnotherOption_Wpf_IsReportedWhenItHasNoEffect(
+        string member)
+    {
+        var inputCode =
+            $$"""
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                {{member}}
+            }
+            """;
+
+        var (_, diagnostics) = Generate(inputCode);
+
+        Assert.Equal([IgnoredOptionDiagnosticId], diagnostics.Select(x => x.Id), StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void ProtectedKeyAndRaiseMethod_InASealedClass_Wpf_AreNarrowedToWhatTheyMeanThere()
+    {
+        // 'protected' in a sealed class is reported by the compiler (CS0628).
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public sealed partial class MyControl : UserControl
+            {
+                [DependencyProperty(IsReadOnly = true, PropertyKeyAccessModifier = PropertyAccessModifier.Protected)]
+                private int count;
+
+                [RoutedEvent(GenerateRaiseMethod = true, RaiseMethodAccessModifier = PropertyAccessModifier.ProtectedInternal)]
+                private static readonly RoutedEvent tap;
+            }
+            """;
+
+        var (generatedCode, diagnostics) = Generate(inputCode);
+
+        Assert.Empty(diagnostics);
+        Assert.Contains("private static readonly DependencyPropertyKey CountPropertyKey", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("    internal void RaiseTap()", generatedCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GenerateCoerceHook_WithACoerceValueCallbackThatMayReturnNull_Wpf_DeclaresANullableResult()
+    {
+        // The named callback can be declared as returning object?; passing its result on from
+        // a method that returns object would be a nullable warning in generated code.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                [DependencyProperty(GenerateCoerceHook = true, CoerceValueCallback = nameof(Reject))]
+                private Brush fill;
+            }
+            """;
+
+        var (generatedCode, _) = Generate(inputCode);
+
+        Assert.Contains("private static object? CoerceFillPropertyCallback(", generatedCode, StringComparison.Ordinal);
     }
 
     [Fact]

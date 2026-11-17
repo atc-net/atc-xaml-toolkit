@@ -161,11 +161,12 @@ internal static class RoutedEventInspector
                 GenerateRaiseMethod = IsOptionSet(fieldArgumentValues, NameConstants.GenerateRaiseMethod, defaultValue: false),
                 HandlerArgsAreNotRoutedEventArgs = HasEventArgsThatAreNotRoutedEventArgs(handlerTypeSymbol),
                 GenerateHandlerMethods = IsOptionSet(fieldArgumentValues, NameConstants.GenerateHandlerMethods, defaultValue: true),
-                RaiseMethodAccessModifier = GetRaiseMethodAccessModifier(fieldPropertyAttribute),
+                RaiseMethodAccessModifier = GetRaiseMethodAccessModifier(classSymbol, fieldPropertyAttribute),
                 GenerateDocumentation = ResolveGenerateDocumentation(classSymbol, fieldArgumentValues),
             };
 
         NoteRaiseMethodThatCannotBeGenerated(routedEvent);
+        NoteOptionsWithoutEffect(routedEvent, fieldArgumentValues);
 
         if (hasUnboundHandlerType)
         {
@@ -218,6 +219,29 @@ internal static class RoutedEventInspector
         return true;
     }
 
+    private static void NoteOptionsWithoutEffect(
+        RoutedEventToGenerate routedEvent,
+        IDictionary<string, string?> fieldArgumentValues)
+    {
+        var ignoredOptions = new List<string>(routedEvent.IgnoredOptions);
+
+        if (routedEvent is { RaiseMethodAccessModifier: not null, GenerateRaiseMethod: false })
+        {
+            ignoredOptions.Add($"{NameConstants.RaiseMethodAccessModifier}|no Raise method is generated without GenerateRaiseMethod = true");
+        }
+
+        if (!routedEvent.IsOwnerTypeStatic &&
+            fieldArgumentValues.ContainsKey(NameConstants.GenerateHandlerMethods))
+        {
+            ignoredOptions.Add($"{NameConstants.GenerateHandlerMethods}|handler methods are only generated in a static class; this class gets an event");
+        }
+
+        if (ignoredOptions.Count != routedEvent.IgnoredOptions.Count)
+        {
+            routedEvent.IgnoredOptions = new EquatableArray<string>(ignoredOptions.ToArray());
+        }
+    }
+
     private static bool IsOptionSet(
         IDictionary<string, string?> fieldArgumentValues,
         string name,
@@ -239,6 +263,7 @@ internal static class RoutedEventInspector
 
     // Public reads as an empty modifier, so look at whether the option was stated at all.
     private static string? GetRaiseMethodAccessModifier(
+        INamedTypeSymbol classSymbol,
         AttributeData fieldPropertyAttribute)
     {
         if (fieldPropertyAttribute.ExtractEnumArgumentName(NameConstants.RaiseMethodAccessModifier) is null)
@@ -247,7 +272,7 @@ internal static class RoutedEventInspector
         }
 
         var modifier = fieldPropertyAttribute.ExtractAccessModifier(NameConstants.RaiseMethodAccessModifier);
-        return modifier.Length == 0 ? "public" : modifier;
+        return modifier.Length == 0 ? "public" : classSymbol.NarrowAccessModifier(modifier);
     }
 
     private static void NoteRaiseMethodThatCannotBeGenerated(
