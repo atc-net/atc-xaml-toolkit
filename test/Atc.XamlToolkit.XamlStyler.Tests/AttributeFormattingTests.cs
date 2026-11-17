@@ -167,4 +167,24 @@ public sealed class AttributeFormattingTests
 
         result.Should().Be("<Button xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\"100\" Height=\"100\" ToolTip=\"Add xmlns:local\" />");
     }
+
+    [Fact]
+    public void MaxAttributeCharactersPerLine_CountsXmlnsDeclarationsByTheirWrittenLength()
+    {
+        // 'xmlns:a="urn:a" xmlns:b="urn:b"' is 31 characters, which fits within 32.
+        var xaml = "<Grid xmlns:a=\"urn:a\" xmlns:b=\"urn:b\" A=\"1\" />";
+
+        var result = StyleWith(xaml, o =>
+        {
+            o.MaxAttributesPerLine = 0;
+            o.MaxAttributeCharactersPerLine = 32;
+        });
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Grid",
+            "    xmlns:a=\"urn:a\" xmlns:b=\"urn:b\"",
+            "    A=\"1\" />");
+        result.Should().Be(expected);
+    }
 }

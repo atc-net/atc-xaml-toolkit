@@ -8,6 +8,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
     private readonly AttributeInfoFactory attributeInfoFactory;
     private readonly AttributeInfoFormatter attributeInfoFormatter;
     private readonly IndentService indentService;
+    private readonly XmlEscapingService xmlEscapingService;
     private readonly IList<string> noNewLineElementsList;
     private readonly IList<string> firstLineAttributes;
     private readonly string[] inlineCollections = ["TextBlock", "RichTextBlock", "Paragraph", "Run", "Span", "InlineUIContainer", "AnchoredBlock"];
@@ -18,8 +19,10 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         XamlLanguageOptions xamlLanguageOptions,
         AttributeInfoFactory attributeInfoFactory,
         AttributeInfoFormatter attributeInfoFormatter,
-        IndentService indentService)
+        IndentService indentService,
+        XmlEscapingService xmlEscapingService)
     {
+        this.xmlEscapingService = xmlEscapingService;
         this.options = options;
         this.xamlLanguageOptions = xamlLanguageOptions;
         this.attributeInfoFactory = attributeInfoFactory;
@@ -248,9 +251,13 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
             {
                 var pendingAppend = attributeInfoFormatter.ToSingleLineString(attrInfo, xamlLanguageOptions);
 
+                // xmlns declarations carry a temporary "[prefix]" marker that is removed from the final
+                // output, so it must not count towards the line length.
+                var pendingBypassLength = pendingAppend.Length - xmlEscapingService.RestoreXmlnsAliasesBypass(pendingAppend).Length;
+
                 var isAttributeCharLengthExceeded = attributeCountInCurrentLineBuffer > 0
                     && options.MaxAttributeCharactersPerLine > 0
-                    && (currentLineBuffer.Length + pendingAppend.Length - xmlnsAliasesBypassLengthInCurrentLine) > options.MaxAttributeCharactersPerLine;
+                    && (currentLineBuffer.Length + pendingAppend.Length - xmlnsAliasesBypassLengthInCurrentLine - pendingBypassLength) > options.MaxAttributeCharactersPerLine;
 
                 var isAttributeCountExceeded = options.MaxAttributesPerLine > 0
                     && (attributeCountInCurrentLineBuffer + 1) > options.MaxAttributesPerLine;
@@ -270,6 +277,7 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
 
                 currentLineBuffer.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pendingAppend);
                 attributeCountInCurrentLineBuffer++;
+                xmlnsAliasesBypassLengthInCurrentLine += pendingBypassLength;
             }
 
             lastAttributeInfo = attrInfo;

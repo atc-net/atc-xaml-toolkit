@@ -127,7 +127,7 @@ public sealed class XamlStylerService
 
         documentProcessors = new Dictionary<XmlNodeType, IDocumentProcessor>
         {
-            { XmlNodeType.Element, new ElementDocumentProcessor(options, xamlLanguageOptions, attributeInfoFactory, attributeInfoFormatter, indentService) },
+            { XmlNodeType.Element, new ElementDocumentProcessor(options, xamlLanguageOptions, attributeInfoFactory, attributeInfoFormatter, indentService, xmlEscapingService) },
             { XmlNodeType.Text, new TextDocumentProcessor(indentService) },
             { XmlNodeType.CDATA, new CdataDocumentProcessor(indentService) },
             { XmlNodeType.ProcessingInstruction, new ProcessInstructionDocumentProcessor(indentService) },
