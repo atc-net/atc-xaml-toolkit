@@ -30,17 +30,13 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
                 .GroupBy(vm => vm!.GeneratedFileName, StringComparer.Ordinal)
                 .Select(static group => group.First())
                 .ToImmutableArray())
-            .WithTrackingName("FrameworkElementGenerator.Deduplicated");
+            .WithTrackingName("FrameworkElementGenerator.Deduplicated")
+            .SelectMany(static (viewModels, _) => viewModels);
 
+        // One output per class: an edit only regenerates the files of the classes whose model changed.
         context.RegisterSourceOutput(
             viewModelsToGenerate,
-            static (spc, sources) =>
-            {
-                foreach (var source in sources)
-                {
-                    Execute(spc, source);
-                }
-            });
+            static (spc, source) => Execute(spc, source));
 
         FrameworkElementGeneratorHelper.RegisterRoutedEventOnNonWpfDiagnostic(context);
     }

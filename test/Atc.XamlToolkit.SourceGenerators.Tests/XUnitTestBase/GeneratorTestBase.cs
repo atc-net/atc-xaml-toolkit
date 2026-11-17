@@ -124,6 +124,44 @@ public abstract class GeneratorTestBase
     }
 
     /// <summary>
+    /// Runs the generator, then replaces one source file with an edited version and runs it
+    /// again. The other syntax trees stay the same instances, as in the IDE.
+    /// </summary>
+    /// <typeparam name="T">The generator type.</typeparam>
+    /// <param name="inputCodes">Source files to compile.</param>
+    /// <param name="editedIndex">The index of the source file that is edited.</param>
+    /// <param name="editedCode">The new content of that source file.</param>
+    /// <returns>The second run's <see cref="GeneratorRunResult"/>, exposing TrackedOutputSteps.</returns>
+    internal static GeneratorRunResult RunGeneratorIncrementalAfterEdit<T>(
+        string[] inputCodes,
+        int editedIndex,
+        string editedCode)
+        where T : IIncrementalGenerator, new()
+    {
+        var firstCompilation = CreateCompilation(inputCodes);
+
+        var secondCompilation = firstCompilation.ReplaceSyntaxTree(
+            firstCompilation.SyntaxTrees.ElementAt(editedIndex),
+            CSharpSyntaxTree.ParseText(editedCode));
+
+        T generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: [generator.AsSourceGenerator()],
+            additionalTexts: null,
+            parseOptions: null,
+            optionsProvider: null,
+            driverOptions: new GeneratorDriverOptions(
+                disabledOutputs: IncrementalGeneratorOutputKind.None,
+                trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(firstCompilation);
+        driver = driver.RunGenerators(secondCompilation);
+
+        return driver.GetRunResult().Results[0];
+    }
+
+    /// <summary>
     /// Asserts that every output entry of the given tracked step on the second
     /// run reports <see cref="IncrementalStepRunReason.Cached"/> or
     /// <see cref="IncrementalStepRunReason.Unchanged"/> — i.e. the model is
