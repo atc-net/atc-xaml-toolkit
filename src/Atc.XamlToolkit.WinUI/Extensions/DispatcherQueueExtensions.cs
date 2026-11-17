@@ -62,7 +62,7 @@ public static class DispatcherQueueExtensions
         else
         {
             var tcs = new TaskCompletionSource<bool>();
-            dispatcherQueue.TryEnqueue(priority, () =>
+            var enqueued = dispatcherQueue.TryEnqueue(priority, () =>
             {
                 try
                 {
@@ -74,6 +74,12 @@ public static class DispatcherQueueExtensions
                     tcs.SetException(ex);
                 }
             });
+
+            if (!enqueued)
+            {
+                // The queue is shutting down and will never run the action - cancel instead of waiting forever.
+                tcs.TrySetCanceled();
+            }
 
             await tcs.Task;
         }
@@ -102,7 +108,7 @@ public static class DispatcherQueueExtensions
         }
 
         var tcs = new TaskCompletionSource<bool>();
-        dispatcherQueue.TryEnqueue(priority, () =>
+        var enqueued = dispatcherQueue.TryEnqueue(priority, () =>
         {
             try
             {
@@ -116,6 +122,12 @@ public static class DispatcherQueueExtensions
                 tcs.SetException(ex);
             }
         });
+
+        if (!enqueued)
+        {
+            // The queue is shutting down and will never run the action - cancel instead of never completing.
+            tcs.TrySetCanceled();
+        }
 
         return tcs.Task;
     }
