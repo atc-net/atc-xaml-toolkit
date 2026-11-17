@@ -4,6 +4,16 @@ public sealed class AttributeFormattingTests
 {
     private const string WpfNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
+    private static string StyleWith(
+        string xaml,
+        Action<XamlStylerOptions>? configure = null)
+    {
+        var options = new XamlStylerOptions();
+        configure?.Invoke(options);
+        var service = new XamlStylerService(options);
+        return service.StyleDocument(xaml);
+    }
+
     [Fact]
     public void SingleAttribute_StaysOnSameLine()
     {
@@ -106,5 +116,35 @@ public sealed class AttributeFormattingTests
         result.Should().NotContain("</Button>");
         result.Should().Contain("<Button");
         result.Should().Contain("/>");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void MarkupExtension_WithDoubleQuotedValue_IsWrittenAsValidXml(
+        bool formatMarkupExtension)
+    {
+        var xaml = "<TextBlock xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Text='{Binding Name, StringFormat=\"Hi {0}\"}' />";
+
+        var result = StyleWith(xaml, o => o.FormatMarkupExtension = formatMarkupExtension);
+
+        result.Should().Be("<TextBlock xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Text=\"{Binding Name, StringFormat=&quot;Hi {0}&quot;}\" />");
+        System.Xml.Linq.XDocument.Parse(result).Root!.Attribute("Text")!.Value
+            .Should().Be("{Binding Name, StringFormat=\"Hi {0}\"}");
+        StyleWith(result, o => o.FormatMarkupExtension = formatMarkupExtension)
+            .Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void MarkupExtension_WithDoubleQuotedValue_OnMultipleLines_IsWrittenAsValidXml()
+    {
+        var xaml = "<TextBlock xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\"1\" Height=\"2\" Text='{MultiBinding Converter={StaticResource C}, StringFormat=\"Hi {0}\"}' />";
+
+        var result = StyleWith(xaml);
+
+        result.Should().Contain("StringFormat=&quot;Hi {0}&quot;}\"");
+        var parse = () => System.Xml.Linq.XDocument.Parse(result);
+        parse.Should().NotThrow();
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
     }
 }

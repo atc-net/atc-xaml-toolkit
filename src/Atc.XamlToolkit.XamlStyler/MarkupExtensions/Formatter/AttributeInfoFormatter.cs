@@ -23,7 +23,7 @@ internal sealed class AttributeInfoFormatter
         }
 
         var currentIndentationString = $"{baseIndentationString}{string.Empty.PadLeft(attrInfo.Name.Length + 2, ' ')}";
-        var lines = formatter.Format(attrInfo.MarkupExtension!).ToList();
+        var lines = formatter.Format(attrInfo.MarkupExtension!).Select(EscapeQuotes).ToList();
 
         var buffer = new StringBuilder();
         buffer.Append(attrInfo.Name).Append("=\"").Append(lines[0]);
@@ -43,9 +43,16 @@ internal sealed class AttributeInfoFormatter
         XamlLanguageOptions xamlLanguageOptions)
     {
         var valuePart = attrInfo.IsMarkupExtension
-            ? formatter.FormatSingleLine(attrInfo.MarkupExtension!)
+            ? EscapeQuotes(formatter.FormatSingleLine(attrInfo.MarkupExtension!))
             : attrInfo.Value.ToXmlEncodedString(xamlLanguageOptions.UnescapedAttributeCharacters);
 
         return $"{attrInfo.Name}=\"{valuePart}\"";
     }
+
+    /// <summary>
+    /// The attribute is always written with double quotes, so a double quote inside a markup
+    /// extension (possible when the source attribute used single quotes) has to be escaped.
+    /// </summary>
+    private static string EscapeQuotes(string value) =>
+        value.ReplaceOrdinal("\"", "&quot;");
 }
