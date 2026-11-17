@@ -63,9 +63,18 @@ public static class DispatcherExtensions
     /// <param name="dispatcher">The dispatcher to use for invoking the action.</param>
     /// <param name="action">The action to be executed.</param>
     /// <param name="priority">The priority at which the action is invoked, if required. The default is <see cref="DispatcherPriority.Normal"/>.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <returns>
+    /// A task that completes when the action has run. When the action throws on the dispatcher
+    /// thread, the task carries the exception; it does not reach the dispatcher's
+    /// unhandled-exception handling.
+    /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="dispatcher"/> or <paramref name="action"/> is null.</exception>
-    public static async Task BeginInvokeIfRequired(
+    /// <remarks>
+    /// When the caller is already on the dispatcher thread the action runs before the method
+    /// returns, and an exception it throws is thrown to the caller.
+    /// </remarks>
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "The exception is passed on through the returned task.")]
+    public static Task BeginInvokeIfRequired(
         this Dispatcher dispatcher,
         Action action,
         DispatcherPriority priority = DispatcherPriority.Normal)
@@ -76,10 +85,27 @@ public static class DispatcherExtensions
         if (dispatcher.CheckAccess())
         {
             action();
+            return Task.CompletedTask;
         }
-        else
-        {
-            await dispatcher.BeginInvoke(action, priority);
-        }
+
+        // Dispatcher.BeginInvoke does not report an exception to the caller: it goes to the
+        // dispatcher's unhandled-exception handling. Carry it on the task instead.
+        var completion = new TaskCompletionSource<object?>();
+        _ = dispatcher.BeginInvoke(
+            priority,
+            new Action(() =>
+            {
+                try
+                {
+                    action();
+                    completion.SetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    completion.SetException(ex);
+                }
+            }));
+
+        return completion.Task;
     }
 }
