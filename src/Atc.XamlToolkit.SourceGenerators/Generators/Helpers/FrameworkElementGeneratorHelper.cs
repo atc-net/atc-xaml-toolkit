@@ -181,14 +181,19 @@ internal static class FrameworkElementGeneratorHelper
 
         return new FrameworkElementToGenerate(
             XamlPlatform: xamlPlatform,
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             IsStatic: isStatic,
             AttachedPropertiesToGenerate: new EquatableArray<AttachedPropertyToGenerate>(allAttachedProperties.ToArray()),
             DependencyPropertiesToGenerate: new EquatableArray<DependencyPropertyToGenerate>(allDependencyProperties.ToArray()),
             RoutedEventsToGenerate: new EquatableArray<RoutedEventToGenerate>(allRoutedEvents.ToArray()),
-            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()))
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>

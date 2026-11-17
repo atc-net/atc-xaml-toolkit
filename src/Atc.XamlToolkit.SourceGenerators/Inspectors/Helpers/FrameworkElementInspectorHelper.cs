@@ -11,7 +11,7 @@ internal static class FrameworkElementInspectorHelper
     {
         var propertiesToGenerate = new List<T>();
 
-        var ownerType = classSymbol.Name;
+        var ownerType = classSymbol.Name + classSymbol.GetTypeParameterList();
 
         // Project-level default for the GenerateDocumentation flag, opted in via
         // [assembly: GenerateDocumentationDefault]. When present, attributes that
@@ -96,7 +96,7 @@ internal static class FrameworkElementInspectorHelper
     {
         var argumentValues = propertyAttribute.ExtractConstructorArgumentValues();
 
-        var ownerType = classSymbol.Name;
+        var ownerType = classSymbol.Name + classSymbol.GetTypeParameterList();
 
         var propertyName = fieldSymbol.Name;
 

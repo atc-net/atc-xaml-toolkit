@@ -1963,7 +1963,8 @@ The property is named `InnerModel` to:
 **Example with repository pattern:**
 
 ```csharp
-public class PersonEditViewModel : ViewModelBase
+// A nested view model is generated inside its containing types, so they must be partial too.
+public partial class PersonEditViewModel : ViewModelBase
 {
     private readonly IPersonRepository repository;
 

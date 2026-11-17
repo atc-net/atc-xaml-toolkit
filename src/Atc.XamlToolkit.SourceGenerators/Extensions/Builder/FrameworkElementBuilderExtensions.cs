@@ -37,14 +37,7 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine("using System.Windows.Data;");
         }
 
-        builder.AppendLine();
-        builder.AppendLine($"namespace {frameworkElementToGenerate.NamespaceName};");
-        builder.AppendLine();
-        builder.AppendLine(frameworkElementToGenerate.IsStatic
-            ? $"{frameworkElementToGenerate.ClassAccessModifier} static partial class {frameworkElementToGenerate.ClassName}"
-            : $"{frameworkElementToGenerate.ClassAccessModifier} partial class {frameworkElementToGenerate.ClassName}");
-        builder.AppendLine("{");
-        builder.IncreaseIndent();
+        builder.AppendTypeStart(frameworkElementToGenerate);
     }
 
     public static void GenerateAttachedProperties(
@@ -760,8 +753,14 @@ internal static class FrameworkElementBuilderExtensions
         string className,
         IEnumerable<DependencyPropertyToGenerate> propertiesWithCallbacks)
     {
+        // A constructor is named without the type parameters of a generic class.
+        var typeParameterListStart = className.IndexOf('<');
+        var constructorName = typeParameterListStart > 0
+            ? className.Substring(0, typeParameterListStart)
+            : className;
+
         builder.AppendLine();
-        builder.AppendLine($"static {className}()");
+        builder.AppendLine($"static {constructorName}()");
         builder.AppendLine("{");
         builder.IncreaseIndent();
 

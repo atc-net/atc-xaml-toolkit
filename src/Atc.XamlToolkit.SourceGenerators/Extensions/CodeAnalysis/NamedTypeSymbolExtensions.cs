@@ -164,6 +164,81 @@ internal static class NamedTypeSymbolExtensions
             : literal;
     }
 
+    /// <summary>
+    /// Gets the namespace of the type; empty for a type in the global namespace.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The namespace name, or an empty string.</returns>
+    public static string GetNamespaceName(this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace
+            ? containingNamespace.ToDisplayString()
+            : string.Empty;
+
+    /// <summary>
+    /// Gets the type parameter list of the type, e.g. <c>&lt;TKey, TValue&gt;</c>;
+    /// empty for a non-generic type.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The type parameter list, or an empty string.</returns>
+    public static string GetTypeParameterList(
+        this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol.TypeParameters.Length == 0
+            ? string.Empty
+            : $"<{string.Join(", ", namedTypeSymbol.TypeParameters.Select(x => x.Name.EscapeKeyword()))}>";
+
+    /// <summary>
+    /// Gets the partial declarations of the types the type is nested in, outermost first.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The declarations, e.g. <c>partial class Outer&lt;T&gt;</c>.</returns>
+    public static EquatableArray<string> GetContainingTypeDeclarations(
+        this INamedTypeSymbol namedTypeSymbol)
+    {
+        var declarations = new List<string>();
+
+        for (var containingType = namedTypeSymbol.ContainingType;
+             containingType is not null;
+             containingType = containingType.ContainingType)
+        {
+            var keyword = containingType.TypeKind switch
+            {
+                TypeKind.Struct => containingType.IsRecord ? "record struct" : "struct",
+                TypeKind.Interface => "interface",
+                _ => containingType.IsRecord ? "record" : "class",
+            };
+
+            declarations.Insert(0, $"partial {keyword} {containingType.Name.EscapeKeyword()}{containingType.GetTypeParameterList()}");
+        }
+
+        return new EquatableArray<string>(declarations.ToArray());
+    }
+
+    /// <summary>
+    /// Gets a file name stem that is unique for the type: namespace, containing types and
+    /// name, where generic types get their arity appended (<c>Name`1</c>).
+    /// </summary>
+    /// <param name="namedTypeSymbol">The type symbol.</param>
+    /// <returns>The hint name without extension.</returns>
+    public static string GetHintName(this INamedTypeSymbol namedTypeSymbol)
+    {
+        var parts = new List<string>();
+
+        for (var type = namedTypeSymbol;
+             type is not null;
+             type = type.ContainingType)
+        {
+            parts.Insert(0, type.MetadataName);
+        }
+
+        var namespaceName = namedTypeSymbol.GetNamespaceName();
+        if (namespaceName.Length > 0)
+        {
+            parts.Insert(0, namespaceName);
+        }
+
+        return string.Join(".", parts);
+    }
+
     public static string GetAccessModifier(
         this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.DeclaredAccessibility switch

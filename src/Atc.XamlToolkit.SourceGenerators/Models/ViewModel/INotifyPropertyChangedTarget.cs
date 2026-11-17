@@ -19,4 +19,10 @@ internal sealed class INotifyPropertyChangedTarget(
     public string ClassName { get; } = className;
 
     public string AccessModifier { get; } = accessModifier;
+
+    public string TypeParameterList { get; set; } = string.Empty;
+
+    public EquatableArray<string> ContainingTypeDeclarations { get; set; } = EquatableArray<string>.Empty;
+
+    public string? HintName { get; set; }
 }

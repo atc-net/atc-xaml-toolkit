@@ -12,6 +12,7 @@ internal abstract class BuilderBase
     private bool wasLastCallAppendLine = true;
     private bool isFirstMember = true;
     private int uniqueVarCounter;
+    private int openContainingTypes;
 
     public int IndentLevel { get; private set; }
 
@@ -123,10 +124,44 @@ internal abstract class BuilderBase
         sb.Append(stringToAppend);
     }
 
+    // Appends the namespace, the containing types of a nested class and the class header.
+    public void AppendTypeStart(GenerateBase toGenerate)
+    {
+        AppendLine();
+
+        if (toGenerate.NamespaceName.Length > 0)
+        {
+            AppendLine($"namespace {toGenerate.NamespaceName};");
+            AppendLine();
+        }
+
+        foreach (var containingTypeDeclaration in toGenerate.ContainingTypeDeclarations)
+        {
+            AppendLine(containingTypeDeclaration);
+            AppendLine("{");
+            IncreaseIndent();
+            openContainingTypes++;
+        }
+
+        var staticModifier = toGenerate.IsStatic ? " static" : string.Empty;
+
+        AppendLine($"{toGenerate.ClassAccessModifier}{staticModifier} partial class {toGenerate.ClassName}{toGenerate.TypeParameterList}");
+        AppendLine("{");
+        IncreaseIndent();
+    }
+
     public void GenerateEnd()
     {
         DecreaseIndent();
-        sb.AppendLine("}");
+        AppendLine("}");
+
+        while (openContainingTypes > 0)
+        {
+            DecreaseIndent();
+            AppendLine("}");
+            openContainingTypes--;
+        }
+
         sb.AppendLine();
         sb.AppendLine("#nullable disable");
     }

@@ -25,12 +25,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
             }
         }
 
-        AppendLine();
-        AppendLine($"namespace {viewModelToGenerate.NamespaceName};");
-        AppendLine();
-        AppendLine($"{viewModelToGenerate.ClassAccessModifier} partial class {viewModelToGenerate.ClassName}");
-        AppendLine("{");
-        IncreaseIndent();
+        AppendTypeStart(viewModelToGenerate);
     }
 
     public void GenerateDtoFieldAndCommandBackingFields(

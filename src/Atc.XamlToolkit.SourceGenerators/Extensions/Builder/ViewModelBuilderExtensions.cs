@@ -26,12 +26,7 @@ internal static class ViewModelBuilderExtensions
             }
         }
 
-        builder.AppendLine();
-        builder.AppendLine($"namespace {viewModelToGenerate.NamespaceName};");
-        builder.AppendLine();
-        builder.AppendLine($"{viewModelToGenerate.ClassAccessModifier} partial class {viewModelToGenerate.ClassName}");
-        builder.AppendLine("{");
-        builder.IncreaseIndent();
+        builder.AppendTypeStart(viewModelToGenerate);
     }
 
     public static void GenerateProperties(

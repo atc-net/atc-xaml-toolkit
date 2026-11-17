@@ -105,7 +105,7 @@ internal static class ObservableDtoViewModelGeneratorHelper
         }
 
         return new ObservableDtoViewModelToGenerate(
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             DtoTypeName: result.DtoTypeName!,
@@ -119,7 +119,12 @@ internal static class ObservableDtoViewModelGeneratorHelper
             CustomProperties: new EquatableArray<ObservablePropertyToGenerate>(result.CustomProperties.ToArray()),
             CustomCommands: new EquatableArray<RelayCommandToGenerate>(result.CustomCommands.ToArray()),
             ComputedProperties: new EquatableArray<ComputedPropertyToGenerate>(result.ComputedProperties.ToArray()),
-            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform());
+            XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform())
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>

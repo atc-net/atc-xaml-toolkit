@@ -213,12 +213,17 @@ internal static class ViewModelGeneratorHelper
         ComputedPropertyInspector.LinkToObservableProperties(allObservableProperties, allComputedProperties);
 
         return new ViewModelToGenerate(
-            NamespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            NamespaceName: classSymbol.GetNamespaceName(),
             ClassName: classSymbol.Name,
             ClassAccessModifier: classSymbol.GetAccessModifier(),
             XamlPlatform: context.SemanticModel.Compilation.GetXamlPlatform(),
             PropertiesToGenerate: new EquatableArray<ObservablePropertyToGenerate>(allObservableProperties.ToArray()),
-            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()));
+            RelayCommandsToGenerate: new EquatableArray<RelayCommandToGenerate>(allRelayCommands.ToArray()))
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>
@@ -276,9 +281,14 @@ internal static class ViewModelGeneratorHelper
         }
 
         return new INotifyPropertyChangedTarget(
-            namespaceName: classSymbol.ContainingNamespace.ToDisplayString(),
+            namespaceName: classSymbol.GetNamespaceName(),
             className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier());
+            accessModifier: classSymbol.GetAccessModifier())
+        {
+            TypeParameterList = classSymbol.GetTypeParameterList(),
+            ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
+            HintName = classSymbol.GetHintName(),
+        };
     }
 
     /// <summary>
