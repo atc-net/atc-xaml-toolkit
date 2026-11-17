@@ -33,6 +33,23 @@ public sealed class DispatcherExtensionsBeginInvokeIfRequiredTests
     }
 
     [Fact]
+    public async Task FromAnotherThread_WhenTheDispatcherHasShutDown_TheTaskIsCanceled()
+    {
+        // The queued work never runs on a dispatcher that has shut down. Without a canceled
+        // task, a caller that awaits during application shutdown would wait forever.
+        var dispatcherThread = new DispatcherThread();
+        dispatcherThread.Dispose();
+        var ran = false;
+
+        var task = dispatcherThread.Dispatcher.BeginInvokeIfRequired(() => ran = true);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => task.WaitAsync(Timeout, TestContext.Current.CancellationToken));
+        Assert.True(task.IsCanceled);
+        Assert.False(ran);
+    }
+
+    [Fact]
     public void OnTheDispatcherThread_TheActionRunsBeforeTheCallReturns()
         => StaThreadRunner.Run(() =>
         {

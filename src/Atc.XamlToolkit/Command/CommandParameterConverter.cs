@@ -36,21 +36,58 @@ internal static class CommandParameterConverter
         Type enumType,
         object parameter)
     {
+        object value;
+
         if (parameter is string text)
         {
-            return Enum.TryParse(enumType, text, ignoreCase: false, out var result)
-                ? result!
-                : throw new FormatException($"'{text}' is not a value of {enumType.Name}.");
+            if (!Enum.TryParse(enumType, text, ignoreCase: false, out var parsed))
+            {
+                throw new FormatException($"'{text}' is not a value of {enumType.Name}.");
+            }
+
+            value = parsed!;
+        }
+        else if (parameter is bool or char)
+        {
+            // Enum.ToObject accepts these, but they are not numbers a caller means as an enum.
+            throw new InvalidCastException($"Cannot convert {parameter.GetType().Name} to {enumType.Name}.");
+        }
+        else
+        {
+            try
+            {
+                value = Enum.ToObject(enumType, parameter);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new InvalidCastException($"Cannot convert {parameter.GetType().Name} to {enumType.Name}.", ex);
+            }
         }
 
-        try
+        // Enum.TryParse and Enum.ToObject take any number, also one the enum does not define.
+        return IsValueOf(enumType, value)
+            ? value
+            : throw new FormatException($"'{parameter}' is not a value of {enumType.Name}.");
+    }
+
+    // A defined value, or for a [Flags] enum a combination of defined values. A combination
+    // is written as names ("Read, Write"); an undefined number is written as digits.
+    private static bool IsValueOf(
+        Type enumType,
+        object value)
+    {
+        if (Enum.IsDefined(enumType, value))
         {
-            return Enum.ToObject(enumType, parameter);
+            return true;
         }
-        catch (ArgumentException ex)
+
+        if (!enumType.IsDefined(typeof(FlagsAttribute), inherit: false))
         {
-            throw new InvalidCastException($"Cannot convert {parameter.GetType().Name} to {enumType.Name}.", ex);
+            return false;
         }
+
+        var text = value.ToString()!;
+        return text.Length > 0 && !char.IsDigit(text[0]) && text[0] != '-';
     }
 
     /// <summary>

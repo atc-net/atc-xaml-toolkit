@@ -117,6 +117,52 @@ public sealed class RelayCommandGenericTests
         executed.Should().BeFalse("execution must be skipped when parameter conversion fails");
     }
 
+    [Theory]
+    [InlineData("99")]
+    [InlineData(99)]
+    [InlineData("NotADay")]
+    public void Execute_DoesNotRun_WhenTheParameterIsNotAValueOfTheEnum(
+        object parameter)
+    {
+        var executed = false;
+        var command = new RelayCommand<DayOfWeek>(_ => executed = true, _ => true);
+
+        command.Execute(parameter);
+
+        executed.Should().BeFalse("the parameter is not a day of the week");
+        command.CanExecute(parameter).Should().BeFalse("a command with a predicate cannot run with a parameter it cannot convert");
+    }
+
+    [Theory]
+    [InlineData("5", DayOfWeek.Friday)]
+    [InlineData(5, DayOfWeek.Friday)]
+    [InlineData("Friday", DayOfWeek.Friday)]
+    public void Execute_ConvertsTextAndNumbers_ToADefinedEnumValue(
+        object parameter,
+        DayOfWeek expected)
+    {
+        DayOfWeek? actual = null;
+        var command = new RelayCommand<DayOfWeek>(value => actual = value);
+
+        command.Execute(parameter);
+
+        actual.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("3")]
+    [InlineData(3)]
+    [InlineData("Assembly, Module")]
+    public void Execute_AcceptsACombinationOfFlags(object parameter)
+    {
+        AttributeTargets? actual = null;
+        var command = new RelayCommand<AttributeTargets>(value => actual = value);
+
+        command.Execute(parameter);
+
+        actual.Should().Be(AttributeTargets.Assembly | AttributeTargets.Module);
+    }
+
     [Fact]
     public void Execute_DoesNotThrow_WhenParameterFormatIsInvalid()
     {

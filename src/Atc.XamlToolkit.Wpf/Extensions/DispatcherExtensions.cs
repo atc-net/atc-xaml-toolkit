@@ -91,20 +91,28 @@ public static class DispatcherExtensions
         // Dispatcher.BeginInvoke does not report an exception to the caller: it goes to the
         // dispatcher's unhandled-exception handling. Carry it on the task instead.
         var completion = new TaskCompletionSource<object?>();
-        _ = dispatcher.BeginInvoke(
+        var operation = dispatcher.BeginInvoke(
             priority,
             new Action(() =>
             {
                 try
                 {
                     action();
-                    completion.SetResult(null);
+                    completion.TrySetResult(null);
                 }
                 catch (Exception ex)
                 {
-                    completion.SetException(ex);
+                    completion.TrySetException(ex);
                 }
             }));
+
+        // The work never runs when the dispatcher shuts down first or the operation is
+        // aborted. Without this the task would never complete.
+        operation.Aborted += (_, _) => completion.TrySetCanceled();
+        if (operation.Status == DispatcherOperationStatus.Aborted)
+        {
+            completion.TrySetCanceled();
+        }
 
         return completion.Task;
     }

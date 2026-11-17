@@ -38,6 +38,45 @@ public sealed class RelayCommandAsyncLifecycleTests
     }
 
     [Fact]
+    public async Task Cancel_DoesNotBlockOtherRuns_WhileACancellationCallbackIsRunning()
+    {
+        // A callback registered on the token runs inside Cancel(). If Cancel() held the
+        // command's lock meanwhile, a run on another thread could neither start nor finish,
+        // and a callback that waits for such a run would deadlock.
+        var gate = new TaskCompletionSource();
+        var calls = 0;
+        var otherRunFinished = false;
+        RelayCommandAsync command = null!;
+        command = new RelayCommandAsync(token =>
+        {
+            if (Interlocked.Increment(ref calls) > 1)
+            {
+                return Task.CompletedTask;
+            }
+
+            token.Register(() =>
+            {
+                var otherRun = Task.Run(() => command.ExecuteAsync(null), CancellationToken.None);
+                otherRunFinished = otherRun.Wait(TimeSpan.FromSeconds(10));
+            });
+
+            return gate.Task;
+        });
+
+        using (command)
+        {
+            var run = command.ExecuteAsync(null);
+
+            command.Cancel();
+
+            gate.SetResult();
+            await run;
+        }
+
+        Assert.True(otherRunFinished);
+    }
+
+    [Fact]
     public async Task IsExecuting_StaysTrueUntilTheLastOverlappingRunHasFinished()
     {
         var first = new TaskCompletionSource();

@@ -130,16 +130,27 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     /// </summary>
     public virtual void Cancel()
     {
-        // Cancelling inside the lock keeps a finishing run from disposing its
-        // token source while it is being cancelled.
+        // The token sources are cancelled outside the lock: cancelling runs the callbacks
+        // registered on the token, and those must not block other runs from starting or
+        // finishing. A run that ends meanwhile disposes its own source.
+        CancellationTokenSource[] tokenSources;
         lock (runningTokenSources)
         {
-            foreach (var tokenSource in runningTokenSources.ToArray())
+            tokenSources = runningTokenSources.ToArray();
+        }
+
+        foreach (var tokenSource in tokenSources)
+        {
+            try
             {
                 if (!tokenSource.IsCancellationRequested)
                 {
                     tokenSource.Cancel();
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                // The run finished in the meantime
             }
         }
     }
