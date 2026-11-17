@@ -9,6 +9,8 @@ namespace Atc.XamlToolkit.Command;
 /// <typeparam name="T">The type of the command parameter.</typeparam>
 public class RelayCommand<T> : RelayCommandBase<T>
 {
+    private EventHandler requerySuggestedLocal = null!;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayCommand{T}"/> class that can always execute.
     /// </summary>
@@ -38,18 +40,52 @@ public class RelayCommand<T> : RelayCommandBase<T>
     {
         add
         {
-            if (wfCanExecute is not null)
+            if (wfCanExecute is null)
             {
-                CommandManager.RequerySuggested += value;
+                return;
             }
+
+            // CommandManager.RequerySuggested only holds weak references to its handlers,
+            // so a local copy keeps them alive for as long as the command lives.
+            EventHandler handler2;
+            var canExecuteChanged = requerySuggestedLocal;
+
+            do
+            {
+                handler2 = canExecuteChanged;
+                var handler3 = (EventHandler)Delegate.Combine(handler2, value);
+                canExecuteChanged = Interlocked.CompareExchange(
+                    ref requerySuggestedLocal,
+                    handler3,
+                    handler2);
+            }
+            while (canExecuteChanged != handler2);
+
+            CommandManager.RequerySuggested += value;
         }
 
         remove
         {
-            if (wfCanExecute is not null)
+            if (wfCanExecute is null)
             {
-                CommandManager.RequerySuggested -= value;
+                return;
             }
+
+            EventHandler handler2;
+            var canExecuteChanged = requerySuggestedLocal;
+
+            do
+            {
+                handler2 = canExecuteChanged;
+                var handler3 = (EventHandler)Delegate.Remove(handler2, value)!;
+                canExecuteChanged = Interlocked.CompareExchange(
+                    ref requerySuggestedLocal,
+                    handler3,
+                    handler2);
+            }
+            while (canExecuteChanged != handler2);
+
+            CommandManager.RequerySuggested -= value;
         }
     }
 

@@ -36,6 +36,32 @@ public sealed class RelayCommandGenericTests
         Assert.Equal(expected, canExecuteChangedCalled);
     }
 
+    [Fact]
+    [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
+    [SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "The test verifies that the command keeps its subscribers alive.")]
+    public void RaiseCanExecuteChanged_NotifiesSubscriber_WhenOnlyTheCommandReferencesTheHandler()
+    {
+        // Arrange
+        var canExecuteChangedCalled = new int[1];
+        var command = new RelayCommand<string>(_ => { }, _ => true, keepTargetAlive: true);
+        SubscribeCountingHandler(command, canExecuteChangedCalled);
+
+        // CommandManager.RequerySuggested only holds weak references to its handlers
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        // Act
+        command.RaiseCanExecuteChanged();
+
+        // Forces processing of CommandManager.InvalidateRequerySuggested by dispatching an empty action at background priority.
+        _ = Dispatcher.CurrentDispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
+
+        // Assert
+        Assert.Equal(1, canExecuteChangedCalled[0]);
+        GC.KeepAlive(command);
+    }
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, false)]
@@ -188,4 +214,10 @@ public sealed class RelayCommandGenericTests
         Assert.Null(exception);
         Assert.False(executed);
     }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static void SubscribeCountingHandler(
+        RelayCommand<string> command,
+        int[] counter)
+        => command.CanExecuteChanged += (_, _) => counter[0]++;
 }
