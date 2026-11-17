@@ -366,7 +366,7 @@ internal static class AttributeDataExtensions
             string? literal = null;
             if (namedArgument.Value.Value is string stringValue &&
                 (namedArgument.Key is NameConstants.Category or NameConstants.Description ||
-                 (isDefaultValue && type == "string")))
+                 (isDefaultValue && type is "string" or "object")))
             {
                 literal = SymbolDisplay.FormatLiteral(stringValue, quote: true);
             }
@@ -379,8 +379,11 @@ internal static class AttributeDataExtensions
 
             if (literal is not null)
             {
-                // Drop the quotes - they are added again where the value is emitted.
-                argumentValues[namedArgument.Key] = literal.Substring(1, literal.Length - 2);
+                // Drop the quotes - they are added again where the value of a string or char
+                // property is emitted. A property of type object gets the literal as it is.
+                argumentValues[namedArgument.Key] = isDefaultValue && type == "object"
+                    ? literal
+                    : literal.Substring(1, literal.Length - 2);
             }
         }
     }

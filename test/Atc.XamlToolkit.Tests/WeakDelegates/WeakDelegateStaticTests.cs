@@ -29,6 +29,16 @@ public sealed class WeakDelegateStaticTests
         Assert.False(sut.IsAlive);
     }
 
+    [Fact]
+    public void WeakFuncOfT_MarkForDeletion_ThroughBaseReference_MakesItNotAlive()
+    {
+        WeakFunc<bool> sut = new WeakFunc<int, bool>(StaticFunc);
+
+        sut.MarkForDeletion();
+
+        Assert.False(sut.IsAlive);
+    }
+
     private static void StaticAction(int value)
     {
         // Intentionally empty - only the delegate kind matters.

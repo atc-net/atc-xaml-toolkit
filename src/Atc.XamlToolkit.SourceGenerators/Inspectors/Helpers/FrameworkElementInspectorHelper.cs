@@ -120,6 +120,7 @@ internal static class FrameworkElementInspectorHelper
             ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
             DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
+            NoteDependencyPropertyWithMetadataInAStaticClass(propertyToGenerate, xamlPlatform);
             propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
             propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
             propertyToGenerate.PropertyKeyAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.PropertyKeyAccessModifier);
@@ -253,6 +254,7 @@ internal static class FrameworkElementInspectorHelper
         ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
         DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
+        NoteDependencyPropertyWithMetadataInAStaticClass(propertyToGenerate, xamlPlatform);
         propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
         propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
         propertyToGenerate.PropertyKeyAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.PropertyKeyAccessModifier);
@@ -428,6 +430,30 @@ internal static class FrameworkElementInspectorHelper
     // AddOwner with metadata is an override of the metadata, which WPF only allows for an
     // owner that derives from DependencyObject; for any other owner it throws when the class
     // is first used. A static class, or a class without a base class, is not one.
+    // DependencyProperty.Register with metadata throws for an owner that is not a
+    // DependencyObject, such as a static class. An attached property is what such a class
+    // can own; without metadata Register works, so only that case is reported.
+    private static void NoteDependencyPropertyWithMetadataInAStaticClass(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        XamlPlatform xamlPlatform)
+    {
+        if (xamlPlatform != XamlPlatform.Wpf ||
+            propertyToGenerate is AttachedPropertyToGenerate ||
+            !propertyToGenerate.IsOwnerTypeStatic ||
+            propertyToGenerate.UsesPropertyKey ||
+            !propertyToGenerate.IgnoredOptions.IsEmpty ||
+            propertyToGenerate.AddOwnerOf is not null ||
+            !(propertyToGenerate.HasAnyMetadata || propertyToGenerate.MetadataType is not null))
+        {
+            return;
+        }
+
+        AddIgnoredOption(
+            propertyToGenerate,
+            "DependencyProperty",
+            "a static class is not a DependencyObject, so registering a property with metadata for it throws when the class is first used; use [AttachedProperty]");
+    }
+
     private static void DropMetadataOverrideForOwnerThatIsNotADependencyObject(
         BaseFrameworkElementPropertyToGenerate propertyToGenerate,
         INamedTypeSymbol classSymbol)

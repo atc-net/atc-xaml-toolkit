@@ -204,7 +204,7 @@ public class WeakFunc<TResult>
     /// <summary>
     /// Sets the reference that this instance stores to null.
     /// </summary>
-    protected void MarkForDeletion()
+    public virtual void MarkForDeletion()
     {
         Reference = null;
         FuncReference = null;

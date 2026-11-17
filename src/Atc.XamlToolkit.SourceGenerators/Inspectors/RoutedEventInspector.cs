@@ -166,7 +166,7 @@ internal static class RoutedEventInspector
             };
 
         NoteRaiseMethodThatCannotBeGenerated(routedEvent);
-        NoteOptionsWithoutEffect(routedEvent, fieldArgumentValues);
+        NoteOptionsWithoutEffect(routedEvent);
 
         if (hasUnboundHandlerType)
         {
@@ -220,8 +220,7 @@ internal static class RoutedEventInspector
     }
 
     private static void NoteOptionsWithoutEffect(
-        RoutedEventToGenerate routedEvent,
-        IDictionary<string, string?> fieldArgumentValues)
+        RoutedEventToGenerate routedEvent)
     {
         var ignoredOptions = new List<string>(routedEvent.IgnoredOptions);
 
@@ -231,7 +230,7 @@ internal static class RoutedEventInspector
         }
 
         if (!routedEvent.IsOwnerTypeStatic &&
-            fieldArgumentValues.ContainsKey(NameConstants.GenerateHandlerMethods))
+            !routedEvent.GenerateHandlerMethods)
         {
             ignoredOptions.Add($"{NameConstants.GenerateHandlerMethods}|handler methods are only generated in a static class; this class gets an event");
         }

@@ -164,7 +164,7 @@ public sealed class WeakFunc<T, TResult> : WeakFunc<TResult>, IExecuteWithObject
     /// which is a signal for containing objects that this WeakFunc
     /// should be deleted.
     /// </summary>
-    public new void MarkForDeletion()
+    public override void MarkForDeletion()
     {
         staticFunc = null;
         base.MarkForDeletion();

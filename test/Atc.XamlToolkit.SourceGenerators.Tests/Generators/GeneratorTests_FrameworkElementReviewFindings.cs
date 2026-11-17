@@ -297,6 +297,69 @@ public sealed class GeneratorTests_FrameworkElementReviewFindings : GeneratorTes
         Assert.Contains("private static object? CoerceFillPropertyCallback(", generatedCode, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("[DependencyProperty] private static int count;")]
+    [InlineData("[DependencyProperty(DefaultValue = \"x\")] private static string title;")]
+    public void DependencyProperty_WithMetadataInAStaticClass_Wpf_ReportsADiagnostic(
+        string member)
+    {
+        // A static class is not a DependencyObject, and DependencyProperty.Register with
+        // metadata throws for such an owner when the class is first used.
+        var inputCode =
+            $$"""
+            namespace TestNamespace;
+
+            public static partial class XHelper
+            {
+                {{member}}
+            }
+            """;
+
+        var (_, diagnostics) = Generate(inputCode);
+
+        Assert.Equal([IgnoredOptionDiagnosticId], diagnostics.Select(x => x.Id), StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void DependencyProperty_WithoutMetadataInAStaticClass_Wpf_ReportsNoDiagnostic()
+    {
+        // Register without metadata works for any owner; code that works today gets no warning.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public static partial class XHelper
+            {
+                [DependencyProperty]
+                private static string title;
+            }
+            """;
+
+        var (_, diagnostics) = Generate(inputCode);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void RoutedEvent_GenerateHandlerMethodsTrueInAClassThatIsNotStatic_Wpf_ReportsNoDiagnostic()
+    {
+        // Spelling out the default must not fail a build with warnings as errors.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                [RoutedEvent(GenerateHandlerMethods = true)]
+                private static readonly RoutedEvent tap;
+            }
+            """;
+
+        var (_, diagnostics) = Generate(inputCode);
+
+        Assert.Empty(diagnostics);
+    }
+
     [Fact]
     public void IgnoredOptionDiagnostic_PointsAtTheAttribute()
     {
