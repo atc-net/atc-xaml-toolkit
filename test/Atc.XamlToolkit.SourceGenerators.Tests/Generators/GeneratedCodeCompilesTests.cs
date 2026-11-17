@@ -809,6 +809,35 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableDtoViewModel_CustomCommandWithSupportsCancellation_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Order
+            {
+                public string Number { get; set; } = string.Empty;
+            }
+
+            [ObservableDtoViewModel(typeof(Order))]
+            public partial class OrderViewModel : ViewModelBase
+            {
+                [RelayCommand(SupportsCancellation = true)]
+                private Task LoadAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+                public System.Windows.Input.ICommand CancelCommandForBinding => LoadAsyncCancelCommand;
+
+                public void CancelFromCode() => CancelLoadAsync();
+
+                public void Release() => DisposeCommands();
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

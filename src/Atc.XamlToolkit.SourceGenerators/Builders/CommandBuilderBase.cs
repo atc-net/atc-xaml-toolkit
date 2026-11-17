@@ -108,7 +108,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
     }
 
-    private static void AppendPrivateBackingFields(
+    protected static void AppendPrivateBackingFields(
         CommandBuilderBase builder,
         EquatableArray<RelayCommandToGenerate> commands)
     {
@@ -131,7 +131,7 @@ internal abstract class CommandBuilderBase : BuilderBase
         }
     }
 
-    private static void AppendPublicProperties(
+    protected static void AppendPublicProperties(
         CommandBuilderBase builder,
         EquatableArray<RelayCommandToGenerate> commands)
     {

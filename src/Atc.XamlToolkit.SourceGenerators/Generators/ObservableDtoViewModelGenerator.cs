@@ -69,6 +69,8 @@ public sealed class ObservableDtoViewModelGenerator : IIncrementalGenerator
 
         builder.GenerateCustomProperties(viewModelToGenerate);
 
+        builder.GenerateCustomCommandMethods(viewModelToGenerate);
+
         builder.GenerateToString(viewModelToGenerate);
 
         builder.GenerateEnd();
