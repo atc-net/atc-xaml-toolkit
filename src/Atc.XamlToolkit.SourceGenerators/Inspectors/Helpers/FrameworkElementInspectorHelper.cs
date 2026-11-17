@@ -87,6 +87,12 @@ internal static class FrameworkElementInspectorHelper
                 coerceValueCallback = GetGeneratedCoerceValueCallbackName(propertyName);
             }
 
+            defaultValue = UseTypeDefaultWhereNullIsInvalid(
+                defaultValue,
+                propertyAttribute.AttributeClass?.TypeArguments.FirstOrDefault(),
+                type,
+                propertyChangedCallback ?? coerceValueCallback ?? validateValueCallback ?? flags ?? defaultUpdateSourceTrigger ?? isAnimationProhibited?.ToString());
+
             var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
                 classSymbol.IsStatic,
                 ownerType,
@@ -113,12 +119,14 @@ internal static class FrameworkElementInspectorHelper
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
+            DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
             propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
             propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
             propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
             propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
+            propertyToGenerate.DiagnosticLocation = propertyToGenerate.IgnoredOptions.IsEmpty ? null : DiagnosticLocation.From(propertyAttribute);
 
             propertiesToGenerate.Add(propertyToGenerate);
         }
@@ -148,8 +156,8 @@ internal static class FrameworkElementInspectorHelper
 
         // PropertyName names the property independently of the field.
         var statedPropertyName = propertyAttribute.ExtractStringArgument(NameConstants.PropertyName);
-        if (statedPropertyName is not null &&
-            SyntaxFacts.IsValidIdentifier(statedPropertyName))
+        var isPropertyNameUsable = statedPropertyName is null || IsUsableIdentifier(statedPropertyName);
+        if (statedPropertyName is not null && isPropertyNameUsable)
         {
             propertyName = statedPropertyName;
         }
@@ -206,6 +214,12 @@ internal static class FrameworkElementInspectorHelper
             coerceValueCallback = GetGeneratedCoerceValueCallbackName(propertyName);
         }
 
+        defaultValue = UseTypeDefaultWhereNullIsInvalid(
+            defaultValue,
+            fieldSymbol.Type,
+            type,
+            propertyChangedCallback ?? coerceValueCallback ?? validateValueCallback ?? flags ?? defaultUpdateSourceTrigger ?? isAnimationProhibited?.ToString());
+
         var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
             classSymbol.IsStatic,
             ownerType,
@@ -225,6 +239,11 @@ internal static class FrameworkElementInspectorHelper
             generateDocumentation);
 
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
+        if (!isPropertyNameUsable)
+        {
+            AddIgnoredOption(propertyToGenerate, NameConstants.PropertyName, "the name is not a valid C# identifier; the name of the field is used");
+        }
+
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
         ApplyMetadataType(propertyToGenerate, metadataType, ignoredMetadataType);
@@ -232,6 +251,7 @@ internal static class FrameworkElementInspectorHelper
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         DropSetterModifierThatIsNotMoreRestrictive(propertyToGenerate, propertyAttribute);
+        DropMetadataOverrideForOwnerThatIsNotADependencyObject(propertyToGenerate, classSymbol);
         propertyToGenerate.AccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.AccessModifier);
         propertyToGenerate.SetterAccessModifier = classSymbol.NarrowAccessModifier(propertyToGenerate.SetterAccessModifier);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
@@ -241,6 +261,7 @@ internal static class FrameworkElementInspectorHelper
         var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
         fieldSymbol.Type.AddRequiredNamespacesTo(requiredNamespaces);
         propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
+        propertyToGenerate.DiagnosticLocation = propertyToGenerate.IgnoredOptions.IsEmpty ? null : DiagnosticLocation.From(propertyAttribute);
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
         propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);
@@ -272,16 +293,27 @@ internal static class FrameworkElementInspectorHelper
 
         // The second parameter of Set{Name} is called value, so that name is taken.
         var elementParameterName = propertyAttribute.ExtractStringArgument(NameConstants.ElementParameterName);
-        if (elementParameterName is not null &&
-            elementParameterName != "value" &&
-            SyntaxFacts.IsValidIdentifier(elementParameterName))
+        if (elementParameterName is not null)
         {
-            propertyToGenerate.ElementParameterName = elementParameterName;
+            if (elementParameterName != "value" && IsUsableIdentifier(elementParameterName))
+            {
+                propertyToGenerate.ElementParameterName = elementParameterName;
+            }
+            else
+            {
+                AddIgnoredOption(propertyToGenerate, NameConstants.ElementParameterName, "the name is 'value', which the second parameter has, or not a valid C# identifier; 'element' is used");
+            }
         }
 
         propertyToGenerate.BrowsableForTargetType =
             argumentValues.TryGetValue(NameConstants.BrowsableForTargetType, out var browsable) &&
             "true".Equals(browsable, StringComparison.OrdinalIgnoreCase);
+
+        if (propertyToGenerate is { BrowsableForTargetType: true, TargetType: null })
+        {
+            AddIgnoredOption(propertyToGenerate, NameConstants.BrowsableForTargetType, "it needs TargetType, which names the type the property is offered on");
+        }
+
         propertyToGenerate.GenerateClrAccessors =
             !argumentValues.TryGetValue(NameConstants.GenerateClrAccessors, out var value) ||
             !"false".Equals(value, StringComparison.OrdinalIgnoreCase);
@@ -373,6 +405,60 @@ internal static class FrameworkElementInspectorHelper
             "the setter of a property has to be more restrictive than the property, which AccessModifier sets");
     }
 
+    // Metadata that is created with callbacks or flags takes a default value, and null is
+    // not a value of a value type: registering it throws when the class is first used.
+    private static object? UseTypeDefaultWhereNullIsInvalid(
+        object? defaultValue,
+        ITypeSymbol? typeSymbol,
+        string type,
+        string? anyOtherMetadata)
+        => defaultValue is null &&
+           anyOtherMetadata is not null &&
+           typeSymbol is { IsValueType: true, TypeKind: not TypeKind.Error } &&
+           typeSymbol.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T
+            ? $"default({type})"
+            : defaultValue;
+
+    private static bool IsUsableIdentifier(string name)
+        => SyntaxFacts.IsValidIdentifier(name) &&
+           SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None;
+
+    // AddOwner with metadata is an override of the metadata, which WPF only allows for an
+    // owner that derives from DependencyObject; for any other owner it throws when the class
+    // is first used. A static class, or a class without a base class, is not one.
+    private static void DropMetadataOverrideForOwnerThatIsNotADependencyObject(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        INamedTypeSymbol classSymbol)
+    {
+        if (propertyToGenerate.AddOwnerOf is null ||
+            !(classSymbol.IsStatic || classSymbol.BaseType?.SpecialType == SpecialType.System_Object))
+        {
+            return;
+        }
+
+        var hasOverride =
+            propertyToGenerate.HasExplicitDefaultValue ||
+            !string.IsNullOrEmpty(propertyToGenerate.PropertyChangedCallback) ||
+            !string.IsNullOrEmpty(propertyToGenerate.CoerceValueCallback) ||
+            !string.IsNullOrEmpty(propertyToGenerate.Flags) ||
+            !string.IsNullOrEmpty(propertyToGenerate.DefaultUpdateSourceTrigger) ||
+            propertyToGenerate.IsAnimationProhibited is not null;
+
+        if (!hasOverride)
+        {
+            return;
+        }
+
+        propertyToGenerate.DropsMetadataOverride = true;
+        propertyToGenerate.GeneratePartialHooks = false;
+        propertyToGenerate.GenerateCoerceHook = false;
+
+        AddIgnoredOption(
+            propertyToGenerate,
+            NameConstants.AddOwnerOf,
+            "the default value, callbacks and metadata options are left out, because metadata can only be overridden for an owner that derives from DependencyObject");
+    }
+
     private static void AddIgnoredOption(
         BaseFrameworkElementPropertyToGenerate propertyToGenerate,
         string option,
@@ -456,6 +542,15 @@ internal static class FrameworkElementInspectorHelper
             !argumentValues.TryGetValue(NameConstants.IsReadOnly, out var value) ||
             !"true".Equals(value, StringComparison.OrdinalIgnoreCase))
         {
+            return;
+        }
+
+        // A static class is not a DependencyObject, so a read-only property cannot be
+        // registered for it other than as an attached property.
+        if (propertyToGenerate is not AttachedPropertyToGenerate &&
+            propertyToGenerate.IsOwnerTypeStatic)
+        {
+            AddIgnoredOption(propertyToGenerate, NameConstants.IsReadOnly, "a read-only property in a static class has to be an [AttachedProperty]");
             return;
         }
 
@@ -547,19 +642,22 @@ internal static class FrameworkElementInspectorHelper
         propertyChangedCallback = null;
         if (argumentValues.TryGetValue(NameConstants.PropertyChangedCallback, out var propertyChangedCallbackValue))
         {
-            propertyChangedCallback = propertyChangedCallbackValue!.ExtractInnerContent();
+            // The value is null when the attribute says '= null'
+            propertyChangedCallback = propertyChangedCallbackValue?.ExtractInnerContent();
         }
 
         coerceValueCallback = null;
         if (argumentValues.TryGetValue(NameConstants.CoerceValueCallback, out var coerceValueCallbackValue))
         {
-            coerceValueCallback = coerceValueCallbackValue!.ExtractInnerContent();
+            // The value is null when the attribute says '= null'
+            coerceValueCallback = coerceValueCallbackValue?.ExtractInnerContent();
         }
 
         validateValueCallback = null;
         if (argumentValues.TryGetValue(NameConstants.ValidateValueCallback, out var validateValueCallbackValue))
         {
-            validateValueCallback = validateValueCallbackValue!.ExtractInnerContent();
+            // The value is null when the attribute says '= null'
+            validateValueCallback = validateValueCallbackValue?.ExtractInnerContent();
         }
 
         flags = null;

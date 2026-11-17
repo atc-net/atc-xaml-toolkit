@@ -118,6 +118,19 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public EquatableArray<string> IgnoredOptions { get; set; } = EquatableArray<string>.Empty;
 
     /// <summary>
+    /// Gets or sets where the diagnostics for <see cref="IgnoredOptions"/> point. It is only
+    /// set when there is something to report, so that moving a declaration within its file
+    /// does not change the model.
+    /// </summary>
+    public DiagnosticLocation? DiagnosticLocation { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the metadata the attribute asks for is left
+    /// out of <c>AddOwner</c>, because the owner is not a <c>DependencyObject</c>.
+    /// </summary>
+    public bool DropsMetadataOverride { get; set; }
+
+    /// <summary>
     /// Gets or sets the type whose existing dependency property is shared with
     /// <c>AddOwner</c> instead of registering a new one (WPF only); <c>null</c> otherwise.
     /// </summary>

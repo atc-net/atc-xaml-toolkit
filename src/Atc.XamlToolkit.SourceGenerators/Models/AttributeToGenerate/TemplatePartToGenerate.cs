@@ -18,4 +18,11 @@ internal sealed record TemplatePartToGenerate(
     string TypeName,
     bool IsRequired,
     bool IsFieldNullable,
-    EquatableArray<string> RequiredNamespaces);
+    EquatableArray<string> RequiredNamespaces)
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether the type of the part uses a type parameter
+    /// of the class, which cannot be written in the <c>typeof</c> of an attribute.
+    /// </summary>
+    public bool UsesTypeParameter { get; set; }
+}

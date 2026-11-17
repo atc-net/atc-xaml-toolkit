@@ -413,6 +413,12 @@ internal static class AttributeDataExtensions
         {
             if (arg.Kind == TypedConstantKind.Array)
             {
+                // A null array constant has no values to enumerate
+                if (arg.IsNull)
+                {
+                    continue;
+                }
+
                 foreach (var typedConstant in arg.Values)
                 {
                     if (typedConstant.Value is null)
@@ -441,6 +447,12 @@ internal static class AttributeDataExtensions
         {
             if (arg.Value.Kind == TypedConstantKind.Array)
             {
+                // A null array constant has no values to enumerate
+                if (arg.Value.IsNull)
+                {
+                    continue;
+                }
+
                 foreach (var typedConstant in arg.Value.Values)
                 {
                     if (typedConstant.Value is null)

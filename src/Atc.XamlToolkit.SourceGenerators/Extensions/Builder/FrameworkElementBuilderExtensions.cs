@@ -283,8 +283,11 @@ internal static class FrameworkElementBuilderExtensions
         GenerateDependencyPropertyBody(builder, p, xamlPlatform);
         GeneratePropertyIdentifierFromKey(builder, p, isAttached: false, xamlPlatform);
         GenerateClrDependencyProperty(builder, p, xamlPlatform);
-        GeneratePartialHook(builder, p, isAttached: false, xamlPlatform);
-        GenerateCoerceHook(builder, p, isAttached: false);
+
+        // In a static class there is no instance to call: the hooks take the target object,
+        // like those of an attached property.
+        GeneratePartialHook(builder, p, isAttached: p.IsOwnerTypeStatic, xamlPlatform);
+        GenerateCoerceHook(builder, p, isAttached: p.IsOwnerTypeStatic);
     }
 
     // Emits the static coerce callback that is registered with the property system, and the
@@ -305,19 +308,41 @@ internal static class FrameworkElementBuilderExtensions
         // A nullable property type can be coerced to and from null.
         var objectType = p.Type.EndsWith("?", StringComparison.Ordinal) ? "object?" : "object";
 
-        var baseValue = string.IsNullOrEmpty(p.UserCoerceValueCallback)
-            ? $"({p.Type})baseValue"
-            : $"({p.Type}){p.UserCoerceValueCallback}(d, baseValue)";
+        var hasUserCallback = !string.IsNullOrEmpty(p.UserCoerceValueCallback);
+        var value = hasUserCallback
+            ? $"({p.Type})coerced!"
+            : $"({p.Type})baseValue";
+        var hookCall = isAttached
+            ? $"{hookName}(d, {value})"
+            : $"(({p.OwnerType})d).{hookName}({value})";
 
         builder.AppendLine();
         builder.AppendLine($"private static {objectType} {p.CoerceValueCallback}(");
         builder.IncreaseIndent();
         builder.AppendLine("DependencyObject d,");
         builder.AppendLine($"{objectType} baseValue)");
-        builder.AppendLine(isAttached
-            ? $"=> {hookName}(d, {baseValue});"
-            : $"=> (({p.OwnerType})d).{hookName}({baseValue});");
-        builder.DecreaseIndent();
+
+        if (hasUserCallback)
+        {
+            // The named callback runs first. It rejects a value by returning UnsetValue,
+            // which is not a value of the property type and is passed on as it is.
+            builder.DecreaseIndent();
+            builder.AppendLine("{");
+            builder.IncreaseIndent();
+            builder.AppendLine($"var coerced = {p.UserCoerceValueCallback}(d, baseValue);");
+            builder.AppendLine("return ReferenceEquals(coerced, DependencyProperty.UnsetValue)");
+            builder.IncreaseIndent();
+            builder.AppendLine("? coerced");
+            builder.AppendLine($": {hookCall};");
+            builder.DecreaseIndent();
+            builder.DecreaseIndent();
+            builder.AppendLine("}");
+        }
+        else
+        {
+            builder.AppendLine($"=> {hookCall};");
+            builder.DecreaseIndent();
+        }
 
         builder.AppendLine();
         builder.AppendLine(isAttached
@@ -625,7 +650,7 @@ internal static class FrameworkElementBuilderExtensions
                     }
                     else
                     {
-                        builder.AppendLine("new PropertyMetadata());");
+                        builder.AppendLine(isWpf ? "new PropertyMetadata());" : "new PropertyMetadata(null));");
                     }
 
                     builder.DecreaseIndent();
@@ -695,7 +720,7 @@ internal static class FrameworkElementBuilderExtensions
                 case true when p.UsesPropertyKey:
                     // RegisterReadOnly has no overload without metadata
                     builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
-                    builder.AppendLine("new PropertyMetadata());");
+                    builder.AppendLine(isWpf ? "new PropertyMetadata());" : "new PropertyMetadata(null));");
                     builder.DecreaseIndent();
                     break;
                 case false:
@@ -727,6 +752,13 @@ internal static class FrameworkElementBuilderExtensions
         // Where a constructor needs a default value and the attribute states none, the one
         // the new owner would inherit is passed, so the shared default is kept.
         var sharedDefaultValue = $"{p.AddOwnerOf}.{p.Name}Property.GetMetadata({ownerType}).DefaultValue";
+
+        if (p.DropsMetadataOverride)
+        {
+            builder.AppendLine($"{ownerType});");
+            builder.DecreaseIndent();
+            return;
+        }
 
         var hasFrameworkOptions =
             !string.IsNullOrEmpty(p.Flags) ||

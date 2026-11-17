@@ -49,11 +49,23 @@ internal static class TemplatePartInspector
                     TypeName: typeName,
                     IsRequired: GetIsRequired(attribute),
                     IsFieldNullable: fieldSymbol.NullableAnnotation == NullableAnnotation.Annotated,
-                    RequiredNamespaces: new EquatableArray<string>(requiredNamespaces.OrderBy(x => x, StringComparer.Ordinal).ToArray())));
+                    RequiredNamespaces: new EquatableArray<string>(requiredNamespaces.OrderBy(x => x, StringComparer.Ordinal).ToArray()))
+                {
+                    UsesTypeParameter = UsesTypeParameter(fieldSymbol.Type),
+                });
         }
 
         return templateParts;
     }
+
+    private static bool UsesTypeParameter(ITypeSymbol typeSymbol)
+        => typeSymbol switch
+        {
+            ITypeParameterSymbol => true,
+            IArrayTypeSymbol arrayType => UsesTypeParameter(arrayType.ElementType),
+            INamedTypeSymbol namedType => namedType.TypeArguments.Any(UsesTypeParameter),
+            _ => false,
+        };
 
     /// <summary>
     /// Builds the platform's <c>[TemplatePart]</c> attribute for every part that the class
@@ -81,6 +93,20 @@ internal static class TemplatePartInspector
             if (templatePart.PartNameText is not null &&
                 !declaredPartNames.Add(templatePart.PartNameText))
             {
+                continue;
+            }
+
+            // typeof(List<T>) with a type parameter of the class is not allowed as an
+            // attribute argument, so such a part is declared without its type.
+            if (templatePart.UsesTypeParameter)
+            {
+                classAttributes.Add(xamlPlatform switch
+                {
+                    XamlPlatform.Avalonia => $"[global::Avalonia.Controls.Metadata.TemplatePart({templatePart.PartNameExpression}, typeof(global::Avalonia.Controls.Control))]",
+                    XamlPlatform.WinUI => $"[global::Microsoft.UI.Xaml.TemplatePart(Name = {templatePart.PartNameExpression})]",
+                    _ => $"[global::System.Windows.TemplatePart(Name = {templatePart.PartNameExpression})]",
+                });
+
                 continue;
             }
 

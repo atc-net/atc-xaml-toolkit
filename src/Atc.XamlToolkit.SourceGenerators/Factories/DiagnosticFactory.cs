@@ -134,10 +134,11 @@ internal static class DiagnosticFactory
         string option,
         string memberName,
         string className,
-        string reason)
+        string reason,
+        Location? location = null)
         => Diagnostic.Create(
             IgnoredOptionDescriptor,
-            Location.None,
+            location ?? Location.None,
             option,
             memberName,
             className,

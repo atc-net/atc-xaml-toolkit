@@ -55,6 +55,19 @@ internal sealed record RoutedEventToGenerate(
     public EquatableArray<string> IgnoredOptions { get; set; } = EquatableArray<string>.Empty;
 
     /// <summary>
+    /// Gets or sets where the diagnostics for <see cref="IgnoredOptions"/> point; only set
+    /// when there is something to report.
+    /// </summary>
+    public DiagnosticLocation? DiagnosticLocation { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the handler is an <c>EventHandler&lt;T&gt;</c>
+    /// whose event args do not derive from <c>RoutedEventArgs</c>, so they cannot be raised
+    /// with <c>RaiseEvent</c>.
+    /// </summary>
+    public bool HandlerArgsAreNotRoutedEventArgs { get; set; }
+
+    /// <summary>
     /// Gets the handler type without its namespace and type arguments.
     /// </summary>
     public string HandlerSimpleName
@@ -95,6 +108,7 @@ internal sealed record RoutedEventToGenerate(
     /// </summary>
     public bool CanGenerateRaiseMethod
         => !IsOwnerTypeStatic &&
+           !HandlerArgsAreNotRoutedEventArgs &&
            HandlerSimpleName switch
            {
                NameConstants.RoutedEventHandler => HandlerTypeArgument.Length == 0,

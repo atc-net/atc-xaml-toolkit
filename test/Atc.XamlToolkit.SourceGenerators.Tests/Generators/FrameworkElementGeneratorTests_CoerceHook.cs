@@ -53,7 +53,8 @@ public sealed partial class FrameworkElementGeneratorTests
         var generatedCode = Assert.Single(RunGenerator<FrameworkElementGenerator>(inputCode).GeneratorResult.GeneratedSources).SourceText.ToString();
 
         Assert.Contains("coerceValueCallback: CoerceMaximumPropertyCallback", generatedCode, StringComparison.Ordinal);
-        Assert.Contains("=> ((MyControl)d).CoerceMaximum((double)CoerceAny(d, baseValue));", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("var coerced = CoerceAny(d, baseValue);", generatedCode, StringComparison.Ordinal);
+        Assert.Contains(": ((MyControl)d).CoerceMaximum((double)coerced!);", generatedCode, StringComparison.Ordinal);
     }
 
     [Fact]

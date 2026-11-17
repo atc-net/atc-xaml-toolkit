@@ -124,15 +124,15 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
 
         var ignoredOptions = frameworkElementToGenerate
             .AttachedPropertiesToGenerate
-            .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option)))
+            .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation)))
             .Concat(frameworkElementToGenerate
                 .DependencyPropertiesToGenerate
-                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option))))
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation))))
             .Concat(frameworkElementToGenerate
                 .RoutedEventsToGenerate
-                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option))));
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option, x.DiagnosticLocation))));
 
-        foreach (var (memberName, ignoredOption) in ignoredOptions)
+        foreach (var (memberName, ignoredOption, location) in ignoredOptions)
         {
             var separator = ignoredOption.IndexOf('|');
 
@@ -141,7 +141,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
                     ignoredOption.Substring(0, separator),
                     memberName,
                     className,
-                    ignoredOption.Substring(separator + 1)));
+                    ignoredOption.Substring(separator + 1),
+                    location?.ToLocation()));
         }
 
         return frameworkElementToGenerate.HasAnythingToGenerate;
