@@ -135,6 +135,53 @@ public string SelectedStateMessage
 
 This only hides the C# setter. The property is still an ordinary, writable dependency property: XAML can set it and so can `SetValue(SelectedStateMessageProperty, ...)`. It is not a read-only dependency property with a `DependencyPropertyKey`.
 
+## 🧮 Default values that are expressions
+
+`DefaultValue` is for constants, and the generator fits its text to the property type: a `string` value is quoted, a `Brush` value gets `Brushes.` in front, and so on. A default that is code - a method call, a static member, a constructor - goes in `DefaultValueExpression`, which is emitted exactly as written:
+
+```csharp
+[DependencyProperty(DefaultValueExpression = "CreateFrozenBrush(40)")]
+private Brush gridBrush;
+
+[DependencyProperty(DefaultValueExpression = "new Thickness(1)")]
+private Thickness itemMargin;
+
+[DependencyProperty(DefaultValueExpression = "Array.Empty<object>()")]
+private IEnumerable items;
+```
+
+```csharp
+public static readonly DependencyProperty GridBrushProperty = DependencyProperty.Register(
+    nameof(GridBrush),
+    typeof(Brush),
+    typeof(ZoomGridOverlay),
+    new PropertyMetadata(defaultValue: CreateFrozenBrush(40)));
+```
+
+- The expression is evaluated once, in the static field initialiser, so it can only use static members. Names are resolved in the generated file: use a member of the class, a fully qualified name, or a type covered by the project's global usings.
+- The value is **shared by every instance** of the control. Use something immutable: a frozen brush, an empty array, a value type. A mutable default such as `new List<string>()` or an unfrozen brush would be one object shared by all controls.
+- When both `DefaultValue` and `DefaultValueExpression` are set, the expression is used.
+- Works on WPF, WinUI and Avalonia (`[StyledProperty]`), and for `[AttachedProperty]`.
+
+## 🏷️ Which metadata class is generated (WPF)
+
+The generator picks the metadata class from the options that are set:
+
+| Options set | Metadata class |
+|-------------|----------------|
+| none, or only `DefaultValue` and callbacks | `PropertyMetadata` |
+| `Flags`, `DefaultUpdateSourceTrigger` or `IsAnimationProhibited` | `FrameworkPropertyMetadata` |
+| `AddOwnerOf` with any override | `FrameworkPropertyMetadata` |
+
+`UIPropertyMetadata` is never generated. To get a `FrameworkPropertyMetadata` without any flag, state the flag explicitly:
+
+```csharp
+[DependencyProperty(DefaultValue = 3, Flags = FrameworkPropertyMetadataOptions.None)]
+private int count;
+```
+
+The class does not change how the property behaves. It matters to a derived class that calls `OverrideMetadata`: metadata may be overridden with the same class or a more derived one, so a base property with `PropertyMetadata` accepts any override, while one with `FrameworkPropertyMetadata` requires `FrameworkPropertyMetadata`. Keep that in mind when a hand-written property that derived classes override is converted to the attribute.
+
 ## 🙈 Non-public properties and properties without a CLR wrapper
 
 `AccessModifier` sets the accessibility of everything generated for the property: the `{Name}Property` field and the CLR property. Use it for a property that is an implementation detail of the control:

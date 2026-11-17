@@ -93,6 +93,43 @@ internal static class AttributeDataExtensions
     }
 
     /// <summary>
+    /// Reads a named string argument of an attribute, as the text the string holds.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <param name="argumentName">The name of the argument.</param>
+    /// <returns>The content of the string; <c>null</c> when the argument is not set.</returns>
+    public static string? ExtractStringArgument(
+        this AttributeData attributeData,
+        string argumentName)
+    {
+        // The attribute is resolved: the value is the string.
+        foreach (var namedArgument in attributeData.NamedArguments)
+        {
+            if (namedArgument.Key == argumentName &&
+                namedArgument.Value.Value is string value)
+            {
+                return value;
+            }
+        }
+
+        // The attribute is not resolved: only the literal is known.
+        if (attributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList: { } argumentList })
+        {
+            foreach (var argument in argumentList.Arguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText == argumentName &&
+                    argument.Expression is LiteralExpressionSyntax literalExpression &&
+                    literalExpression.IsKind(SyntaxKind.StringLiteralExpression))
+                {
+                    return literalExpression.Token.ValueText;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Reads the <c>AddOwnerOf</c> option of an attribute.
     /// </summary>
     /// <param name="attributeData">The attribute data.</param>

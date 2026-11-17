@@ -63,6 +63,8 @@ internal static class FrameworkElementInspectorHelper
                 out var generateDocumentation,
                 ref defaultValue);
 
+            defaultValue = GetDefaultValueExpression(propertyAttribute) ?? defaultValue;
+
             var userPropertyChangedCallback = propertyChangedCallback;
             var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
             if (generatePartialHooks)
@@ -160,6 +162,8 @@ internal static class FrameworkElementInspectorHelper
             out var generateDocumentation,
             ref defaultValue);
 
+        defaultValue = GetDefaultValueExpression(propertyAttribute) ?? defaultValue;
+
         var userPropertyChangedCallback = propertyChangedCallback;
         var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
         if (generatePartialHooks)
@@ -212,6 +216,17 @@ internal static class FrameworkElementInspectorHelper
         return propertyToGenerate;
     }
 
+    // DefaultValueExpression is C# source text. It is emitted as it stands, so it is taken
+    // after DefaultValue has been fitted to the property type.
+    private static string? GetDefaultValueExpression(
+        AttributeData propertyAttribute)
+    {
+        var expression = propertyAttribute.ExtractStringArgument(NameConstants.DefaultValueExpression);
+        return string.IsNullOrWhiteSpace(expression)
+            ? null
+            : expression!.Trim();
+    }
+
     // AccessModifier, GenerateClrAccessors and TargetType decide how the generated members
     // are declared; they do not change the registration.
     private static void ApplyAccessOptions(
@@ -240,7 +255,9 @@ internal static class FrameworkElementInspectorHelper
         }
 
         propertyToGenerate.AddOwnerOf = propertyAttribute.ExtractAddOwnerOf();
-        propertyToGenerate.HasExplicitDefaultValue = argumentValues.ContainsKey(NameConstants.DefaultValue);
+        propertyToGenerate.HasExplicitDefaultValue =
+            argumentValues.ContainsKey(NameConstants.DefaultValue) ||
+            GetDefaultValueExpression(propertyAttribute) is not null;
     }
 
     // IsReadOnly = true registers a read-only dependency property with a key. Only WPF has

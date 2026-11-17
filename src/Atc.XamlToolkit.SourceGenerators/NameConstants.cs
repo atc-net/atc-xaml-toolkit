@@ -82,6 +82,7 @@ internal static class NameConstants
     public const string ResolveTemplateParts = nameof(ResolveTemplateParts);
     public const string AccessModifier = nameof(AccessModifier);
     public const string AddOwnerOf = nameof(AddOwnerOf);
+    public const string DefaultValueExpression = nameof(DefaultValueExpression);
     public const string GenerateClrAccessors = nameof(GenerateClrAccessors);
     public const string TargetType = nameof(TargetType);
     public const string GenerateCoerceHook = nameof(GenerateCoerceHook);

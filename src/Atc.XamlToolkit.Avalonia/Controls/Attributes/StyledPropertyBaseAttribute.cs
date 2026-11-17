@@ -13,6 +13,16 @@ public abstract class StyledPropertyBaseAttribute : Attribute
     public object? DefaultValue { get; set; }
 
     /// <summary>
+    /// Gets or sets the default value as C# source text that is emitted unchanged, for a
+    /// default that is not a constant: a method call, a static member or a constructor,
+    /// e.g. <c>"CreateFrozenBrush(40)"</c> or <c>"new Thickness(1)"</c>. Unlike
+    /// <see cref="DefaultValue"/> the text is never quoted or rewritten to fit the property
+    /// type. When both are set, the expression is used. The value is created once and
+    /// shared by all instances, so it should be immutable (a frozen brush, an empty array).
+    /// </summary>
+    public string? DefaultValueExpression { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the property changed callback method.
     /// </summary>
     public string? PropertyChangedCallback { get; set; }
