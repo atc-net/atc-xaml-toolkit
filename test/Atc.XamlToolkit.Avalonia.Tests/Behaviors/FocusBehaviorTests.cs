@@ -7,6 +7,12 @@ public sealed class FocusBehaviorTests
         => HeadlessRunner.Run(() =>
         {
             // Arrange
+            // The unobserved-exception event is process-wide and fires when a faulted
+            // operation is garbage collected. Run and collect whatever earlier tests left
+            // behind first, so only this test's own dispatcher work is observed below.
+            HeadlessRunner.PumpDispatcher();
+            CollectGarbage();
+
             var failures = new List<Exception>();
             EventHandler<UnobservedTaskExceptionEventArgs> handler = (_, e) =>
             {
