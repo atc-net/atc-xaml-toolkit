@@ -161,6 +161,33 @@ public sealed class RelayCommandAsyncTests
         Assert.False(command.IsExecuting);
     }
 
+    [Fact]
+    public async Task Cancel_CancelsEveryRunningExecution_WhenRunsOverlap()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync(cancellationToken =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        var first = command.ExecuteAsync(null);
+        var second = command.ExecuteAsync(null);
+
+        // Act
+        command.Cancel();
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.True(tokens[1].IsCancellationRequested);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+    }
+
     private static Task MyTask()
         => Task.Delay(1);
 

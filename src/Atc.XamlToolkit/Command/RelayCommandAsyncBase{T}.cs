@@ -20,6 +20,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     protected readonly IErrorHandler? errorHandler;
     protected bool isExecuting;
     protected CancellationTokenSource? cancellationTokenSource;
+    private readonly List<CancellationTokenSource> runningTokenSources = [];
     private int executionCount;
 
     /// <summary>
@@ -128,10 +129,17 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     /// </summary>
     public virtual void Cancel()
     {
-        if (cancellationTokenSource is not null &&
-            !cancellationTokenSource.IsCancellationRequested)
+        // Cancelling inside the lock keeps a finishing run from disposing its
+        // token source while it is being cancelled.
+        lock (runningTokenSources)
         {
-            cancellationTokenSource.Cancel();
+            foreach (var tokenSource in runningTokenSources.ToArray())
+            {
+                if (!tokenSource.IsCancellationRequested)
+                {
+                    tokenSource.Cancel();
+                }
+            }
         }
     }
 
@@ -260,13 +268,18 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             return;
         }
 
-        // Every run gets its own token source, so a canceled token is never reused
-        // and Cancel() always targets the most recently started run.
+        // Every run gets its own token source, so a canceled token is never reused.
+        // Cancel() cancels all runs that are in progress.
         CancellationTokenSource? runTokenSource = null;
         if (executeWithCancellation is not null)
         {
             runTokenSource = new CancellationTokenSource();
             cancellationTokenSource = runTokenSource;
+
+            lock (runningTokenSources)
+            {
+                runningTokenSources.Add(runTokenSource);
+            }
         }
 
         BeginExecution();
@@ -287,7 +300,12 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
             if (runTokenSource is not null)
             {
                 Interlocked.CompareExchange(ref cancellationTokenSource, value: null, runTokenSource);
-                runTokenSource.Dispose();
+
+                lock (runningTokenSources)
+                {
+                    runningTokenSources.Remove(runTokenSource);
+                    runTokenSource.Dispose();
+                }
             }
 
             EndExecution();

@@ -259,6 +259,33 @@ public sealed class RelayCommandAsyncGenericTests
         errorHandler.DidNotReceive().HandleError(Arg.Any<Exception>());
     }
 
+    [Fact]
+    public async Task Cancel_CancelsEveryRunningExecution_WhenRunsOverlap()
+    {
+        // Arrange
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+
+        using var command = new RelayCommandAsync<string>((_, cancellationToken) =>
+        {
+            tokens.Add(cancellationToken);
+            return gate.Task;
+        });
+
+        var first = command.ExecuteAsync("x");
+        var second = command.ExecuteAsync("x");
+
+        // Act
+        command.Cancel();
+
+        // Assert
+        Assert.True(tokens[0].IsCancellationRequested);
+        Assert.True(tokens[1].IsCancellationRequested);
+
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+    }
+
     private delegate void OpDelegate(string op);
 
     private static async Task<string> MyTask()
