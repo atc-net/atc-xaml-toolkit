@@ -142,7 +142,8 @@ internal static class FrameworkElementGeneratorHelper
 
         // The symbol covers every partial declaration of the class, so one inspection is enough.
         var unusableTemplates = new List<string>();
-        var templateMembers = PropertyTemplateInspector.GetTemplateMembers(classSymbol, unusableTemplates);
+        var documentationValues = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var templateMembers = PropertyTemplateInspector.GetTemplateMembers(classSymbol, unusableTemplates, documentationValues);
 
         var result = FrameworkElementInspector.Inspect(xamlPlatform, classSymbol, templateMembers);
 
@@ -155,6 +156,23 @@ internal static class FrameworkElementGeneratorHelper
                 allRelayCommands);
 
             isStatic = result.IsStatic;
+        }
+
+        // The documentation of a template's fields can have placeholders for what the class is about
+        foreach (var property in allAttachedProperties.Cast<BaseFrameworkElementPropertyToGenerate>().Concat(allDependencyProperties))
+        {
+            if (documentationValues.TryGetValue(property.Name, out var values))
+            {
+                property.DocumentationComments = PropertyTemplateInspector.FillPlaceholders(property.DocumentationComments, values);
+            }
+        }
+
+        foreach (var routedEvent in allRoutedEvents)
+        {
+            if (documentationValues.TryGetValue(routedEvent.Name, out var values))
+            {
+                routedEvent.DocumentationComments = PropertyTemplateInspector.FillPlaceholders(routedEvent.DocumentationComments, values);
+            }
         }
 
         // The commands of a view model class are emitted by ViewModelGenerator

@@ -339,10 +339,7 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine();
 
-        if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
-        {
-            builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
-        }
+        AppendPropertyIdentifierDocumentation(builder, p, isAttached, xamlPlatform);
 
         var newModifier = p.UseNewKeyword ? "new " : string.Empty;
         builder.AppendLine($"{p.MemberAccessModifier} static {newModifier}readonly DependencyProperty {p.Name}Property = {p.Name}PropertyKey.DependencyProperty;");
@@ -453,10 +450,7 @@ internal static class FrameworkElementBuilderExtensions
         if (p.AddOwnerOf is not null)
         {
             // An existing property is shared: no name and no property type are passed.
-            if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
-            {
-                builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
-            }
+            AppendPropertyIdentifierDocumentation(builder, p, isAttached, xamlPlatform);
 
             var newModifier = p.UseNewKeyword ? "new " : string.Empty;
             builder.AppendLine($"{p.MemberAccessModifier} static {newModifier}readonly DependencyProperty {p.Name}Property = {p.AddOwnerOf}.{p.Name}Property.AddOwner(");
@@ -468,17 +462,14 @@ internal static class FrameworkElementBuilderExtensions
         {
             // A read-only dependency property: the registration returns the key, and the
             // public identifier is taken from the key after the registration.
-            builder.AppendLine($"private static readonly DependencyPropertyKey {p.Name}PropertyKey = DependencyProperty.{registerMethod}ReadOnly(");
+            builder.AppendLine($"{p.PropertyKeyAccessModifier} static readonly DependencyPropertyKey {p.Name}PropertyKey = DependencyProperty.{registerMethod}ReadOnly(");
             builder.IncreaseIndent();
             builder.AppendLine(isAttached || p.IsOwnerTypeStatic || !p.GenerateClrAccessors ? $"\"{p.Name}\"," : $"{p.Name.EnsureNameofContent()},");
             builder.AppendLine($"typeof({p.TypeForTypeOf}),");
             return;
         }
 
-        if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
-        {
-            builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
-        }
+        AppendPropertyIdentifierDocumentation(builder, p, isAttached, xamlPlatform);
 
         // Avalonia uses generic type parameters, WPF/WinUI use typeof() parameters. A type
         // argument keeps the '?' of a nullable reference type, which typeof() cannot have:
@@ -526,6 +517,28 @@ internal static class FrameworkElementBuilderExtensions
         if (xamlPlatform != XamlPlatform.Avalonia)
         {
             builder.AppendLine($"typeof({p.TypeForTypeOf}),");
+        }
+    }
+
+    // The documentation of the {Name}Property field. With accessors, the documentation
+    // written on the attributed field goes to them and the identifier gets a standard
+    // summary. Without accessors the identifier is the only member there is, so it gets
+    // the documentation of the field.
+    private static void AppendPropertyIdentifierDocumentation(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        bool isAttached,
+        XamlPlatform xamlPlatform)
+    {
+        if (!p.GenerateClrAccessors && !p.DocumentationComments.IsEmpty)
+        {
+            builder.AppendDocumentation(p.DocumentationComments, generateDocumentation: false, fallbackSummary: string.Empty);
+            return;
+        }
+
+        if (!p.DocumentationComments.IsEmpty || p.GenerateDocumentation)
+        {
+            builder.AppendSummary(GetPropertyIdentifierSummary(p, isAttached, xamlPlatform));
         }
     }
 

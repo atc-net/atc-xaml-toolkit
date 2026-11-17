@@ -328,9 +328,36 @@ internal static class ViewModelDiagnosticHelper
                     fieldName,
                     variable.Identifier.GetLocation()));
             }
+
+            if (GetClassThatCannotRaisePropertyChanged(context, variable) is { } className)
+            {
+                diagnostics ??= [];
+                diagnostics.Add(DiagnosticFactory.CreateObservablePropertyWithoutNotification(
+                    fieldName,
+                    className,
+                    variable.Identifier.GetLocation()));
+            }
         }
 
         return diagnostics;
+    }
+
+    // The name of the field's class when it is partial (a class that is not is reported on
+    // its own) but has neither a toolkit base class nor [INotifyPropertyChanged], so the
+    // generator emits nothing for it.
+    private static string? GetClassThatCannotRaisePropertyChanged(
+        GeneratorSyntaxContext context,
+        VariableDeclaratorSyntax variable)
+    {
+        if (context.SemanticModel.GetDeclaredSymbol(variable) is not IFieldSymbol { ContainingType: { TypeKind: TypeKind.Class } classSymbol } ||
+            !classSymbol.DeclaringSyntaxReferences.Any(x => x.GetSyntax().HasPartialClassDeclaration()) ||
+            classSymbol.CheckBaseClasses().HasAnyBase ||
+            ViewModelGeneratorHelper.ClassHasINotifyPropertyChangedAttribute(classSymbol))
+        {
+            return null;
+        }
+
+        return classSymbol.Name;
     }
 
     private static bool IsClassWithNotifyPropertyChangedForUsage(

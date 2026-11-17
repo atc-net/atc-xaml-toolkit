@@ -105,6 +105,8 @@ private static double grow;
 
 `<param>` and `<returns>` tags cannot be written on a field (the compiler reports them), so the generated methods have a summary only.
 
+With `GenerateClrAccessors = false` there are no methods; the documentation of the field then goes to the `{Name}Property` field.
+
 ## 🎯 Typing the accessors with `TargetType` (WPF, WinUI)
 
 By default the generated `Get{Name}` and `Set{Name}` methods take a `DependencyObject`. `TargetType` narrows the parameter to the kind of element the property is meant for:

@@ -9,7 +9,13 @@ namespace Atc.XamlToolkit.Controls.Attributes;
 /// The template: a class marked with <see cref="DependencyPropertyTemplateAttribute"/>,
 /// with its type arguments when it is generic, e.g. <c>typeof(PickerMembers&lt;DriveInfo&gt;)</c>.
 /// </param>
+/// <remarks>
+/// The attribute is an instruction to the source generator and is not kept in the compiled
+/// class: a control would otherwise carry a reference to the template type, which is
+/// usually internal, in its metadata.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+[System.Diagnostics.Conditional("ATC_XAML_TOOLKIT_KEEP_GENERATOR_ATTRIBUTES")]
 public sealed class UseDependencyPropertyTemplateAttribute(Type templateType) : Attribute
 {
     /// <summary>
@@ -23,4 +29,12 @@ public sealed class UseDependencyPropertyTemplateAttribute(Type templateType) : 
     /// </summary>
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "An attribute argument has to be an array.")]
     public string[]? Exclude { get; set; }
+
+    /// <summary>
+    /// Gets or sets the texts that replace the placeholders <c>{0}</c>, <c>{1}</c>, ... in
+    /// the XML documentation of the template's fields, for documentation that names what
+    /// the control is about: "Gets or sets the selected {0}." with <c>["drive"]</c>.
+    /// </summary>
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "An attribute argument has to be an array.")]
+    public string[]? DocumentationValues { get; set; }
 }

@@ -181,6 +181,22 @@ internal static class DiagnosticFactory
         Location location)
         => Diagnostic.Create(MissingPartialKeywordDescriptor, location, className);
 
+    private static readonly DiagnosticDescriptor ObservablePropertyWithoutNotificationDescriptor =
+        new(
+            id: "AtcXamlToolkit0014",
+            title: "[ObservableProperty] needs a class that can raise PropertyChanged",
+            messageFormat: "Field '{0}' is decorated with [ObservableProperty], but class '{1}' neither derives from ObservableObject (or ViewModelBase) nor has [INotifyPropertyChanged]. No property is generated. Derive from ObservableObject, or add [INotifyPropertyChanged] to the class.",
+            category: "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "The generated property calls RaisePropertyChanged, which comes from ObservableObject or from [INotifyPropertyChanged]. A class that implements INotifyPropertyChanged by hand, or derives from something else, has no such method the generator knows of, so it generates nothing for the class.");
+
+    public static Diagnostic CreateObservablePropertyWithoutNotification(
+        string fieldName,
+        string className,
+        Location location)
+        => Diagnostic.Create(ObservablePropertyWithoutNotificationDescriptor, location, fieldName, className);
+
     public static Diagnostic CreateObservablePropertyFieldNotPrivate(
         string fieldName,
         Location location)

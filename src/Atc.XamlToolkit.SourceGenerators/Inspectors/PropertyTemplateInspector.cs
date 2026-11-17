@@ -22,6 +22,20 @@ internal static class PropertyTemplateInspector
     public static ImmutableArray<ISymbol> GetTemplateMembers(
         INamedTypeSymbol classSymbol,
         List<string> unusableTemplates)
+        => GetTemplateMembers(classSymbol, unusableTemplates, documentationValues: null);
+
+    /// <summary>
+    /// Gets the attributed fields of every template the class uses, and the documentation
+    /// values stated for them.
+    /// </summary>
+    /// <param name="classSymbol">The class that uses the templates.</param>
+    /// <param name="unusableTemplates">Receives the name of each template that cannot be applied.</param>
+    /// <param name="documentationValues">Receives, per generated member name, the values for the placeholders in its documentation.</param>
+    /// <returns>The fields, in the order the templates are listed and the fields are declared.</returns>
+    public static ImmutableArray<ISymbol> GetTemplateMembers(
+        INamedTypeSymbol classSymbol,
+        List<string> unusableTemplates,
+        Dictionary<string, string[]>? documentationValues)
     {
         var result = ImmutableArray.CreateBuilder<ISymbol>();
 
@@ -50,34 +64,80 @@ internal static class PropertyTemplateInspector
             }
 
             var excludedNames = GetExcludedNames(attribute);
-            result.AddRange(members.Where(x => !excludedNames.Contains(GetGeneratedName(x.Name))));
+            var appliedMembers = members.Where(x => !excludedNames.Contains(GetGeneratedName(x.Name))).ToList();
+            result.AddRange(appliedMembers);
+
+            var values = GetStringArray(attribute, NameConstants.DocumentationValues);
+            if (documentationValues is not null && values.Length > 0)
+            {
+                foreach (var member in appliedMembers)
+                {
+                    documentationValues[GetGeneratedName(member.Name)] = values;
+                }
+            }
         }
 
         return result.ToImmutable();
     }
 
     private static HashSet<string> GetExcludedNames(AttributeData attribute)
+        => new(
+            GetStringArray(attribute, NameConstants.Exclude).Select(GetGeneratedName),
+            StringComparer.Ordinal);
+
+    private static string[] GetStringArray(
+        AttributeData attribute,
+        string argumentName)
     {
-        var result = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<string>();
 
         foreach (var namedArgument in attribute.NamedArguments)
         {
-            if (namedArgument.Key != NameConstants.Exclude ||
-                namedArgument.Value.Kind != TypedConstantKind.Array)
+            if (namedArgument.Key != argumentName ||
+                namedArgument.Value.Kind != TypedConstantKind.Array ||
+                namedArgument.Value.IsNull)
             {
                 continue;
             }
 
             foreach (var value in namedArgument.Value.Values)
             {
-                if (value.Value is string name)
+                if (value.Value is string text)
                 {
-                    result.Add(GetGeneratedName(name));
+                    result.Add(text);
                 }
             }
         }
 
-        return result;
+        return result.ToArray();
+    }
+
+    /// <summary>
+    /// Replaces the placeholders <c>{0}</c>, <c>{1}</c>, ... in documentation comments.
+    /// Other braces, such as the type parameters in a <c>cref</c>, are left alone.
+    /// </summary>
+    /// <param name="documentationComments">The documentation comment lines.</param>
+    /// <param name="values">The values, by placeholder index.</param>
+    /// <returns>The lines with the placeholders filled in.</returns>
+    public static EquatableArray<string> FillPlaceholders(
+        EquatableArray<string> documentationComments,
+        string[] values)
+    {
+        var result = new string[documentationComments.Count];
+        var index = 0;
+
+        foreach (var comment in documentationComments)
+        {
+            var line = comment;
+            for (var i = 0; i < values.Length; i++)
+            {
+                line = line.Replace("{" + i.ToString(CultureInfo.InvariantCulture) + "}", values[i]);
+            }
+
+            result[index++] = line;
+        }
+
+        return new EquatableArray<string>(result);
     }
 
     // The name of the property or event generated from a field: no leading underscore,

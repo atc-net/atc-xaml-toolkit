@@ -461,6 +461,13 @@ internal static class FrameworkElementInspectorHelper
 
         propertyToGenerate.UsesPropertyKey = true;
 
+        // Public reads as an empty modifier, so look at whether the option was stated at all.
+        if (propertyAttribute.ExtractEnumArgumentName(NameConstants.PropertyKeyAccessModifier) is not null)
+        {
+            var keyModifier = propertyAttribute.ExtractAccessModifier(NameConstants.PropertyKeyAccessModifier);
+            propertyToGenerate.PropertyKeyAccessModifier = keyModifier.Length == 0 ? "public" : keyModifier;
+        }
+
         // An explicit SetterAccessModifier = Public reads as "no modifier" too, so look at
         // whether the option was stated at all.
         if (propertyAttribute.ExtractEnumArgumentName(NameConstants.SetterAccessModifier) is null)

@@ -92,6 +92,8 @@ internal static class NameConstants
     public const string NullElementHandling = nameof(NullElementHandling);
     public const string ElementParameterName = nameof(ElementParameterName);
     public const string RaiseMethodAccessModifier = nameof(RaiseMethodAccessModifier);
+    public const string PropertyKeyAccessModifier = nameof(PropertyKeyAccessModifier);
+    public const string DocumentationValues = nameof(DocumentationValues);
     public const string ThrowArgumentNullException = nameof(ThrowArgumentNullException);
     public const string PropertyMetadata = nameof(PropertyMetadata);
     public const string UIPropertyMetadata = nameof(UIPropertyMetadata);

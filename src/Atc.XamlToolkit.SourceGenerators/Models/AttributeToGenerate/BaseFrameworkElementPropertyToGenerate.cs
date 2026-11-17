@@ -136,6 +136,11 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public bool UsesPropertyKey { get; set; }
 
     /// <summary>
+    /// Gets or sets the C# modifier of the <c>{Name}PropertyKey</c> field.
+    /// </summary>
+    public string PropertyKeyAccessModifier { get; set; } = "private";
+
+    /// <summary>
     /// Gets the field the generated code writes through: the key of a read-only dependency
     /// property, otherwise the property identifier itself.
     /// </summary>

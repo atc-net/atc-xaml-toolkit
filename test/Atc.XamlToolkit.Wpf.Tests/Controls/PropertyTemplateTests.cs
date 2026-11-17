@@ -113,6 +113,19 @@ public sealed class PropertyTemplateTests
     }
 
     [Fact]
+    public void TheAttributeThatNamesTheTemplate_IsNotKeptInTheCompiledClass()
+    {
+        // It is only an instruction to the generator. Kept, it would put a reference to the
+        // (usually internal) template type into the metadata of every public control.
+        var attributeNames = typeof(TemplateDrivePicker)
+            .GetCustomAttributesData()
+            .Select(x => x.AttributeType.Name)
+            .ToList();
+
+        Assert.DoesNotContain("UseDependencyPropertyTemplateAttribute", attributeNames, StringComparer.Ordinal);
+    }
+
+    [Fact]
     public void TheTemplateClass_GetsNoGeneratedMembers()
     {
         const System.Reflection.BindingFlags all =

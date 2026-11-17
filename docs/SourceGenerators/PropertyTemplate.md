@@ -53,7 +53,32 @@ Each control gets its own `ValueProperty`, `WatermarkTextProperty`, `ShowRefresh
 
 - **Nullability** comes from the type argument: `typeof(PickerMembers<DriveInfo?>)` gives `public DriveInfo? Value` and `RoutedPropertyChangedEventHandler<DriveInfo?>`; `typeof(PickerMembers<int>)` gives `public int Value`.
 - A control can use several templates (repeat the attribute) and can declare further attributed fields of its own.
-- Anything a template names must exist in each control that uses it: a `PropertyChangedCallback = nameof(OnValueChanged)` needs an `OnValueChanged` method in every control. The typed hooks (`GeneratePartialHooks`, `GenerateCoerceHook`) fit templates well, because each control implements only the hooks it needs.
+- Anything a template names must exist in each control that uses it: a `PropertyChangedCallback = "OnValueChanged"` needs an `OnValueChanged` method in every control. Write the name as a string: `nameof(OnValueChanged)` does not compile in the template, where the method does not exist. The typed hooks (`GeneratePartialHooks`, `GenerateCoerceHook`) fit templates well, because each control implements only the hooks it needs.
+- The same goes for XML documentation: `<see cref="ItemTemplate"/>` in a template field's documentation refers to a member that only exists in the controls, and the compiler reports it in the template (CS1574). Use `<c>ItemTemplate</c>`, or suppress CS1574 for the template class.
+- `[UseDependencyPropertyTemplate]` is an instruction to the generator and is not kept in the compiled control, so a public control does not carry a reference to an internal template type.
+
+### Documentation that names what the control is about
+
+XML documentation is copied from the template's fields, so every control gets the same text. Where the text should name the thing the control handles, write placeholders in the template and give each control its words in `DocumentationValues`:
+
+```csharp
+[DependencyPropertyTemplate]
+internal abstract class PickerMembers<TInfo>
+{
+    /// <summary>
+    /// Gets or sets the selected {0}; <see langword="null"/> when no {0} is selected.
+    /// </summary>
+    [DependencyProperty]
+    private TInfo value;
+}
+
+[UseDependencyPropertyTemplate(typeof(PickerMembers<DriveInfo?>), DocumentationValues = ["drive"])]
+public partial class DrivePicker : UserControl
+{
+}
+```
+
+`{0}`, `{1}`, ... are replaced by the values in order. Other braces, such as `List{T}` in a `cref`, are left alone.
 
 ### Leaving members out
 

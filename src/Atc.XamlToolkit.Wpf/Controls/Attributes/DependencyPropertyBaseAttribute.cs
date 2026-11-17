@@ -69,6 +69,14 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public bool IsReadOnly { get; set; }
 
     /// <summary>
+    /// Gets or sets the accessibility of the <c>{Name}PropertyKey</c> field of a read-only
+    /// property. When it is not stated the key is <c>private</c>. State
+    /// <see cref="PropertyAccessModifier.Internal"/> when another class of the assembly sets
+    /// the property through the key.
+    /// </summary>
+    public PropertyAccessModifier PropertyKeyAccessModifier { get; set; }
+
+    /// <summary>
     /// Gets or sets the accessibility of the generated CLR property's setter. The default is
     /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
     /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.
