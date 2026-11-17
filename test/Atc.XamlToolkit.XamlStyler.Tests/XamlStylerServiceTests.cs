@@ -578,4 +578,38 @@ public sealed class XamlStylerServiceTests : IDisposable
         expected.Should().Contain("Tag=\"keep\"");
         result.Should().Be(expected);
     }
+
+    [Fact]
+    public void StyleDocument_RepeatedAndInterleavedCalls_MatchAFreshService()
+    {
+        // Arrange
+        var first = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="1" Margin="2" Height="3" Tag="t" />
+            """;
+        var second = """
+            <Button xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Margin="2" Content="c" Width="1" />
+            """;
+        var options = new XamlStylerOptions();
+        var service = new XamlStylerService(options);
+
+        // Act & Assert — same options, alternating documents
+        var expectedFirst = new XamlStylerService(new XamlStylerOptions()).StyleDocument(first);
+        var expectedSecond = new XamlStylerService(new XamlStylerOptions()).StyleDocument(second);
+        service.StyleDocument(first).Should().Be(expectedFirst);
+        service.StyleDocument(second).Should().Be(expectedSecond);
+        service.StyleDocument(first).Should().Be(expectedFirst);
+
+        // Act & Assert — ordering rules replaced between calls
+        string[] marginFirst = ["Margin", "*"];
+        options.AttributeOrderingRuleGroups = marginFirst;
+        var expectedMarginFirst = new XamlStylerService(new XamlStylerOptions { AttributeOrderingRuleGroups = marginFirst }).StyleDocument(first);
+        expectedMarginFirst.Should().NotBe(expectedFirst);
+        service.StyleDocument(first).Should().Be(expectedMarginFirst);
+
+        // Act & Assert — ordering rules changed in place between calls
+        options.AttributeOrderingRuleGroups[0] = "Tag";
+        var expectedTagFirst = new XamlStylerService(new XamlStylerOptions { AttributeOrderingRuleGroups = ["Tag", "*"] }).StyleDocument(first);
+        expectedTagFirst.Should().NotBe(expectedMarginFirst);
+        service.StyleDocument(first).Should().Be(expectedTagFirst);
+    }
 }

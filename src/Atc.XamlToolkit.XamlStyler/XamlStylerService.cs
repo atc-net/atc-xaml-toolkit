@@ -17,6 +17,8 @@ public sealed class XamlStylerService
     private readonly XamlLanguageOptions xamlLanguageOptions;
     private readonly XmlEscapingService xmlEscapingService;
     private Dictionary<XmlNodeType, IDocumentProcessor>? documentProcessors;
+    private AttributeOrderRules? attributeOrderRules;
+    private string[]? attributeOrderRulesSource;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="XamlStylerService"/> class.
@@ -120,7 +122,7 @@ public sealed class XamlStylerService
         var markupExtensionFormatter = new MarkupExtensionFormatter(options.NoNewLineMarkupExtensions.ToList());
         var attributeInfoFactory = new AttributeInfoFactory(
             new MarkupExtensionParser(),
-            new AttributeOrderRules(options),
+            GetAttributeOrderRules(),
             ignoredNamespacesPrefixes,
             ignoreDesignTimeReferencePrefix);
         var attributeInfoFormatter = new AttributeInfoFormatter(
@@ -139,6 +141,27 @@ public sealed class XamlStylerService
             { XmlNodeType.EndElement, new EndElementDocumentProcessor(options, indentService) },
             { XmlNodeType.XmlDeclaration, new XmlDeclarationDocumentProcessor() },
         };
+    }
+
+    /// <summary>
+    /// Returns the attribute order rules for the current options. Building them compiles one
+    /// regex per rule, so they are reused across documents for as long as the rule groups in
+    /// the options stay the same (the options can be changed between calls).
+    /// </summary>
+    private AttributeOrderRules GetAttributeOrderRules()
+    {
+        var ruleGroups = options.AttributeOrderingRuleGroups;
+
+        if (attributeOrderRules is null
+            || attributeOrderRulesSource is null
+            || ruleGroups is null
+            || !attributeOrderRulesSource.SequenceEqual(ruleGroups, StringComparer.Ordinal))
+        {
+            attributeOrderRules = new AttributeOrderRules(options);
+            attributeOrderRulesSource = ruleGroups?.ToArray();
+        }
+
+        return attributeOrderRules;
     }
 
     private IList<string> FindIgnoredNamespaces(string xamlSource)
