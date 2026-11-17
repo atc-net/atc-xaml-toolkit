@@ -130,6 +130,17 @@ internal static class FrameworkElementBuilderExtensions
     {
         GenerateDependencyPropertyHeader(builder, p, isAttached: true, xamlPlatform);
         GenerateDependencyPropertyBody(builder, p, xamlPlatform);
+
+        if (xamlPlatform == XamlPlatform.Avalonia &&
+            !string.IsNullOrEmpty(p.PropertyChangedCallback))
+        {
+            // Avalonia has no callback parameter on RegisterAttached. A static field initializer
+            // subscribes instead of a static constructor, so the class can still declare its own.
+            // The handler runs for every AvaloniaObject the property is attached to.
+            builder.AppendLine();
+            builder.AppendLine($"private static readonly System.IDisposable {p.Name.EnsureFirstCharacterToLower()}PropertyChangedSubscription = {p.Name}Property.Changed.AddClassHandler<AvaloniaObject>({p.PropertyChangedCallback});");
+        }
+
         GenerateClrAttachedMethods(builder, p, xamlPlatform);
     }
 

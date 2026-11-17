@@ -386,7 +386,7 @@ public partial class DragBehavior
 
 Avalonia's registration surface is **smaller** by design — there are no flags, no `ValidateValueCallback`, no `CoerceValueCallback`, no `DefaultUpdateSourceTrigger`, no `IsAnimationProhibited`. Specifying any of those on `[AttachedProperty]` for an Avalonia target is a no-op (the generator silently drops them). The two surviving knobs are `DefaultValue` and `PropertyChangedCallback`.
 
-`PropertyChangedCallback` is wired up differently: instead of being passed into the registration call, it's bound through `Property.Changed.AddClassHandler<TOwner>(...)` in a generated **static constructor**:
+`PropertyChangedCallback` is wired up differently: instead of being passed into the registration call, it's bound through `Property.Changed.AddClassHandler<AvaloniaObject>(...)` in a generated **static field initializer**. The handler runs for every `AvaloniaObject` the property is attached to, and the class can still declare its own static constructor:
 
 ```csharp
 [AttachedProperty<bool>(
@@ -409,15 +409,13 @@ public partial class DragBehavior : AvaloniaObject
 ```csharp
 public partial class DragBehavior : AvaloniaObject
 {
-    static DragBehavior()
-    {
-        IsDraggableProperty.Changed.AddClassHandler<DragBehavior>(PropertyChangedCallback);
-    }
-
     public static readonly Avalonia.AvaloniaProperty IsDraggableProperty =
         Avalonia.AvaloniaProperty.RegisterAttached<DragBehavior, AvaloniaObject, bool>(
             "IsDraggable",
             defaultValue: false);
+
+    private static readonly System.IDisposable isDraggablePropertyChangedSubscription =
+        IsDraggableProperty.Changed.AddClassHandler<AvaloniaObject>(PropertyChangedCallback);
 
     public static bool GetIsDraggable(AvaloniaObject element)
         => (bool)element.GetValue(IsDraggableProperty)!;
