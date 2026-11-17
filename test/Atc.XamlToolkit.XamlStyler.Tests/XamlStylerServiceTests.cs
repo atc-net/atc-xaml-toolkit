@@ -553,6 +553,29 @@ public sealed class XamlStylerServiceTests : IDisposable
         File.ReadAllBytes(filePath).Should().Equal(originalBytes);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StyleDocument_TwoPrefixesForTheSameNamespace_KeepTheirOwnPrefix(
+        bool useSingleQuotes)
+    {
+        // Two prefixes may point at the same namespace. Each element must keep the prefix
+        // it was written with, whichever quote character the declarations use.
+        var quote = useSingleQuotes ? "'" : "\"";
+        var xaml =
+            $"<Grid xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:a={quote}urn:same{quote} xmlns:b={quote}urn:same{quote}>" + Environment.NewLine +
+            "    <a:First />" + Environment.NewLine +
+            "    <b:Second />" + Environment.NewLine +
+            "</Grid>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        result.Should().Contain("<a:First />");
+        result.Should().Contain("<b:Second />");
+        result.Should().Contain("xmlns:a=\"urn:same\"");
+        result.Should().Contain("xmlns:b=\"urn:same\"");
+    }
+
     [Fact]
     public void StyleDocument_RemoveDesignTimeReferences_KeepsAPrefixThatIsRedeclaredForAnotherNamespace()
     {
