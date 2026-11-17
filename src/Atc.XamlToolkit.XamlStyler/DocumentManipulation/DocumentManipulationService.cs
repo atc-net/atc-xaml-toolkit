@@ -29,12 +29,13 @@ internal sealed class DocumentManipulationService
 
         if (rootElement is not null)
         {
-            if (options.RemoveDesignTimeReferences)
-            {
-                processElementServices.Add(GetRemoveDesignTimeReferencesService(rootElement));
-            }
+            // The removal service is bound to this document's namespace prefixes, so it is created
+            // per call and never added to the shared list.
+            IReadOnlyList<IProcessElementService> services = options.RemoveDesignTimeReferences
+                ? [.. processElementServices, GetRemoveDesignTimeReferencesService(rootElement)]
+                : processElementServices;
 
-            HandleNode(rootElement);
+            HandleNode(rootElement, services);
         }
 
         return xmlDeclaration + xDocument;
@@ -109,7 +110,9 @@ internal sealed class DocumentManipulationService
         return reorderService;
     }
 
-    private void HandleNode(XNode node)
+    private static void HandleNode(
+        XNode node,
+        IReadOnlyList<IProcessElementService> services)
     {
         if (node.NodeType != XmlNodeType.Element)
         {
@@ -125,11 +128,11 @@ internal sealed class DocumentManipulationService
         {
             foreach (var childNode in element.Nodes().ToList())
             {
-                HandleNode(childNode);
+                HandleNode(childNode, services);
             }
         }
 
-        foreach (var elementService in processElementServices)
+        foreach (var elementService in services)
         {
             elementService.ProcessElement(element);
         }

@@ -552,4 +552,30 @@ public sealed class XamlStylerServiceTests : IDisposable
         act.Should().Throw<System.Text.DecoderFallbackException>();
         File.ReadAllBytes(filePath).Should().Equal(originalBytes);
     }
+
+    [Fact]
+    public void StyleDocument_RemoveDesignTimeReferences_DoesNotCarryPrefixMappingsToTheNextDocument()
+    {
+        // Arrange — the first document maps the design-time prefix "d" to a namespace that the
+        // second document only uses on a child element; its root maps "d" to something else.
+        var first = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="urn:first" d:DesignWidth="800" />
+            """;
+        var second = """
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="urn:second">
+                <Button xmlns:d="urn:first" d:Tag="keep" />
+            </Grid>
+            """;
+        var options = new XamlStylerOptions { RemoveDesignTimeReferences = true };
+        var expected = new XamlStylerService(options).StyleDocument(second);
+        var service = new XamlStylerService(options);
+
+        // Act
+        service.StyleDocument(first);
+        var result = service.StyleDocument(second);
+
+        // Assert
+        expected.Should().Contain("Tag=\"keep\"");
+        result.Should().Be(expected);
+    }
 }
