@@ -77,6 +77,12 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         base.OnAttached();
 
         AssociatedObject.AttachedToVisualTree += OnAttachedToVisualTree;
+
+        // An element that is already in the visual tree does not raise AttachedToVisualTree again
+        if (AutoStart && Avalonia.VisualTree.VisualExtensions.IsAttachedToVisualTree(AssociatedObject))
+        {
+            PlayAnimation();
+        }
     }
 
     /// <inheritdoc />

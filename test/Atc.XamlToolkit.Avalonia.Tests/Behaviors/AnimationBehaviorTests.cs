@@ -18,6 +18,64 @@ public sealed class AnimationBehaviorTests
         Assert.False(behaviorReference.IsAlive);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AutoStart_PlaysAnimation_WhenAttachedToAnElementThatIsAlreadyInTheVisualTree(
+        bool autoStart)
+        => HeadlessRunner.Run(() =>
+        {
+            // Arrange - a scale animation gives the element a ScaleTransform when it plays
+            var border = new global::Avalonia.Controls.Border();
+            var window = HeadlessRunner.ShowInWindow(border);
+            try
+            {
+                var behavior = new Atc.XamlToolkit.Behaviors.AnimationBehavior
+                {
+                    AnimationType = Atc.XamlToolkit.Behaviors.AnimationType.ScaleIn,
+                    AutoStart = autoStart,
+                };
+
+                // Act
+                behavior.Attach(border);
+
+                // Assert
+                Assert.Equal(autoStart, border.RenderTransform is global::Avalonia.Media.ScaleTransform);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+
+    [Fact]
+    public void AutoStart_PlaysAnimation_WhenTheElementIsAttachedToTheVisualTree()
+        => HeadlessRunner.Run(() =>
+        {
+            // Arrange
+            var border = new global::Avalonia.Controls.Border();
+            var behavior = new Atc.XamlToolkit.Behaviors.AnimationBehavior
+            {
+                AnimationType = Atc.XamlToolkit.Behaviors.AnimationType.ScaleIn,
+                AutoStart = true,
+            };
+
+            behavior.Attach(border);
+            Assert.Null(border.RenderTransform);
+
+            // Act
+            var window = HeadlessRunner.ShowInWindow(border);
+            try
+            {
+                // Assert
+                Assert.IsType<global::Avalonia.Media.ScaleTransform>(border.RenderTransform);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+
     [Fact]
     public void AnimationTrigger_PlaysAgain_WhenSetToTheSameValueAfterNull()
         => HeadlessRunner.Run(() =>
