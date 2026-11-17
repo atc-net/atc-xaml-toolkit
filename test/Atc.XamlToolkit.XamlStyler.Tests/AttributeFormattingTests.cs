@@ -121,6 +121,21 @@ public sealed class AttributeFormattingTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    public void MarkupExtension_WithDoubleQuotedValueContainingComma_IsNotSplitOnTheNextRun(
+        bool formatMarkupExtension)
+    {
+        var xaml = "<TextBlock xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Text='{Binding Name, StringFormat=\"a,b\"}' />";
+
+        var firstPass = StyleWith(xaml, o => o.FormatMarkupExtension = formatMarkupExtension);
+        var secondPass = StyleWith(firstPass, o => o.FormatMarkupExtension = formatMarkupExtension);
+
+        firstPass.Should().Contain("StringFormat=&quot;a,b&quot;}");
+        secondPass.Should().Be(firstPass, "a quoted value is one argument, also when the quotes are written as entities");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
     public void MarkupExtension_WithDoubleQuotedValue_IsWrittenAsValidXml(
         bool formatMarkupExtension)
     {
