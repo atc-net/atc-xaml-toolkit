@@ -172,14 +172,16 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
 
     private void SetFocus()
     {
-        if (AssociatedObject is not null)
+        // Capture the element: the behavior can be detached before the deferred callback runs
+        var target = AssociatedObject;
+        if (target is not null)
         {
-            _ = AssociatedObject.Dispatcher.BeginInvoke(
+            _ = target.Dispatcher.BeginInvoke(
                 DispatcherPriority.Input,
                 new Action(() =>
                 {
-                    AssociatedObject.Focus();
-                    Keyboard.Focus(AssociatedObject);
+                    target.Focus();
+                    Keyboard.Focus(target);
                 }));
         }
     }

@@ -192,14 +192,17 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
             KeyboardNavigation.SetIsTabStop(AssociatedObject, value: true);
         }
 
+        // Capture the element: the behavior can be detached before the deferred callback runs
+        var target = AssociatedObject;
+
         // Use InvokeAsync to ensure focus is set after the current operation completes
         _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(
             () =>
             {
                 // Set focus using keyboard navigation to trigger proper focus visuals
-                var focused = AssociatedObject.Focus(NavigationMethod.Directional);
+                var focused = target.Focus(NavigationMethod.Directional);
 
-                if (focused && AssociatedObject is TextBox textBox && !SelectAllOnFocus)
+                if (focused && target is TextBox textBox && !SelectAllOnFocus)
                 {
                     // For TextBox, position caret at the end (only if not using SelectAllOnFocus)
                     var length = textBox.Text?.Length ?? 0;
