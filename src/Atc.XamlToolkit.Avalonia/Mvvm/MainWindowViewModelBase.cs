@@ -39,10 +39,12 @@ namespace Atc.XamlToolkit.Mvvm
             if (sender is Control control &&
                 Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
+                // The bounds are in device-independent pixels and the working area is in physical pixels
+                var scaling = TopLevel.GetTopLevel(control)?.RenderScaling ?? 1.0;
                 var screens = desktopLifetime.MainWindow?.Screens;
                 if (screens?.Primary is { } primaryScreen &&
-                    (control.Bounds.Width >= primaryScreen.WorkingArea.Width ||
-                     control.Bounds.Height >= primaryScreen.WorkingArea.Height))
+                    (control.Bounds.Width * scaling >= primaryScreen.WorkingArea.Width ||
+                     control.Bounds.Height * scaling >= primaryScreen.WorkingArea.Height))
                 {
                     WindowState = WindowState.Maximized;
                 }

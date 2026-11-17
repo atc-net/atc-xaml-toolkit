@@ -9,6 +9,10 @@ internal static class HeadlessRunner
     private static readonly Lazy<global::Avalonia.Headless.HeadlessUnitTestSession> Session = new(
         static () => global::Avalonia.Headless.HeadlessUnitTestSession.StartNew(typeof(HeadlessTestApplication)));
 
+    // Called by HeadlessApplicationFixture before any test runs.
+    public static void Start()
+        => _ = Session.Value;
+
     public static void Run(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
