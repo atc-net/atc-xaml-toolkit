@@ -128,10 +128,13 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         }
         else if (e.Property == FocusTriggerProperty)
         {
+            // Clearing the trigger is remembered too, so setting the same value again sets focus again
             var newTrigger = e.NewValue;
-            if (newTrigger is not null && !Equals(newTrigger, lastFocusTrigger))
+            var isChanged = !Equals(newTrigger, lastFocusTrigger);
+            lastFocusTrigger = newTrigger;
+
+            if (newTrigger is not null && isChanged)
             {
-                lastFocusTrigger = newTrigger;
                 SetFocus();
             }
         }

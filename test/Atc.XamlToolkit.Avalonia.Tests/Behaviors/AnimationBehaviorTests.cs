@@ -18,6 +18,31 @@ public sealed class AnimationBehaviorTests
         Assert.False(behaviorReference.IsAlive);
     }
 
+    [Fact]
+    public void AnimationTrigger_PlaysAgain_WhenSetToTheSameValueAfterNull()
+        => HeadlessRunner.Run(() =>
+        {
+            // Arrange - a scale animation gives the element a ScaleTransform when it plays
+            var trigger = new object();
+            var border = new global::Avalonia.Controls.Border();
+            var behavior = new Atc.XamlToolkit.Behaviors.AnimationBehavior
+            {
+                AnimationType = Atc.XamlToolkit.Behaviors.AnimationType.ScaleIn,
+            };
+
+            behavior.Attach(border);
+            behavior.AnimationTrigger = trigger;
+            Assert.IsType<global::Avalonia.Media.ScaleTransform>(border.RenderTransform);
+            border.RenderTransform = null;
+
+            // Act
+            behavior.AnimationTrigger = null;
+            behavior.AnimationTrigger = trigger;
+
+            // Assert
+            Assert.IsType<global::Avalonia.Media.ScaleTransform>(border.RenderTransform);
+        });
+
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static WeakReference CreateAttachedBehavior()
     {

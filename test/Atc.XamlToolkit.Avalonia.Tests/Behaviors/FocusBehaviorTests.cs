@@ -70,6 +70,44 @@ public sealed class FocusBehaviorTests
             }
         });
 
+    [Fact]
+    public void FocusTrigger_FocusesAgain_WhenSetToTheSameValueAfterNull()
+        => HeadlessRunner.Run(() =>
+        {
+            // Arrange
+            var trigger = new object();
+            var textBox = new global::Avalonia.Controls.TextBox();
+            var other = new global::Avalonia.Controls.TextBox();
+            var panel = new global::Avalonia.Controls.StackPanel();
+            panel.Children.Add(other);
+            panel.Children.Add(textBox);
+
+            var behavior = new Atc.XamlToolkit.Behaviors.FocusBehavior();
+            behavior.Attach(textBox);
+
+            var window = HeadlessRunner.ShowInWindow(panel);
+            try
+            {
+                behavior.FocusTrigger = trigger;
+                HeadlessRunner.PumpDispatcher();
+                Assert.True(textBox.IsFocused);
+                other.Focus();
+                Assert.False(textBox.IsFocused);
+
+                // Act
+                behavior.FocusTrigger = null;
+                behavior.FocusTrigger = trigger;
+                HeadlessRunner.PumpDispatcher();
+
+                // Assert
+                Assert.True(textBox.IsFocused);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+
     [SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "The test verifies that no faulted dispatcher operation is left unobserved.")]
     private static void CollectGarbage()
     {

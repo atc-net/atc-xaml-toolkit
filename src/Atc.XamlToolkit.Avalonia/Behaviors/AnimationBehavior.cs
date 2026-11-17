@@ -106,9 +106,12 @@ public class AnimationBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
 
     private void OnAnimationTriggerChanged(object? newTrigger)
     {
-        if (newTrigger is not null && !Equals(newTrigger, lastTrigger))
+        // Clearing the trigger is remembered too, so setting the same value again plays the animation again
+        var isChanged = !Equals(newTrigger, lastTrigger);
+        lastTrigger = newTrigger;
+
+        if (newTrigger is not null && isChanged)
         {
-            lastTrigger = newTrigger;
             PlayAnimation();
         }
     }
