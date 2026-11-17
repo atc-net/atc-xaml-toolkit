@@ -83,8 +83,10 @@ public sealed class XamlStylerService
         string originalContent;
         Encoding detectedEncoding;
 
+        // Invalid bytes throw instead of being replaced with U+FFFD: a file in another encoding
+        // (without a byte order mark) must not be rewritten with its content damaged.
         using (var stream = File.OpenRead(filePath))
-        using (var reader = new StreamReader(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), detectEncodingFromByteOrderMarks: true))
+        using (var reader = new StreamReader(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), detectEncodingFromByteOrderMarks: true))
         {
             originalContent = reader.ReadToEnd();
             detectedEncoding = reader.CurrentEncoding;

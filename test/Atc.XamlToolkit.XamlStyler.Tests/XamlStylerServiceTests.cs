@@ -533,4 +533,23 @@ public sealed class XamlStylerServiceTests : IDisposable
         File.WriteAllText(path, content);
         return path;
     }
+
+    [Fact]
+    public void StyleFile_NonUtf8FileWithoutBom_ThrowsAndLeavesFileUntouched()
+    {
+        // Arrange — Latin-1 encoded file: 0xE6 ('æ') is not valid UTF-8
+        var xaml = "<Window xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Title=\"Blæk\" Height=\"450\" Width=\"800\"><Grid /></Window>";
+        var filePath = Path.Combine(tempDir, "latin1.xaml");
+        var originalBytes = System.Text.Encoding.Latin1.GetBytes(xaml);
+        File.WriteAllBytes(filePath, originalBytes);
+
+        var service = new XamlStylerService(new XamlStylerOptions());
+
+        // Act
+        var act = () => service.StyleFile(filePath);
+
+        // Assert — the file must not be rewritten with replacement characters
+        act.Should().Throw<System.Text.DecoderFallbackException>();
+        File.ReadAllBytes(filePath).Should().Equal(originalBytes);
+    }
 }
