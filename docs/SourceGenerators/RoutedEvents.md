@@ -135,7 +135,7 @@ protected void RaiseDeviceError(DeviceErrorRoutedEventArgs e)
 ```
 
 - The method is `protected`, or `private` in a sealed class.
-- For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. Raise the event yourself with `RaiseEvent(...)`.
+- For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. The generator reports `AtcXamlToolkit0013`; raise the event yourself with `RaiseEvent(...)`.
 
 ### 🤝 Sharing an existing event with `AddOwnerOf`
 
@@ -195,7 +195,7 @@ public static void AddFilterChangedHandler(DependencyObject element, DataGridFil
 // RemoveFilterChangedHandler is generated the same way.
 ```
 
-This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `GenerateRaiseMethod` has no effect in a static class; raise the event on the element with `element.RaiseEvent(...)`.
+This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `GenerateRaiseMethod` has no effect in a static class and is reported as `AtcXamlToolkit0013`; raise the event on the element with `element.RaiseEvent(...)`.
 
 ### 🛠️ Specifying a custom delegate type
 

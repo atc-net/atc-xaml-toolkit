@@ -121,6 +121,28 @@ internal static class DiagnosticFactory
             templateName,
             className);
 
+    private static readonly DiagnosticDescriptor IgnoredOptionDescriptor = new(
+        id: "AtcXamlToolkit0013",
+        title: "The option has no effect",
+        messageFormat: "'{0}' on '{1}' in '{2}' has no effect: {3}",
+        category: "Usage",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "An option was set on a source generator attribute in a combination where it cannot be applied. The generator ignores it; remove the option, or change the combination, so the code says what is generated.");
+
+    public static Diagnostic CreateIgnoredOption(
+        string option,
+        string memberName,
+        string className,
+        string reason)
+        => Diagnostic.Create(
+            IgnoredOptionDescriptor,
+            Location.None,
+            option,
+            memberName,
+            className,
+            reason);
+
     public static Diagnostic CreateDefaultStyleKeyOverrideNotCalled(
         string className)
         => Diagnostic.Create(

@@ -47,6 +47,17 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public Type? AddOwnerOf { get; set; }
 
     /// <summary>
+    /// Gets or sets the metadata class that is created. The default,
+    /// <see cref="DependencyPropertyMetadataType.Auto"/>, lets the generator choose.
+    /// The class matters to a derived class that overrides the metadata, and to code that
+    /// casts the result of <c>GetMetadata</c>. <c>PropertyMetadata</c> and
+    /// <c>UIPropertyMetadata</c> cannot carry <c>Flags</c> or
+    /// <c>DefaultUpdateSourceTrigger</c>; when one of those is set the choice is ignored
+    /// and reported as <c>AtcXamlToolkit0013</c>.
+    /// </summary>
+    public DependencyPropertyMetadataType MetadataType { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the property is a read-only dependency
     /// property. It is then registered with <c>RegisterReadOnly</c> (or
     /// <c>RegisterAttachedReadOnly</c>): the generator emits a private

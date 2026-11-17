@@ -93,6 +93,52 @@ internal static class AttributeDataExtensions
     }
 
     /// <summary>
+    /// Reads a named enum argument of an attribute.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <param name="argumentName">The name of the argument.</param>
+    /// <returns>The name of the enum member; <c>null</c> when the argument is not set.</returns>
+    public static string? ExtractEnumArgumentName(
+        this AttributeData attributeData,
+        string argumentName)
+    {
+        // The attribute is resolved: the value is the enum's number.
+        foreach (var namedArgument in attributeData.NamedArguments)
+        {
+            if (namedArgument.Key != argumentName ||
+                namedArgument.Value.Kind != TypedConstantKind.Enum ||
+                namedArgument.Value.Type is not { } enumType)
+            {
+                continue;
+            }
+
+            foreach (var member in enumType.GetMembers())
+            {
+                if (member is IFieldSymbol { HasConstantValue: true } field &&
+                    Equals(field.ConstantValue, namedArgument.Value.Value))
+                {
+                    return field.Name;
+                }
+            }
+        }
+
+        // The attribute is not resolved: only the text is known, e.g. MetadataType.UIPropertyMetadata.
+        if (attributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList: { } argumentList })
+        {
+            foreach (var argument in argumentList.Arguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText == argumentName)
+                {
+                    var text = argument.Expression.ToString();
+                    return text.Substring(text.LastIndexOf('.') + 1);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Reads a named string argument of an attribute, as the text the string holds.
     /// </summary>
     /// <param name="attributeData">The attribute data.</param>

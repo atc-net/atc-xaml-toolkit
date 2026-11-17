@@ -173,12 +173,25 @@ The generator picks the metadata class from the options that are set:
 | `Flags`, `DefaultUpdateSourceTrigger` or `IsAnimationProhibited` | `FrameworkPropertyMetadata` |
 | `AddOwnerOf` with any override | `FrameworkPropertyMetadata` |
 
-`UIPropertyMetadata` is never generated. To get a `FrameworkPropertyMetadata` without any flag, state the flag explicitly:
+`MetadataType` overrides that choice:
 
 ```csharp
-[DependencyProperty(DefaultValue = 3, Flags = FrameworkPropertyMetadataOptions.None)]
-private int count;
+[DependencyProperty(MetadataType = DependencyPropertyMetadataType.UIPropertyMetadata, DefaultValue = 0d, PropertyChangedCallback = nameof(OnSpacingChanged))]
+private double spacing;
 ```
+
+```csharp
+new UIPropertyMetadata(defaultValue: 0d, propertyChangedCallback: OnSpacingChanged)
+```
+
+| `MetadataType` | Result |
+|----------------|--------|
+| `Auto` (default) | The table above. |
+| `PropertyMetadata` | `PropertyMetadata`. |
+| `UIPropertyMetadata` | `UIPropertyMetadata`; it can also carry `IsAnimationProhibited`. |
+| `FrameworkPropertyMetadata` | `FrameworkPropertyMetadata`, also when no flag is set (the same as `Flags = FrameworkPropertyMetadataOptions.None`). |
+
+`PropertyMetadata` and `UIPropertyMetadata` cannot carry `Flags` or `DefaultUpdateSourceTrigger`, and `PropertyMetadata` cannot carry `IsAnimationProhibited`. When one of those is set, `MetadataType` is ignored, `FrameworkPropertyMetadata` is generated, and the generator reports `AtcXamlToolkit0013`. The option also works on `[AttachedProperty]` and together with `AddOwnerOf`.
 
 The class does not change how the property behaves. It matters to a derived class that calls `OverrideMetadata`: metadata may be overridden with the same class or a more derived one, so a base property with `PropertyMetadata` accepts any override, while one with `FrameworkPropertyMetadata` requires `FrameworkPropertyMetadata`. Keep that in mind when a hand-written property that derived classes override is converted to the attribute.
 
@@ -239,6 +252,7 @@ public string SummaryText
 
 - The key is named `{Name}PropertyKey` and is private.
 - The setter is `private` by default. `SetterAccessModifier` changes that, for example `SetterAccessModifier = PropertyAccessModifier.Internal`.
+- Declare the field `readonly` to get no setter at all: `[DependencyProperty(IsReadOnly = true)] private readonly string summaryText;`. The class then writes with `SetValue(SummaryTextPropertyKey, value)`.
 - Nothing outside the class can set the property: `SetValue(SummaryTextProperty, ...)`, XAML, styles and bindings that write to it all fail. Bindings that read it work as usual.
 - `DefaultValue`, the callbacks and the metadata options work as for an ordinary property.
 - This is different from `SetterAccessModifier` alone, which only hides the C# setter of an ordinary, writable property.
@@ -284,10 +298,10 @@ public double MaxDropDownHeight
       new FrameworkPropertyMetadata(propertyChangedCallback: OnDataChanged));
   ```
 
-- The metadata is always a `FrameworkPropertyMetadata`, because WPF requires the metadata type of the shared property or a type derived from it.
-- `Flags`, `DefaultUpdateSourceTrigger` and `IsAnimationProhibited` can be set too. The metadata constructors that take them also take a default value, so state `DefaultValue` together with them; otherwise the default of the property type is passed.
-- `ValidateValueCallback` is ignored: validation belongs to the registration of the shared property.
-- `IsReadOnly` cannot be combined with `AddOwnerOf` and is ignored.
+- The metadata is a `FrameworkPropertyMetadata` unless `MetadataType` says otherwise. WPF requires the metadata type of the shared property or a type derived from it, and `FrameworkPropertyMetadata` fits every built-in property.
+- `Flags`, `DefaultUpdateSourceTrigger` and `IsAnimationProhibited` can be set too. The metadata constructors that take them also take a default value; when the attribute states none, the generator passes the default the new owner would inherit (`X.{Name}Property.GetMetadata(typeof(Owner)).DefaultValue`), so the shared default is kept.
+- `ValidateValueCallback` does not apply: validation belongs to the registration of the shared property. `IsReadOnly` does not apply either: the property is as writable as the shared one. Setting either is reported as `AtcXamlToolkit0013`.
+- `[AttachedProperty(AddOwnerOf = typeof(TextElement))]` works the same way and generates the `Get{Name}` / `Set{Name}` methods for the shared property.
 - **WPF only.**
 
 ## 🪝 Typed change hooks

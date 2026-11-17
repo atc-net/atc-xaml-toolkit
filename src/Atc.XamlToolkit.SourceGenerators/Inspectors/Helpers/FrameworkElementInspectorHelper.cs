@@ -65,6 +65,14 @@ internal static class FrameworkElementInspectorHelper
 
             defaultValue = GetDefaultValueExpression(propertyAttribute) ?? defaultValue;
 
+            var metadataType = ResolveMetadataType(
+                propertyAttribute,
+                xamlPlatform,
+                ref flags,
+                defaultUpdateSourceTrigger,
+                isAnimationProhibited,
+                out var ignoredMetadataType);
+
             var userPropertyChangedCallback = propertyChangedCallback;
             var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
             if (generatePartialHooks)
@@ -100,6 +108,7 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.IsNullableValueType = isNullableValueType;
             propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
             propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+            ApplyMetadataType(propertyToGenerate, metadataType, ignoredMetadataType);
             ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
             ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
             ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
@@ -164,6 +173,14 @@ internal static class FrameworkElementInspectorHelper
 
         defaultValue = GetDefaultValueExpression(propertyAttribute) ?? defaultValue;
 
+        var metadataType = ResolveMetadataType(
+            propertyAttribute,
+            xamlPlatform,
+            ref flags,
+            defaultUpdateSourceTrigger,
+            isAnimationProhibited,
+            out var ignoredMetadataType);
+
         var userPropertyChangedCallback = propertyChangedCallback;
         var generatePartialHooks = HasGeneratePartialHooks(argumentValues);
         if (generatePartialHooks)
@@ -199,6 +216,7 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
+        ApplyMetadataType(propertyToGenerate, metadataType, ignoredMetadataType);
         ApplyAccessOptions(propertyToGenerate, propertyAttribute, argumentValues);
         ApplyAddOwner(propertyToGenerate, propertyAttribute, argumentValues, xamlPlatform);
         ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
@@ -236,6 +254,9 @@ internal static class FrameworkElementInspectorHelper
     {
         propertyToGenerate.AccessModifier = propertyAttribute.ExtractAccessModifier(NameConstants.AccessModifier);
         propertyToGenerate.TargetType = propertyAttribute.ExtractTypeOfArgument(NameConstants.TargetType);
+        propertyToGenerate.BrowsableForTargetType =
+            argumentValues.TryGetValue(NameConstants.BrowsableForTargetType, out var browsable) &&
+            "true".Equals(browsable, StringComparison.OrdinalIgnoreCase);
         propertyToGenerate.GenerateClrAccessors =
             !argumentValues.TryGetValue(NameConstants.GenerateClrAccessors, out var value) ||
             !"false".Equals(value, StringComparison.OrdinalIgnoreCase);
@@ -258,6 +279,98 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.HasExplicitDefaultValue =
             argumentValues.ContainsKey(NameConstants.DefaultValue) ||
             GetDefaultValueExpression(propertyAttribute) is not null;
+
+        if (propertyToGenerate.AddOwnerOf is null)
+        {
+            return;
+        }
+
+        if (argumentValues.ContainsKey(NameConstants.ValidateValueCallback))
+        {
+            AddIgnoredOption(
+                propertyToGenerate,
+                NameConstants.ValidateValueCallback,
+                "validation belongs to the registration of the property that AddOwnerOf shares");
+        }
+
+        if (argumentValues.TryGetValue(NameConstants.IsReadOnly, out var isReadOnly) &&
+            "true".Equals(isReadOnly, StringComparison.OrdinalIgnoreCase))
+        {
+            AddIgnoredOption(
+                propertyToGenerate,
+                NameConstants.IsReadOnly,
+                "a property shared with AddOwnerOf is as writable as the shared property");
+        }
+    }
+
+    private static void AddIgnoredOption(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        string option,
+        string reason)
+        => propertyToGenerate.IgnoredOptions = new EquatableArray<string>(
+            propertyToGenerate.IgnoredOptions.Append($"{option}|{reason}").ToArray());
+
+    // MetadataType asks for a metadata class. FrameworkPropertyMetadata is what the generator
+    // picks as soon as a flag is set, so it is expressed as the flag None. PropertyMetadata
+    // and UIPropertyMetadata are passed on, unless an option is set that they cannot carry.
+    private static string? ResolveMetadataType(
+        AttributeData propertyAttribute,
+        XamlPlatform xamlPlatform,
+        ref string? flags,
+        string? defaultUpdateSourceTrigger,
+        bool? isAnimationProhibited,
+        out string? ignoredBecause)
+    {
+        ignoredBecause = null;
+
+        if (xamlPlatform != XamlPlatform.Wpf)
+        {
+            return null;
+        }
+
+        var metadataType = propertyAttribute.ExtractEnumArgumentName(NameConstants.MetadataType);
+        switch (metadataType)
+        {
+            case NameConstants.FrameworkPropertyMetadata:
+                if (string.IsNullOrEmpty(flags))
+                {
+                    flags = "FrameworkPropertyMetadataOptions.None";
+                }
+
+                return null;
+            case NameConstants.PropertyMetadata:
+            case NameConstants.UIPropertyMetadata:
+                if (!string.IsNullOrEmpty(flags))
+                {
+                    ignoredBecause = "Flags needs FrameworkPropertyMetadata";
+                }
+                else if (!string.IsNullOrEmpty(defaultUpdateSourceTrigger))
+                {
+                    ignoredBecause = "DefaultUpdateSourceTrigger needs FrameworkPropertyMetadata";
+                }
+                else if (isAnimationProhibited is not null &&
+                         metadataType == NameConstants.PropertyMetadata)
+                {
+                    ignoredBecause = "IsAnimationProhibited needs UIPropertyMetadata or FrameworkPropertyMetadata";
+                }
+
+                return ignoredBecause is null ? metadataType : null;
+            default:
+                return null;
+        }
+    }
+
+    private static void ApplyMetadataType(
+        BaseFrameworkElementPropertyToGenerate propertyToGenerate,
+        string? metadataType,
+        string? ignoredBecause)
+    {
+        propertyToGenerate.MetadataType = metadataType;
+
+        if (ignoredBecause is not null)
+        {
+            AddIgnoredOption(propertyToGenerate, NameConstants.MetadataType, ignoredBecause);
+        }
     }
 
     // IsReadOnly = true registers a read-only dependency property with a key. Only WPF has

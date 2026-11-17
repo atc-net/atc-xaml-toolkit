@@ -113,6 +113,13 @@ public static void SetCheckCornerRadius(UIElement element, CornerRadius value)
 
 This only changes the signature of the two methods. The property can still be set on any object from XAML, and the change hooks still receive a `DependencyObject`.
 
+On WPF, add `BrowsableForTargetType = true` to also put `[AttachedPropertyBrowsableForType(typeof(UIElement))]` on the `Get{Name}` method, so designers offer the property only on elements of that type:
+
+```csharp
+[AttachedProperty(TargetType = typeof(CheckBox), BrowsableForTargetType = true)]
+private static double checkSize;
+```
+
 ## 🙈 Non-public attached properties and per-element state
 
 `AccessModifier` sets the accessibility of the `{Name}Property` field and of the `Get{Name}` / `Set{Name}` methods; `SetterAccessModifier` can give the `Set{Name}` method a different one. `GenerateClrAccessors = false` generates only the field. Together they cover an attached property that a class uses to keep its own state on an element:

@@ -570,6 +570,12 @@ internal static class FrameworkElementBuilderExtensions
             return;
         }
 
+        if (p.MetadataType is not null)
+        {
+            GenerateExplicitMetadataBody(builder, p);
+            return;
+        }
+
         // WinUI doesn't support ValidateValueCallback, CoerceValueCallback, Flags, DefaultUpdateSourceTrigger, IsAnimationProhibited
         var isWpf = xamlPlatform == XamlPlatform.Wpf;
 
@@ -704,45 +710,33 @@ internal static class FrameworkElementBuilderExtensions
     {
         var ownerType = $"typeof({p.OwnerType.RemoveNullableSuffix()})";
 
+        // Where a constructor needs a default value and the attribute states none, the one
+        // the new owner would inherit is passed, so the shared default is kept.
+        var sharedDefaultValue = $"{p.AddOwnerOf}.{p.Name}Property.GetMetadata({ownerType}).DefaultValue";
+
         var hasFrameworkOptions =
             !string.IsNullOrEmpty(p.Flags) ||
             !string.IsNullOrEmpty(p.DefaultUpdateSourceTrigger) ||
-            p.IsAnimationProhibited is not null;
+            (p.IsAnimationProhibited is not null && p.MetadataType != NameConstants.UIPropertyMetadata);
 
         if (hasFrameworkOptions)
         {
             builder.AppendLine($"{ownerType},");
-            GenerateFrameworkPropertyMetadata(builder, p, endWithComma: false);
+            GenerateFrameworkPropertyMetadata(
+                builder,
+                p.HasExplicitDefaultValue ? p : p with { DefaultValue = sharedDefaultValue },
+                endWithComma: false);
             builder.DecreaseIndent();
             builder.DecreaseIndent();
             return;
         }
 
-        var hasPropertyChangedCallback = !string.IsNullOrEmpty(p.PropertyChangedCallback);
-        var hasCoerceValueCallback = !string.IsNullOrEmpty(p.CoerceValueCallback);
+        var arguments = BuildMetadataArguments(
+            p,
+            p.HasExplicitDefaultValue ? p.DefaultValue?.ToString() ?? "null" : null,
+            sharedDefaultValue);
 
-        var arguments = new List<string>();
-        if (p.HasExplicitDefaultValue)
-        {
-            arguments.Add($"defaultValue: {p.DefaultValue ?? "null"}");
-        }
-
-        if (hasPropertyChangedCallback)
-        {
-            arguments.Add($"propertyChangedCallback: {p.PropertyChangedCallback}");
-        }
-        else if (hasCoerceValueCallback)
-        {
-            // There is no constructor that takes a coerce callback without a changed callback
-            arguments.Add("propertyChangedCallback: null");
-        }
-
-        if (hasCoerceValueCallback)
-        {
-            arguments.Add($"coerceValueCallback: {p.CoerceValueCallback}");
-        }
-
-        if (arguments.Count == 0)
+        if (arguments.Length == 0)
         {
             builder.AppendLine($"{ownerType});");
             builder.DecreaseIndent();
@@ -750,8 +744,86 @@ internal static class FrameworkElementBuilderExtensions
         }
 
         builder.AppendLine($"{ownerType},");
-        builder.AppendLine($"new FrameworkPropertyMetadata({string.Join(", ", arguments)}));");
+        builder.AppendLine($"new {p.MetadataType ?? NameConstants.FrameworkPropertyMetadata}({arguments}));");
         builder.DecreaseIndent();
+    }
+
+    // The registration arguments after the property type, for a property whose attribute
+    // asks for PropertyMetadata or UIPropertyMetadata.
+    private static void GenerateExplicitMetadataBody(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p)
+    {
+        var hasDefaultValue = p.DefaultValue is not null && !"null".Equals(p.DefaultValue);
+        var arguments = BuildMetadataArguments(
+            p,
+            hasDefaultValue ? p.DefaultValue!.ToString() : null,
+            defaultValueWhenRequired: "null");
+
+        builder.AppendLine($"typeof({p.OwnerType.RemoveNullableSuffix()}),");
+
+        if (p.HasAnyValidateValueCallback)
+        {
+            builder.AppendLine($"new {p.MetadataType}({arguments}),");
+            builder.DecreaseIndent();
+            builder.AppendLine($"validateValueCallback: {p.ValidateValueCallback});");
+            return;
+        }
+
+        builder.AppendLine($"new {p.MetadataType}({arguments}));");
+        builder.DecreaseIndent();
+    }
+
+    // The constructor arguments of a metadata object, as named arguments on one line. Only
+    // FrameworkPropertyMetadata has a constructor that takes callbacks without a default
+    // value; for the other classes a coerce callback or IsAnimationProhibited needs one.
+    private static string BuildMetadataArguments(
+        BaseFrameworkElementPropertyToGenerate p,
+        string? defaultValue,
+        string defaultValueWhenRequired)
+    {
+        var hasPropertyChangedCallback = !string.IsNullOrEmpty(p.PropertyChangedCallback);
+        var hasCoerceValueCallback = !string.IsNullOrEmpty(p.CoerceValueCallback);
+        var hasIsAnimationProhibited =
+            p.MetadataType == NameConstants.UIPropertyMetadata &&
+            p.IsAnimationProhibited.HasValue;
+
+        var arguments = new List<string>();
+        if (defaultValue is not null)
+        {
+            arguments.Add($"defaultValue: {defaultValue}");
+        }
+        else if (hasIsAnimationProhibited ||
+                 (hasCoerceValueCallback && p.MetadataType is not null))
+        {
+            arguments.Add($"defaultValue: {defaultValueWhenRequired}");
+        }
+
+        if (hasPropertyChangedCallback)
+        {
+            arguments.Add($"propertyChangedCallback: {p.PropertyChangedCallback}");
+        }
+        else if (hasCoerceValueCallback || hasIsAnimationProhibited)
+        {
+            // There is no constructor that takes a later argument without a changed callback
+            arguments.Add("propertyChangedCallback: null");
+        }
+
+        if (hasCoerceValueCallback)
+        {
+            arguments.Add($"coerceValueCallback: {p.CoerceValueCallback}");
+        }
+        else if (hasIsAnimationProhibited)
+        {
+            arguments.Add("coerceValueCallback: null");
+        }
+
+        if (hasIsAnimationProhibited)
+        {
+            arguments.Add($"isAnimationProhibited: {(p.IsAnimationProhibited!.Value ? "true" : "false")}");
+        }
+
+        return string.Join(", ", arguments);
     }
 
     private static void GeneratePropertyMetadataExtended(
@@ -1084,6 +1156,13 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"[Description(\"Get: {p.Description}\")]");
         }
 
+        if (p.BrowsableForTargetType &&
+            p.TargetType is not null &&
+            xamlPlatform == XamlPlatform.Wpf)
+        {
+            builder.AppendLine($"[AttachedPropertyBrowsableForType(typeof({p.TargetType}))]");
+        }
+
         builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} element)");
         builder.IncreaseIndent();
 
@@ -1219,44 +1298,31 @@ internal static class FrameworkElementBuilderExtensions
         FrameworkElementBuilder builder,
         RoutedEventToGenerate re)
     {
-        if (!re.GenerateRaiseMethod || string.IsNullOrEmpty(re.HandlerTypeName))
+        if (!re.GenerateRaiseMethod || !re.CanGenerateRaiseMethod)
         {
             return;
         }
 
-        var handlerTypeName = re.HandlerTypeName!;
-        var typeArgumentStart = handlerTypeName.IndexOf('<');
-        var typeArgumentEnd = handlerTypeName.LastIndexOf('>');
-        var hasTypeArgument = typeArgumentStart > 0 && typeArgumentEnd > typeArgumentStart;
-
-        var handlerName = hasTypeArgument
-            ? handlerTypeName.Substring(0, typeArgumentStart)
-            : handlerTypeName;
-        handlerName = handlerName.Substring(handlerName.LastIndexOfAny(['.', ':']) + 1);
-
-        var typeArgument = hasTypeArgument
-            ? handlerTypeName.Substring(typeArgumentStart + 1, typeArgumentEnd - typeArgumentStart - 1)
-            : string.Empty;
-
+        var typeArgument = re.HandlerTypeArgument;
         var accessModifier = re.IsOwnerTypeSealed ? "private" : "protected";
 
-        switch (handlerName)
+        switch (re.HandlerSimpleName)
         {
-            case NameConstants.RoutedEventHandler when !hasTypeArgument:
+            case NameConstants.RoutedEventHandler:
                 AppendRaiseMethodSummary(builder, re);
                 builder.AppendLine($"{accessModifier} void Raise{re.Name}()");
                 builder.IncreaseIndent();
                 builder.AppendLine($"=> RaiseEvent(new RoutedEventArgs({re.Name}Event, this));");
                 builder.DecreaseIndent();
                 break;
-            case "RoutedPropertyChangedEventHandler" when hasTypeArgument:
+            case "RoutedPropertyChangedEventHandler":
                 AppendRaiseMethodSummary(builder, re);
                 builder.AppendLine($"{accessModifier} void Raise{re.Name}({typeArgument} oldValue, {typeArgument} newValue)");
                 builder.IncreaseIndent();
                 builder.AppendLine($"=> RaiseEvent(new RoutedPropertyChangedEventArgs<{typeArgument}>(oldValue, newValue, {re.Name}Event));");
                 builder.DecreaseIndent();
                 break;
-            case "EventHandler" when hasTypeArgument:
+            case "EventHandler":
                 AppendRaiseMethodSummary(builder, re);
                 builder.AppendLine($"{accessModifier} void Raise{re.Name}({typeArgument} e)");
                 builder.AppendLine("{");

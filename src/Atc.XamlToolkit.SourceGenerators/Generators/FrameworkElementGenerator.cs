@@ -51,7 +51,7 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         FrameworkElementToGenerate? frameworkElementToGenerate)
     {
         if (frameworkElementToGenerate is null ||
-            !ReportUnusablePropertyTemplates(context, frameworkElementToGenerate))
+            !ReportProblems(context, frameworkElementToGenerate))
         {
             return;
         }
@@ -107,15 +107,40 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             sourceText);
     }
 
+    // Reports what was asked for but cannot be generated.
     // Returns whether there is still code to emit for the class.
-    private static bool ReportUnusablePropertyTemplates(
+    private static bool ReportProblems(
         SourceProductionContext context,
         FrameworkElementToGenerate frameworkElementToGenerate)
     {
+        var className = frameworkElementToGenerate.ClassName;
+
         foreach (var templateName in frameworkElementToGenerate.UnusablePropertyTemplates)
         {
             context.ReportDiagnostic(
-                DiagnosticFactory.CreateUnusablePropertyTemplate(templateName, frameworkElementToGenerate.ClassName));
+                DiagnosticFactory.CreateUnusablePropertyTemplate(templateName, className));
+        }
+
+        var ignoredOptions = frameworkElementToGenerate
+            .AttachedPropertiesToGenerate
+            .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option)))
+            .Concat(frameworkElementToGenerate
+                .DependencyPropertiesToGenerate
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option))))
+            .Concat(frameworkElementToGenerate
+                .RoutedEventsToGenerate
+                .SelectMany(x => x.IgnoredOptions.Select(option => (x.Name, option))));
+
+        foreach (var (memberName, ignoredOption) in ignoredOptions)
+        {
+            var separator = ignoredOption.IndexOf('|');
+
+            context.ReportDiagnostic(
+                DiagnosticFactory.CreateIgnoredOption(
+                    ignoredOption.Substring(0, separator),
+                    memberName,
+                    className,
+                    ignoredOption.Substring(separator + 1)));
         }
 
         return frameworkElementToGenerate.HasAnythingToGenerate;

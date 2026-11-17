@@ -35,4 +35,58 @@ internal sealed record RoutedEventToGenerate(
     /// field has no XML doc of its own.
     /// </summary>
     public bool GenerateDocumentation { get; set; }
+
+    /// <summary>
+    /// Gets or sets the options that were set on the attribute but have no effect, each as
+    /// <c>option|reason</c>. They are reported as diagnostics.
+    /// </summary>
+    public EquatableArray<string> IgnoredOptions { get; set; } = EquatableArray<string>.Empty;
+
+    /// <summary>
+    /// Gets the handler type without its namespace and type arguments.
+    /// </summary>
+    public string HandlerSimpleName
+    {
+        get
+        {
+            var handlerTypeName = HandlerTypeName ?? string.Empty;
+            var typeArgumentStart = handlerTypeName.IndexOf('<');
+            var name = typeArgumentStart > 0
+                ? handlerTypeName.Substring(0, typeArgumentStart)
+                : handlerTypeName;
+
+            return name.Substring(name.LastIndexOfAny(['.', ':']) + 1);
+        }
+    }
+
+    /// <summary>
+    /// Gets the type arguments of the handler type as written; empty when it has none.
+    /// </summary>
+    public string HandlerTypeArgument
+    {
+        get
+        {
+            var handlerTypeName = HandlerTypeName ?? string.Empty;
+            var typeArgumentStart = handlerTypeName.IndexOf('<');
+            var typeArgumentEnd = handlerTypeName.LastIndexOf('>');
+
+            return typeArgumentStart > 0 && typeArgumentEnd > typeArgumentStart
+                ? handlerTypeName.Substring(typeArgumentStart + 1, typeArgumentEnd - typeArgumentStart - 1)
+                : string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether a <c>Raise{Name}</c> method can be generated: the
+    /// owner is not static and the event args of the handler type can be created without
+    /// guessing.
+    /// </summary>
+    public bool CanGenerateRaiseMethod
+        => !IsOwnerTypeStatic &&
+           HandlerSimpleName switch
+           {
+               NameConstants.RoutedEventHandler => HandlerTypeArgument.Length == 0,
+               "RoutedPropertyChangedEventHandler" or "EventHandler" => HandlerTypeArgument.Length > 0,
+               _ => false,
+           };
 }

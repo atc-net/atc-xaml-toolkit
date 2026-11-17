@@ -127,19 +127,13 @@ internal static class RoutedEventInspector
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
-        // An explicit per-attribute value wins; otherwise the assembly-level
-        // [GenerateDocumentationDefault] decides.
-        var generateDocumentation =
-            fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var generateDocumentationValue) &&
-            bool.TryParse(generateDocumentationValue, out var generateDocumentationValueAsBool)
-                ? generateDocumentationValueAsBool
-                : FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol);
+        var generateDocumentation = ResolveGenerateDocumentation(classSymbol, fieldArgumentValues);
 
         var generateRaiseMethod =
             fieldArgumentValues.TryGetValue(NameConstants.GenerateRaiseMethod, out var generateRaiseMethodValue) &&
             "true".Equals(generateRaiseMethodValue, StringComparison.OrdinalIgnoreCase);
 
-        routedEventToGenerate.Add(
+        var routedEvent =
             new RoutedEventToGenerate(
                 OwnerType: classSymbol.Name,
                 Name: propertyName,
@@ -152,6 +146,35 @@ internal static class RoutedEventInspector
                 AddOwnerOf = fieldPropertyAttribute.ExtractAddOwnerOf(),
                 GenerateRaiseMethod = generateRaiseMethod,
                 GenerateDocumentation = generateDocumentation,
-            });
+            };
+
+        NoteRaiseMethodThatCannotBeGenerated(routedEvent);
+
+        routedEventToGenerate.Add(routedEvent);
+    }
+
+    // An explicit per-attribute value wins; otherwise the assembly-level
+    // [GenerateDocumentationDefault] decides.
+    private static bool ResolveGenerateDocumentation(
+        INamedTypeSymbol classSymbol,
+        IDictionary<string, string?> fieldArgumentValues)
+        => fieldArgumentValues.TryGetValue(NameConstants.GenerateDocumentation, out var value) &&
+           bool.TryParse(value, out var generateDocumentation)
+            ? generateDocumentation
+            : FrameworkElementInspectorHelper.HasGenerateDocumentationDefaultAttribute(classSymbol);
+
+    private static void NoteRaiseMethodThatCannotBeGenerated(
+        RoutedEventToGenerate routedEvent)
+    {
+        if (!routedEvent.GenerateRaiseMethod || routedEvent.CanGenerateRaiseMethod)
+        {
+            return;
+        }
+
+        var reason = routedEvent.IsOwnerTypeStatic
+            ? "a static class cannot raise an event; raise it on the element with RaiseEvent"
+            : "the event args of the handler type cannot be created without guessing; only RoutedEventHandler, RoutedPropertyChangedEventHandler<T> and EventHandler<TArgs> are supported";
+
+        routedEvent.IgnoredOptions = new EquatableArray<string>([$"{NameConstants.GenerateRaiseMethod}|{reason}"]);
     }
 }

@@ -87,6 +87,25 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? TargetType { get; set; }
 
     /// <summary>
+    /// Gets or sets the metadata class asked for with <c>MetadataType</c> when it is
+    /// <c>PropertyMetadata</c> or <c>UIPropertyMetadata</c>; <c>null</c> when the generator
+    /// chooses the class.
+    /// </summary>
+    public string? MetadataType { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the <c>Get{Name}</c> method of an attached
+    /// property gets <c>[AttachedPropertyBrowsableForType]</c> for <see cref="TargetType"/>.
+    /// </summary>
+    public bool BrowsableForTargetType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the options that were set on the attribute but have no effect, each as
+    /// <c>option|reason</c>. They are reported as diagnostics.
+    /// </summary>
+    public EquatableArray<string> IgnoredOptions { get; set; } = EquatableArray<string>.Empty;
+
+    /// <summary>
     /// Gets or sets the type whose existing dependency property is shared with
     /// <c>AddOwner</c> instead of registering a new one (WPF only); <c>null</c> otherwise.
     /// </summary>
