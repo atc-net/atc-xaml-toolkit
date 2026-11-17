@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.2.1...v4.0.0) (2026-11-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* ViewModelBase.ViewModelId is an instance property; the Atc dependency is version 4.
+
+### New features
+
+* add version 4 source generator options, fixes and upgrade guide ([4a3129b](https://github.com/atc-net/atc-xaml-toolkit/commit/4a3129bfbe827f320a0638ea53af56693c4172ad))
+
 ## [3.2.1](https://github.com/atc-net/atc-xaml-toolkit/compare/v3.2.0...v3.2.1) (2026-10-09)
 
 
