@@ -87,7 +87,7 @@ internal static class ObservablePropertyInspector
         bool generateDocumentationDefault,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
-        var backingFieldName = fieldSymbol.Name;
+        var backingFieldName = fieldSymbol.Name.EscapeKeyword();
         var propertyType = fieldSymbol.Type.ToString();
 
         var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();
@@ -96,7 +96,7 @@ internal static class ObservablePropertyInspector
             ? nameValue!
                 .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper()
-            : backingFieldName
+            : fieldSymbol.Name
                 .RemovePrefixFromField()
                 .EnsureFirstCharacterToUpper();
 

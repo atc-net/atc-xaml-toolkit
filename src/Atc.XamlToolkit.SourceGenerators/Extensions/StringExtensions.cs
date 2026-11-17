@@ -230,6 +230,17 @@ public static class StringExtensions
         return value.Substring(0, value.Length - 1);
     }
 
+    /// <summary>
+    /// Prefixes the identifier with '@' when it is a C# keyword, e.g. a field named <c>@class</c>,
+    /// whose symbol name is <c>class</c>.
+    /// </summary>
+    /// <param name="identifier">The identifier as returned by a symbol's name.</param>
+    /// <returns>The identifier as it must be written in source code.</returns>
+    public static string EscapeKeyword(this string identifier)
+        => SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None
+            ? "@" + identifier
+            : identifier;
+
     public static string RemovePrefixFromField(this string fieldName)
     {
         if (fieldName is null)

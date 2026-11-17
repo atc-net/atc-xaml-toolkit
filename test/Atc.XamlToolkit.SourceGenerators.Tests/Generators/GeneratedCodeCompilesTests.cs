@@ -604,6 +604,37 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void KeywordNamedFieldsParametersAndMethods_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string @class = string.Empty;
+
+                [ObservableProperty(GeneratePartialHooks = true)]
+                private int @event;
+
+                [RelayCommand]
+                private void @new()
+                {
+                }
+
+                [RelayCommand(SupportsCancellation = true, AutoSetIsBusy = true)]
+                private Task Open(string @namespace, CancellationToken cancellationToken) => Task.CompletedTask;
+
+                [RelayCommand]
+                private ValueTask Close(string @string, int @int) => ValueTask.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

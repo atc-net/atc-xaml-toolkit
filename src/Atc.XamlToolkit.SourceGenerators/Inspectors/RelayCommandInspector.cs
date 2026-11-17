@@ -182,7 +182,7 @@ internal static class RelayCommandInspector
                 .Select(parameterSymbol => parameterSymbol.Type.ToDisplayString())
                 .ToList();
             parameterNames = methodSymbol.Parameters
-                .Select(parameterSymbol => parameterSymbol.Name)
+                .Select(parameterSymbol => parameterSymbol.Name.EscapeKeyword())
                 .ToList();
         }
 
@@ -232,7 +232,7 @@ internal static class RelayCommandInspector
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
-                returnsValueTask ? methodSymbol.Name + "AsTask" : methodSymbol.Name,
+                returnsValueTask ? methodSymbol.Name + "AsTask" : methodSymbol.Name.EscapeKeyword(),
                 new EquatableArray<string>(parameterTypes?.ToArray() ?? []),
                 new EquatableArray<string>(parameterNames?.ToArray() ?? []),
                 new EquatableArray<string>(parameterValues.ToArray()),
@@ -247,7 +247,7 @@ internal static class RelayCommandInspector
                 generateDocumentation)
             {
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
-                ValueTaskMethodName = returnsValueTask ? methodSymbol.Name : null,
+                ValueTaskMethodName = returnsValueTask ? methodSymbol.Name.EscapeKeyword() : null,
             });
     }
 }
