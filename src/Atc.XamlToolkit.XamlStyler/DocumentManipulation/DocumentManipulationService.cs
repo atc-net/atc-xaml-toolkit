@@ -82,9 +82,10 @@ internal sealed class DocumentManipulationService
         reorderService.ParentNodeNames.Add(new NameSelector("MultiTrigger", null));
         reorderService.ParentNodeNames.Add(new NameSelector("Style", null));
         reorderService.ParentNodeNames.Add(new NameSelector("Trigger", null));
-        reorderService.ChildNodeNames.Add(new NameSelector(
-            "Setter",
-            "http://schemas.microsoft.com/winfx/2006/xaml/presentation"));
+        foreach (var setterNamespace in FormatThicknessService.SetterNamespaces)
+        {
+            reorderService.ChildNodeNames.Add(new NameSelector("Setter", setterNamespace));
+        }
 
         switch (options.ReorderSetters)
         {

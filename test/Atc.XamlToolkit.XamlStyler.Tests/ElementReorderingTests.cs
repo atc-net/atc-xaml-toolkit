@@ -101,4 +101,53 @@ public sealed class ElementReorderingTests
         var bgIndex = result.IndexOf("Background", StringComparison.Ordinal);
         wIndex.Should().BeLessThan(bgIndex, "original order preserved");
     }
+
+    [Theory]
+    [InlineData("http://schemas.microsoft.com/winfx/2006/xaml/presentation")]
+    [InlineData("https://github.com/avaloniaui")]
+    [InlineData("http://schemas.microsoft.com/dotnet/2021/maui")]
+    [InlineData("http://xamarin.com/schemas/2014/forms")]
+    public void ReorderSetters_ByProperty_SortsSettersOfEachXamlDialect(
+        string xamlNamespace)
+    {
+        var xaml = $"<Style xmlns=\"{xamlNamespace}\">\n    <Setter Property=\"Width\" Value=\"100\" />\n    <Setter Property=\"Background\" Value=\"Red\" />\n    <Setter Property=\"Height\" Value=\"50\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ReorderSetters = ReorderSettersBy.Property);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            $"<Style xmlns=\"{xamlNamespace}\">",
+            "    <Setter Property=\"Background\" Value=\"Red\" />",
+            "    <Setter Property=\"Height\" Value=\"50\" />",
+            "    <Setter Property=\"Width\" Value=\"100\" />",
+            "</Style>");
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("http://schemas.microsoft.com/winfx/2006/xaml/presentation")]
+    [InlineData("https://github.com/avaloniaui")]
+    [InlineData("http://schemas.microsoft.com/dotnet/2021/maui")]
+    [InlineData("http://xamarin.com/schemas/2014/forms")]
+    public void ThicknessFormatting_AppliesToSetterValuesOfEachXamlDialect(
+        string xamlNamespace)
+    {
+        var xaml = $"<Style xmlns=\"{xamlNamespace}\">\n    <Setter Property=\"Margin\" Value=\"1 2 3 4\" />\n    <Setter Property=\"Tag\" Value=\"1 2 3 4\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ThicknessStyle = ThicknessStyle.Comma);
+
+        result.Should().Contain("<Setter Property=\"Margin\" Value=\"1,2,3,4\" />");
+        result.Should().Contain("<Setter Property=\"Tag\" Value=\"1 2 3 4\" />");
+    }
+
+    [Fact]
+    public void ReorderSetters_ByProperty_LeavesSettersOfUnknownNamespacesAlone()
+    {
+        var xaml = "<Style xmlns=\"urn:custom\">\n    <Setter Property=\"Width\" Value=\"100\" />\n    <Setter Property=\"Background\" Value=\"Red\" />\n</Style>";
+
+        var result = StyleWith(xaml, o => o.ReorderSetters = ReorderSettersBy.Property);
+
+        result.IndexOf("Width", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("Background", StringComparison.Ordinal));
+    }
 }
