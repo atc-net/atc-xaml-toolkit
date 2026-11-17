@@ -34,6 +34,19 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? UserPropertyChangedCallback { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether a typed <c>Coerce{Name}</c> partial method is
+    /// generated. When true, <see cref="CoerceValueCallback"/> names the generated static
+    /// callback that calls it.
+    /// </summary>
+    public bool GenerateCoerceHook { get; set; }
+
+    /// <summary>
+    /// Gets or sets the coerce callback the user named in the attribute, when
+    /// <see cref="GenerateCoerceHook"/> replaced it with the generated one.
+    /// </summary>
+    public string? UserCoerceValueCallback { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the property is registered as a read-only
     /// dependency property with a <c>DependencyPropertyKey</c> (WPF only).
     /// </summary>

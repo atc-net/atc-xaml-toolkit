@@ -141,6 +141,23 @@ static partial void OnIsDraggableChanged(DependencyObject d, bool oldValue, bool
 
 On Avalonia the first parameter is an `AvaloniaObject`. `PropertyChangedCallback = nameof(...)` can still be used, alone or together with the hook (the named callback then runs first). The hook for ordinary dependency properties is described in [DependencyProperty.md](DependencyProperty.md#-typed-change-hooks).
 
+## 🎚️ Typed coerce hook (WPF)
+
+`[AttachedProperty(GenerateCoerceHook = true)]` generates the static coerce callback and a typed method that also receives the object the property is set on. The class must implement it:
+
+```csharp
+public static partial class ZoomBehavior
+{
+    [AttachedProperty(GenerateCoerceHook = true)]
+    private static double zoomFactor;
+
+    private static partial double CoerceZoomFactor(DependencyObject d, double value)
+        => value > 4 ? 4 : value;
+}
+```
+
+If `CoerceValueCallback` is also set, that callback runs first and its result is passed to the typed method.
+
 ## 📚 XML documentation generation
 
 When the backing field has XML doc comments, the generator copies them to the generated `Get{Name}` / `Set{Name}` methods, and the `{Name}Property` field gets an "Identifies the {Name} attached property." summary:

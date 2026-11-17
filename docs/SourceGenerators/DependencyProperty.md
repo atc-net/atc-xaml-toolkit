@@ -213,6 +213,37 @@ partial void OnIsReadOnlyChanged(bool oldValue, bool newValue);
 - `PropertyChangedCallback = nameof(...)` still works, for example for one callback shared by several properties. When both are set, the named callback runs first and the hook second.
 - For attached properties see [AttachedProperty.md](AttachedProperty.md#-typed-change-hooks).
 
+## 🎚️ Typed coerce hook (WPF)
+
+`GenerateCoerceHook = true` gives you a typed method that decides the effective value, instead of a static `CoerceValueCallback` that takes and returns `object`:
+
+```csharp
+public partial class RangeControl : UserControl
+{
+    [DependencyProperty(GenerateCoerceHook = true)]
+    private double maximum;
+
+    private partial double CoerceMaximum(double value)
+        => value < 0 ? 0 : value;
+}
+```
+
+Generated (besides the registration with `coerceValueCallback: CoerceMaximumPropertyCallback`):
+
+```csharp
+private static object CoerceMaximumPropertyCallback(
+    DependencyObject d,
+    object baseValue)
+    => ((RangeControl)d).CoerceMaximum((double)baseValue);
+
+private partial double CoerceMaximum(double value);
+```
+
+- The method **must be implemented**. It returns a value, so unlike the change hooks it cannot be left out; forgetting it is a compile error (CS8795).
+- It is a separate option, not part of `GeneratePartialHooks`, for that reason.
+- If `CoerceValueCallback` is also set, that callback runs first and its result is passed to the typed method.
+- **WPF only.** WinUI and Avalonia styled properties registered by the generator have no coerce callback.
+
 ## 📚 XML documentation generation
 
 When the backing field has XML doc comments, the generator copies them to the generated CLR property, and the `{Name}Property` field gets an "Identifies the ... dependency property." summary:

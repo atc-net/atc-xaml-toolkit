@@ -272,6 +272,7 @@ internal static class FrameworkElementBuilderExtensions
 
         GenerateClrAttachedMethods(builder, p, xamlPlatform);
         GeneratePartialHook(builder, p, isAttached: true, xamlPlatform);
+        GenerateCoerceHook(builder, p, isAttached: true);
     }
 
     private static void GenerateDependencyProperty(
@@ -284,6 +285,45 @@ internal static class FrameworkElementBuilderExtensions
         GeneratePropertyIdentifierFromKey(builder, p, isAttached: false, xamlPlatform);
         GenerateClrDependencyProperty(builder, p, xamlPlatform);
         GeneratePartialHook(builder, p, isAttached: false, xamlPlatform);
+        GenerateCoerceHook(builder, p, isAttached: false);
+    }
+
+    // Emits the static coerce callback that is registered with the property system, and the
+    // typed partial method it calls. The method returns the coerced value, so the class has
+    // to implement it. WPF only.
+    private static void GenerateCoerceHook(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        bool isAttached)
+    {
+        if (!p.GenerateCoerceHook)
+        {
+            return;
+        }
+
+        var hookName = $"Coerce{p.Name}";
+
+        // A nullable property type can be coerced to and from null.
+        var objectType = p.Type.EndsWith("?", StringComparison.Ordinal) ? "object?" : "object";
+
+        var baseValue = string.IsNullOrEmpty(p.UserCoerceValueCallback)
+            ? $"({p.Type})baseValue"
+            : $"({p.Type}){p.UserCoerceValueCallback}(d, baseValue)";
+
+        builder.AppendLine();
+        builder.AppendLine($"private static {objectType} {p.CoerceValueCallback}(");
+        builder.IncreaseIndent();
+        builder.AppendLine("DependencyObject d,");
+        builder.AppendLine($"{objectType} baseValue)");
+        builder.AppendLine(isAttached
+            ? $"=> {hookName}(d, {baseValue});"
+            : $"=> (({p.OwnerType})d).{hookName}({baseValue});");
+        builder.DecreaseIndent();
+
+        builder.AppendLine();
+        builder.AppendLine(isAttached
+            ? $"private static partial {p.Type} {hookName}(DependencyObject d, {p.Type} value);"
+            : $"private partial {p.Type} {hookName}({p.Type} value);");
     }
 
     // The public {Name}Property of a read-only dependency property comes from its key.

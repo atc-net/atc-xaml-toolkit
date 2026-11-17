@@ -17,6 +17,16 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public bool GeneratePartialHooks { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether a typed coerce method is generated:
+    /// <c>private partial T Coerce{Name}(T value)</c>, or for an attached property
+    /// <c>private static partial T Coerce{Name}(DependencyObject d, T value)</c>.
+    /// The generator registers the static <c>CoerceValueCallback</c> and calls the method,
+    /// which the class must implement (a method that returns a value cannot be left out).
+    /// Can be combined with <see cref="CoerceValueCallback"/>, which then runs first.
+    /// </summary>
+    public bool GenerateCoerceHook { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the property is a read-only dependency
     /// property. It is then registered with <c>RegisterReadOnly</c> (or
     /// <c>RegisterAttachedReadOnly</c>): the generator emits a private

@@ -70,6 +70,13 @@ internal static class FrameworkElementInspectorHelper
                 propertyChangedCallback = GetGeneratedPropertyChangedCallbackName(propertyName);
             }
 
+            var userCoerceValueCallback = coerceValueCallback;
+            var generateCoerceHook = HasGenerateCoerceHook(argumentValues, xamlPlatform);
+            if (generateCoerceHook)
+            {
+                coerceValueCallback = GetGeneratedCoerceValueCallbackName(propertyName);
+            }
+
             var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
                 classSymbol.IsStatic,
                 ownerType,
@@ -93,6 +100,8 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
             ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
+            propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
+            propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
             propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
             propertiesToGenerate.Add(propertyToGenerate);
@@ -156,6 +165,13 @@ internal static class FrameworkElementInspectorHelper
             propertyChangedCallback = GetGeneratedPropertyChangedCallbackName(propertyName);
         }
 
+        var userCoerceValueCallback = coerceValueCallback;
+        var generateCoerceHook = HasGenerateCoerceHook(argumentValues, xamlPlatform);
+        if (generateCoerceHook)
+        {
+            coerceValueCallback = GetGeneratedCoerceValueCallbackName(propertyName);
+        }
+
         var propertyToGenerate = BaseFrameworkElementPropertyToGenerate.Create<T>(
             classSymbol.IsStatic,
             ownerType,
@@ -179,6 +195,8 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
         ApplyReadOnlyKey(propertyToGenerate, argumentValues, xamlPlatform);
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
+        propertyToGenerate.GenerateCoerceHook = generateCoerceHook;
+        propertyToGenerate.UserCoerceValueCallback = generateCoerceHook ? userCoerceValueCallback : null;
 
         var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
         fieldSymbol.Type.AddRequiredNamespacesTo(requiredNamespaces);
@@ -211,6 +229,20 @@ internal static class FrameworkElementInspectorHelper
             propertyToGenerate.SetterAccessModifier = "private";
         }
     }
+
+    // Only WPF has a coerce callback.
+    private static bool HasGenerateCoerceHook(
+        IDictionary<string, string?> argumentValues,
+        XamlPlatform xamlPlatform)
+        => xamlPlatform == XamlPlatform.Wpf &&
+           argumentValues.TryGetValue(NameConstants.GenerateCoerceHook, out var value) &&
+           "true".Equals(value, StringComparison.OrdinalIgnoreCase);
+
+    // The generated static callback that is registered with the property system and
+    // calls the typed Coerce{Name} partial method.
+    private static string GetGeneratedCoerceValueCallbackName(
+        string propertyName)
+        => $"Coerce{propertyName}PropertyCallback";
 
     private static bool HasGeneratePartialHooks(
         IDictionary<string, string?> argumentValues)
