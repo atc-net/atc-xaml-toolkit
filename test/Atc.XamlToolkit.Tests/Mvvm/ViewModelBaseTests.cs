@@ -69,4 +69,17 @@ public sealed class ViewModelBaseTests
         public bool ShouldSkip(string propertyName)
             => ShouldSkipValidationOnPropertyChanged(propertyName);
     }
+
+    [Fact]
+    public void ViewModelId_IsStablePerInstance_AndUniqueAcrossInstances()
+    {
+        // Arrange
+        var first = new TestViewModel();
+        var second = new TestViewModel();
+
+        // Act & Assert
+        Assert.NotEqual(Guid.Empty, first.ViewModelId);
+        Assert.Equal(first.ViewModelId, first.ViewModelId);
+        Assert.NotEqual(first.ViewModelId, second.ViewModelId);
+    }
 }
