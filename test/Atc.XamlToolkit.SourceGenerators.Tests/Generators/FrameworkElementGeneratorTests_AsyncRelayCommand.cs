@@ -35,6 +35,11 @@ public sealed partial class FrameworkElementGeneratorTests
                 private IRelayCommandAsync? saveCommand;
 
                 public IRelayCommandAsync SaveCommand => saveCommand ??= new RelayCommandAsync(Save);
+
+                public void DisposeCommands()
+                {
+                    SaveCommand.Dispose();
+                }
             }
 
             #nullable disable

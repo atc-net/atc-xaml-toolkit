@@ -88,6 +88,9 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
         if (frameworkElementToGenerate.RelayCommandsToGenerate.Count > 0)
         {
             frameworkElementBuilder.GenerateRelayCommands(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
+
+            // The cancel methods the cancel commands call, and DisposeCommands().
+            frameworkElementBuilder.GenerateRelayCommandMethods(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
         }
 
         frameworkElementBuilder.GenerateEnd();

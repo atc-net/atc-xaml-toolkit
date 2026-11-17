@@ -788,6 +788,27 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void FrameworkElement_RelayCommandWithSupportsCancellation_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class LoadBehavior
+            {
+                [RelayCommand(SupportsCancellation = true)]
+                private Task LoadAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+                public void CancelFromCode() => CancelLoadAsync();
+
+                public void Release() => DisposeCommands();
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =
