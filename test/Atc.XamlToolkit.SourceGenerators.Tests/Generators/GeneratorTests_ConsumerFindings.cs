@@ -167,6 +167,79 @@ public sealed class GeneratorTests_ConsumerFindings : GeneratorTestBase
         Assert.Contains("public static int GetHits(AvaloniaObject element)", generatedCode, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void AttachedProperty_FieldDocumentationThatSaysGetsOrSets_IsSplitBetweenTheAccessors()
+    {
+        // One field documents two methods. "Gets or sets" on a method that only sets reads wrong.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public static partial class FlexPanelHelper
+            {
+                /// <summary>
+                /// Gets or sets the grow factor of the element
+                /// inside its panel.
+                /// </summary>
+                [AttachedProperty]
+                private static double grow;
+
+                /// <summary>
+                /// The shrink factor.
+                /// </summary>
+                [AttachedProperty]
+                private static double shrink;
+            }
+            """;
+
+        var generatedCode = Generate<FrameworkElementGenerator>(inputCode);
+
+        Assert.Contains(
+            """
+                /// <summary>
+                /// Gets the grow factor of the element
+                /// inside its panel.
+                /// </summary>
+                public static double GetGrow(DependencyObject element)
+            """.EnsureEnvironmentNewLines(),
+            generatedCode,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            """
+                /// <summary>
+                /// Sets the grow factor of the element
+                /// inside its panel.
+                /// </summary>
+                public static void SetGrow(DependencyObject element, double value)
+            """.EnsureEnvironmentNewLines(),
+            generatedCode,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Gets or sets", generatedCode, StringComparison.Ordinal);
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(generatedCode, "/// The shrink factor\\.", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(1)).Count);
+    }
+
+    [Fact]
+    public void DependencyProperty_FieldDocumentationThatSaysGetsOrSets_IsKeptOnTheProperty()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class MyControl : UserControl
+            {
+                /// <summary>
+                /// Gets or sets the grow factor.
+                /// </summary>
+                [DependencyProperty]
+                private double grow;
+            }
+            """;
+
+        var generatedCode = Generate<FrameworkElementGenerator>(inputCode);
+
+        Assert.Contains("/// Gets or sets the grow factor.", generatedCode, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("Private", "private")]
     [InlineData("Internal", "internal")]

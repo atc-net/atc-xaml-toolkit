@@ -1030,7 +1030,7 @@ internal static class FrameworkElementBuilderExtensions
 
         if (p.IsOwnerTypeStatic)
         {
-            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
+            builder.AppendDocumentation(GetAccessorDocumentation(p.DocumentationComments, "Gets "), p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -1060,7 +1060,7 @@ internal static class FrameworkElementBuilderExtensions
 
             builder.AppendLine();
 
-            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
+            builder.AppendDocumentation(GetAccessorDocumentation(p.DocumentationComments, "Sets "), p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -1145,7 +1145,7 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine();
 
-        builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
+        builder.AppendDocumentation(GetAccessorDocumentation(p.DocumentationComments, "Gets "), p.GenerateDocumentation, $"Gets the {p.Name} attached property value.");
 
         if (!string.IsNullOrEmpty(p.Category))
         {
@@ -1181,7 +1181,7 @@ internal static class FrameworkElementBuilderExtensions
         {
             builder.AppendLine();
 
-            builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
+            builder.AppendDocumentation(GetAccessorDocumentation(p.DocumentationComments, "Sets "), p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
 
             if (!string.IsNullOrEmpty(p.Category))
             {
@@ -1210,6 +1210,38 @@ internal static class FrameworkElementBuilderExtensions
                 $"{p.ElementParameterName}{nullConditional}.SetValue({p.WritablePropertyIdentifier}, {value})",
                 isGetter: false);
         }
+    }
+
+    // One field documents both accessor methods. Documentation written the way a property
+    // is documented ("Gets or sets ...") is turned into "Gets ..." for the Get method and
+    // "Sets ..." for the Set method; any other text is used for both as it stands.
+    private static EquatableArray<string> GetAccessorDocumentation(
+        EquatableArray<string> documentationComments,
+        string verb)
+    {
+        const string getsOrSets = "Gets or sets ";
+
+        if (!documentationComments.Any(x => x.Contains(getsOrSets)))
+        {
+            return documentationComments;
+        }
+
+        var isReplaced = false;
+        var result = new List<string>();
+        foreach (var comment in documentationComments)
+        {
+            var index = isReplaced ? -1 : comment.IndexOf(getsOrSets, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                result.Add(comment);
+                continue;
+            }
+
+            isReplaced = true;
+            result.Add(comment.Substring(0, index) + verb + comment.Substring(index + getsOrSets.Length));
+        }
+
+        return new EquatableArray<string>(result.ToArray());
     }
 
     // The body of a Get{Name} / Set{Name} method: an expression body, or a block that

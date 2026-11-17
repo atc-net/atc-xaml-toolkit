@@ -91,6 +91,20 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 📝 Documentation of the accessors
+
+XML documentation on the field is copied to both generated methods. Write it the way a property is documented, starting with "Gets or sets": the generator then writes "Gets ..." on `Get{Name}` and "Sets ..." on `Set{Name}`. Any other text is used for both methods as it stands.
+
+```csharp
+/// <summary>
+/// Gets or sets the grow factor of the element inside its panel.
+/// </summary>
+[AttachedProperty]
+private static double grow;
+```
+
+`<param>` and `<returns>` tags cannot be written on a field (the compiler reports them), so the generated methods have a summary only.
+
 ## 🎯 Typing the accessors with `TargetType` (WPF, WinUI)
 
 By default the generated `Get{Name}` and `Set{Name}` methods take a `DependencyObject`. `TargetType` narrows the parameter to the kind of element the property is meant for:
