@@ -55,8 +55,8 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         if (!elementProcessContext.Current.IsPreservingSpace)
         {
             if (elementProcessContext.Current.Parent?.Name is not null
-                && inlineCollections.Any(c => elementProcessContext.Current.Parent.Name.ContainsOrdinal(c))
-                && inlineTypes.Any(t => elementName.ContainsOrdinal(t)))
+                && inlineCollections.Any(c => IsNameOfType(elementProcessContext.Current.Parent.Name, c))
+                && inlineTypes.Any(t => IsNameOfType(elementName, t)))
             {
                 elementProcessContext.Current.Parent.IsSignificantWhiteSpace = true;
                 if (output.Length == 0 || output.IsNewLine())
@@ -351,5 +351,20 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         }
 
         return indentService.GetIndentString(xmlReader.Depth, options.AttributeIndentation);
+    }
+
+    // True for the type itself ("Run", "ui:Run") and for its property elements
+    // ("TextBlock.Inlines") - not for other types whose name merely contains it ("RunButton").
+    private static bool IsNameOfType(
+        string elementName,
+        string typeName)
+    {
+        var prefixEnd = elementName.IndexOf(":", StringComparison.Ordinal);
+        var localName = prefixEnd >= 0
+            ? elementName.Substring(prefixEnd + 1)
+            : elementName;
+
+        return localName.Equals(typeName, StringComparison.Ordinal) ||
+               localName.StartsWith(typeName + ".", StringComparison.Ordinal);
     }
 }

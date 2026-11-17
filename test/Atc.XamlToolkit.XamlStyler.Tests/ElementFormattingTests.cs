@@ -173,4 +173,31 @@ public sealed class ElementFormattingTests
 
         result.Should().Contain("<TextBlock><Run Text=\"a\" /> <Run Text=\"b\" /></TextBlock>");
     }
+
+    [Fact]
+    public void ElementsWhoseNamesOnlyContainAnInlineTypeName_AreNotTreatedAsInlineContent()
+    {
+        // 'TextBlockHost' is not a TextBlock and 'RunButton' is not a Run.
+        var xaml = "<local:TextBlockHost xmlns:local=\"urn:x\">Hello <local:RunButton /> world</local:TextBlockHost>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        // Formatted like any other element with mixed content, not kept on one line as inline text.
+        result.Should().Be(
+            "<local:TextBlockHost xmlns:local=\"urn:x\">" + Environment.NewLine +
+            "    Hello" + Environment.NewLine +
+            "    <local:RunButton />" + Environment.NewLine +
+            "    world" + Environment.NewLine +
+            "</local:TextBlockHost>");
+    }
+
+    [Fact]
+    public void InlineElementsWithANamespacePrefix_AreStillTreatedAsInlineContent()
+    {
+        var xaml = "<ui:TextBlock xmlns:ui=\"urn:x\">Hello <ui:Run Text=\"x\" /> world</ui:TextBlock>";
+
+        var result = new XamlStylerService(new XamlStylerOptions()).StyleDocument(xaml);
+
+        result.Should().Contain("Hello <ui:Run Text=\"x\" />");
+    }
 }
