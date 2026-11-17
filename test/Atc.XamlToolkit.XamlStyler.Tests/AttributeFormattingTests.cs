@@ -147,4 +147,24 @@ public sealed class AttributeFormattingTests
         parse.Should().NotThrow();
         StyleWith(result).Should().Be(result, "formatting should be idempotent");
     }
+
+    [Fact]
+    public void XmlnsDeclaration_WithSpaceBeforeEquals_IsWrittenWithoutPlaceholder()
+    {
+        var xaml = "<Grid xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:x =\"http://schemas.microsoft.com/winfx/2006/xaml\" x:Name=\"Root\" />";
+
+        var result = StyleWith(xaml, o => o.AttributesTolerance = 5);
+
+        result.Should().Be("<Grid xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\" x:Name=\"Root\" />");
+    }
+
+    [Fact]
+    public void AttributeValue_MentioningXmlnsPrefix_IsNotMistakenForADeclaration()
+    {
+        var xaml = "<Button xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\"100\" ToolTip=\"Add xmlns:local\" Height=\"100\" />";
+
+        var result = StyleWith(xaml, o => o.AttributesTolerance = 5);
+
+        result.Should().Be("<Button xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" Width=\"100\" Height=\"100\" ToolTip=\"Add xmlns:local\" />");
+    }
 }

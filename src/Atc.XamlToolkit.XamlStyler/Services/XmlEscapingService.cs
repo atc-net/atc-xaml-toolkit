@@ -4,8 +4,8 @@ internal sealed class XmlEscapingService
 {
     private readonly Regex htmlReservedCharRegex = new(@"&(?<entity>[\d\D][^;]{1,7});", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
     private readonly Regex htmlReservedCharRestoreRegex = new(@"__amp__(?<entity>[\d\D][^;]{1,7})__scln__", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
-    private readonly Regex xmlnsAliasesBypassRegex = new(@"xmlns(?<colonprefix>:(?<prefix>[^=]+))=""(?<ns>[^""]+)""", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
-    private readonly Regex xmlnsAliasesBypassRestoreRegex = new(@"xmlns:(?<prefix>[^=]+)=""\[(\k<prefix>)\](?<ns>[^""]+)""", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
+    private readonly Regex xmlnsAliasesBypassRegex = new(@"xmlns(?<colonprefix>:(?<prefix>[\w.\-]+))\s*=\s*""(?<ns>[^""]+)""", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
+    private readonly Regex xmlnsAliasesBypassRestoreRegex = new(@"xmlns:(?<prefix>[\w.\-]+)\s*=\s*""\[(\k<prefix>)\](?<ns>[^""]+)""", RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
 
     public string EscapeDocument(string source)
     {
