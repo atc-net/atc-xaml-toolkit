@@ -144,4 +144,33 @@ public sealed class ElementFormattingTests
         result.Should().Be(expected);
         StyleWith(result).Should().Be(result, "formatting should be idempotent");
     }
+
+    [Fact]
+    public void WhitespaceWithoutLineBreak_BetweenElements_LeavesNoTrailingSpaces()
+    {
+        var xaml = WrapXaml(" <Grid> <Button /> <Button /></Grid> ");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <Grid>",
+            "        <Button />",
+            "        <Button />",
+            "    </Grid>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void WhitespaceWithoutLineBreak_BetweenInlineElements_IsKept()
+    {
+        var xaml = WrapXaml("\n    <TextBlock><Run Text=\"a\" /> <Run Text=\"b\" /></TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        result.Should().Contain("<TextBlock><Run Text=\"a\" /> <Run Text=\"b\" /></TextBlock>");
+    }
 }

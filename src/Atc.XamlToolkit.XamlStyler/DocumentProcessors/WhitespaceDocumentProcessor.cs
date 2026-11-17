@@ -22,6 +22,13 @@ internal sealed class WhitespaceDocumentProcessor : IDocumentProcessor
                 .ReplaceOrdinal("\r", string.Empty)
                 .ReplaceOrdinal("\n", Environment.NewLine));
         }
+        else if (!hasNewline
+            && !elementProcessContext.Current.IsPreservingSpace
+            && !elementProcessContext.Current.IsSignificantWhiteSpace)
+        {
+            // Spaces between block elements on one line carry no meaning. Writing them would leave
+            // trailing spaces once the next element moves to its own line.
+        }
         else
         {
             output.Append(xmlReader.Value.ReplaceOrdinal("\n", Environment.NewLine));
