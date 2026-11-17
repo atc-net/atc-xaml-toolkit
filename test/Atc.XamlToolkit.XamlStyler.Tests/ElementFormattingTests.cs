@@ -91,4 +91,57 @@ public sealed class ElementFormattingTests
         result.Should().Contain("<TextBlock>File > Open</TextBlock>");
         StyleWith(result).Should().Be(result, "formatting should be idempotent");
     }
+
+    [Fact]
+    public void InlineContent_KeepsSpaceBetweenTextAndInlineElement()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>Hello <Run Text=\"x\" /> world</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello <Run Text=\"x\" />",
+            "        world</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void InlineContent_DoesNotAddSpaceBetweenInlineElementAndText()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>Hello<Run Text=\"x\" />world <Bold>big</Bold>.</TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello<Run Text=\"x\" />world <Bold>big</Bold>.</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
+
+    [Fact]
+    public void InlineContent_OnSeparateLines_KeepsWhitespaceBetweenTextAndInlineElement()
+    {
+        var xaml = WrapXaml("\n    <TextBlock>\n        Hello\n        <Run Text=\"x\" />\n        world\n    </TextBlock>\n");
+
+        var result = StyleWith(xaml);
+
+        var expected = string.Join(
+            Environment.NewLine,
+            "<Root xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">",
+            "    <TextBlock>",
+            "        Hello <Run Text=\"x\" />",
+            "        world</TextBlock>",
+            "</Root>");
+        result.Should().Be(expected);
+        StyleWith(result).Should().Be(result, "formatting should be idempotent");
+    }
 }

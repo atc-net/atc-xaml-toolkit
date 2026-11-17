@@ -60,6 +60,11 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
                 {
                     output.Append(currentIndentString);
                 }
+                else if (elementProcessContext.Current.Parent.TextTrailingWhitespaceIndex == output.Length)
+                {
+                    // The preceding text ended with whitespace (e.g. "Hello <Run />"); keep one space.
+                    output.Append(' ');
+                }
             }
             else
             {
