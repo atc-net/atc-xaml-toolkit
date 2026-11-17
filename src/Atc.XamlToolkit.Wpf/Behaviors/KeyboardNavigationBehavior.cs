@@ -178,8 +178,9 @@ public class KeyboardNavigationBehavior : Microsoft.Xaml.Behaviors.Behavior<Fram
         object sender,
         RoutedEventArgs e)
     {
-        // Ensure keyboard focus is set when the element gets focus
-        if (AssociatedObject is not null)
+        // Ensure keyboard focus is set when the element itself gets focus.
+        // GotFocus bubbles, so focus that a child control received must stay with the child.
+        if (AssociatedObject is not null && ReferenceEquals(e.OriginalSource, AssociatedObject))
         {
             Keyboard.Focus(AssociatedObject);
         }

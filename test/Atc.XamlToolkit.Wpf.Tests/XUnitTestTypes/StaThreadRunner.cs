@@ -36,6 +36,24 @@ internal static class StaThreadRunner
         failure?.Throw();
     }
 
+    // Shows the content in a window, so it is loaded and can take keyboard focus.
+    public static Window ShowInWindow(UIElement content)
+    {
+        var window = new Window
+        {
+            Content = content,
+            Width = 200,
+            Height = 100,
+            ShowInTaskbar = false,
+            WindowStyle = WindowStyle.None,
+        };
+
+        window.Show();
+        window.Activate();
+        PumpDispatcher();
+        return window;
+    }
+
     /// <summary>
     /// Processes everything queued on the current thread's dispatcher.
     /// </summary>

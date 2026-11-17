@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Update="Atc.XUnit" Version="4.0.0" />
+    <PackageReference Include="Avalonia.Headless" Version="12.1.6" />
   </ItemGroup>
 
 
