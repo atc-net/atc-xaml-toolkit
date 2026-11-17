@@ -149,6 +149,32 @@ public sealed class ObservableValidatorTests
     }
 
     [Fact]
+    public void HasErrors_IsReportedOnEveryTransition_ThroughEveryWayOfValidating()
+    {
+        var sut = new TestPersonValidator();
+        var reportedHasErrors = new List<bool>();
+        sut.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ObservableValidator.HasErrors))
+            {
+                reportedHasErrors.Add(sut.HasErrors);
+            }
+        };
+
+        sut.RunValidateAllProperties();          // empty name: invalid
+        sut.RunValidateAllProperties();          // still invalid: no report
+        sut.FirstName = "Alice";
+        sut.RunValidateAllProperties();          // valid again
+        sut.RunValidateFirstName(string.Empty);  // invalid through ValidateProperty
+        sut.RunClearAllErrors();                 // cleared
+        sut.RunClearAllErrors();                 // already clear: no report
+
+        reportedHasErrors
+            .Should()
+            .Equal([true, false, true, false], "HasErrors is reported each time it changes, and only then");
+    }
+
+    [Fact]
     public void Validation_RaisesErrorsChangedOnce_PerChangeOfAPropertysErrors()
     {
         var sut = new TestPersonValidator(validateOnPropertyChanged: true);
@@ -297,5 +323,8 @@ public sealed class ObservableValidatorTests
 
         public void RunValidateFirstName(string value)
             => ValidateProperty(value, nameof(FirstName));
+
+        public void RunClearAllErrors()
+            => ClearAllErrors();
     }
 }

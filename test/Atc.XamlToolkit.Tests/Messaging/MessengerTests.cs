@@ -502,6 +502,34 @@ public sealed class MessengerTests
     }
 
     [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void RequestCleanup_CleansUpInline_OnlyAfter64IgnoredRequests()
+    {
+        // Registering requests a cleanup, which is posted; later requests are ignored while it is pending.
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<int>(messenger);
+        ForceFullGarbageCollection();
+        var typeMap = (System.Collections.IDictionary)GetPrivateField(messenger, "recipientsStrictAction")!;
+
+        for (var i = 0; i < 63; i++)
+        {
+            messenger.RequestCleanup();
+        }
+
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeTrue("63 ignored requests are not enough to give up on the posted cleanup");
+
+        messenger.RequestCleanup();
+
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeFalse("the 64th ignored request runs the cleanup on the calling thread");
+    }
+
+    [Fact]
     public void Register_DoesNotThrow_WhenTheContextRejectsThePostedCleanup()
     {
         var messenger = CreateMessengerOn(new RejectingSynchronizationContext());
