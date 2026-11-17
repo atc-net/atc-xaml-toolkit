@@ -268,9 +268,9 @@ internal static class ViewModelGeneratorHelper
         }
 
         return new INotifyPropertyChangedTarget(
-            namespaceName: classSymbol.GetNamespaceName(),
-            className: classSymbol.Name,
-            accessModifier: classSymbol.GetAccessModifier())
+            NamespaceName: classSymbol.GetNamespaceName(),
+            ClassName: classSymbol.Name,
+            AccessModifier: classSymbol.GetAccessModifier())
         {
             TypeParameterList = classSymbol.GetTypeParameterList(),
             ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),

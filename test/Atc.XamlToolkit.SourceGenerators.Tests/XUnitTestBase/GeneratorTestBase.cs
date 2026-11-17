@@ -90,6 +90,40 @@ public abstract class GeneratorTestBase
     }
 
     /// <summary>
+    /// Runs the generator, then adds an unrelated file to the compilation and runs it again -
+    /// what happens in the IDE when another file is edited: the syntax trees of the given
+    /// sources stay the same instances, only the compilation changes.
+    /// </summary>
+    /// <typeparam name="T">The generator type.</typeparam>
+    /// <param name="inputCodes">Source files to compile.</param>
+    /// <returns>The second run's <see cref="GeneratorRunResult"/>, exposing TrackedSteps.</returns>
+    internal static GeneratorRunResult RunGeneratorIncrementalAfterUnrelatedEdit<T>(
+        params string[] inputCodes)
+        where T : IIncrementalGenerator, new()
+    {
+        var firstCompilation = CreateCompilation(inputCodes);
+
+        var secondCompilation = firstCompilation.AddSyntaxTrees(
+            CSharpSyntaxTree.ParseText("namespace Unrelated { public class Other { } }"));
+
+        T generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: [generator.AsSourceGenerator()],
+            additionalTexts: null,
+            parseOptions: null,
+            optionsProvider: null,
+            driverOptions: new GeneratorDriverOptions(
+                disabledOutputs: IncrementalGeneratorOutputKind.None,
+                trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(firstCompilation);
+        driver = driver.RunGenerators(secondCompilation);
+
+        return driver.GetRunResult().Results[0];
+    }
+
+    /// <summary>
     /// Asserts that every output entry of the given tracked step on the second
     /// run reports <see cref="IncrementalStepRunReason.Cached"/> or
     /// <see cref="IncrementalStepRunReason.Unchanged"/> — i.e. the model is

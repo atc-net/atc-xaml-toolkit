@@ -59,8 +59,8 @@ internal static class ViewModelDiagnosticHelper
         var invalidObservablePropertyFields = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsObservablePropertyFieldTarget(syntaxNode),
-                transform: static (ctx, _) => GetObservablePropertyFieldDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(GetObservablePropertyFieldDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ObservablePropertyFieldDiagnostics");
 
         context.RegisterSourceOutput(
@@ -77,8 +77,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyPropertyChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyPropertyChangedForDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(GetNotifyPropertyChangedForDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyPropertyChangedForDiagnostics");
 
         context.RegisterSourceOutput(
@@ -93,8 +93,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyCanExecForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyCanExecuteChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyCanExecuteChangedForDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(GetNotifyCanExecuteChangedForDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyCanExecuteChangedForDiagnostics");
 
         context.RegisterSourceOutput(
@@ -112,8 +112,8 @@ internal static class ViewModelDiagnosticHelper
         var computedPropertyDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithComputedPropertyUsage(syntaxNode),
-                transform: static (ctx, _) => GetComputedPropertyDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(GetComputedPropertyDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ComputedPropertyDiagnostics");
 
         context.RegisterSourceOutput(
@@ -131,8 +131,8 @@ internal static class ViewModelDiagnosticHelper
         var notifyDataErrorInfoDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyDataErrorInfoUsage(syntaxNode),
-                transform: static (ctx, _) => GetNotifyDataErrorInfoDiagnostics(ctx))
-            .Where(static diagnostics => diagnostics is { Count: > 0 })
+                transform: static (ctx, _) => ToEquatableArray(GetNotifyDataErrorInfoDiagnostics(ctx)))
+            .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyDataErrorInfoDiagnostics");
 
         context.RegisterSourceOutput(
@@ -140,15 +140,18 @@ internal static class ViewModelDiagnosticHelper
             static (spc, diagnostics) => ReportAll(spc, diagnostics));
     }
 
+    // A list has reference equality, which would make the pipeline re-run its output on every
+    // compilation change. Diagnostic itself compares by descriptor, message and location.
+    private static EquatableArray<Diagnostic> ToEquatableArray(
+        List<Diagnostic>? diagnostics)
+        => diagnostics is null
+            ? EquatableArray<Diagnostic>.Empty
+            : new EquatableArray<Diagnostic>(diagnostics.ToArray());
+
     private static void ReportAll(
         SourceProductionContext spc,
-        List<Diagnostic>? diagnostics)
+        EquatableArray<Diagnostic> diagnostics)
     {
-        if (diagnostics is null)
-        {
-            return;
-        }
-
         foreach (var diagnostic in diagnostics)
         {
             spc.ReportDiagnostic(diagnostic);

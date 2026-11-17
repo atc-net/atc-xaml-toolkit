@@ -196,6 +196,7 @@ internal static class FrameworkElementGeneratorHelper
                 predicate: static (syntaxNode, _) => IsRoutedEventCandidate(syntaxNode),
                 transform: static (ctx, _) => GetRoutedEventLocations(ctx))
             .Where(static result => result is not null && result.Locations.Length > 0)
+            .WithTrackingName("FrameworkElementGenerator.RoutedEventLocations")
             .Combine(context.CompilationProvider.Select(static (c, _) => c.GetXamlPlatform()))
             .Where(static pair => pair.Right != XamlPlatform.Wpf);
 
