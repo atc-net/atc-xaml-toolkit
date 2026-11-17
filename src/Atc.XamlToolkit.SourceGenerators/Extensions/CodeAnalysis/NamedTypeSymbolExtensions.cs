@@ -297,15 +297,6 @@ internal static class NamedTypeSymbolExtensions
         return false;
     }
 
-    [SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "OK")]
-    public static IList<ClassDeclarationSyntax> GetAllPartialClassDeclarations(
-        this INamedTypeSymbol classSymbol)
-        => classSymbol
-            .DeclaringSyntaxReferences
-            .Select(r => r.GetSyntax())
-            .OfType<ClassDeclarationSyntax>()
-            .ToList();
-
     /// <summary>
     /// Checks if the class symbol inherits from ViewModelBase or ObservableObject.
     /// Since all partial declarations resolve to the same type symbol, checking

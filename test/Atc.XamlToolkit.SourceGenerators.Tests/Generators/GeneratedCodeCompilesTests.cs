@@ -721,6 +721,73 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ClassesSplitOverSeveralPartialDeclarations_GetEachMemberOnce()
+    {
+        const string firstFile =
+            """
+            using Atc.XamlToolkit.Controls.Attributes;
+
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private string name = string.Empty;
+            }
+
+            public partial class TestViewModel
+            {
+                [RelayCommand]
+                private void Save()
+                {
+                }
+            }
+
+            [StyledProperty<int>("Size")]
+            public partial class SizeControl : Avalonia.Controls.UserControl
+            {
+            }
+
+            public partial class SizeControl
+            {
+                [StyledProperty]
+                private int depth;
+            }
+            """;
+
+        const string secondFile =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel
+            {
+                [ObservableProperty]
+                private int age;
+
+                [ComputedProperty]
+                public string Display => $"{Name} ({Age})";
+
+                [RelayCommand]
+                private Task LoadAsync() => Task.CompletedTask;
+            }
+
+            public partial class SizeControl
+            {
+                [RelayCommand]
+                private void Grow() => Size += Depth;
+            }
+
+            public static class Consumer
+            {
+                public static string Use(TestViewModel viewModel, SizeControl control)
+                    => $"{viewModel.Name}{viewModel.Age}{viewModel.SaveCommand}{viewModel.LoadAsyncCommand}{control.Size}{control.Depth}{control.GrowCommand}";
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(firstFile, secondFile);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

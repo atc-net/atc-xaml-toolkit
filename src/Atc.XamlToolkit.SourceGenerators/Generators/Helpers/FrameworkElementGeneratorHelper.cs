@@ -119,8 +119,6 @@ internal static class FrameworkElementGeneratorHelper
             }
         }
 
-        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
-
         if (!classSymbol.HasAnythingAroundFrameworkElement())
         {
             return null;
@@ -134,32 +132,18 @@ internal static class FrameworkElementGeneratorHelper
 
         var xamlPlatform = context.SemanticModel.Compilation.GetXamlPlatform();
 
-        foreach (var partialClassSyntax in allPartialDeclarations)
+        // The symbol covers every partial declaration of the class, so one inspection is enough.
+        var result = FrameworkElementInspector.Inspect(xamlPlatform, classSymbol);
+
+        if (result.FoundAnythingToGenerate)
         {
-            if (context.SemanticModel.Compilation
-                    .GetSemanticModel(partialClassSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(partialClassSyntax) is not { } partialClassSymbol)
-            {
-                continue;
-            }
-
-            var result = FrameworkElementInspector.Inspect(xamlPlatform, partialClassSymbol);
-
-            if (!result.FoundAnythingToGenerate)
-            {
-                continue;
-            }
-
             result.ApplyCommandsAndPropertiesAndEvents(
                 allAttachedProperties,
                 allDependencyProperties,
                 allRoutedEvents,
                 allRelayCommands);
 
-            if (!isStatic)
-            {
-                isStatic = result.IsStatic;
-            }
+            isStatic = result.IsStatic;
         }
 
         // The commands of a view model class are emitted by ViewModelGenerator

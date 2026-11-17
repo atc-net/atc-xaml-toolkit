@@ -164,8 +164,6 @@ internal static class ViewModelGeneratorHelper
             return null;
         }
 
-        var allPartialDeclarations = classSymbol.GetAllPartialClassDeclarations();
-
         var (hasAnyBase, inheritFromViewModel) = classSymbol.CheckBaseClasses();
 
         // [INotifyPropertyChanged] gives the class its own RaisePropertyChanged via the
@@ -180,24 +178,13 @@ internal static class ViewModelGeneratorHelper
         var allRelayCommands = new List<RelayCommandToGenerate>();
         var allComputedProperties = new List<ComputedPropertyToGenerate>();
 
-        foreach (var partialClassSyntax in allPartialDeclarations)
+        // The symbol covers every partial declaration of the class, so one inspection is enough.
+        var result = ViewModelInspector.Inspect(
+            classSymbol,
+            inheritFromViewModel);
+
+        if (result.FoundAnythingToGenerate)
         {
-            if (context.SemanticModel.Compilation
-                    .GetSemanticModel(partialClassSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(partialClassSyntax) is not { } partialClassSymbol)
-            {
-                continue;
-            }
-
-            var result = ViewModelInspector.Inspect(
-                partialClassSymbol,
-                inheritFromViewModel);
-
-            if (!result.FoundAnythingToGenerate)
-            {
-                continue;
-            }
-
             result.ApplyCommandsAndProperties(
                 allObservableProperties,
                 allRelayCommands,
