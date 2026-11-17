@@ -51,7 +51,7 @@ internal static class NamedTypeSymbolExtensions
                 var documentationComments = p.ExtractPropertyDocumentationComments();
 
                 return new DtoPropertyInfo(
-                    p.Name,
+                    p.Name.EscapeKeyword(),
                     p.Type.ToString(),
                     isRecordParameter,
                     isReadOnly,

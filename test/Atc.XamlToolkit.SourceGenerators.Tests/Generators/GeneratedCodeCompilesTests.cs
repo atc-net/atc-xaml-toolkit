@@ -867,6 +867,55 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void ObservableProperty_FieldNamedValue_IsNotConfusedWithTheSetterParameter()
+    {
+        // 'value' is also the name of the setter's implicit parameter, so the field
+        // must be qualified - otherwise the setter compares and assigns the parameter to itself.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [ObservableProperty]
+                private int value;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+        var generatedCode = generatorResult.GeneratorResult.GeneratedSources[0].SourceText.ToString();
+
+        Assert.Contains("get => this.value;", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("if (this.value == value)", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("this.value = value;", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ObservableDtoViewModel_PropertyWithKeywordName_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Booking
+            {
+                public string @class { get; set; } = string.Empty;
+
+                public int @event { get; set; }
+            }
+
+            [ObservableDtoViewModel(typeof(Booking))]
+            public partial class BookingViewModel : ViewModelBase
+            {
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

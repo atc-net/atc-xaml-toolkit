@@ -87,7 +87,10 @@ internal static class ObservablePropertyInspector
         bool generateDocumentationDefault,
         List<ObservablePropertyToGenerate> propertiesToGenerate)
     {
-        var backingFieldName = fieldSymbol.Name.EscapeKeyword();
+        // A field named 'value' would be hidden by the setter's implicit parameter.
+        var backingFieldName = fieldSymbol.Name == "value"
+            ? "this.value"
+            : fieldSymbol.Name.EscapeKeyword();
         var propertyType = fieldSymbol.Type.ToString();
 
         var fieldArgumentValues = fieldPropertyAttribute.ExtractConstructorArgumentValues();
