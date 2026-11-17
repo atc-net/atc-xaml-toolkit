@@ -346,6 +346,13 @@ internal abstract class CommandBuilderBase : BuilderBase
                         : "() =>");
                 useDispatcherInvoke = true;
                 break;
+            case true when supportsCancellation && parameterNamesWithoutCt.Length > 1:
+                // When AutoSetIsBusy + SupportsCancellation with multiple parameters,
+                // the lambda must accept the parameters as one tuple AND CancellationToken
+                builder.AppendLine("async (x, cancellationToken) =>");
+                useAwait = true;
+                useDispatcherInvokeAsync = true;
+                break;
             case true when execExprContainParameters:
                 builder.AppendLine("async x =>");
                 useAwait = true;
@@ -640,15 +647,14 @@ internal abstract class CommandBuilderBase : BuilderBase
             // don't wrap in Task.Run
             if (cmd.ExecuteOnBackgroundThread && !(cmd.SupportsCancellation && hasCt))
             {
-                return $"Task.Run(() => {cmd.MethodName}{call})";
+                return $"x => Task.Run(() => {cmd.MethodName}{call})";
             }
 
-            // When SupportsCancellation = true and method has CancellationToken
+            // When SupportsCancellation = true and method has CancellationToken,
+            // pass the command's token on instead of CancellationToken.None
             if (cmd.SupportsCancellation && hasCt)
             {
-                // Remove CancellationToken.None from the call
-                var ctFreeCall = args is not null ? $"({args})" : "()";
-                return $"x => {cmd.MethodName}{ctFreeCall}";
+                return $"(x, cancellationToken) => {cmd.MethodName}({args}, cancellationToken)";
             }
 
             return $"x => {cmd.MethodName}{call}";
@@ -716,24 +722,23 @@ internal abstract class CommandBuilderBase : BuilderBase
                     : $"{cmd.MethodName}(x)";
             }
 
+            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
+
             // When both AutoSetIsBusy and SupportsCancellation are true with multiple parameters,
-            // the lambda will provide the actual parameter names, so use them
+            // the lambda receives the parameters as one tuple (x) plus the CancellationToken
             if (cmd.SupportsCancellation && hasCt)
             {
-                var paramNames = cmd.GetParameterNamesWithoutCancellationToken();
-                var paramList = string.Join(", ", paramNames);
-                return $"{cmd.MethodName}({paramList}, cancellationToken)";
+                return $"{cmd.MethodName}({args}, cancellationToken)";
             }
-
-            var args = cmd.GetParameterTypesWithoutCancellationTokenAsItemNumberArgsAsCommaSeparated();
 
             var call = hasCt
                 ? $"({args}, {NameConstants.CancellationTokenNone})"
                 : $"({args})";
 
+            // The lambda parameter (x) is emitted by AppendAutoSetIsBusyBlock
             return cmd.ExecuteOnBackgroundThread
                 ? $"Task.Run(() => {cmd.MethodName}{call})"
-                : $"x => {cmd.MethodName}{call}";
+                : $"{cmd.MethodName}{call}";
         }
 
         if (cmd.ExecuteOnBackgroundThread)

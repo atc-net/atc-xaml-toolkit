@@ -264,6 +264,63 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
         AssertCompilesWithAllGenerators(inputCode);
     }
 
+    [Theory]
+    [InlineData("ExecuteOnBackgroundThread = true", "void", "")]
+    [InlineData("ExecuteOnBackgroundThread = true", "Task", "")]
+    [InlineData("ExecuteOnBackgroundThread = true", "Task", ", CancellationToken cancellationToken")]
+    [InlineData("AutoSetIsBusy = true", "void", "")]
+    [InlineData("AutoSetIsBusy = true", "Task", "")]
+    [InlineData("AutoSetIsBusy = true", "Task", ", CancellationToken cancellationToken")]
+    [InlineData("AutoSetIsBusy = true, ExecuteOnBackgroundThread = true", "void", "")]
+    [InlineData("AutoSetIsBusy = true, ExecuteOnBackgroundThread = true", "Task", "")]
+    [InlineData("AutoSetIsBusy = true, ExecuteOnBackgroundThread = true", "Task", ", CancellationToken cancellationToken")]
+    [InlineData("SupportsCancellation = true", "Task", "")]
+    [InlineData("SupportsCancellation = true", "Task", ", CancellationToken cancellationToken")]
+    [InlineData("SupportsCancellation = true, AutoSetIsBusy = true", "Task", ", CancellationToken cancellationToken")]
+    public void RelayCommand_TwoParameters_Compiles(
+        string attributeArguments,
+        string returnType,
+        string cancellationTokenParameter)
+    {
+        var body = returnType == "void" ? "{ }" : "=> Task.CompletedTask;";
+
+        var inputCode =
+            $$"""
+              namespace TestNamespace;
+
+              public partial class TestViewModel : ViewModelBase
+              {
+                  [RelayCommand({{attributeArguments}})]
+                  private {{returnType}} Move(int column, string row{{cancellationTokenParameter}}) {{body}}
+              }
+              """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
+    public void ObservableDtoViewModel_CommandWithTwoParametersOnBackgroundThread_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Person
+            {
+                public string Name { get; set; } = string.Empty;
+            }
+
+            [ObservableDtoViewModel(typeof(Person))]
+            public partial class PersonViewModel : ViewModelBase
+            {
+                [RelayCommand(ExecuteOnBackgroundThread = true)]
+                private Task Move(int column, string row) => Task.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
     [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {

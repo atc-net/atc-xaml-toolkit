@@ -282,9 +282,15 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
                 ? $"({args}, {NameConstants.CancellationTokenNone})"
                 : $"({args})";
 
-            return cmd.ExecuteOnBackgroundThread
-                ? $"Task.Run(() => {cmd.MethodName}{call})"
-                : $"x => {cmd.MethodName}{call}";
+            if (cmd.ExecuteOnBackgroundThread)
+            {
+                // With AutoSetIsBusy the lambda parameter (x) is emitted by AppendAutoSetIsBusyBlock
+                return cmd.AutoSetIsBusy
+                    ? $"Task.Run(() => {cmd.MethodName}{call})"
+                    : $"x => Task.Run(() => {cmd.MethodName}{call})";
+            }
+
+            return $"x => {cmd.MethodName}{call}";
         }
 
         if (cmd.ExecuteOnBackgroundThread)
