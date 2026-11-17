@@ -255,6 +255,16 @@ internal static class FrameworkElementInspectorHelper
         propertyToGenerate.AccessModifier = propertyAttribute.ExtractAccessModifier(NameConstants.AccessModifier);
         propertyToGenerate.TargetType = propertyAttribute.ExtractTypeOfArgument(NameConstants.TargetType);
         propertyToGenerate.NullElementHandling = propertyAttribute.ExtractEnumArgumentName(NameConstants.NullElementHandling);
+
+        // The second parameter of Set{Name} is called value, so that name is taken.
+        var elementParameterName = propertyAttribute.ExtractStringArgument(NameConstants.ElementParameterName);
+        if (elementParameterName is not null &&
+            elementParameterName != "value" &&
+            SyntaxFacts.IsValidIdentifier(elementParameterName))
+        {
+            propertyToGenerate.ElementParameterName = elementParameterName;
+        }
+
         propertyToGenerate.BrowsableForTargetType =
             argumentValues.TryGetValue(NameConstants.BrowsableForTargetType, out var browsable) &&
             "true".Equals(browsable, StringComparison.OrdinalIgnoreCase);

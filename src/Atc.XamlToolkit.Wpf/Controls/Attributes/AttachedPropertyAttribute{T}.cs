@@ -18,6 +18,14 @@ public sealed class AttachedPropertyAttribute<T>(string propertyName) : Dependen
     public NullElementHandling NullElementHandling { get; set; }
 
     /// <summary>
+    /// Gets or sets the name of the element parameter of the generated <c>Get{Name}</c> and
+    /// <c>Set{Name}</c> methods. The default is <c>element</c>. The name is part of the
+    /// method's signature for callers that use named arguments, and it is the parameter
+    /// name an <see cref="ArgumentNullException"/> reports.
+    /// </summary>
+    public string? ElementParameterName { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the generated <c>Get{Name}</c> method gets
     /// <c>[AttachedPropertyBrowsableForType(typeof(TargetType))]</c>, so designers offer the
     /// property only on elements of <see cref="TargetType"/>. Has no effect without

@@ -107,6 +107,76 @@ public sealed partial class FrameworkElementGeneratorTests
     }
 
     [Fact]
+    public void AttachedProperty_ElementParameterName_Wpf_NamesTheParameterOfBothAccessors()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public static partial class ItemHelper
+            {
+                [AttachedProperty(ElementParameterName = "d")]
+                private static double spacing;
+
+                [AttachedProperty(ElementParameterName = "obj", NullElementHandling = NullElementHandling.ThrowArgumentNullException)]
+                private static bool isActive;
+            }
+            """;
+
+        var generatedCode = GenerateFrameworkElementCode(inputCode);
+
+        Assert.Contains(
+            """
+                public static double GetSpacing(DependencyObject d)
+                    => (double)d.GetValue(SpacingProperty);
+            """.EnsureEnvironmentNewLines(),
+            generatedCode,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            """
+                public static void SetSpacing(DependencyObject d, double value)
+                    => d?.SetValue(SpacingProperty, value);
+            """.EnsureEnvironmentNewLines(),
+            generatedCode,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            """
+                public static void SetIsActive(DependencyObject obj, bool value)
+                {
+                    global::System.ArgumentNullException.ThrowIfNull(obj);
+                    obj.SetValue(IsActiveProperty, Atc.XamlToolkit.BooleanBoxes.Box(value));
+                }
+            """.EnsureEnvironmentNewLines(),
+            generatedCode,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("element", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("not valid")]
+    [InlineData("value")]
+    public void AttachedProperty_ElementParameterName_Wpf_ThatCannotBeUsed_FallsBackToElement(
+        string name)
+    {
+        var inputCode =
+            $$"""
+            namespace TestNamespace;
+
+            public static partial class ItemHelper
+            {
+                [AttachedProperty(ElementParameterName = "{{name}}")]
+                private static double spacing;
+            }
+            """;
+
+        var generatedCode = GenerateFrameworkElementCode(inputCode);
+
+        Assert.Contains("public static double GetSpacing(DependencyObject element)", generatedCode, StringComparison.Ordinal);
+        Assert.Contains("public static void SetSpacing(DependencyObject element, double value)", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void AttachedProperty_NullElementHandling_ThrowArgumentNullException_Wpf_ReadOnly_WritesThroughTheKey()
     {
         const string inputCode =

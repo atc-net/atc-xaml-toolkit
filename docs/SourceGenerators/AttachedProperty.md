@@ -149,6 +149,8 @@ public static void SetSpacing(DependencyObject element, double value)
 }
 ```
 
+`ElementParameterName` renames the element parameter of both methods (the default is `element`), for example `ElementParameterName = "obj"` gives `GetSpacing(DependencyObject obj)`. It matters when existing callers use named arguments, and it is the name an `ArgumentNullException` reports.
+
 `ThrowArgumentNullException` is the behaviour to prefer in a public API. `None` exists so a hand-written accessor that uses the element directly can be converted without changing what it does. `NullElementHandling` is in the `Atc.XamlToolkit` namespace.
 
 ## 🙈 Non-public attached properties and per-element state

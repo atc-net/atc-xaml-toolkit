@@ -26,6 +26,21 @@ public sealed class NullElementHandlingTests
     }
 
     [Fact]
+    public void ElementParameterName_IsTheParameterName_AndTheNameInTheException()
+    {
+        var getMethod = typeof(NullElementAttach).GetMethod(nameof(NullElementAttach.GetNamed))!;
+        var setMethod = typeof(NullElementAttach).GetMethod(nameof(NullElementAttach.SetNamed))!;
+
+        var fromGet = Assert.Throws<ArgumentNullException>(() => NullElementAttach.GetNamed(obj: null!));
+        var fromSet = Assert.Throws<ArgumentNullException>(() => NullElementAttach.SetNamed(obj: null!, value: 1));
+
+        Assert.Equal("obj", getMethod.GetParameters()[0].Name);
+        Assert.Equal("obj", setMethod.GetParameters()[0].Name);
+        Assert.Equal("obj", fromGet.ParamName);
+        Assert.Equal("obj", fromSet.ParamName);
+    }
+
+    [Fact]
     public void None_BothAccessorsThrowNullReference()
     {
         Assert.Throws<NullReferenceException>(() => NullElementAttach.GetPlain(null!));

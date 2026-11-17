@@ -16,4 +16,12 @@ public sealed class AttachedPropertyAttribute<T>(string propertyName) : Dependen
     /// <see cref="NullElementHandling.Default"/>: <c>Set{Name}</c> does nothing.
     /// </summary>
     public NullElementHandling NullElementHandling { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the element parameter of the generated <c>Get{Name}</c> and
+    /// <c>Set{Name}</c> methods. The default is <c>element</c>. The name is part of the
+    /// method's signature for callers that use named arguments, and it is the parameter
+    /// name an <see cref="ArgumentNullException"/> reports.
+    /// </summary>
+    public string? ElementParameterName { get; set; }
 }

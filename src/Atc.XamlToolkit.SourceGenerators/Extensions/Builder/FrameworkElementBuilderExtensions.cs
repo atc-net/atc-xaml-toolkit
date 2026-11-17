@@ -1163,7 +1163,7 @@ internal static class FrameworkElementBuilderExtensions
             builder.AppendLine($"[AttachedPropertyBrowsableForType(typeof({p.TargetType}))]");
         }
 
-        builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} element)");
+        builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} {p.ElementParameterName})");
 
         // For Avalonia with non-nullable reference/value types, add null-forgiving operator
         var nullForgiving = xamlPlatform == XamlPlatform.Avalonia && !p.Type.EndsWith("?", StringComparison.Ordinal)
@@ -1173,7 +1173,7 @@ internal static class FrameworkElementBuilderExtensions
         AppendAttachedAccessorBody(
             builder,
             p,
-            $"({p.Type})element.GetValue({p.Name}Property){nullForgiving}",
+            $"({p.Type}){p.ElementParameterName}.GetValue({p.Name}Property){nullForgiving}",
             isGetter: true);
 
         if (!p.IsReadOnly)
@@ -1192,7 +1192,7 @@ internal static class FrameworkElementBuilderExtensions
                 builder.AppendLine($"[Description(\"Set: {p.Description}\")]");
             }
 
-            builder.AppendLine($"{p.SetMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
+            builder.AppendLine($"{p.SetMethodAccessModifier} static void Set{p.Name}({elementType} {p.ElementParameterName}, {p.Type} value)");
 
             var value = p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
                 ? "Atc.XamlToolkit.BooleanBoxes.Box(value)"
@@ -1206,7 +1206,7 @@ internal static class FrameworkElementBuilderExtensions
             AppendAttachedAccessorBody(
                 builder,
                 p,
-                $"element{nullConditional}.SetValue({p.WritablePropertyIdentifier}, {value})",
+                $"{p.ElementParameterName}{nullConditional}.SetValue({p.WritablePropertyIdentifier}, {value})",
                 isGetter: false);
         }
     }
@@ -1229,7 +1229,7 @@ internal static class FrameworkElementBuilderExtensions
 
         builder.AppendLine("{");
         builder.IncreaseIndent();
-        builder.AppendLine("global::System.ArgumentNullException.ThrowIfNull(element);");
+        builder.AppendLine($"global::System.ArgumentNullException.ThrowIfNull({p.ElementParameterName});");
         builder.AppendLine(isGetter ? $"return {expression};" : $"{expression};");
         builder.DecreaseIndent();
         builder.AppendLine("}");

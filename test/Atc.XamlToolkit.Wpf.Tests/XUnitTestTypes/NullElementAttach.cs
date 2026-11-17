@@ -13,4 +13,9 @@ public static partial class NullElementAttach
 
     [Atc.XamlToolkit.Controls.Attributes.AttachedProperty(NullElementHandling = Atc.XamlToolkit.NullElementHandling.None)]
     private static double plain;
+
+    [Atc.XamlToolkit.Controls.Attributes.AttachedProperty(
+        ElementParameterName = "obj",
+        NullElementHandling = Atc.XamlToolkit.NullElementHandling.ThrowArgumentNullException)]
+    private static double named;
 }
