@@ -57,6 +57,24 @@ public sealed class ElementReorderingTests
     }
 
     [Fact]
+    public void ReorderGridChildren_ChangedAfterTheServiceWasCreated_TakesEffect()
+    {
+        // The formatting options are read on every call; the reordering options must be too.
+        var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
+    <TextBlock Grid.Row=""1"" Text=""B"" />
+    <TextBlock Grid.Row=""0"" Text=""A"" />
+</Grid>";
+        var options = new XamlStylerOptions { ReorderGridChildren = false };
+        var service = new XamlStylerService(options);
+
+        options.ReorderGridChildren = true;
+        var result = service.StyleDocument(xaml);
+
+        result.IndexOf("\"A\"", StringComparison.Ordinal)
+            .Should().BeLessThan(result.IndexOf("\"B\"", StringComparison.Ordinal), "Row=0 should come before Row=1 once reordering is switched on");
+    }
+
+    [Fact]
     public void ReorderGridChildren_Disabled_PreservesOrder()
     {
         var xaml = @"<Grid xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">

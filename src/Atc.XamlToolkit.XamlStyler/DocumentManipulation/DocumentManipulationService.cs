@@ -3,23 +3,46 @@ namespace Atc.XamlToolkit.XamlStyler.DocumentManipulation;
 internal sealed class DocumentManipulationService
 {
     private readonly IXamlStylerOptions options;
-    private readonly List<IProcessElementService> processElementServices;
+    private List<IProcessElementService>? processElementServices;
+    private (VisualStateManagerRule ReorderVsm, ThicknessStyle ThicknessStyle, string ThicknessAttributes, bool ReorderGridChildren, bool ReorderCanvasChildren, ReorderSettersBy ReorderSetters) processElementServicesOptions;
 
     public bool AllowProcessing => !options.SuppressProcessing;
 
     public DocumentManipulationService(IXamlStylerOptions options)
     {
         this.options = options;
-        processElementServices = new List<IProcessElementService>
+    }
+
+    // The services are kept between documents (creating them compiles regular expressions),
+    // but rebuilt when an option they depend on has changed - so a change to the options
+    // after the service was created takes effect, as it does for the formatting options.
+    private List<IProcessElementService> GetProcessElementServices()
+    {
+        var currentOptions = (
+            options.ReorderVSM,
+            options.ThicknessStyle,
+            options.ThicknessAttributes,
+            options.ReorderGridChildren,
+            options.ReorderCanvasChildren,
+            options.ReorderSetters);
+
+        if (processElementServices is null ||
+            !currentOptions.Equals(processElementServicesOptions))
         {
-            new VSMReorderService { Mode = options.ReorderVSM },
-            new FormatThicknessService(
-                options.ThicknessStyle,
-                options.ThicknessAttributes),
-            GetReorderGridChildrenService(),
-            GetReorderCanvasChildrenService(),
-            GetReorderSettersService(),
-        };
+            processElementServicesOptions = currentOptions;
+            processElementServices =
+            [
+                new VSMReorderService { Mode = options.ReorderVSM },
+                new FormatThicknessService(
+                    options.ThicknessStyle,
+                    options.ThicknessAttributes),
+                GetReorderGridChildrenService(),
+                GetReorderCanvasChildrenService(),
+                GetReorderSettersService(),
+            ];
+        }
+
+        return processElementServices;
     }
 
     public string ManipulateDocument(XDocument xDocument)
@@ -31,9 +54,10 @@ internal sealed class DocumentManipulationService
         {
             // The removal service is bound to this document's namespace prefixes, so it is created
             // per call and never added to the shared list.
+            var sharedServices = GetProcessElementServices();
             IReadOnlyList<IProcessElementService> services = options.RemoveDesignTimeReferences
-                ? [.. processElementServices, GetRemoveDesignTimeReferencesService(rootElement)]
-                : processElementServices;
+                ? [.. sharedServices, GetRemoveDesignTimeReferencesService(rootElement)]
+                : sharedServices;
 
             HandleNode(rootElement, services);
         }
