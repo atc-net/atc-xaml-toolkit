@@ -10,8 +10,9 @@ internal static class HeadlessRunner
         static () => global::Avalonia.Headless.HeadlessUnitTestSession.StartNew(typeof(HeadlessTestApplication)));
 
     // Called by HeadlessApplicationFixture before any test runs.
+    // The session sets the application up on the first dispatch, so an empty action is dispatched.
     public static void Start()
-        => _ = Session.Value;
+        => Run(static () => { });
 
     public static void Run(Action action)
     {

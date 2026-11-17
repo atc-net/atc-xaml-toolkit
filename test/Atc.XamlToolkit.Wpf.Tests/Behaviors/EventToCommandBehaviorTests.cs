@@ -91,4 +91,32 @@ public sealed class EventToCommandBehaviorTests
             // Assert
             Assert.Equal(0, executed);
         });
+
+    [Theory]
+    [InlineData(nameof(System.Windows.Controls.Button.Click))]
+    [InlineData(nameof(UIElement.IsEnabledChanged))]
+    public void Attach_DerivedBehavior_ExecutesCommand(string eventName)
+        => StaThreadRunner.Run(() =>
+        {
+            // Arrange
+            var executed = 0;
+            var button = new System.Windows.Controls.Button();
+            var behavior = new DerivedEventToCommandBehavior
+            {
+                EventName = eventName,
+                Command = new RelayCommand(() => executed++),
+            };
+
+            behavior.Attach(button);
+
+            // Act
+            button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            button.IsEnabled = false;
+
+            // Assert
+            Assert.Equal(1, executed);
+        });
+
+    [SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty", Justification = "The test verifies that a derived behavior works.")]
+    private sealed class DerivedEventToCommandBehavior : Atc.XamlToolkit.Behaviors.EventToCommandBehavior;
 }

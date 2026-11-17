@@ -146,7 +146,8 @@ public class EventToCommandBehavior : Microsoft.Xaml.Behaviors.Behavior<Framewor
             !parameters[0].ParameterType.IsValueType &&
             typeof(EventArgs).IsAssignableFrom(parameters[1].ParameterType))
         {
-            var methodInfo = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            // The handler is private, so it is looked up on this type - not on the type of a derived behavior
+            var methodInfo = typeof(EventToCommandBehavior).GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return Delegate.CreateDelegate(handlerType, this, methodInfo!);
         }
 

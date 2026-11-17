@@ -47,6 +47,8 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
             typeof(EventToCommandBehavior),
             new PropertyMetadata(BooleanBoxes.FalseBox));
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Func<EventToCommandBehavior, Delegate>> AdapterFactories = new();
+
     private Delegate? eventHandler;
     private System.Reflection.EventInfo? eventInfo;
 
@@ -132,12 +134,15 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
 
         // Create a dynamic event handler that matches the event signature
         var handlerType = eventInfo.EventHandlerType!;
-        eventHandler = CreateEventHandler(handlerType);
+
+        // The adapter is compiled once per handler type; the behavior is re-attached on every Loaded
+        eventHandler = AdapterFactories.GetOrAdd(handlerType, CreateAdapterFactory)(this);
         eventInfo.AddEventHandler(AssociatedObject, eventHandler);
     }
 
     [SuppressMessage("Design", "S3011:Make sure this accessibility bypass is safe here", Justification = "Intended.")]
-    private Delegate CreateEventHandler(Type handlerType)
+    private static Func<EventToCommandBehavior, Delegate> CreateAdapterFactory(
+        Type handlerType)
     {
         var invokeMethod = handlerType.GetMethod("Invoke")!;
         var parameters = invokeMethod.GetParameters();
@@ -147,8 +152,8 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
             .Select(p => System.Linq.Expressions.Expression.Parameter(p.ParameterType, p.Name))
             .ToArray();
 
-        // Get the method to call
-        var targetMethod = GetType().GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        // Get the method to call. It is private, so it is looked up on this type - not on the type of a derived behavior
+        var targetMethod = typeof(EventToCommandBehavior).GetMethod(nameof(OnEventRaised), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
 
         // Create the method call expression
         // Pass the second parameter (event args) if it exists, otherwise null
@@ -156,14 +161,17 @@ public class EventToCommandBehavior : Microsoft.Xaml.Interactivity.Behavior<Fram
             ? System.Linq.Expressions.Expression.Convert(parameterExpressions[1], typeof(object))
             : System.Linq.Expressions.Expression.Constant(null, typeof(object));
 
+        var behaviorParameter = System.Linq.Expressions.Expression.Parameter(typeof(EventToCommandBehavior), "behavior");
         var callExpression = System.Linq.Expressions.Expression.Call(
-            System.Linq.Expressions.Expression.Constant(this),
+            behaviorParameter,
             targetMethod,
             eventArgsExpression);
 
-        // Create and compile the lambda
-        var lambda = System.Linq.Expressions.Expression.Lambda(handlerType, callExpression, parameterExpressions);
-        return lambda.Compile();
+        // Create and compile a factory that returns the handler for a given behavior
+        var handler = System.Linq.Expressions.Expression.Lambda(handlerType, callExpression, parameterExpressions);
+        return System.Linq.Expressions.Expression
+            .Lambda<Func<EventToCommandBehavior, Delegate>>(handler, behaviorParameter)
+            .Compile();
     }
 
     private void DetachHandler()
