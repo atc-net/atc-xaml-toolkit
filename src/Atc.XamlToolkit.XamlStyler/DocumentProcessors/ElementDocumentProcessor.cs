@@ -54,16 +54,21 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
 
         if (!elementProcessContext.Current.IsPreservingSpace)
         {
-            if (elementProcessContext.Current.Parent?.Name is not null
-                && inlineCollections.Any(c => IsNameOfType(elementProcessContext.Current.Parent.Name, c))
+            var parent = elementProcessContext.Current.Parent;
+            var parentIsInlineCollection =
+                parent?.Name is not null
+                && inlineCollections.Any(c => IsNameOfType(parent.Name, c));
+
+            if (parent is not null
+                && parentIsInlineCollection
                 && inlineTypes.Any(t => IsNameOfType(elementName, t)))
             {
-                elementProcessContext.Current.Parent.IsSignificantWhiteSpace = true;
+                parent.IsSignificantWhiteSpace = true;
                 if (output.Length == 0 || output.IsNewLine())
                 {
                     output.Append(currentIndentString);
                 }
-                else if (elementProcessContext.Current.Parent.TextTrailingWhitespaceIndex == output.Length)
+                else if (parent.TextTrailingWhitespaceIndex == output.Length)
                 {
                     // The preceding text ended with whitespace (e.g. "Hello <Run />"); keep one space.
                     output.Append(' ');
@@ -73,7 +78,9 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
             {
                 if (elementProcessContext.Current.Parent is not null)
                 {
-                    elementProcessContext.Current.Parent.IsSignificantWhiteSpace = false;
+                    // The content of an inline collection is text, so a space after any of its
+                    // children is shown and has to stay.
+                    elementProcessContext.Current.Parent.IsSignificantWhiteSpace = parentIsInlineCollection;
                 }
 
                 if (output.Length == 0 || output.IsNewLine())
@@ -353,8 +360,9 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
         return indentService.GetIndentString(xmlReader.Depth, options.AttributeIndentation);
     }
 
-    // True for the type itself ("Run", "ui:Run") and for its property elements
-    // ("TextBlock.Inlines") - not for other types whose name merely contains it ("RunButton").
+    // True for the type itself ("Run", "ui:Run"), for a type named after it as derived types
+    // are ("SelectableTextBlock"), and for their property elements ("TextBlock.Inlines") -
+    // not for other types whose name merely contains it ("RunButton", "TextBlockHost").
     private static bool IsNameOfType(
         string elementName,
         string typeName)
@@ -364,7 +372,11 @@ internal sealed class ElementDocumentProcessor : IDocumentProcessor
             ? elementName.Substring(prefixEnd + 1)
             : elementName;
 
-        return localName.Equals(typeName, StringComparison.Ordinal) ||
-               localName.StartsWith(typeName + ".", StringComparison.Ordinal);
+        var propertyStart = localName.IndexOf(".", StringComparison.Ordinal);
+        var ownerName = propertyStart >= 0
+            ? localName.Substring(0, propertyStart)
+            : localName;
+
+        return ownerName.EndsWith(typeName, StringComparison.Ordinal);
     }
 }
