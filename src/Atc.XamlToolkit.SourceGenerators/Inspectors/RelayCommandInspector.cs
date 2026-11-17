@@ -203,10 +203,13 @@ internal static class RelayCommandInspector
 
         var documentationComments = methodSymbol.ExtractDocumentationComments();
 
+        // A ValueTask-returning method is called through a generated Task-returning adapter.
+        var returnsValueTask = methodSymbol.ReturnType.Name is NameConstants.ValueTask;
+
         relayCommandsToGenerate.Add(
             new RelayCommandToGenerate(
                 commandName,
-                methodSymbol.Name,
+                returnsValueTask ? methodSymbol.Name + "AsTask" : methodSymbol.Name,
                 new EquatableArray<string>(parameterTypes?.ToArray() ?? []),
                 new EquatableArray<string>(parameterNames?.ToArray() ?? []),
                 new EquatableArray<string>(parameterValues.ToArray()),
@@ -221,6 +224,7 @@ internal static class RelayCommandInspector
                 generateDocumentation)
             {
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
+                ValueTaskMethodName = returnsValueTask ? methodSymbol.Name : null,
             });
     }
 }

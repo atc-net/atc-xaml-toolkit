@@ -22,6 +22,8 @@ internal abstract class CommandBuilderBase : BuilderBase
         builder.AppendLine();
 
         AppendPublicProperties(builder, relayCommandsToGenerate);
+
+        AppendValueTaskAdapterMethods(builder, relayCommandsToGenerate);
     }
 
     public virtual void GenerateRelayCommandMethods(
@@ -36,6 +38,33 @@ internal abstract class CommandBuilderBase : BuilderBase
         AppendCancelMethods(builder, relayCommandsToGenerate);
 
         AppendDisposeCommandsMethod(builder, relayCommandsToGenerate);
+    }
+
+    // Emits a Task-returning adapter for each ValueTask-returning command method,
+    // because the command constructors only accept Task-returning delegates.
+    protected static void AppendValueTaskAdapterMethods(
+        CommandBuilderBase builder,
+        EquatableArray<RelayCommandToGenerate> commands)
+    {
+        var emittedAdapters = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var cmd in commands)
+        {
+            if (cmd.ValueTaskMethodName is null ||
+                !emittedAdapters.Add(cmd.MethodName))
+            {
+                continue;
+            }
+
+            var parameters = new List<string>();
+            for (var i = 0; i < cmd.ParameterNames.Count; i++)
+            {
+                parameters.Add($"{cmd.ParameterTypes[i]} {cmd.ParameterNames[i]}");
+            }
+
+            builder.AppendLine();
+            builder.AppendLine($"private global::System.Threading.Tasks.Task {cmd.MethodName}({string.Join(", ", parameters)})");
+            builder.AppendLine($"    => {cmd.ValueTaskMethodName}({string.Join(", ", cmd.ParameterNames)}).AsTask();");
+        }
     }
 
     private static void AppendPrivateBackingFields(

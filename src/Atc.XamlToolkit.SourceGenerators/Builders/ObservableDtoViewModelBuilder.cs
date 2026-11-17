@@ -243,6 +243,8 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
                 AppendLine($"public {interfaceType}{generic} {propName} => {fieldName} ??= new {implementationType}{generic}({execExpr});");
             }
         }
+
+        AppendValueTaskAdapterMethods(this, commands);
     }
 
     private static string BuildExecuteExpression(RelayCommandToGenerate cmd)

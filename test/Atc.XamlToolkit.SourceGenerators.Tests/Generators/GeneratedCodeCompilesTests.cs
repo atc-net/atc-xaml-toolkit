@@ -322,6 +322,57 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void RelayCommand_ValueTaskMethods_Compiles()
+    {
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public class Person
+            {
+                public string Name { get; set; } = string.Empty;
+            }
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand]
+                private ValueTask Save() => ValueTask.CompletedTask;
+
+                [RelayCommand(CanExecute = nameof(CanOpen))]
+                private ValueTask<int> Open(string path) => ValueTask.FromResult(1);
+
+                private bool CanOpen(string path) => true;
+
+                [RelayCommand(SupportsCancellation = true, AutoSetIsBusy = true)]
+                private async ValueTask Load(string path, CancellationToken cancellationToken)
+                    => await Task.Delay(1, cancellationToken);
+
+                [RelayCommand(ExecuteOnBackgroundThread = true)]
+                private ValueTask Move(int column, int row) => ValueTask.CompletedTask;
+
+                [RelayCommand("FirstPage", ParameterValue = 1)]
+                [RelayCommand("SecondPage", ParameterValue = 2)]
+                private ValueTask GoToPage(int page) => ValueTask.CompletedTask;
+            }
+
+            public partial class SaveBehavior
+            {
+                [RelayCommand]
+                private ValueTask Save(CancellationToken cancellationToken) => ValueTask.CompletedTask;
+            }
+
+            [ObservableDtoViewModel(typeof(Person))]
+            public partial class PersonViewModel : ViewModelBase
+            {
+                [RelayCommand]
+                private ValueTask Save() => ValueTask.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =
