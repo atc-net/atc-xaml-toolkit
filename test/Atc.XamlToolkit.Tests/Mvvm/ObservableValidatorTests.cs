@@ -126,6 +126,57 @@ public sealed class ObservableValidatorTests
             .Should().Contain(e => e.Contains("at least 2 characters", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void ValidationMetadata_IsDiscoveredOncePerType_NotOncePerInstance()
+    {
+        // Reading a property's attributes through reflection constructs the attribute,
+        // so the number of constructions equals the number of reflection scans.
+        var before = CountingRequiredAttribute.InstanceCount;
+
+        var first = new TestCountingValidator();
+        var second = new TestCountingValidator();
+        var third = new TestCountingValidator();
+
+        (CountingRequiredAttribute.InstanceCount - before)
+            .Should()
+            .BeLessThanOrEqualTo(1, "the scan result must be shared by all instances of the type");
+
+        // The shared metadata still validates each instance on its own.
+        first.Name = "set";
+        first.RunValidateAllProperties().Should().BeTrue();
+        second.RunValidateAllProperties().Should().BeFalse();
+        third.RunValidateAllProperties().Should().BeFalse();
+    }
+
+    private sealed class TestCountingValidator : ObservableValidator
+    {
+        public TestCountingValidator()
+        {
+            InitializeValidation(validateOnPropertyChanged: false);
+        }
+
+        [CountingRequired]
+        public string Name { get; set; } = string.Empty;
+
+        public bool RunValidateAllProperties()
+            => ValidateAllProperties();
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    private sealed class CountingRequiredAttribute : ValidationAttribute
+    {
+        private static int instanceCount;
+
+        [SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed", Justification = "Called when the attribute is read through reflection.")]
+        public CountingRequiredAttribute()
+            => Interlocked.Increment(ref instanceCount);
+
+        public static int InstanceCount => Volatile.Read(ref instanceCount);
+
+        public override bool IsValid(object? value)
+            => value is string { Length: > 0 };
+    }
+
     private sealed class TestLazyValidator : ObservableValidator
     {
         private string firstName = string.Empty;

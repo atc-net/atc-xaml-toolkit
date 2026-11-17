@@ -25,9 +25,13 @@ namespace Atc.XamlToolkit.Mvvm;
 [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "OK.")]
 public abstract class ObservableValidator : ObservableObject, INotifyDataErrorInfo
 {
+    // The validation metadata only depends on the type, so it is discovered once per type
+    // and shared by all its instances. The dictionaries are never modified after they are built.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Dictionary<string, PropertyValidationMetadata>> ValidationCaches = new();
+    private static readonly Dictionary<string, PropertyValidationMetadata> NoValidationMetadata = new(StringComparer.Ordinal);
+
     private readonly Dictionary<string, List<string>> errors = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, PropertyValidationMetadata> validationCache = new(StringComparer.Ordinal);
-    private readonly Lock validationCacheBuildLock = new();
+    private Dictionary<string, PropertyValidationMetadata> validationCache = NoValidationMetadata;
     private bool validationCacheBuilt;
 
     /// <summary>
@@ -276,9 +280,10 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Lazily builds the validation cache on the first call from <see cref="ValidateProperty"/> or
-    /// <see cref="InitializeValidation"/>. Thread-safe via double-checked locking. The flag prevents
-    /// rebuilds when both <see cref="InitializeValidation"/> and inline validation (via
+    /// Lazily resolves the validation cache on the first call from <see cref="ValidateProperty"/> or
+    /// <see cref="InitializeValidation"/>. The cache is built once per type and shared by all
+    /// instances of that type. The flag avoids repeated lookups when both
+    /// <see cref="InitializeValidation"/> and inline validation (via
     /// <c>[NotifyDataErrorInfo]</c>) are used on the same instance.
     /// </summary>
     private void EnsureValidationCacheBuilt()
@@ -288,25 +293,18 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
             return;
         }
 
-        lock (validationCacheBuildLock)
-        {
-            if (validationCacheBuilt)
-            {
-                return;
-            }
-
-            BuildValidationCache();
-            validationCacheBuilt = true;
-        }
+        validationCache = ValidationCaches.GetOrAdd(GetType(), static type => BuildValidationCache(type));
+        validationCacheBuilt = true;
     }
 
     /// <summary>
     /// Builds the validation cache by scanning all properties for validation attributes.
-    /// This is done once during initialization to avoid repeated reflection calls.
+    /// This is done once per type to avoid repeated reflection calls.
     /// </summary>
-    private void BuildValidationCache()
+    private static Dictionary<string, PropertyValidationMetadata> BuildValidationCache(
+        Type type)
     {
-        var type = GetType();
+        var cache = new Dictionary<string, PropertyValidationMetadata>(StringComparer.Ordinal);
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var property in properties)
@@ -316,17 +314,19 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
                 continue;
             }
 
-            var validationAttributes = GetValidationAttributesForProperty(property);
+            var validationAttributes = GetValidationAttributesForProperty(type, property);
 
             if (validationAttributes.Count > 0)
             {
-                validationCache[property.Name] = new PropertyValidationMetadata
+                cache[property.Name] = new PropertyValidationMetadata
                 {
                     Property = property,
                     ValidationAttributes = validationAttributes,
                 };
             }
         }
+
+        return cache;
     }
 
     /// <summary>
@@ -335,7 +335,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// <param name="property">The property to scan for validation attributes.</param>
     /// <returns>A list of validation attributes.</returns>
     [SuppressMessage("Design", "S3011:Make sure this accessibility bypass is safe here", Justification = "Intended.")]
-    private List<System.ComponentModel.DataAnnotations.ValidationAttribute> GetValidationAttributesForProperty(
+    private static List<System.ComponentModel.DataAnnotations.ValidationAttribute> GetValidationAttributesForProperty(
+        Type type,
         PropertyInfo property)
     {
         var attributes = new List<System.ComponentModel.DataAnnotations.ValidationAttribute>();
@@ -350,7 +351,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         if (attributes.Count == 0)
         {
             var backingFieldName = char.ToLowerInvariant(property.Name[0]) + property.Name[1..];
-            var backingField = GetType().GetField(backingFieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            var backingField = type.GetField(backingFieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (backingField is not null)
             {
