@@ -46,7 +46,9 @@ internal sealed class AttributeRemovalService : IProcessElementService
         {
             if (elementAttribute.IsNamespaceDeclaration)
             {
-                if (NamespaceDeclarations.Any(ns => ns.NamespaceName == elementAttribute.Name.ToString()))
+                // The prefix alone is not enough: a nested element may reuse it for another namespace.
+                if (NamespaceDeclarations.Any(ns => ns.NamespaceName == elementAttribute.Name.ToString()) &&
+                    initializedAttributes.Any(a => string.Equals(a.Namespace, elementAttribute.Value, StringComparison.Ordinal)))
                 {
                     removedAttributeList.Add(elementAttribute);
                 }
