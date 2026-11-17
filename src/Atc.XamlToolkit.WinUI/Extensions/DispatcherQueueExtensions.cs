@@ -19,6 +19,11 @@ public static class DispatcherQueueExtensions
     /// immediately after calling <see cref="DispatcherQueue.TryEnqueue(DispatcherQueuePriority, DispatcherQueueHandler)"/>
     /// without waiting for the action to run. WPF's and Avalonia's <c>InvokeIfRequired</c> block until the action
     /// completes. If you need WinUI to wait, use <see cref="InvokeAsyncIfRequired"/> and <c>await</c> the result.
+    /// <para>
+    /// If the dispatcher queue no longer accepts work (it is shutting down), the action is dropped
+    /// silently. <see cref="InvokeAsyncIfRequired"/> and <see cref="BeginInvokeIfRequired"/> report
+    /// that case by returning a canceled task.
+    /// </para>
     /// </remarks>
     public static void InvokeIfRequired(
         this DispatcherQueue dispatcherQueue,
