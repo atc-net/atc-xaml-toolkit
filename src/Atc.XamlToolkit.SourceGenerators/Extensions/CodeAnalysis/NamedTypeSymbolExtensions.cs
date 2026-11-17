@@ -59,6 +59,7 @@ internal static class NamedTypeSymbolExtensions
                     new EquatableArray<string>(documentationComments?.ToArray() ?? []))
                 {
                     UseEqualityComparer = !p.Type.SupportsEqualityOperator(),
+                    RequiredNamespaces = p.ExtractPropertyAttributeNamespaces(),
                 };
             })
             .ToList();

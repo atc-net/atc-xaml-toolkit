@@ -37,7 +37,9 @@ internal static class FrameworkElementInspectorHelper
 
             object? defaultValue = null;
 
-            var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue, out var isNullableValueType);
+            var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
+
+            var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue, out var isNullableValueType, requiredNamespaces);
 
             propertyAttribute.EscapeLiteralArgumentValues(argumentValues, type);
 
@@ -80,6 +82,7 @@ internal static class FrameworkElementInspectorHelper
                 generateDocumentation);
 
             propertyToGenerate.IsNullableValueType = isNullableValueType;
+            propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
             propertiesToGenerate.Add(propertyToGenerate);
         }
@@ -155,6 +158,10 @@ internal static class FrameworkElementInspectorHelper
             generateDocumentation);
 
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
+
+        var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
+        fieldSymbol.Type.AddRequiredNamespacesTo(requiredNamespaces);
+        propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
         propertyToGenerate.DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []);

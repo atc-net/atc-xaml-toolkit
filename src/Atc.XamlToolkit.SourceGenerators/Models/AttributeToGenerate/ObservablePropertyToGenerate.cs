@@ -35,5 +35,10 @@ internal sealed record ObservablePropertyToGenerate(
 
     public EquatableArray<string> CustomAttributes { get; set; } = EquatableArray<string>.Empty;
 
+    /// <summary>
+    /// Gets or sets the namespaces the generated file must import for the copied attributes.
+    /// </summary>
+    public EquatableArray<string> RequiredNamespaces { get; set; } = EquatableArray<string>.Empty;
+
     public EquatableArray<string> DocumentationComments { get; set; } = EquatableArray<string>.Empty;
 }

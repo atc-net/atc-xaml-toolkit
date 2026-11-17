@@ -40,6 +40,47 @@ internal abstract class CommandBuilderBase : BuilderBase
         AppendDisposeCommandsMethod(builder, relayCommandsToGenerate);
     }
 
+    // Returns the namespaces the generated command code refers to by simple names.
+    public static List<string> GetCommandUsings(
+        XamlPlatform xamlPlatform,
+        EquatableArray<RelayCommandToGenerate> commands)
+    {
+        var namespaces = new List<string>();
+        if (commands.IsEmpty)
+        {
+            return namespaces;
+        }
+
+        namespaces.Add("Atc.XamlToolkit.Command");
+
+        if (commands.Any(c => c.UseTask || c.ExecuteOnBackgroundThread))
+        {
+            // Task and CancellationToken
+            namespaces.Add("System.Threading");
+            namespaces.Add("System.Threading.Tasks");
+        }
+
+        switch (xamlPlatform)
+        {
+            case XamlPlatform.Wpf when commands.Any(c => c.AutoSetIsBusy):
+                // Application.Current and the dispatcher extension methods
+                namespaces.Add("System.Windows");
+                namespaces.Add("System.Windows.Threading");
+                break;
+            case XamlPlatform.WinUI:
+                namespaces.Add("Microsoft.UI.Dispatching");
+                if (commands.Any(c => c.UseTask))
+                {
+                    // INotifyPropertyChanged
+                    namespaces.Add("System.ComponentModel");
+                }
+
+                break;
+        }
+
+        return namespaces;
+    }
+
     // Emits a Task-returning adapter for each ValueTask-returning command method,
     // because the command constructors only accept Task-returning delegates.
     protected static void AppendValueTaskAdapterMethods(

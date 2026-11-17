@@ -5,6 +5,41 @@ internal static class TypeSymbolExtensions
     private const string ToolkitNamespace = "Atc.XamlToolkit";
 
     /// <summary>
+    /// Adds the namespaces that must be imported to write the type by its simple name:
+    /// the namespace of the type itself, of its type arguments and of an array's element type.
+    /// </summary>
+    /// <param name="typeSymbol">The type to inspect.</param>
+    /// <param name="namespaces">The set the namespaces are added to.</param>
+    public static void AddRequiredNamespacesTo(
+        this ITypeSymbol typeSymbol,
+        ISet<string> namespaces)
+    {
+        switch (typeSymbol)
+        {
+            case IArrayTypeSymbol arrayType:
+                arrayType.ElementType.AddRequiredNamespacesTo(namespaces);
+                return;
+            case INamedTypeSymbol namedType:
+                foreach (var typeArgument in namedType.TypeArguments)
+                {
+                    typeArgument.AddRequiredNamespacesTo(namespaces);
+                }
+
+                break;
+        }
+
+        // Keyword types (int, string, T?, ...) and unresolved types need no import.
+        if (typeSymbol.TypeKind is TypeKind.Error or TypeKind.TypeParameter ||
+            typeSymbol.OriginalDefinition.SpecialType != SpecialType.None ||
+            typeSymbol.ContainingNamespace is not { IsGlobalNamespace: false } containingNamespace)
+        {
+            return;
+        }
+
+        namespaces.Add(containingNamespace.ToDisplayString());
+    }
+
+    /// <summary>
     /// Determines whether the type is declared in an <c>Atc.XamlToolkit</c> namespace.
     /// A type that cannot be resolved is accepted, because only its simple name is known.
     /// </summary>

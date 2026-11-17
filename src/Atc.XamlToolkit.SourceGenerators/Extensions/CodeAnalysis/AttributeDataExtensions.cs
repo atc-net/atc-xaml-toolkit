@@ -17,6 +17,56 @@ internal static class AttributeDataExtensions
             ? attributeClass.Name
             : null;
 
+    /// <summary>
+    /// Adds the namespaces that must be imported to copy the attribute as written:
+    /// the namespace of the attribute class and of the types and enums used as arguments.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <param name="namespaces">The set the namespaces are added to.</param>
+    public static void AddRequiredNamespacesTo(
+        this AttributeData attributeData,
+        ISet<string> namespaces)
+    {
+        if (attributeData.AttributeClass is not { TypeKind: not TypeKind.Error } attributeClass)
+        {
+            return;
+        }
+
+        attributeClass.AddRequiredNamespacesTo(namespaces);
+
+        foreach (var argument in attributeData.ConstructorArguments)
+        {
+            AddRequiredNamespacesTo(argument, namespaces);
+        }
+
+        foreach (var argument in attributeData.NamedArguments)
+        {
+            AddRequiredNamespacesTo(argument.Value, namespaces);
+        }
+    }
+
+    private static void AddRequiredNamespacesTo(
+        TypedConstant argument,
+        ISet<string> namespaces)
+    {
+        switch (argument.Kind)
+        {
+            case TypedConstantKind.Array when !argument.IsNull:
+                foreach (var element in argument.Values)
+                {
+                    AddRequiredNamespacesTo(element, namespaces);
+                }
+
+                break;
+            case TypedConstantKind.Type when argument.Value is ITypeSymbol typeValue:
+                typeValue.AddRequiredNamespacesTo(namespaces);
+                break;
+            case TypedConstantKind.Enum when argument.Type is not null:
+                argument.Type.AddRequiredNamespacesTo(namespaces);
+                break;
+        }
+    }
+
     public static IDictionary<string, string?> ExtractConstructorArgumentValues(
         this AttributeData attributeData)
     {
@@ -34,7 +84,8 @@ internal static class AttributeDataExtensions
     public static string ExtractClassFirstArgumentType(
         this AttributeData propertyAttribute,
         ref object? defaultValue,
-        out bool? isNullableValueType)
+        out bool? isNullableValueType,
+        ISet<string> requiredNamespaces)
     {
         isNullableValueType = null;
 
@@ -46,6 +97,7 @@ internal static class AttributeDataExtensions
 
         var typeSymbol = propertyAttribute.AttributeClass.TypeArguments[0];
         isNullableValueType = typeSymbol.IsNullableValueTypeOrUnknown();
+        typeSymbol.AddRequiredNamespacesTo(requiredNamespaces);
         type = typeSymbol
             .ToDisplayString()
             .EnsureCSharpAliasIfNeeded();

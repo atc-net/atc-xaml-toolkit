@@ -124,6 +124,26 @@ internal abstract class BuilderBase
         sb.Append(stringToAppend);
     }
 
+    // Appends the using directives the generated code needs, so it does not depend on the
+    // global usings of the consumer project: System namespaces first, then the others.
+    // Namespaces that enclose the generated class are in scope already.
+    public void AppendUsings(
+        IEnumerable<string> namespaces,
+        string classNamespaceName)
+    {
+        var sortedNamespaces = namespaces
+            .Where(x => x != classNamespaceName &&
+                        !classNamespaceName.StartsWith(x + ".", StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x == "System" || x.StartsWith("System.", StringComparison.Ordinal) ? 0 : 1)
+            .ThenBy(x => x, StringComparer.Ordinal);
+
+        foreach (var sortedNamespace in sortedNamespaces)
+        {
+            AppendLine($"using {sortedNamespace};");
+        }
+    }
+
     // Appends the namespace, the containing types of a nested class and the class header.
     public void AppendTypeStart(GenerateBase toGenerate)
     {

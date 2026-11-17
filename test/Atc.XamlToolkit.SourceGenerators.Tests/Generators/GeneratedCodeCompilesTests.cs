@@ -6,13 +6,6 @@ namespace Atc.XamlToolkit.SourceGenerators.Tests.Generators;
 /// </summary>
 public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
 {
-    // The generated framework element code relies on these usings of the consumer project.
-    private const string AvaloniaGlobalUsings =
-        """
-        global using System.ComponentModel;
-        global using Avalonia;
-        """;
-
     [Fact]
     public void ViewModel_WithObservablePropertyAndCommands_Compiles()
     {
@@ -568,7 +561,7 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
             }
             """;
 
-        AssertCompilesWithAllGenerators(AvaloniaGlobalUsings, inputCode);
+        AssertCompilesWithAllGenerators(inputCode);
     }
 
     [Fact]
@@ -595,7 +588,7 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
             // sv-SE formats negative numbers with U+2212 and uses a decimal comma.
             System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("sv-SE");
 
-            AssertCompilesWithAllGenerators(AvaloniaGlobalUsings, inputCode);
+            AssertCompilesWithAllGenerators(inputCode);
         }
         finally
         {

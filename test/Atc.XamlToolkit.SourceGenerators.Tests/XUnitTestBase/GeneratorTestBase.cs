@@ -229,6 +229,28 @@ public abstract class GeneratorTestBase
     /// <returns>The problems found.</returns>
     internal static IReadOnlyList<string> CompileWithAllGenerators(
         params string[] inputCodes)
+        => CompileWithAllGenerators(useConsumerGlobalUsings: true, inputCodes);
+
+    /// <summary>
+    /// Like <see cref="AssertCompilesWithAllGenerators"/>, but the consumer project has no
+    /// global usings at all: the generated files must bring every namespace they need.
+    /// </summary>
+    /// <param name="inputCodes">Source files to compile.</param>
+    internal static void AssertCompilesWithAllGeneratorsWithoutGlobalUsings(
+        params string[] inputCodes)
+    {
+        var problems = CompileWithAllGenerators(useConsumerGlobalUsings: false, inputCodes);
+        if (problems.Count == 0)
+        {
+            return;
+        }
+
+        Assert.Fail(string.Join(Environment.NewLine, problems));
+    }
+
+    private static IReadOnlyList<string> CompileWithAllGenerators(
+        bool useConsumerGlobalUsings,
+        string[] inputCodes)
     {
         const string consumerGlobalUsings =
             """
@@ -243,7 +265,7 @@ public abstract class GeneratorTestBase
             """;
 
         var syntaxTrees = inputCodes
-            .Prepend(consumerGlobalUsings)
+            .Prepend(useConsumerGlobalUsings ? consumerGlobalUsings : "// No global usings.")
             .Select((source, index) => CSharpSyntaxTree.ParseText(source, path: $"Input{index}.cs"))
             .ToArray();
 

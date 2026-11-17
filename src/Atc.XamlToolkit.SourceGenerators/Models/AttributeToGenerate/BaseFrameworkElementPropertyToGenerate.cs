@@ -27,6 +27,12 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public bool? IsNullableValueType { get; set; }
 
     /// <summary>
+    /// Gets or sets the namespaces the generated file must import for the property type,
+    /// which is written by its simple name.
+    /// </summary>
+    public EquatableArray<string> RequiredNamespaces { get; set; } = EquatableArray<string>.Empty;
+
+    /// <summary>
     /// Gets the type as it must be written in a <c>typeof</c> expression or as a type argument:
     /// a nullable value type keeps its '?', a nullable reference type loses it.
     /// </summary>

@@ -249,6 +249,17 @@ internal static class ObservablePropertyInspector
         }
 
         var customAttributes = fieldSymbol.ExtractCustomAttributes();
+
+        // The copied attributes are written as in the user's file, so their namespaces are imported.
+        var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);
+        if (customAttributes is not null)
+        {
+            foreach (var attr in fieldSymbolAttributes)
+            {
+                attr.AddRequiredNamespacesTo(requiredNamespaces);
+            }
+        }
+
         var documentationComments = fieldSymbol.ExtractDocumentationComments();
 
         propertiesToGenerate.Add(
@@ -270,6 +281,7 @@ internal static class ObservablePropertyInspector
                 ValidatesOnChange = validatesOnChange,
                 UseEqualityComparer = !fieldSymbol.Type.SupportsEqualityOperator(),
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
+                RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray()),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),
             });
     }
