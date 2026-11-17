@@ -438,6 +438,88 @@ public sealed class MessengerTests
         // recipient leaves scope — eligible for GC.
     }
 
+    [Fact]
+    public void Send_DoesNotRequestCleanup_WhenAllRecipientsAreAlive()
+    {
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+        var recipient = new object();
+
+        messenger.Register<DerivedMessage>(recipient, _ => { });
+        context.RunPosted();
+
+        for (var i = 0; i < 10; i++)
+        {
+            messenger.Send(new DerivedMessage());
+        }
+
+        context.PostCount
+            .Should()
+            .Be(1, "only Register asks for a cleanup; sending to live recipients leaves nothing to clean up");
+
+        GC.KeepAlive(recipient);
+    }
+
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void Send_RequestsCleanup_WhenItMeetsADeadRecipient()
+    {
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<DerivedMessage>(messenger);
+        context.RunPosted();
+        ForceFullGarbageCollection();
+
+        messenger.Send(new DerivedMessage());
+
+        context.PostCount
+            .Should()
+            .Be(2, "a dead recipient found while sending must still lead to a cleanup");
+    }
+
+    private static Messenger CreateMessengerOn(SynchronizationContext context)
+    {
+        // The messenger posts its cleanups to the context it was created on.
+        var original = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+
+        try
+        {
+            return new Messenger();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    private sealed class RecordingSynchronizationContext : SynchronizationContext
+    {
+        private readonly List<(SendOrPostCallback Callback, object? State)> posted = [];
+
+        public int PostCount { get; private set; }
+
+        public override void Post(
+            SendOrPostCallback d,
+            object? state)
+        {
+            PostCount++;
+            posted.Add((d, state));
+        }
+
+        public void RunPosted()
+        {
+            var callbacks = posted.ToList();
+            posted.Clear();
+
+            foreach (var (callback, state) in callbacks)
+            {
+                callback(state);
+            }
+        }
+    }
+
     private sealed class DerivedMessage;
 
     private sealed class UnrelatedMessage;

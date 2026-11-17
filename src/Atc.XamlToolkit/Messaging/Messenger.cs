@@ -6,6 +6,7 @@ namespace Atc.XamlToolkit.Messaging;
 public class Messenger : IMessenger
 {
     private static readonly Lock CreationLock = new();
+    private static readonly List<Type> NoTypes = [];
     private static IMessenger? defaultInstance;
     private readonly Lock registerLock = new();
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction = new();
@@ -298,25 +299,31 @@ public class Messenger : IMessenger
         }
     }
 
-    private static void SendToList<TMessage>(
+    private static bool SendToList<TMessage>(
         TMessage message,
-        IEnumerable<WeakActionAndToken>? weakActionsAndTokens,
+        List<WeakActionAndToken>? weakActionsAndTokens,
         Type? messageTargetType,
         object? token)
     {
         if (weakActionsAndTokens is null)
         {
-            return;
+            return false;
         }
 
-        // Clone to protect from people registering in a "receive message" method.
+        // The caller passes a snapshot taken under the lock, which protects against
+        // people registering in a "receive message" method.
         // Correction Messaging BL0004.007.
-        var listClone = weakActionsAndTokens.ToList();
+        var foundDeadRecipient = false;
 
-        foreach (var item in listClone)
+        foreach (var item in weakActionsAndTokens)
         {
+            if (item.Action is null || !item.Action.IsAlive)
+            {
+                foundDeadRecipient = true;
+                continue;
+            }
+
             if (item.Action is IExecuteWithObject executeAction
-                && item.Action.IsAlive
                 && item.Action.Target is not null
                 && (messageTargetType is null
                     || item.Action.Target.GetType() == messageTargetType
@@ -327,6 +334,8 @@ public class Messenger : IMessenger
                 executeAction.ExecuteWithObject(message);
             }
         }
+
+        return foundDeadRecipient;
     }
 
     [SuppressMessage("Major Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions", Justification = "OK.")]
@@ -408,13 +417,18 @@ public class Messenger : IMessenger
         // Snapshot the registered subclass-listener types under the lock —
         // enumerating .Keys without locking can throw if another thread
         // registers/unregisters mid-iteration.
-        List<Type> typesToCheck;
+        List<Type>? typesToCheck = null;
         lock (recipientsOfSubclassesAction)
         {
-            typesToCheck = new List<Type>(recipientsOfSubclassesAction.Keys);
+            if (recipientsOfSubclassesAction.Count > 0)
+            {
+                typesToCheck = new List<Type>(recipientsOfSubclassesAction.Keys);
+            }
         }
 
-        foreach (var type in typesToCheck)
+        var foundDeadRecipient = false;
+
+        foreach (var type in typesToCheck ?? NoTypes)
         {
             // IsAssignableFrom subsumes both reference-equality and IsSubclassOf:
             // it returns true when messageType == type, when messageType is a
@@ -438,7 +452,7 @@ public class Messenger : IMessenger
                 }
             }
 
-            SendToList(message, subclassList, messageTargetType, token);
+            foundDeadRecipient |= SendToList(message, subclassList, messageTargetType, token);
         }
 
         List<WeakActionAndToken>? strictList = null;
@@ -450,11 +464,12 @@ public class Messenger : IMessenger
             }
         }
 
-        if (strictList is not null)
-        {
-            SendToList(message, strictList, messageTargetType, token);
-        }
+        foundDeadRecipient |= SendToList(message, strictList, messageTargetType, token);
 
-        RequestCleanup();
+        // Sending only needs a cleanup when it came across a dead recipient.
+        if (foundDeadRecipient)
+        {
+            RequestCleanup();
+        }
     }
 }
