@@ -592,6 +592,29 @@ private void Replay()
 <Border Width="300" HorizontalAlignment="Left" />
 ```
 
+### My Own RenderTransform Disappears
+
+**Problem:** An element with its own `RenderTransform` (for example a rotation) loses it when a slide or scale animation plays, or a slide and a scale animation on the same element cancel each other out.
+
+**Cause:** The slide animations need a `TranslateTransform` and the scale animations a `ScaleTransform` as the element's `RenderTransform`. If the element has any other transform there, the behavior replaces it. The scale animations also set `RenderTransformOrigin` to the centre. This applies on WPF, WinUI and Avalonia. Fade animations do not touch the transform.
+
+**Solution:** Put the animation on a wrapping element and keep your own transform (or the second animation) on the inner one:
+
+```xml
+<Border>
+    <i:Interaction.Behaviors>
+        <behaviors:AnimationBehavior AnimationType="SlideInFromLeft" AutoStart="True" />
+    </i:Interaction.Behaviors>
+
+    <!-- The rotation stays on the inner element -->
+    <Border RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform>
+            <RotateTransform Angle="15" />
+        </Border.RenderTransform>
+    </Border>
+</Border>
+```
+
 ## Performance Considerations
 
 - **Animations are GPU-accelerated** when possible for smooth performance
