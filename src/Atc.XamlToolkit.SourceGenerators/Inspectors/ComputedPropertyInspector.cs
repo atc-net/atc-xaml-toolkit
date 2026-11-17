@@ -18,7 +18,8 @@ internal static class ComputedPropertyInspector
         ImmutableArray<ISymbol> memberSymbols,
         List<ObservablePropertyToGenerate>? observableProperties = null)
     {
-        var result = new List<ComputedPropertyToGenerate>();
+        // The direct dependencies of each computed property, in declaration order
+        var directDependencies = new List<(string Name, ICollection<string> Dependencies)>();
 
         foreach (var memberSymbol in memberSymbols)
         {
@@ -44,20 +45,62 @@ internal static class ComputedPropertyInspector
 
             if (dependentProperties.Count > 0)
             {
-                // Sort for deterministic content-equality across compilations —
-                // the dependency set comes from a HashSet whose iteration order
-                // is unspecified, which would defeat the EquatableArray cache.
-                var sorted = dependentProperties
-                    .OrderBy(static x => x, StringComparer.Ordinal)
-                    .ToArray();
-
-                result.Add(new ComputedPropertyToGenerate(
-                    propertySymbol.Name,
-                    new EquatableArray<string>(sorted)));
+                directDependencies.Add((propertySymbol.Name, dependentProperties));
             }
         }
 
+        var result = new List<ComputedPropertyToGenerate>();
+
+        foreach (var (name, _) in directDependencies)
+        {
+            // Sort for deterministic content-equality across compilations —
+            // the dependency set comes from a HashSet whose iteration order
+            // is unspecified, which would defeat the EquatableArray cache.
+            var sorted = GetTransitiveDependencies(name, directDependencies)
+                .OrderBy(static x => x, StringComparer.Ordinal)
+                .ToArray();
+
+            result.Add(new ComputedPropertyToGenerate(
+                name,
+                new EquatableArray<string>(sorted)));
+        }
+
         return result;
+    }
+
+    // A computed property that reads another computed property also depends on
+    // everything that one depends on, otherwise it would never be notified.
+    private static HashSet<string> GetTransitiveDependencies(
+        string computedPropertyName,
+        List<(string Name, ICollection<string> Dependencies)> directDependencies)
+    {
+        var dependencies = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Stack<string>();
+        pending.Push(computedPropertyName);
+
+        while (pending.Count > 0)
+        {
+            var current = pending.Pop();
+
+            foreach (var (name, currentDependencies) in directDependencies)
+            {
+                if (name != current)
+                {
+                    continue;
+                }
+
+                foreach (var dependency in currentDependencies)
+                {
+                    if (dependency != computedPropertyName &&
+                        dependencies.Add(dependency))
+                    {
+                        pending.Push(dependency);
+                    }
+                }
+            }
+        }
+
+        return dependencies;
     }
 
     /// <summary>
