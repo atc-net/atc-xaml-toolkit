@@ -172,6 +172,15 @@ public sealed class XamlStylerOptions : IXamlStylerOptions
     /// <returns>The path to the configuration file, or null if not found.</returns>
     public static string? FindConfigFile(string startPath)
     {
+        if (string.IsNullOrWhiteSpace(startPath))
+        {
+            return null;
+        }
+
+        // Resolve relative paths first; otherwise the walk ends at the first path segment
+        // and never reaches the working directory or its parents.
+        startPath = Path.GetFullPath(startPath);
+
         var directory = File.Exists(startPath)
             ? Path.GetDirectoryName(startPath)
             : startPath;
