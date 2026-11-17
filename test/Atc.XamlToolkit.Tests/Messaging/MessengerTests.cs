@@ -478,6 +478,51 @@ public sealed class MessengerTests
             .Be(2, "a dead recipient found while sending must still lead to a cleanup");
     }
 
+    [Fact]
+    [SuppressMessage("Major Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "Required to verify weak-reference cleanup behaviour.")]
+    public void RequestCleanup_CleansUpInline_WhenThePostedCleanupNeverRuns()
+    {
+        // The context accepts the posted cleanup but never runs it - as a
+        // dispatcher that has stopped pumping does.
+        var context = new RecordingSynchronizationContext();
+        var messenger = CreateMessengerOn(context);
+
+        RegisterAndAbandonRecipient<int>(messenger);
+        ForceFullGarbageCollection();
+
+        for (var i = 0; i < 100; i++)
+        {
+            messenger.RequestCleanup();
+        }
+
+        var typeMap = (System.Collections.IDictionary)GetPrivateField(messenger, "recipientsStrictAction")!;
+        typeMap.Contains(typeof(int))
+            .Should()
+            .BeFalse("dead recipients must still be removed when the posted cleanup is never run");
+    }
+
+    [Fact]
+    public void Register_DoesNotThrow_WhenTheContextRejectsThePostedCleanup()
+    {
+        var messenger = CreateMessengerOn(new RejectingSynchronizationContext());
+        var recipient = new object();
+        var hits = 0;
+
+        var exception = Record.Exception(() => messenger.Register<DerivedMessage>(recipient, _ => hits++, keepTargetAlive: true));
+        messenger.Send(new DerivedMessage());
+
+        exception.Should().BeNull();
+        hits.Should().Be(1);
+    }
+
+    private sealed class RejectingSynchronizationContext : SynchronizationContext
+    {
+        public override void Post(
+            SendOrPostCallback d,
+            object? state)
+            => throw new InvalidOperationException("The context has shut down.");
+    }
+
     private static Messenger CreateMessengerOn(SynchronizationContext context)
     {
         // The messenger posts its cleanups to the context it was created on.

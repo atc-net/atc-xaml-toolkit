@@ -5,6 +5,7 @@ namespace Atc.XamlToolkit.Messaging;
 /// </summary>
 public class Messenger : IMessenger
 {
+    private const int MaxRequestsWhileCleanupPending = 64;
     private static readonly Lock CreationLock = new();
     private static readonly List<Type> NoTypes = [];
     private static IMessenger? defaultInstance;
@@ -13,6 +14,7 @@ public class Messenger : IMessenger
     private readonly Dictionary<Type, List<WeakActionAndToken>> recipientsStrictAction = new();
     private readonly SynchronizationContext? context = SynchronizationContext.Current;
     private int cleanupPending;
+    private int requestsWhileCleanupPending;
 
     /// <summary>
     /// Gets the Messenger's default instance, allowing
@@ -220,6 +222,13 @@ public class Messenger : IMessenger
         // bail out — that thread will run (or has scheduled) the cleanup.
         if (Interlocked.CompareExchange(ref cleanupPending, value: 1, comparand: 0) != 0)
         {
+            // A posted cleanup normally runs shortly. If the context has stopped pumping
+            // it never will, so after enough ignored requests the cleanup runs right here.
+            if (Interlocked.Increment(ref requestsWhileCleanupPending) >= MaxRequestsWhileCleanupPending)
+            {
+                Cleanup();
+            }
+
             return;
         }
 
@@ -229,7 +238,15 @@ public class Messenger : IMessenger
 
         if (context is not null)
         {
-            context.Post(_ => cleanupAction(), state: null);
+            try
+            {
+                context.Post(_ => cleanupAction(), state: null);
+            }
+            catch (InvalidOperationException)
+            {
+                // The context no longer accepts work (for example it has shut down).
+                cleanupAction();
+            }
         }
         else
         {
@@ -252,6 +269,7 @@ public class Messenger : IMessenger
     {
         CleanupList(recipientsOfSubclassesAction);
         CleanupList(recipientsStrictAction);
+        Interlocked.Exchange(ref requestsWhileCleanupPending, value: 0);
         Interlocked.Exchange(ref cleanupPending, value: 0);
     }
 
