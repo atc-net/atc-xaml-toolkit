@@ -90,6 +90,7 @@ internal static class FrameworkElementInspectorHelper
 
             propertyToGenerate.IsNullableValueType = isNullableValueType;
             propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
+            propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
             propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
             propertyToGenerate.RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray());
 
@@ -174,6 +175,7 @@ internal static class FrameworkElementInspectorHelper
 
         propertyToGenerate.IsNullableValueType = fieldSymbol.Type.IsNullableValueTypeOrUnknown();
         propertyToGenerate.GeneratePartialHooks = generatePartialHooks;
+        propertyToGenerate.SetterAccessModifier = propertyAttribute.ExtractSetterAccessModifier();
         propertyToGenerate.UserPropertyChangedCallback = generatePartialHooks ? userPropertyChangedCallback : null;
 
         var requiredNamespaces = new SortedSet<string>(StringComparer.Ordinal);

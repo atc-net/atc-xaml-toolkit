@@ -34,6 +34,12 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? UserPropertyChangedCallback { get; set; }
 
     /// <summary>
+    /// Gets or sets the C# modifier of the property's setter, e.g. <c>private</c>;
+    /// empty for a setter that is as accessible as the property.
+    /// </summary>
+    public string SetterAccessModifier { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets a value indicating whether the type is a <c>Nullable&lt;T&gt;</c> value type,
     /// a type where a trailing '?' is only a nullability annotation, or unknown (<c>null</c>).
     /// </summary>

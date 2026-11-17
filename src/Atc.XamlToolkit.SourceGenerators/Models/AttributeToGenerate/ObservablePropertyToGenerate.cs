@@ -33,6 +33,12 @@ internal sealed record ObservablePropertyToGenerate(
     /// </summary>
     public bool UseEqualityComparer { get; set; }
 
+    /// <summary>
+    /// Gets or sets the C# modifier of the property's setter, e.g. <c>private</c>;
+    /// empty for a setter that is as accessible as the property.
+    /// </summary>
+    public string SetterAccessModifier { get; set; } = string.Empty;
+
     public EquatableArray<string> CustomAttributes { get; set; } = EquatableArray<string>.Empty;
 
     /// <summary>

@@ -252,7 +252,7 @@ internal sealed class ObservableDtoViewModelBuilder : CommandBuilderBase
             return;
         }
 
-        AppendLine("set");
+        AppendLine(p.SetterAccessModifier.Length == 0 ? "set" : $"{p.SetterAccessModifier} set");
         AppendLine("{");
         IncreaseIndent();
         AppendLine(p.UseEqualityComparer

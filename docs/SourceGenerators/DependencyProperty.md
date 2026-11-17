@@ -112,6 +112,29 @@ The source generator automatically detects your platform and generates the appro
 
 ---
 
+## 🔒 Non-public setters
+
+`SetterAccessModifier` restricts the setter of the generated CLR property, for a value the control computes itself and consumers should only read from code:
+
+```csharp
+[DependencyProperty(SetterAccessModifier = PropertyAccessModifier.Private)]
+private string selectedStateMessage;
+```
+
+Generated (WPF):
+
+```csharp
+public string SelectedStateMessage
+{
+    get => (string)GetValue(SelectedStateMessageProperty);
+    private set => SetValue(SelectedStateMessageProperty, value);
+}
+```
+
+`PropertyAccessModifier` (namespace `Atc.XamlToolkit`) has the values `Public` (default), `Internal`, `Protected`, `ProtectedInternal`, `PrivateProtected` and `Private`. On Avalonia use `[StyledProperty(SetterAccessModifier = ...)]`.
+
+This only hides the C# setter. The property is still an ordinary, writable dependency property: XAML can set it and so can `SetValue(SelectedStateMessageProperty, ...)`. It is not a read-only dependency property with a `DependencyPropertyKey`.
+
 ## 🪝 Typed change hooks
 
 A `PropertyChangedCallback` has to be a static method that receives the object and untyped event args, so it usually starts by casting both:

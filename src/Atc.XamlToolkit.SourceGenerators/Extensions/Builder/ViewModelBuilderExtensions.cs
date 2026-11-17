@@ -80,7 +80,7 @@ internal static class ViewModelBuilderExtensions
             return;
         }
 
-        builder.AppendLine("set");
+        builder.AppendLine(p.SetterAccessModifier.Length == 0 ? "set" : $"{p.SetterAccessModifier} set");
         builder.AppendLine("{");
         builder.IncreaseIndent();
         builder.AppendLine(p.UseEqualityComparer

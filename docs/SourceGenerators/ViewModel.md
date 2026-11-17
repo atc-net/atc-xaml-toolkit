@@ -349,6 +349,39 @@ var vm = new CustomerViewModel();
 
 `IsRequired` composes freely with the other `[ObservableProperty]` options (callbacks, partial hooks, broadcasting, etc.) — they sit in different parts of the generated output.
 
+### 🔒 Non-public setters
+
+By default the generated property has a public setter. Use `SetterAccessModifier` for a property that others may read but only the class, or the assembly, may change:
+
+```csharp
+public partial class DeviceInfo : ObservableObject
+{
+    [ObservableProperty(SetterAccessModifier = PropertyAccessModifier.Internal)]
+    private string name = string.Empty;
+}
+```
+
+Generated:
+
+```csharp
+public string Name
+{
+    get => name;
+    internal set
+    {
+        if (name == value)
+        {
+            return;
+        }
+
+        name = value;
+        RaisePropertyChanged(nameof(Name));
+    }
+}
+```
+
+`PropertyAccessModifier` (namespace `Atc.XamlToolkit`) has the values `Public` (default), `Internal`, `Protected`, `ProtectedInternal`, `PrivateProtected` and `Private`. Change notification works the same whoever calls the setter. The option also applies to `[ObservableProperty]` fields in an `[ObservableDtoViewModel]` class.
+
 ### 🪝 Partial-method hooks
 
 `GeneratePartialHooks = true` emits compile-time-safe partial-method declarations for change notifications instead of the string-named `BeforeChangedCallback` / `AfterChangedCallback`. The generator emits **declarations** of `partial void On{PropertyName}Changing({Type} value)` and `partial void On{PropertyName}Changed({Type} value)` plus unconditional calls to them in the setter. Implementing the partial methods is optional — when no implementation exists, the C# compiler **elides the call entirely**, so the feature has zero runtime cost when unused.

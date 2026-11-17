@@ -81,6 +81,7 @@ internal static class NameConstants
     public const string OverrideDefaultStyleKey = nameof(OverrideDefaultStyleKey);
     public const string ResolveTemplateParts = nameof(ResolveTemplateParts);
     public const string RoutedEvent = nameof(RoutedEvent);
+    public const string SetterAccessModifier = nameof(SetterAccessModifier);
     public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
     public const string RoutedEventHandler = nameof(RoutedEventHandler);
     public const string RoutingStrategy = nameof(RoutingStrategy);

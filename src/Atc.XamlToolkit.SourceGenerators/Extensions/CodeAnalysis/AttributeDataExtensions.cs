@@ -67,6 +67,17 @@ internal static class AttributeDataExtensions
         }
     }
 
+    // Indexed by the value of Atc.XamlToolkit.PropertyAccessModifier.
+    private static readonly string[] SetterAccessModifiers =
+    [
+        string.Empty,
+        "internal",
+        "protected",
+        "protected internal",
+        "private protected",
+        "private",
+    ];
+
     public static IDictionary<string, string?> ExtractConstructorArgumentValues(
         this AttributeData attributeData)
     {
@@ -79,6 +90,52 @@ internal static class AttributeDataExtensions
 
         // Runtime check
         return attributeData.RunTimeExtractConstructorArgumentValues();
+    }
+
+    /// <summary>
+    /// Reads the <c>SetterAccessModifier</c> option of an attribute.
+    /// </summary>
+    /// <param name="attributeData">The attribute data.</param>
+    /// <returns>The C# modifier for the setter, e.g. <c>private</c>; empty for a public setter.</returns>
+    public static string ExtractSetterAccessModifier(
+        this AttributeData attributeData)
+    {
+        // The attribute is resolved: the value is the enum's number.
+        foreach (var namedArgument in attributeData.NamedArguments)
+        {
+            if (namedArgument.Key == NameConstants.SetterAccessModifier &&
+                namedArgument.Value.Value is int value &&
+                value >= 0 &&
+                value < SetterAccessModifiers.Length)
+            {
+                return SetterAccessModifiers[value];
+            }
+        }
+
+        // The attribute is not resolved: only the text is known, e.g. PropertyAccessModifier.Private.
+        if (attributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax { ArgumentList: { } argumentList })
+        {
+            foreach (var argument in argumentList.Arguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText != NameConstants.SetterAccessModifier)
+                {
+                    continue;
+                }
+
+                var text = argument.Expression.ToString();
+                return text.Substring(text.LastIndexOf('.') + 1) switch
+                {
+                    "Internal" => SetterAccessModifiers[1],
+                    "Protected" => SetterAccessModifiers[2],
+                    "ProtectedInternal" => SetterAccessModifiers[3],
+                    "PrivateProtected" => SetterAccessModifiers[4],
+                    "Private" => SetterAccessModifiers[5],
+                    _ => string.Empty,
+                };
+            }
+        }
+
+        return string.Empty;
     }
 
     public static string ExtractClassFirstArgumentType(

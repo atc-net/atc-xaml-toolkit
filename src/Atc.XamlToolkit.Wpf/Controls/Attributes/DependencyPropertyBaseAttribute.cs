@@ -16,6 +16,13 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     /// </summary>
     public bool GeneratePartialHooks { get; set; }
 
+    /// <summary>
+    /// Gets or sets the accessibility of the generated CLR property's setter. The default is
+    /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
+    /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.
+    /// </summary>
+    public PropertyAccessModifier SetterAccessModifier { get; set; }
+
     public string? CoerceValueCallback { get; set; }
 
     public string? ValidateValueCallback { get; set; }

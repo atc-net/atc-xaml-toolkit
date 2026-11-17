@@ -128,7 +128,8 @@ internal static class ObservablePropertyInspector
                     or NameConstants.UseIsDirty
                     or NameConstants.IsRequired
                     or NameConstants.GeneratePartialHooks
-                    or NameConstants.GenerateDocumentation)
+                    or NameConstants.GenerateDocumentation
+                    or NameConstants.SetterAccessModifier)
                 {
                     continue;
                 }
@@ -283,6 +284,7 @@ internal static class ObservablePropertyInspector
                 GenerateDocumentation = generateDocumentation,
                 ValidatesOnChange = validatesOnChange,
                 UseEqualityComparer = !fieldSymbol.Type.SupportsEqualityOperator(),
+                SetterAccessModifier = fieldPropertyAttribute.ExtractSetterAccessModifier(),
                 CustomAttributes = new EquatableArray<string>(customAttributes?.ToArray() ?? []),
                 RequiredNamespaces = new EquatableArray<string>(requiredNamespaces.ToArray()),
                 DocumentationComments = new EquatableArray<string>(documentationComments?.ToArray() ?? []),

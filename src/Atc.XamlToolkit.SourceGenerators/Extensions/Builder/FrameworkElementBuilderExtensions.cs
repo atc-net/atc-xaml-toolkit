@@ -859,10 +859,12 @@ internal static class FrameworkElementBuilderExtensions
 
             if (!p.IsReadOnly)
             {
+                var setter = p.SetterAccessModifier.Length == 0 ? "set" : $"{p.SetterAccessModifier} set";
+
                 builder.AppendLine(
                     p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                        ? $"set => SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                        : $"set => SetValue({p.Name}Property, value);");
+                        ? $"{setter} => SetValue({p.Name}Property, Atc.XamlToolkit.BooleanBoxes.Box(value));"
+                        : $"{setter} => SetValue({p.Name}Property, value);");
             }
 
             builder.DecreaseIndent();
