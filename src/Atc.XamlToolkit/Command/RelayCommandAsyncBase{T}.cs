@@ -19,6 +19,7 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     protected readonly WeakFunc<T, bool>? wfCanExecute;
     protected readonly IErrorHandler? errorHandler;
     protected bool isExecuting;
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed in Dispose unless a run in progress owns it; that run disposes it when it ends.")]
     protected CancellationTokenSource? cancellationTokenSource;
     private readonly List<CancellationTokenSource> runningTokenSources = [];
     private int executionCount;
@@ -327,11 +328,23 @@ public abstract class RelayCommandAsyncBase<T> : IRelayCommandAsync<T>, INotifyP
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!disposing)
         {
-            cancellationTokenSource?.Dispose();
-            cancellationTokenSource = null;
+            return;
         }
+
+        // A run that is in progress owns its token source and disposes it when it ends.
+        // Disposing it here would make a later Cancel() throw.
+        lock (runningTokenSources)
+        {
+            if (cancellationTokenSource is { } tokenSource &&
+                !runningTokenSources.Contains(tokenSource))
+            {
+                tokenSource.Dispose();
+            }
+        }
+
+        cancellationTokenSource = null;
     }
 
     private void BeginExecution()
