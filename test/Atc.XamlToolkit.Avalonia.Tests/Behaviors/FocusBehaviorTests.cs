@@ -39,6 +39,40 @@ public sealed class FocusBehaviorTests
         });
 
     [Fact]
+    public void DetachingBeforeDeferredFocusRuns_DoesNotFocusTheElement()
+        => HeadlessRunner.Run(() =>
+        {
+            // Arrange
+            var textBox = new global::Avalonia.Controls.TextBox();
+            var other = new global::Avalonia.Controls.TextBox();
+            var panel = new global::Avalonia.Controls.StackPanel();
+            panel.Children.Add(other);
+            panel.Children.Add(textBox);
+
+            var behavior = new Atc.XamlToolkit.Behaviors.FocusBehavior();
+            behavior.Attach(textBox);
+
+            var window = HeadlessRunner.ShowInWindow(panel);
+            try
+            {
+                other.Focus();
+
+                // Act - the focus request is queued on the dispatcher and the behavior is detached before it runs
+                behavior.FocusTrigger = new object();
+                behavior.Detach();
+                HeadlessRunner.PumpDispatcher();
+
+                // Assert
+                Assert.False(textBox.IsFocused);
+                Assert.True(other.IsFocused);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+
+    [Fact]
     public void FocusTrigger_FocusesAssociatedObject()
         => HeadlessRunner.Run(() =>
         {

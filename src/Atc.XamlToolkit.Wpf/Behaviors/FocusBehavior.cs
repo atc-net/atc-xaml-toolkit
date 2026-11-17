@@ -180,6 +180,12 @@ public class FocusBehavior : Microsoft.Xaml.Behaviors.Behavior<FrameworkElement>
                 DispatcherPriority.Input,
                 new Action(() =>
                 {
+                    // The request is dropped when the behavior was detached (or moved) in the meantime
+                    if (!ReferenceEquals(AssociatedObject, target))
+                    {
+                        return;
+                    }
+
                     target.Focus();
                     Keyboard.Focus(target);
                 }));

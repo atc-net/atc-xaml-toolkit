@@ -177,6 +177,12 @@ public sealed class FocusBehavior : Microsoft.Xaml.Interactivity.Behavior<Framew
                 Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,
                 () =>
                 {
+                    // The request is dropped when the behavior was detached (or moved) in the meantime
+                    if (!ReferenceEquals(AssociatedObject, target))
+                    {
+                        return;
+                    }
+
                     target.Focus(FocusState.Programmatic);
                 });
         }

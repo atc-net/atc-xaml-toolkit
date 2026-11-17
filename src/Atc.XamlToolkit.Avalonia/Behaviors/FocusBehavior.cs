@@ -202,6 +202,12 @@ public class FocusBehavior : Avalonia.Xaml.Interactivity.Behavior<Control>
         _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(
             () =>
             {
+                // The request is dropped when the behavior was detached (or moved) in the meantime
+                if (!ReferenceEquals(AssociatedObject, target))
+                {
+                    return;
+                }
+
                 // Set focus using keyboard navigation to trigger proper focus visuals
                 var focused = target.Focus(NavigationMethod.Directional);
 
