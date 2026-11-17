@@ -838,6 +838,35 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
     }
 
     [Fact]
+    public void RelayCommand_ParameterNamedX_Compiles()
+    {
+        // The generated lambdas use 'x' as their parameter name.
+        const string inputCode =
+            """
+            namespace TestNamespace;
+
+            public partial class TestViewModel : ViewModelBase
+            {
+                [RelayCommand(AutoSetIsBusy = true, SupportsCancellation = true)]
+                private Task SearchAsync(string x, CancellationToken cancellationToken) => Task.CompletedTask;
+
+                [RelayCommand(AutoSetIsBusy = true)]
+                private Task LoadAsync(string x) => Task.CompletedTask;
+
+                [RelayCommand(AutoSetIsBusy = true, ExecuteOnBackgroundThread = true)]
+                private void Save(string x)
+                {
+                }
+
+                [RelayCommand(SupportsCancellation = true, ExecuteOnBackgroundThread = true)]
+                private Task ExportAsync(int x, string y, CancellationToken cancellationToken) => Task.CompletedTask;
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(inputCode);
+    }
+
+    [Fact]
     public void CompileWithAllGenerators_ReportsCompileErrors()
     {
         const string inputCode =

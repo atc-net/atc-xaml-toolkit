@@ -434,16 +434,18 @@ internal abstract class CommandBuilderBase : BuilderBase
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
-            case true when execExprContainParameters:
-                builder.AppendLine("async x =>");
+            case true when supportsCancellation && parameterNamesWithoutCt.Length > 0:
+                // When AutoSetIsBusy + SupportsCancellation with parameters,
+                // the lambda must accept the parameters AND CancellationToken.
+                // This case comes before the "(x" text check below: a method parameter
+                // that is itself named x would otherwise be mistaken for the lambda parameter.
+                var paramList = string.Join(", ", parameterNamesWithoutCt);
+                builder.AppendLine($"async ({paramList}, cancellationToken) =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
-            case true when supportsCancellation && parameterNamesWithoutCt.Length > 0:
-                // When AutoSetIsBusy + SupportsCancellation with parameters,
-                // the lambda must accept the parameters AND CancellationToken
-                var paramList = string.Join(", ", parameterNamesWithoutCt);
-                builder.AppendLine($"async ({paramList}, cancellationToken) =>");
+            case true when execExprContainParameters:
+                builder.AppendLine("async x =>");
                 useAwait = true;
                 useDispatcherInvokeAsync = true;
                 break;
