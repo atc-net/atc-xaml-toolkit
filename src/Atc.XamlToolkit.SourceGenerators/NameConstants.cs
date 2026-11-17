@@ -89,6 +89,8 @@ internal static class NameConstants
     public const string AddOwnerOf = nameof(AddOwnerOf);
     public const string BrowsableForTargetType = nameof(BrowsableForTargetType);
     public const string MetadataType = nameof(MetadataType);
+    public const string NullElementHandling = nameof(NullElementHandling);
+    public const string ThrowArgumentNullException = nameof(ThrowArgumentNullException);
     public const string PropertyMetadata = nameof(PropertyMetadata);
     public const string UIPropertyMetadata = nameof(UIPropertyMetadata);
     public const string FrameworkPropertyMetadata = nameof(FrameworkPropertyMetadata);

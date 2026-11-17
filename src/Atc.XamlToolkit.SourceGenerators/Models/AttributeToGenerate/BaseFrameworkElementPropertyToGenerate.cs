@@ -87,6 +87,12 @@ internal abstract record BaseFrameworkElementPropertyToGenerate(
     public string? TargetType { get; set; }
 
     /// <summary>
+    /// Gets or sets how the accessor methods of an attached property treat a null element:
+    /// the name of the <c>NullElementHandling</c> member, or <c>null</c> for the default.
+    /// </summary>
+    public string? NullElementHandling { get; set; }
+
+    /// <summary>
     /// Gets or sets the metadata class asked for with <c>MetadataType</c> when it is
     /// <c>PropertyMetadata</c> or <c>UIPropertyMetadata</c>; <c>null</c> when the generator
     /// chooses the class.

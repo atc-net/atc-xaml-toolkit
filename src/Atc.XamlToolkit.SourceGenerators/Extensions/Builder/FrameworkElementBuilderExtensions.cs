@@ -1164,23 +1164,20 @@ internal static class FrameworkElementBuilderExtensions
         }
 
         builder.AppendLine($"{p.MemberAccessModifier} static {p.Type} Get{p.Name}({elementType} element)");
-        builder.IncreaseIndent();
 
         // For Avalonia with non-nullable reference/value types, add null-forgiving operator
-        if (xamlPlatform == XamlPlatform.Avalonia &&
-            !p.Type.EndsWith("?", StringComparison.Ordinal))
-        {
-            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property)!;");
-        }
-        else
-        {
-            builder.AppendLine($"=> ({p.Type})element.GetValue({p.Name}Property);");
-        }
+        var nullForgiving = xamlPlatform == XamlPlatform.Avalonia && !p.Type.EndsWith("?", StringComparison.Ordinal)
+            ? "!"
+            : string.Empty;
+
+        AppendAttachedAccessorBody(
+            builder,
+            p,
+            $"({p.Type})element.GetValue({p.Name}Property){nullForgiving}",
+            isGetter: true);
 
         if (!p.IsReadOnly)
         {
-            builder.DecreaseIndent();
-
             builder.AppendLine();
 
             builder.AppendDocumentation(p.DocumentationComments, p.GenerateDocumentation, $"Sets the {p.Name} attached property value.");
@@ -1196,14 +1193,46 @@ internal static class FrameworkElementBuilderExtensions
             }
 
             builder.AppendLine($"{p.SetMethodAccessModifier} static void Set{p.Name}({elementType} element, {p.Type} value)");
+
+            var value = p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
+                ? "Atc.XamlToolkit.BooleanBoxes.Box(value)"
+                : "value";
+
+            // By default a null element is ignored
+            var nullConditional = p.NullElementHandling is null or "Default"
+                ? "?"
+                : string.Empty;
+
+            AppendAttachedAccessorBody(
+                builder,
+                p,
+                $"element{nullConditional}.SetValue({p.WritablePropertyIdentifier}, {value})",
+                isGetter: false);
+        }
+    }
+
+    // The body of a Get{Name} / Set{Name} method: an expression body, or a block that
+    // first rejects a null element.
+    private static void AppendAttachedAccessorBody(
+        FrameworkElementBuilder builder,
+        BaseFrameworkElementPropertyToGenerate p,
+        string expression,
+        bool isGetter)
+    {
+        if (p.NullElementHandling != NameConstants.ThrowArgumentNullException)
+        {
             builder.IncreaseIndent();
-            builder.AppendLine(
-                p.Type.StartsWith("bool", StringComparison.Ordinal) && xamlPlatform != XamlPlatform.Avalonia
-                    ? $"=> element?.SetValue({p.WritablePropertyIdentifier}, Atc.XamlToolkit.BooleanBoxes.Box(value));"
-                    : $"=> element?.SetValue({p.WritablePropertyIdentifier}, value);");
+            builder.AppendLine($"=> {expression};");
+            builder.DecreaseIndent();
+            return;
         }
 
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+        builder.AppendLine("global::System.ArgumentNullException.ThrowIfNull(element);");
+        builder.AppendLine(isGetter ? $"return {expression};" : $"{expression};");
         builder.DecreaseIndent();
+        builder.AppendLine("}");
     }
 
     private static void GenerateRoutedEvent(

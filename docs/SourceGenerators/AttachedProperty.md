@@ -120,6 +120,37 @@ On WPF, add `BrowsableForTargetType = true` to also put `[AttachedPropertyBrowsa
 private static double checkSize;
 ```
 
+## 🚫 What the accessors do with a `null` element (WPF, WinUI)
+
+`NullElementHandling` decides what the generated `Get{Name}` and `Set{Name}` methods do when they are called with `null`:
+
+| Value | `Get{Name}(null)` | `Set{Name}(null, value)` |
+|-------|-------------------|--------------------------|
+| `Default` | throws `NullReferenceException` | does nothing |
+| `ThrowArgumentNullException` | throws `ArgumentNullException` for `element` | throws `ArgumentNullException` for `element` |
+| `None` | throws `NullReferenceException` | throws `NullReferenceException` |
+
+```csharp
+[AttachedProperty(NullElementHandling = NullElementHandling.ThrowArgumentNullException)]
+private static double spacing;
+```
+
+```csharp
+public static double GetSpacing(DependencyObject element)
+{
+    global::System.ArgumentNullException.ThrowIfNull(element);
+    return (double)element.GetValue(SpacingProperty);
+}
+
+public static void SetSpacing(DependencyObject element, double value)
+{
+    global::System.ArgumentNullException.ThrowIfNull(element);
+    element.SetValue(SpacingProperty, value);
+}
+```
+
+`ThrowArgumentNullException` is the behaviour to prefer in a public API. `None` exists so a hand-written accessor that uses the element directly can be converted without changing what it does. `NullElementHandling` is in the `Atc.XamlToolkit` namespace.
+
 ## 🙈 Non-public attached properties and per-element state
 
 `AccessModifier` sets the accessibility of the `{Name}Property` field and of the `Get{Name}` / `Set{Name}` methods; `SetterAccessModifier` can give the `Set{Name}` method a different one. `GenerateClrAccessors = false` generates only the field. Together they cover an attached property that a class uses to keep its own state on an element:

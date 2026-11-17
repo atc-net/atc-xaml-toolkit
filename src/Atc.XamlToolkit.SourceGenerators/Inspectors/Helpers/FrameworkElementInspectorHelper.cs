@@ -254,6 +254,7 @@ internal static class FrameworkElementInspectorHelper
     {
         propertyToGenerate.AccessModifier = propertyAttribute.ExtractAccessModifier(NameConstants.AccessModifier);
         propertyToGenerate.TargetType = propertyAttribute.ExtractTypeOfArgument(NameConstants.TargetType);
+        propertyToGenerate.NullElementHandling = propertyAttribute.ExtractEnumArgumentName(NameConstants.NullElementHandling);
         propertyToGenerate.BrowsableForTargetType =
             argumentValues.TryGetValue(NameConstants.BrowsableForTargetType, out var browsable) &&
             "true".Equals(browsable, StringComparison.OrdinalIgnoreCase);
