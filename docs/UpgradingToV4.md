@@ -90,7 +90,7 @@ The toolkit packages depend on `Atc` 4.1.0 (was 3.0.186). A project that referen
 | A class that is not `partial` but uses `[DependencyProperty]`, `[AttachedProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` | Nothing was generated and nothing was reported | Warning `AtcXamlToolkit0002` |
 | `[ObservableProperty]` in a partial class without `ObservableObject` or `[INotifyPropertyChanged]` | Nothing was generated and nothing was reported | Warning `AtcXamlToolkit0014` |
 | A property of an enum or struct type with `PropertyChangedCallback`, `CoerceValueCallback` or `Flags` and no `DefaultValue` | Registered with `defaultValue: null`, which throws when the class is first used | Registered with the default of the type |
-| A string `DefaultValue` on a property of type `object` | Written without quotes, which did not compile | Written as a string literal |
+| A string `DefaultValue` on a property of type `object` | Written without quotes: `DefaultValue = "#"` did not compile, so the quotes had to be part of the value (`DefaultValue = "\"#\""`) | Written as a string literal. **Remove the embedded quotes**: `DefaultValue = "\"#\""` now gives the three-character string `"#"`, and no warning says so |
 | `[DependencyProperty]` with metadata in a static class | Compiled, and threw when the class was first used | Warning `AtcXamlToolkit0013`; use `[AttachedProperty]` in a static class |
 | Avalonia: `[StyledProperty]` of a nullable reference type | Registered as `StyledProperty<string>`, with a compiler warning in the generated file | Registered as `StyledProperty<string?>` |
 
