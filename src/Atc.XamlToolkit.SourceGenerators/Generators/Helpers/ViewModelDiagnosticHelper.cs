@@ -35,7 +35,7 @@ internal static class ViewModelDiagnosticHelper
         var missingPartialClasses = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsMissingPartialTarget(syntaxNode),
-                transform: static (ctx, _) => GetMissingPartialDiagnostic(ctx))
+                transform: static (ctx, _) => UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetMissingPartialDiagnostic(ctx))
             .Where(static d => d is not null)
             .WithTrackingName("ViewModelGenerator.MissingPartialDiagnostic");
 
@@ -59,7 +59,7 @@ internal static class ViewModelDiagnosticHelper
         var invalidObservablePropertyFields = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsObservablePropertyFieldTarget(syntaxNode),
-                transform: static (ctx, _) => ToEquatableArray(GetObservablePropertyFieldDiagnostics(ctx)))
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetObservablePropertyFieldDiagnostics(ctx)))
             .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ObservablePropertyFieldDiagnostics");
 
@@ -77,7 +77,7 @@ internal static class ViewModelDiagnosticHelper
         var notifyForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyPropertyChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => ToEquatableArray(GetNotifyPropertyChangedForDiagnostics(ctx)))
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyPropertyChangedForDiagnostics(ctx)))
             .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyPropertyChangedForDiagnostics");
 
@@ -93,7 +93,7 @@ internal static class ViewModelDiagnosticHelper
         var notifyCanExecForRefDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyCanExecuteChangedForUsage(syntaxNode),
-                transform: static (ctx, _) => ToEquatableArray(GetNotifyCanExecuteChangedForDiagnostics(ctx)))
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyCanExecuteChangedForDiagnostics(ctx)))
             .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyCanExecuteChangedForDiagnostics");
 
@@ -112,7 +112,7 @@ internal static class ViewModelDiagnosticHelper
         var computedPropertyDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithComputedPropertyUsage(syntaxNode),
-                transform: static (ctx, _) => ToEquatableArray(GetComputedPropertyDiagnostics(ctx)))
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetComputedPropertyDiagnostics(ctx)))
             .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.ComputedPropertyDiagnostics");
 
@@ -131,13 +131,74 @@ internal static class ViewModelDiagnosticHelper
         var notifyDataErrorInfoDiagnostics = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (syntaxNode, _) => IsClassWithNotifyDataErrorInfoUsage(syntaxNode),
-                transform: static (ctx, _) => ToEquatableArray(GetNotifyDataErrorInfoDiagnostics(ctx)))
+                transform: static (ctx, _) => ToEquatableArray(UsesGeneratorAttributesOfAnotherLibrary(ctx) ? null : GetNotifyDataErrorInfoDiagnostics(ctx)))
             .Where(static diagnostics => !diagnostics.IsEmpty)
             .WithTrackingName("ViewModelGenerator.NotifyDataErrorInfoDiagnostics");
 
         context.RegisterSourceOutput(
             notifyDataErrorInfoDiagnostics,
             static (spc, diagnostics) => ReportAll(spc, diagnostics));
+    }
+
+    // Other MVVM libraries use the same attribute names (ObservableProperty, RelayCommand, ...).
+    // The candidate nodes are found by name only, so this resolves the attributes on the class
+    // and tells whether every one of them belongs to another library. An attribute that cannot
+    // be resolved counts as the toolkit's own, because only its name is known.
+    private static bool UsesGeneratorAttributesOfAnotherLibrary(
+        GeneratorSyntaxContext context)
+    {
+        var typeDeclaration = context.Node.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+        if (typeDeclaration is null)
+        {
+            return false;
+        }
+
+        var foundAttributeOfAnotherLibrary = false;
+
+        foreach (var attribute in typeDeclaration.DescendantNodes().OfType<AttributeSyntax>())
+        {
+            if (attribute.FirstAncestorOrSelf<TypeDeclarationSyntax>() != typeDeclaration ||
+                !IsGeneratorAttributeName(attribute))
+            {
+                continue;
+            }
+
+            var attributeType = context.SemanticModel.GetTypeInfo(attribute).Type;
+            if (attributeType is null || attributeType.IsToolkitTypeOrUnresolved())
+            {
+                return false;
+            }
+
+            foundAttributeOfAnotherLibrary = true;
+        }
+
+        return foundAttributeOfAnotherLibrary;
+    }
+
+    private static bool IsGeneratorAttributeName(AttributeSyntax attribute)
+    {
+        var name = attribute.Name.ToString();
+
+        var lastDot = name.LastIndexOf('.');
+        if (lastDot >= 0)
+        {
+            name = name.Substring(lastDot + 1);
+        }
+
+        const string attributeSuffix = "Attribute";
+        if (name.EndsWith(attributeSuffix, StringComparison.Ordinal))
+        {
+            name = name.Substring(0, name.Length - attributeSuffix.Length);
+        }
+
+        return name
+            is "ObservableProperty"
+            or "RelayCommand"
+            or "ComputedProperty"
+            or "NotifyPropertyChangedFor"
+            or "NotifyCanExecuteChangedFor"
+            or "NotifyDataErrorInfo"
+            or "INotifyPropertyChanged";
     }
 
     // A list has reference equality, which would make the pipeline re-run its output on every

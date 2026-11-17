@@ -70,4 +70,65 @@ public sealed class ViewModelGeneratorTests_InheritedMemberDiagnostics : Generat
         Assert.Contains(generatorResult.Diagnostics, x => x.Id == "AtcXamlToolkit0005");
         Assert.Contains(generatorResult.Diagnostics, x => x.Id == "AtcXamlToolkit0006");
     }
+
+    [Fact]
+    public void SameNamedAttributesOfAnotherMvvmLibrary_ReportNoDiagnostics()
+    {
+        // Another MVVM library uses the same attribute names. Its usage is none of this
+        // generator's business, so none of the toolkit's diagnostics may fire for it.
+        const string inputCode =
+            """
+            namespace CommunityToolkit.Mvvm.ComponentModel
+            {
+                public abstract class ObservableObject
+                {
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Field)]
+                public sealed class ObservablePropertyAttribute : System.Attribute
+                {
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = true)]
+                public sealed class NotifyPropertyChangedForAttribute : System.Attribute
+                {
+                    public NotifyPropertyChangedForAttribute(string propertyName)
+                    {
+                    }
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = true)]
+                public sealed class NotifyCanExecuteChangedForAttribute : System.Attribute
+                {
+                    public NotifyCanExecuteChangedForAttribute(string commandName)
+                    {
+                    }
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Field)]
+                public sealed class NotifyDataErrorInfoAttribute : System.Attribute
+                {
+                }
+            }
+
+            namespace TestNamespace
+            {
+                using CommunityToolkit.Mvvm.ComponentModel;
+
+                // Not partial, a field name the toolkit would reject, and names it cannot resolve.
+                public class OtherLibraryViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    [NotifyPropertyChangedFor("Missing")]
+                    [NotifyCanExecuteChangedFor("MissingCommand")]
+                    [NotifyDataErrorInfo]
+                    private string Name = string.Empty;
+                }
+            }
+            """;
+
+        var generatorResult = RunGenerator<ViewModelGenerator>(inputCode);
+
+        Assert.DoesNotContain(generatorResult.Diagnostics, x => x.Id.StartsWith("AtcXamlToolkit", StringComparison.Ordinal));
+    }
 }
