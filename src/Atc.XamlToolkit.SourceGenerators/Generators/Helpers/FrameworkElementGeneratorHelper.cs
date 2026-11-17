@@ -156,12 +156,14 @@ internal static class FrameworkElementGeneratorHelper
         }
 
         var defaultStyleKey = GetDefaultStyleKey(xamlPlatform, classSymbol);
+        var templateParts = TemplatePartInspector.Inspect(classSymbol);
 
         if (allAttachedProperties.Count == 0 &&
             allDependencyProperties.Count == 0 &&
             allRoutedEvents.Count == 0 &&
             allRelayCommands.Count == 0 &&
-            defaultStyleKey is null)
+            defaultStyleKey is null &&
+            templateParts.Count == 0)
         {
             return null;
         }
@@ -181,6 +183,9 @@ internal static class FrameworkElementGeneratorHelper
             ContainingTypeDeclarations = classSymbol.GetContainingTypeDeclarations(),
             HintName = classSymbol.GetHintName(),
             DefaultStyleKey = defaultStyleKey,
+            TemplatePartsToGenerate = new EquatableArray<TemplatePartToGenerate>(templateParts.ToArray()),
+            ClassAttributes = new EquatableArray<string>(
+                TemplatePartInspector.GetClassAttributes(xamlPlatform, classSymbol, templateParts).ToArray()),
         };
     }
 
@@ -330,6 +335,9 @@ internal static class FrameworkElementGeneratorHelper
 
                     // WPF & Avalonia: DefaultStyleKey (class level)
                     NameConstants.DefaultStyleKey or NameConstants.DefaultStyleKeyAttribute or
+
+                    // All platforms: TemplatePartField
+                    NameConstants.TemplatePartField or NameConstants.TemplatePartFieldAttribute or
 
                     // All platforms: RelayCommand
                     NameConstants.RelayCommand or NameConstants.RelayCommandAttribute)

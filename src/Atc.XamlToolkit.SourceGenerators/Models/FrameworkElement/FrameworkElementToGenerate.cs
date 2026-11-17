@@ -17,4 +17,9 @@ internal sealed record FrameworkElementToGenerate(
     /// Gets or sets what <c>[DefaultStyleKey]</c> on the class asks for; null when the attribute is absent.
     /// </summary>
     public DefaultStyleKeyToGenerate? DefaultStyleKey { get; set; }
+
+    /// <summary>
+    /// Gets or sets the fields marked with <c>[TemplatePartField]</c>.
+    /// </summary>
+    public EquatableArray<TemplatePartToGenerate> TemplatePartsToGenerate { get; set; } = EquatableArray<TemplatePartToGenerate>.Empty;
 }

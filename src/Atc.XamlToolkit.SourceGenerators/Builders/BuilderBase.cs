@@ -165,6 +165,11 @@ internal abstract class BuilderBase
 
         var staticModifier = toGenerate.IsStatic ? " static" : string.Empty;
 
+        foreach (var classAttribute in toGenerate.ClassAttributes)
+        {
+            AppendLine(classAttribute);
+        }
+
         AppendLine($"{toGenerate.ClassAccessModifier}{staticModifier} partial class {toGenerate.ClassName}{toGenerate.TypeParameterList}");
         AppendLine("{");
         IncreaseIndent();

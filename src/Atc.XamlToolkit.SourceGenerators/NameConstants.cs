@@ -74,9 +74,12 @@ internal static class NameConstants
     public const string RelayCommand = nameof(RelayCommand);
     public const string RelayCommandAsync = nameof(RelayCommandAsync);
     public const string RelayCommandAttribute = nameof(RelayCommandAttribute);
+    public const string TemplatePartField = nameof(TemplatePartField);
+    public const string TemplatePartFieldAttribute = nameof(TemplatePartFieldAttribute);
     public const string DefaultStyleKey = nameof(DefaultStyleKey);
     public const string DefaultStyleKeyAttribute = nameof(DefaultStyleKeyAttribute);
     public const string OverrideDefaultStyleKey = nameof(OverrideDefaultStyleKey);
+    public const string ResolveTemplateParts = nameof(ResolveTemplateParts);
     public const string RoutedEvent = nameof(RoutedEvent);
     public const string RoutedEventAttribute = nameof(RoutedEventAttribute);
     public const string RoutedEventHandler = nameof(RoutedEventHandler);

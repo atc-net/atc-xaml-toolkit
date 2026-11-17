@@ -237,6 +237,7 @@ Eliminate boilerplate with powerful code generation:
 - **[AttachedProperty]** (WPF, WinUI 3 & Avalonia) - Auto-generate attached properties
 - **[RoutedEvent]** (WPF only) - Auto-generate routed events
 - **[DefaultStyleKey]** (WPF & Avalonia) - Auto-generate the default style key override of a custom control
+- **[TemplatePartField]** (WPF, WinUI 3 & Avalonia) - Declare a template part once, on its field, and auto-generate the lookup
 
 > **Note:** Classes using `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, or `[RoutedEvent]` must either inherit from `UserControl`/`DependencyObject`/`FrameworkElement`, or have a class name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`).
 
@@ -244,6 +245,7 @@ Learn more about each generator:
 
 - [SourceGenerators for AttachedProperties](docs/SourceGenerators/AttachedProperty.md)
 - [SourceGenerators for the default style key](docs/SourceGenerators/DefaultStyleKey.md)
+- [SourceGenerators for template parts](docs/SourceGenerators/TemplatePartField.md)
 - [SourceGenerators for DependencyProperties](docs/SourceGenerators/DependencyProperty.md)
 - [SourceGenerators for RoutedEvents](docs/SourceGenerators/RoutedEvents.md)
 - [SourceGenerators for ViewModel](docs/SourceGenerators/ViewModel.md)

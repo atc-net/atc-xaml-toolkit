@@ -382,6 +382,8 @@ internal static class NamedTypeSymbolExtensions
             .Any(m => m.GetAttributes()
                 .Any(a => a.GetToolkitAttributeName()
                     is NameConstants.RoutedEventAttribute
-                    or NameConstants.RoutedEvent));
+                    or NameConstants.RoutedEvent
+                    or NameConstants.TemplatePartFieldAttribute
+                    or NameConstants.TemplatePartField));
     }
 }

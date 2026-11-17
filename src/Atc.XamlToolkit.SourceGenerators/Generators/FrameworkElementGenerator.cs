@@ -95,6 +95,8 @@ public sealed class FrameworkElementGenerator : IIncrementalGenerator
             frameworkElementBuilder.GenerateRelayCommandMethods(frameworkElementBuilder, frameworkElementToGenerate.RelayCommandsToGenerate);
         }
 
+        frameworkElementBuilder.GenerateTemplateParts(frameworkElementToGenerate);
+
         frameworkElementBuilder.GenerateEnd();
 
         var sourceText = frameworkElementBuilder.ToSourceText();

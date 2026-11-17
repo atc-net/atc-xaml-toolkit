@@ -54,6 +54,12 @@ internal static class FrameworkElementBuilderExtensions
             namespaces.AddRange(defaultStyleKey.RequiredNamespaces);
         }
 
+        foreach (var templatePart in frameworkElementToGenerate.TemplatePartsToGenerate)
+        {
+            // The type of the part is written by its simple name
+            namespaces.AddRange(templatePart.RequiredNamespaces);
+        }
+
         foreach (var property in properties)
         {
             // The property type is written by its simple name
@@ -120,6 +126,64 @@ internal static class FrameworkElementBuilderExtensions
         builder.AppendLine($"typeof({ownerType}),");
         builder.AppendLine($"new FrameworkPropertyMetadata(typeof({styleType})));");
         builder.DecreaseIndent();
+        builder.DecreaseIndent();
+        builder.AppendLine("}");
+    }
+
+    public static void GenerateTemplateParts(
+        this FrameworkElementBuilder builder,
+        FrameworkElementToGenerate frameworkElementToGenerate)
+    {
+        var templateParts = frameworkElementToGenerate.TemplatePartsToGenerate;
+        if (templateParts.IsEmpty)
+        {
+            return;
+        }
+
+        var isAvalonia = frameworkElementToGenerate.XamlPlatform == XamlPlatform.Avalonia;
+
+        builder.AppendLineBeforeMember();
+        builder.AppendLine("/// <summary>");
+        builder.AppendLine("/// Assigns the template parts to their fields. Call it from <c>OnApplyTemplate</c>.");
+        builder.AppendLine("/// </summary>");
+        builder.AppendLine(isAvalonia
+            ? $"private void {NameConstants.ResolveTemplateParts}(global::Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)"
+            : $"private void {NameConstants.ResolveTemplateParts}()");
+        builder.AppendLine("{");
+        builder.IncreaseIndent();
+
+        foreach (var templatePart in templateParts)
+        {
+            var lookup = isAvalonia
+                ? $"e.NameScope.Find<{templatePart.TypeName}>({templatePart.PartNameExpression})"
+                : $"GetTemplateChild({templatePart.PartNameExpression}) as {templatePart.TypeName}";
+
+            if (templatePart.IsRequired)
+            {
+                var partName = templatePart.PartNameText ?? $"{{{templatePart.PartNameExpression}}}";
+                var message = $"Template part '{partName}' of type '{templatePart.TypeName}' was not found in the template of '{frameworkElementToGenerate.ClassName}'.";
+                var messageLiteral = templatePart.PartNameText is null
+                    ? "$" + SymbolDisplay.FormatLiteral(message, quote: true)
+                    : SymbolDisplay.FormatLiteral(message, quote: true);
+
+                builder.AppendLine($"{templatePart.FieldName} = {lookup}");
+                builder.IncreaseIndent();
+                builder.AppendLine($"?? throw new global::System.InvalidOperationException({messageLiteral});");
+                builder.DecreaseIndent();
+            }
+            else if (templatePart.IsFieldNullable)
+            {
+                builder.AppendLine($"{templatePart.FieldName} = {lookup};");
+            }
+            else
+            {
+                // The field is declared non-nullable although the part is optional: keep that choice.
+                builder.AppendLine(isAvalonia
+                    ? $"{templatePart.FieldName} = {lookup}!;"
+                    : $"{templatePart.FieldName} = ({lookup})!;");
+            }
+        }
+
         builder.DecreaseIndent();
         builder.AppendLine("}");
     }

@@ -17,6 +17,7 @@
 | Generate an attached property | `[AttachedProperty]` | Static helper / behavior | [AttachedProperty.md](AttachedProperty.md) |
 | Generate a WPF routed event | `[RoutedEvent]` | Custom control | [RoutedEvents.md](RoutedEvents.md) |
 | Set a control's default style key | `[DefaultStyleKey]` | Custom control (class) | [DefaultStyleKey.md](DefaultStyleKey.md) |
+| Declare and look up the named parts of a control template | `[TemplatePartField]` | Custom control (field) | [TemplatePartField.md](TemplatePartField.md) |
 
 ## Platform support matrix
 
@@ -33,6 +34,7 @@
 | `[AttachedProperty]` | ✅ | ✅ | ✅ | On Avalonia the owner class **must not** be `static` and must inherit from `AvaloniaObject`. |
 | `[RoutedEvent]` | ✅ | ❌ (skipped) | ❌ (skipped) | Generator emits no code on non-WPF platforms — use plain .NET events on WinUI/Avalonia. |
 | `[DefaultStyleKey]` | ✅ | ❌ | ✅ | Class-level attribute. WPF: static constructor with `DefaultStyleKeyProperty.OverrideMetadata`. Avalonia: `StyleKeyOverride`. Not available on WinUI, where the key is set in the instance constructor. |
+| `[TemplatePartField]` | ✅ | ✅ | ✅ | Field-level attribute. Emits the platform's `[TemplatePart]` attribute on the class and a `ResolveTemplateParts` method to call from `OnApplyTemplate`. On Avalonia the method takes the `TemplateAppliedEventArgs`. |
 
 ## How class-naming gates the framework-element generator
 
@@ -41,7 +43,8 @@
 1. Classes inheriting from `UserControl`, `DependencyObject`, `FrameworkElement`, **or**
 2. Class names ending in `Attach`, `Behavior`, or `Helper`, **or**
 3. Classes that contain `[RoutedEvent]` attributes, **or**
-4. Classes that carry the `[DefaultStyleKey]` attribute.
+4. Classes that carry the `[DefaultStyleKey]` attribute, **or**
+5. Classes that contain `[TemplatePartField]` attributes.
 
 If you put `[DependencyProperty]` on, say, `MyService` and nothing happens, this is why — rename to `MyServiceHelper` or inherit from `DependencyObject`.
 

@@ -25,6 +25,12 @@ internal abstract record GenerateBase(
     /// </summary>
     public string? HintName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the attributes to put on the generated part of the class, each as a
+    /// complete attribute list, e.g. <c>[TemplatePart(Name = "PART_X", Type = typeof(Border))]</c>.
+    /// </summary>
+    public EquatableArray<string> ClassAttributes { get; set; } = EquatableArray<string>.Empty;
+
     public string GeneratedFileName
         => $"{HintName ?? $"{NamespaceName}.{ClassName}"}.g.cs";
 }
