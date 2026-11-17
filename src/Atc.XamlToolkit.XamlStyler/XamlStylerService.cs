@@ -163,7 +163,7 @@ public sealed class XamlStylerService
         }
 
         var ignoredNamespacesPrefixes = new List<string>();
-        while (xmlReader.MoveToNextAttribute())
+        do
         {
             var prefix = xmlReader.LocalName;
             var namespaceUri = xmlReader.Value.ReplaceOrdinal($"[{prefix}]", string.Empty);
@@ -173,6 +173,7 @@ public sealed class XamlStylerService
                 ignoredNamespacesPrefixes.Add(prefix);
             }
         }
+        while (xmlReader.MoveToNextAttribute());
 
         return ignoredNamespacesPrefixes;
     }
