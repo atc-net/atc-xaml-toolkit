@@ -1655,7 +1655,7 @@ public sealed partial class FrameworkElementGeneratorTests
                     nameof(LongValue),
                     typeof(long),
                     typeof(MyControl),
-                    new PropertyMetadata(defaultValue: 1));
+                    new PropertyMetadata(defaultValue: 1L));
 
                 public long LongValue
                 {

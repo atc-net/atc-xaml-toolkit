@@ -39,6 +39,8 @@ internal static class FrameworkElementInspectorHelper
 
             var type = propertyAttribute.ExtractClassFirstArgumentType(ref defaultValue);
 
+            propertyAttribute.EscapeLiteralArgumentValues(argumentValues, type);
+
             const bool isReadOnly = false;
 
             var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
@@ -106,6 +108,8 @@ internal static class FrameworkElementInspectorHelper
             .Type
             .ToDisplayString()
             .EnsureCSharpAliasIfNeeded();
+
+        propertyAttribute.EscapeLiteralArgumentValues(argumentValues, type);
 
         var useNewKeyword = classSymbol.HasBaseTypeThePropertyName(propertyName);
 

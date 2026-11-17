@@ -75,6 +75,59 @@ internal static class AttributeDataExtensions
         return defaultValue;
     }
 
+    /// <summary>
+    /// Replaces the bound string and char values that are emitted inside a literal
+    /// (Category, Description, and DefaultValue of a string or char property) with their
+    /// escaped form, so the argument values have the same shape as the source text.
+    /// </summary>
+    /// <param name="attributeData">The attribute data the values were extracted from.</param>
+    /// <param name="argumentValues">The extracted argument values to update.</param>
+    /// <param name="propertyType">The type of the property the attribute describes.</param>
+    public static void EscapeLiteralArgumentValues(
+        this AttributeData attributeData,
+        IDictionary<string, string?> argumentValues,
+        string propertyType)
+    {
+        var type = propertyType.RemoveNullableSuffix();
+
+        foreach (var namedArgument in attributeData.NamedArguments)
+        {
+            if (namedArgument.Value.Kind != TypedConstantKind.Primitive ||
+                !argumentValues.ContainsKey(namedArgument.Key))
+            {
+                continue;
+            }
+
+            var isDefaultValue = namedArgument.Key == NameConstants.DefaultValue;
+
+            string? literal = null;
+            if (namedArgument.Value.Value is string stringValue &&
+                (namedArgument.Key is NameConstants.Category or NameConstants.Description ||
+                 (isDefaultValue && type == "string")))
+            {
+                literal = SymbolDisplay.FormatLiteral(stringValue, quote: true);
+            }
+            else if (namedArgument.Value.Value is char charValue &&
+                     isDefaultValue &&
+                     type == "char")
+            {
+                literal = SymbolDisplay.FormatLiteral(charValue, quote: true);
+            }
+
+            if (literal is not null)
+            {
+                // Drop the quotes - they are added again where the value is emitted.
+                argumentValues[namedArgument.Key] = literal.Substring(1, literal.Length - 2);
+            }
+        }
+    }
+
+    // Numbers must not be formatted with the culture of the build machine.
+    private static string? ToInvariantString(object? value)
+        => value is IFormattable formattable
+            ? formattable.ToString(format: null, CultureInfo.InvariantCulture)
+            : value?.ToString();
+
     private static IDictionary<string, string?> SyntaxExtractConstructorArgumentValues(
         this AttributeData attributeData) =>
         attributeData.ApplicationSyntaxReference is not null
@@ -107,14 +160,14 @@ internal static class AttributeDataExtensions
                     arrayIndex++;
                     result.Add(
                         arrayIndex.ToString(CultureInfo.InvariantCulture),
-                        typedConstant.Value.ToString());
+                        ToInvariantString(typedConstant.Value));
                 }
             }
             else if (arg.Value is not null)
             {
                 result.Add(
                     NameConstants.Name,
-                    arg.Value.ToString());
+                    ToInvariantString(arg.Value));
             }
         }
 
@@ -134,13 +187,13 @@ internal static class AttributeDataExtensions
 
                     if (result.ContainsKey(arg.Key))
                     {
-                        result[arg.Key] += $", {typedConstant.Value}";
+                        result[arg.Key] += $", {ToInvariantString(typedConstant.Value)}";
                     }
                     else
                     {
                         result.Add(
                             arg.Key,
-                            typedConstant.Value.ToString());
+                            ToInvariantString(typedConstant.Value));
                     }
                 }
             }
@@ -173,7 +226,7 @@ internal static class AttributeDataExtensions
                     {
                         result.Add(
                             arg.Key,
-                            arg.Value.Value?.ToString());
+                            ToInvariantString(arg.Value.Value));
                     }
                 }
             }

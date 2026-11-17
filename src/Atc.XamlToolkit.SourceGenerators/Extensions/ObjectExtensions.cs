@@ -101,11 +101,11 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("double."))
                 {
-                    if (strDefaultValue == double.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    if (strDefaultValue == double.MinValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "double.MinValue";
                     }
-                    else if (strDefaultValue == double.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    else if (strDefaultValue == double.MaxValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "double.MaxValue";
                     }
@@ -131,11 +131,11 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("float."))
                 {
-                    if (strDefaultValue == float.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    if (strDefaultValue == float.MinValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "float.MinValue";
                     }
-                    else if (strDefaultValue == float.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    else if (strDefaultValue == float.MaxValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "float.MaxValue";
                     }
@@ -161,11 +161,11 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("uint."))
                 {
-                    if (strDefaultValue == uint.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    if (strDefaultValue == uint.MinValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "uint.MinValue";
                     }
-                    else if (strDefaultValue == uint.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    else if (strDefaultValue == uint.MaxValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "uint.MaxValue";
                     }
@@ -190,11 +190,11 @@ internal static class ObjectExtensions
                 }
                 else if (!strDefaultValue.Contains("ulong."))
                 {
-                    if (strDefaultValue == ulong.MinValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    if (strDefaultValue == ulong.MinValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "ulong.MinValue";
                     }
-                    else if (strDefaultValue == ulong.MaxValue.ToString(Thread.CurrentThread.CurrentCulture))
+                    else if (strDefaultValue == ulong.MaxValue.ToString(CultureInfo.InvariantCulture))
                     {
                         strDefaultValue = "ulong.MaxValue";
                     }
@@ -220,6 +220,26 @@ internal static class ObjectExtensions
                 else if (AllowedIntLongConst.Any(x => x.Equals(strDefaultValue, StringComparison.Ordinal)))
                 {
                     strDefaultValue = lastPart + "." + strDefaultValue;
+                }
+
+                // A boxed int is not a valid default value for a long property.
+                if (lastPart == "long" &&
+                    long.TryParse(strDefaultValue, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
+                {
+                    strDefaultValue += "L";
+                }
+
+                break;
+            case "char":
+                if (strDefaultValue.Length == 0)
+                {
+                    strDefaultValue = SimpleTypeFactory.CreateDefaultValueAsStrForType(type, xamlPlatform);
+                }
+                else if (!(strDefaultValue.Length > 2 &&
+                           strDefaultValue.StartsWith("'", StringComparison.Ordinal) &&
+                           strDefaultValue.EndsWith("'", StringComparison.Ordinal)))
+                {
+                    strDefaultValue = $"'{strDefaultValue}'";
                 }
 
                 break;

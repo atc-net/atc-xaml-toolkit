@@ -6,6 +6,13 @@ namespace Atc.XamlToolkit.SourceGenerators.Tests.Generators;
 /// </summary>
 public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
 {
+    // The generated framework element code relies on these usings of the consumer project.
+    private const string AvaloniaGlobalUsings =
+        """
+        global using System.ComponentModel;
+        global using Avalonia;
+        """;
+
     [Fact]
     public void ViewModel_WithObservablePropertyAndCommands_Compiles()
     {
@@ -540,6 +547,60 @@ public sealed class GeneratedCodeCompilesTests : GeneratorTestBase
         // Forwarding these without 'override' would hide the inherited members (CS0114).
         Assert.DoesNotContain("GetHashCode", generatedCode, StringComparison.Ordinal);
         Assert.DoesNotContain("Equals(", generatedCode, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StyledProperty_DefaultValuesWithEscapesAndChars_Compiles()
+    {
+        const string inputCode =
+            """
+            using Atc.XamlToolkit.Controls.Attributes;
+
+            namespace TestNamespace;
+
+            [StyledProperty<string>("Greeting", DefaultValue = "say \"hi\" to c:\\temp", Category = "The \"common\" ones", Description = "A \"greeting\".")]
+            [StyledProperty<char>("Separator", DefaultValue = ';')]
+            [StyledProperty<char>("Quote", DefaultValue = '\'')]
+            [StyledProperty<long>("Total", DefaultValue = 5)]
+            public partial class MyControl : Avalonia.Controls.UserControl
+            {
+                public string Describe() => $"{Greeting}{Separator}{Quote}{Total}";
+            }
+            """;
+
+        AssertCompilesWithAllGenerators(AvaloniaGlobalUsings, inputCode);
+    }
+
+    [Fact]
+    public void StyledProperty_NegativeDefaultValues_CompileOnAnyBuildMachineCulture()
+    {
+        const string inputCode =
+            """
+            using Atc.XamlToolkit.Controls.Attributes;
+
+            namespace TestNamespace;
+
+            [StyledProperty<int>("Offset", DefaultValue = -1)]
+            [StyledProperty<double>("Scale", DefaultValue = -1.5)]
+            [StyledProperty<decimal>("Amount", DefaultValue = -2.5)]
+            public partial class MyControl : Avalonia.Controls.UserControl
+            {
+                public string Describe() => $"{Offset}{Scale}{Amount}";
+            }
+            """;
+
+        var originalCulture = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            // sv-SE formats negative numbers with U+2212 and uses a decimal comma.
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("sv-SE");
+
+            AssertCompilesWithAllGenerators(AvaloniaGlobalUsings, inputCode);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [Fact]

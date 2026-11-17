@@ -20,7 +20,7 @@ internal static class SimpleTypeFactory
             "uint" => "0U",
             "short" => "(short)0",
             "ushort" => "(ushort)0",
-            "long" => "0",
+            "long" => "0L",
             "ulong" => "0UL",
             "nint" => "nint.Zero",
             "nuint" => "nuint.Zero",
