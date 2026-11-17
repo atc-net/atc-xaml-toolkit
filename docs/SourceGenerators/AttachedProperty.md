@@ -6,6 +6,8 @@ In WPF, WinUI 3, and Avalonia, **attached properties** are a type of dependency/
 
 > **Note:** `[AttachedProperty]` works in any `partial` class, whatever it is called. (Earlier versions required a class name ending with "Attach", "Behavior" or "Helper", or a base class of `UserControl`, `DependencyObject` or `FrameworkElement`.)
 
+> **Note:** A class that is not `partial` gets no generated code and is reported as `AtcXamlToolkit0002`. An attributed field must be `private` and start with a lower-case letter or an underscore; a field that is not `private`, or that starts with an upper-case letter, is skipped without a diagnostic.
+
 ---
 
 ## 🚀 Defining an Attached Property
@@ -78,18 +80,71 @@ While the source generator provides a unified API for all platforms, there are s
 - Does NOT support: `ValidateValueCallback`, `CoerceValueCallback`, `Flags`, `DefaultUpdateSourceTrigger`, or `IsAnimationProhibited`
 - Uses `BooleanBoxes` for boolean default values (performance optimization)
 - Generated Get/Set methods use `DependencyObject` as the parameter type
-- If you specify WPF-only features in WinUI, they will be ignored by the generator
+- The WPF-only options do not exist on the WinUI attribute, so using one is a compile error (CS0246), not something the generator ignores
 
 **Avalonia:**
 - Uses generic type parameters in property registration (e.g., `RegisterAttached<TOwner, THost, TValue>`)
 - Uses plain `bool` values instead of `BooleanBoxes`
 - Generated Get/Set methods use `AvaloniaObject` as the parameter type
 - **Important:** Owner class must inherit from `AvaloniaObject` (cannot be static)
-- Does NOT support WPF-specific features like `ValidateValueCallback`, `CoerceValueCallback`, or metadata flags
+- Does NOT support WPF-specific features like `ValidateValueCallback`, `CoerceValueCallback`, or metadata flags: those options do not exist on the Avalonia attribute, so using one is a compile error (CS0246)
 
 The source generator automatically detects your platform and generates the appropriate code.
 
 ---
+
+## 🧩 Options reference
+
+The options of `[AttachedProperty]`. The class-level form `[AttachedProperty<T>("Name")]` takes the same options, except that the property name is the constructor argument instead of `PropertyName`.
+
+| Option | Type | Default | Platforms | Description |
+|--------|------|---------|-----------|-------------|
+| `PropertyName` | `string` | field name, first letter in upper case | WPF, WinUI, Avalonia (field form) | Name of the generated property. |
+| `DefaultValue` | `object` | default of the property type | WPF, WinUI, Avalonia | Default value as a constant. |
+| `DefaultValueExpression` | `string` | none | WPF, WinUI, Avalonia | Default value as C# source text, emitted unchanged. Wins over `DefaultValue`. |
+| `PropertyChangedCallback` | `string` | none | WPF, WinUI, Avalonia | Name of a static method that is called when the value changes. |
+| `GeneratePartialHooks` | `bool` | `false` | WPF, WinUI, Avalonia | Generate a typed `static partial void On{Name}Changed(d, T oldValue, T newValue)` hook. |
+| `AccessModifier` | `PropertyAccessModifier` | `Public` | WPF, WinUI, Avalonia | Accessibility of the `{Name}Property` field and the `Get{Name}` / `Set{Name}` methods. |
+| `SetterAccessModifier` | `PropertyAccessModifier` | `Public` (`Private` with `IsReadOnly`) | WPF, WinUI, Avalonia | Accessibility of the `Set{Name}` method. |
+| `GenerateClrAccessors` | `bool` | `true` | WPF, WinUI, Avalonia | `false` generates only the `{Name}Property` field. |
+| `Category` | `string` | none | WPF, WinUI, Avalonia | Puts `[Category("...")]` on `Get{Name}` and `Set{Name}`. |
+| `Description` | `string` | none | WPF, WinUI, Avalonia | Puts `[Description("Get: ...")]` on `Get{Name}` and `[Description("Set: ...")]` on `Set{Name}`. |
+| `GenerateDocumentation` | `bool` | `false`, or `true` with `[assembly: GenerateDocumentationDefault]` | WPF, WinUI, Avalonia | Emit default XML summaries when the field has none. |
+| `TargetType` | `Type` | `DependencyObject` | WPF, WinUI | Type of the element parameter of `Get{Name}` / `Set{Name}`. |
+| `NullElementHandling` | `NullElementHandling` | `Default` | WPF, WinUI | What the accessors do with a `null` element. |
+| `ElementParameterName` | `string` | `element` | WPF, WinUI | Name of the element parameter of `Get{Name}` / `Set{Name}`. |
+| `BrowsableForTargetType` | `bool` | `false` | WPF | Put `[AttachedPropertyBrowsableForType(typeof(TargetType))]` on `Get{Name}`. |
+| `CoerceValueCallback` | `string` | none | WPF | Name of a static coerce callback. |
+| `GenerateCoerceHook` | `bool` | `false` | WPF | Generate a typed `private static partial T Coerce{Name}(DependencyObject d, T value)` method that the class must implement. |
+| `ValidateValueCallback` | `string` | none | WPF | Name of a static validation callback. |
+| `Flags` | `FrameworkPropertyMetadataOptions` | `None` | WPF | Metadata flags; makes the metadata a `FrameworkPropertyMetadata`. |
+| `DefaultUpdateSourceTrigger` | `UpdateSourceTrigger` | `Default` | WPF | Default update trigger for bindings. |
+| `IsAnimationProhibited` | `bool` | `false` | WPF | Prohibit animation of the property. |
+| `MetadataType` | `DependencyPropertyMetadataType` | `Auto` | WPF | The metadata class that is created, see "Which metadata class is generated" in [DependencyProperty.md](DependencyProperty.md). |
+| `IsReadOnly` | `bool` | `false` | WPF | Register a read-only attached property with a `DependencyPropertyKey`. |
+| `PropertyKeyAccessModifier` | `PropertyAccessModifier` | private | WPF | Accessibility of the `{Name}PropertyKey` field of a read-only property. |
+| `AddOwnerOf` | `Type` | none | WPF | Share the existing property of this type instead of registering a new one. |
+
+An option does not exist on the attribute of a platform that is not listed for it; using it there does not compile.
+
+`Category` and `Description` are for property grids and designers. The generated file gets `using System.ComponentModel;`:
+
+```csharp
+[AttachedProperty(Category = "Layout", Description = "The gap.")]
+private static double gap;
+```
+
+```csharp
+[Category("Layout")]
+[Description("Get: The gap.")]
+public static double GetGap(DependencyObject element)
+    => (double)element.GetValue(GapProperty);
+
+[Category("Layout")]
+[Description("Set: The gap.")]
+public static void SetGap(DependencyObject element, double value)
+    => element?.SetValue(GapProperty, value);
+```
 
 ## 📝 Documentation of the accessors
 
@@ -120,21 +175,29 @@ public static partial class CheckBoxHelper
 ```
 
 ```csharp
-public static CornerRadius GetCheckCornerRadius(UIElement element)
+public static CornerRadius GetCheckCornerRadius(global::System.Windows.UIElement element)
     => (CornerRadius)element.GetValue(CheckCornerRadiusProperty);
 
-public static void SetCheckCornerRadius(UIElement element, CornerRadius value)
+public static void SetCheckCornerRadius(global::System.Windows.UIElement element, CornerRadius value)
     => element?.SetValue(CheckCornerRadiusProperty, value);
 ```
 
-This only changes the signature of the two methods. The property can still be set on any object from XAML, and the change hooks still receive a `DependencyObject`.
+The type is written with its full name (on WinUI `global::Microsoft.UI.Xaml.UIElement`). This only changes the signature of the two methods. The property can still be set on any object from XAML, and the change hooks still receive a `DependencyObject`.
 
-On WPF, add `BrowsableForTargetType = true` to also put `[AttachedPropertyBrowsableForType(typeof(UIElement))]` on the `Get{Name}` method, so designers offer the property only on elements of that type:
+On WPF, add `BrowsableForTargetType = true` to also put `[AttachedPropertyBrowsableForType(typeof(...))]` with the target type on the `Get{Name}` method, so designers offer the property only on elements of that type:
 
 ```csharp
 [AttachedProperty(TargetType = typeof(CheckBox), BrowsableForTargetType = true)]
 private static double checkSize;
 ```
+
+```csharp
+[AttachedPropertyBrowsableForType(typeof(global::System.Windows.Controls.CheckBox))]
+public static double GetCheckSize(global::System.Windows.Controls.CheckBox element)
+    => (double)element.GetValue(CheckSizeProperty);
+```
+
+`BrowsableForTargetType` without `TargetType` has no effect, and is not reported.
 
 ## 🚫 What the accessors do with a `null` element (WPF, WinUI)
 
@@ -165,7 +228,7 @@ public static void SetSpacing(DependencyObject element, double value)
 }
 ```
 
-`ElementParameterName` renames the element parameter of both methods (the default is `element`), for example `ElementParameterName = "obj"` gives `GetSpacing(DependencyObject obj)`. It matters when existing callers use named arguments, and it is the name an `ArgumentNullException` reports.
+`ElementParameterName` renames the element parameter of both methods (the default is `element`), for example `ElementParameterName = "obj"` gives `GetSpacing(DependencyObject obj)`. It matters when existing callers use named arguments, and it is the name an `ArgumentNullException` reports. A name that is not a valid identifier, or `value` (the name of the second parameter of `Set{Name}`), is not used: the parameter is then called `element`, without a diagnostic.
 
 `ThrowArgumentNullException` is the behaviour to prefer in a public API. `None` exists so a hand-written accessor that uses the element directly can be converted without changing what it does. `NullElementHandling` is in the `Atc.XamlToolkit` namespace.
 
@@ -386,15 +449,17 @@ public static partial class DragBehavior
         "IsDraggable",
         typeof(bool),
         typeof(DragBehavior),
-        new PropertyMetadata(defaultValue: BooleanBoxes.FalseBox));
+        new PropertyMetadata(defaultValue: Atc.XamlToolkit.BooleanBoxes.FalseBox));
 
     public static bool GetIsDraggable(DependencyObject element)
         => (bool)element.GetValue(IsDraggableProperty);
 
     public static void SetIsDraggable(DependencyObject element, bool value)
-        => element?.SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
+        => element?.SetValue(IsDraggableProperty, Atc.XamlToolkit.BooleanBoxes.Box(value));
 }
 ```
+
+On WinUI the field and the registration call are written with the full type name: `public static readonly Microsoft.UI.Xaml.DependencyProperty IsDraggableProperty = Microsoft.UI.Xaml.DependencyProperty.RegisterAttached(`. The rest is the same.
 
 ### ⚙️ Auto-Generated Code - for simple example (Avalonia)
 
@@ -430,7 +495,7 @@ public partial class DragBehavior : AvaloniaObject
 - `RegisterAttached<TOwner, THost, TValue>` uses **generic type parameters** instead of `typeof(...)` arguments. The middle type parameter (`AvaloniaObject`) is the host element type — what the property can be applied to.
 - **No `BooleanBoxes`** — Avalonia stores plain `bool` values; the `Get`/`Set` methods pass them through unboxed.
 - **Get/Set methods take `AvaloniaObject`**, not `DependencyObject`.
-- The `Get` accessor uses the **null-forgiving operator** (`element.GetValue(...)!`) for non-nullable value types because `AvaloniaObject.GetValue` returns `object?`.
+- The `Get` accessor uses the **null-forgiving operator** (`element.GetValue(...)!`), for value types and reference types alike, because `AvaloniaObject.GetValue` returns `object?`.
 
 ### 📝 Human-Written Code - for complex example
 
@@ -527,30 +592,32 @@ The source generator will produce equivalent code:
 ```csharp
 public partial class DragBehavior
 {
-    public static readonly DependencyProperty IsDraggableProperty = DependencyProperty.Register(
-        nameof(IsDraggable),
+    public static readonly DependencyProperty IsDraggableProperty = DependencyProperty.RegisterAttached(
+        "IsDraggable",
         typeof(bool),
         typeof(DragBehavior),
         new FrameworkPropertyMetadata(
-            defaultValue: BooleanBoxes.FalseBox,
+            defaultValue: Atc.XamlToolkit.BooleanBoxes.FalseBox,
             propertyChangedCallback: PropertyChangedCallback,
             coerceValueCallback: CoerceValueCallback,
             flags: FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
             defaultUpdateSourceTrigger: UpdateSourceTrigger.Default,
-            isAnimationProhibited: true,
-            validateValueCallback = ValidateValueCallback));
+            isAnimationProhibited: true),
+        validateValueCallback: ValidateValueCallback);
 
-    public bool IsDraggable
-    {
-        get => (bool)GetValue(IsDraggableProperty);
-        set => SetValue(IsDraggableProperty, BooleanBoxes.Box(value));
-    }
+    public static bool GetIsDraggable(DependencyObject element)
+        => (bool)element.GetValue(IsDraggableProperty);
+
+    public static void SetIsDraggable(DependencyObject element, bool value)
+        => element?.SetValue(IsDraggableProperty, Atc.XamlToolkit.BooleanBoxes.Box(value));
 }
 ```
 
+`validateValueCallback` is an argument of `RegisterAttached`, after the metadata. The generated file has `using System.Windows;` and `using System.Windows.Data;` (for `UpdateSourceTrigger`).
+
 ### ⚙️ Auto-Generated Code - for complex example (Avalonia)
 
-Avalonia's registration surface is **smaller** by design — there are no flags, no `ValidateValueCallback`, no `CoerceValueCallback`, no `DefaultUpdateSourceTrigger`, no `IsAnimationProhibited`. Specifying any of those on `[AttachedProperty]` for an Avalonia target is a no-op (the generator silently drops them). The two surviving knobs are `DefaultValue` and `PropertyChangedCallback`.
+Avalonia's registration surface is **smaller** by design — there are no flags, no `ValidateValueCallback`, no `CoerceValueCallback`, no `DefaultUpdateSourceTrigger`, no `IsAnimationProhibited`. Those options do not exist on the Avalonia `[AttachedProperty]` attribute, so specifying one is a compile error (CS0246). Of the options in the WPF example, `DefaultValue` and `PropertyChangedCallback` remain; the [options reference](#-options-reference) lists everything the Avalonia attribute has.
 
 `PropertyChangedCallback` is wired up differently: instead of being passed into the registration call, it's bound through `Property.Changed.AddClassHandler<AvaloniaObject>(...)` in a generated **static field initializer**. The handler runs for every `AvaloniaObject` the property is attached to, and the class can still declare its own static constructor:
 
@@ -591,6 +658,6 @@ public partial class DragBehavior : AvaloniaObject
 }
 ```
 
-**Why a static constructor?** Avalonia separates the property *definition* from per-class *change subscriptions*. The `Changed.AddClassHandler<T>(...)` call wires the callback once when the type loads — typed to the owning class so the callback receives a strongly-typed first argument. This is the canonical Avalonia pattern; the generator mirrors it directly.
+**Why a static field initializer?** Avalonia separates the property *definition* from the *change subscription*. The `Changed.AddClassHandler<AvaloniaObject>(...)` call wires the callback once when the type loads. It is typed to `AvaloniaObject`, not to the owning class, because an attached property is set on other objects. A field initializer is used instead of a static constructor so that the class can declare a static constructor of its own.
 
 **The handler signature** also differs from WPF: `(AvaloniaObject, AvaloniaPropertyChangedEventArgs)` instead of `(DependencyObject, DependencyPropertyChangedEventArgs)`. Inside, you typically pattern-match on the first argument to the host type (e.g., `if (d is Control element) { ... }`) — see `sample/Atc.XamlToolkit.AvaloniaSample/SampleControls/FrameworkElements/AttachedPropertyComponents/HighlightBehavior.cs` for a runnable example.

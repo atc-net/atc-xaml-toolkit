@@ -238,8 +238,9 @@ Eliminate boilerplate with powerful code generation:
 - **[RoutedEvent]** (WPF only) - Auto-generate routed events
 - **[DefaultStyleKey]** (WPF & Avalonia) - Auto-generate the default style key override of a custom control
 - **[TemplatePartField]** (WPF, WinUI 3 & Avalonia) - Declare a template part once, on its field, and auto-generate the lookup
+- **[DependencyPropertyTemplate]** / **[UseDependencyPropertyTemplate]** (WPF, WinUI 3 & Avalonia) - Declare a set of properties and routed events once and generate it in several controls
 
-> **Note:** Any `partial` class that uses `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]` or `[TemplatePartField]` is picked up, whatever it is called and whatever it derives from. For `[RelayCommand]` in a control, behavior or helper, the class must inherit from `UserControl`/`DependencyObject`/`FrameworkElement` or have a name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`); otherwise the command is treated as a view model command.
+> **Note:** Any `partial` class that uses `[DependencyProperty]`, `[AttachedProperty]`, `[StyledProperty]`, `[RoutedEvent]`, `[DefaultStyleKey]`, `[TemplatePartField]` or `[UseDependencyPropertyTemplate]` is picked up, whatever it is called and whatever it derives from. A class that is not `partial` is reported as `AtcXamlToolkit0002`. For `[RelayCommand]` in a control, behavior or helper, the class must inherit from `UserControl`/`DependencyObject`/`FrameworkElement` or have a name ending with **"Attach"**, **"Behavior"**, or **"Helper"** (e.g., `DragBehavior`, `CheckBoxHelper`); otherwise the command is treated as a view model command.
 
 Learn more about each generator:
 
@@ -438,6 +439,10 @@ All commands support:
 | `[StyledProperty]` | Avalonia | Auto-generate styled properties (Avalonia's equivalent to DependencyProperty) |
 | `[AttachedProperty]` | WPF, WinUI, Avalonia | Auto-generate attached properties |
 | `[RoutedEvent]` | WPF only | Auto-generate routed events (WPF's EventManager pattern not available in WinUI/Avalonia) |
+| `[DefaultStyleKey]` | WPF, Avalonia | Auto-generate the default style key override of a custom control |
+| `[TemplatePartField]` | WPF, WinUI, Avalonia | Declare a template part on its field; auto-generate the class's `[TemplatePart]` attribute and the lookup |
+| `[DependencyPropertyTemplate]` | WPF, WinUI, Avalonia | Mark a class whose attributed fields are a reusable set of properties and routed events |
+| `[UseDependencyPropertyTemplate]` | WPF, WinUI, Avalonia | Generate the members of a property template in a control |
 | `[ObservableDtoViewModel]` | WPF, WinUI, Avalonia | Auto-generate DTO wrapper with readonly properties, method proxies, `IgnorePropertyNames/IgnoreMethodNames`, `IsDirty`, `InnerModel`, automatic validation attribute copying, and `[ComputedProperty]` support |
 
 > **Note on Routed Events:** Routed events are a WPF-exclusive feature that uses `EventManager.RegisterRoutedEvent()` and supports event bubbling/tunneling through the visual tree. WinUI 3 and Avalonia use different event systems and do not support custom routed events. See the [RoutedEvents documentation](docs/SourceGenerators/RoutedEvents.md) for detailed platform comparison.

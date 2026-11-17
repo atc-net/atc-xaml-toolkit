@@ -52,7 +52,7 @@ public partial class Flyout
 }
 ```
 
-On WinUI the class attribute is `global::Microsoft.UI.Xaml.TemplatePart`.
+On WinUI the class attribute is `global::Microsoft.UI.Xaml.TemplatePart`, and `OnApplyTemplate` is a protected method there: write `protected override void OnApplyTemplate()` in the control.
 
 ### Avalonia
 
@@ -73,6 +73,9 @@ Generated:
 [global::Avalonia.Controls.Metadata.TemplatePart("PART_Overlay", typeof(Border))]
 public partial class Flyout
 {
+    /// <summary>
+    /// Assigns the template parts to their fields. Call it from <c>OnApplyTemplate</c>.
+    /// </summary>
     private void ResolveTemplateParts(global::Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
     {
         overlayBorder = e.NameScope.Find<Border>("PART_Overlay");

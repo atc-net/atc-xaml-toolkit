@@ -75,6 +75,9 @@ Generated:
 ```csharp
 public partial class Flyout
 {
+    /// <summary>
+    /// Makes this type its own default style key. Call it from the static constructor.
+    /// </summary>
     private static void OverrideDefaultStyleKey()
         => DefaultStyleKeyProperty.OverrideMetadata(
             typeof(Flyout),
@@ -87,5 +90,5 @@ If the static constructor does not call `OverrideDefaultStyleKey()`, the control
 ## 📝 Notes
 
 - `[DefaultStyleKey]` can be combined with `[DependencyProperty]`, `[StyledProperty]`, `[RoutedEvent]` and `[RelayCommand]` on the same class; everything goes into one generated file.
-- The attribute alone is enough for the generator to pick the class up; the class-naming rule for the other framework-element attributes does not apply to it.
+- The attribute alone is enough for the generator to pick the class up, whatever the class is called. A class that is not `partial` gets no generated code and is reported as `AtcXamlToolkit0002`.
 - The style itself (in `Themes/Generic.xaml` on WPF, or a `ControlTheme` on Avalonia) is still written by hand.

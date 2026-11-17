@@ -3,10 +3,11 @@ namespace Atc.XamlToolkit.Controls.Attributes;
 /// <summary>
 /// Marks a private static field to be transformed into an Avalonia attached property.
 /// The property name is inferred from the field name by removing common prefixes and capitalizing.
+/// The owner class must derive from <c>AvaloniaObject</c> and cannot be static.
 /// </summary>
 /// <example>
 /// <code>
-/// public static partial class MyBehavior
+/// public partial class MyBehavior : AvaloniaObject
 /// {
 ///     [AttachedProperty]
 ///     private static bool isEnabled;
@@ -14,7 +15,7 @@ namespace Atc.XamlToolkit.Controls.Attributes;
 /// </code>
 /// Generates:
 /// <code>
-/// public static readonly AttachedProperty&lt;bool&gt; IsEnabledProperty = ...
+/// public static readonly Avalonia.AvaloniaProperty IsEnabledProperty = ...
 /// public static bool GetIsEnabled(AvaloniaObject element) { ... }
 /// public static void SetIsEnabled(AvaloniaObject element, bool value) { ... }
 /// </code>

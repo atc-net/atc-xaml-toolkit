@@ -27,7 +27,8 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public bool GeneratePartialHooks { get; set; }
 
     /// <summary>
-    /// Gets or sets the accessibility of the generated CLR property's setter. The default is
+    /// Gets or sets the accessibility of the generated CLR property's setter, or of the
+    /// <c>Set{Name}</c> method of an attached property. The default is
     /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
     /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.
     /// </summary>
@@ -49,13 +50,25 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     /// </summary>
     public bool GenerateClrAccessors { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the category for design-time tools. The generator puts
+    /// <c>[Category("...")]</c> on the generated CLR property, or on the <c>Get{Name}</c>
+    /// and <c>Set{Name}</c> methods of an attached property.
+    /// </summary>
     public string? Category { get; set; }
 
+    /// <summary>
+    /// Gets or sets the description for design-time tools. The generator puts
+    /// <c>[Description("...")]</c> on the generated CLR property; for an attached property
+    /// <c>[Description("Get: ...")]</c> on <c>Get{Name}</c> and
+    /// <c>[Description("Set: ...")]</c> on <c>Set{Name}</c>.
+    /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to emit a default
-    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property.
+    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property
+    /// and an <c>Identifies the {Name} ... property.</c> summary on the property identifier field.
     /// When the property has no field-level XML doc, the generator emits
     /// <c>Gets or sets the {Name}.</c> for instance properties, or
     /// <c>Gets the {Name} attached property value.</c> /

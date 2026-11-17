@@ -53,6 +53,9 @@ This setup allows the UI to dynamically update when the Name property changes.
 
 The `ObservableProperty` attribute automatically generates properties from private fields, including `INotifyPropertyChanged` support.
 
+- **The class must be able to raise `PropertyChanged`.** The generated setter calls `RaisePropertyChanged`, so the `partial` class has to derive from `ObservableObject` or `ViewModelBase`, or carry `[INotifyPropertyChanged]`. In a class that does neither, for example one that implements `INotifyPropertyChanged` by hand, no property is generated and the field is reported as `AtcXamlToolkit0014`.
+- **The generated setter always has an equality guard.** It starts with `if (field == value) { return; }`, so setting a property to the value it already has does nothing: no `PropertyChanged`, no callbacks, no `IsDirty`. A hand-written setter that raises `PropertyChanged` on every assignment behaves differently and cannot be converted one to one.
+
 **ObservableProperty options:**
 
 - `PropertyName` for customization.
@@ -62,6 +65,7 @@ The `ObservableProperty` attribute automatically generates properties from priva
 - `AfterChangedCallback` is executed after the property value changes.
 - `BroadcastOnChange` broadcasts a `PropertyChangedMessage<T>` via the messenger when the property changes.
 - `UseIsDirty` automatically sets `IsDirty = true` when the property changes.
+- `SetterAccessModifier` gives the generated setter another accessibility than `public` (see [Non-public setters](#-non-public-setters)).
 - `IsRequired` emits the C# 11+ `required` modifier on the generated property — forces callers to set it via an object initializer (see [Required properties](#-required-properties)).
 - `GeneratePartialHooks` emits `partial void On{PropertyName}Changing/Changed({Type} value)` declarations and calls — a compile-time-safe alternative to the string-named callbacks (see [Partial-method hooks](#-partial-method-hooks)).
 - `GenerateDocumentation` emits a default `/// <summary>Gets or sets the {PropertyName}.</summary>` block above the generated property when the backing field has no XML doc comments of its own (see [XML documentation generation](#-xml-documentation-generation)).
@@ -573,6 +577,8 @@ public string Name
     }
 }
 ```
+
+`IsDirty` is set **after** `PropertyChanged` is raised for the property. A handler of that `PropertyChanged` event therefore still sees the old `IsDirty` value; listen for the change of `IsDirty` itself to react to the view model becoming dirty.
 
 **Use cases for UseIsDirty on individual properties:**
 
@@ -2000,6 +2006,13 @@ The property is named `InnerModel` to:
 public partial class PersonEditViewModel : ViewModelBase
 {
     private readonly IPersonRepository repository;
+    private readonly PersonViewModel person;
+
+    public PersonEditViewModel(IPersonRepository repository, PersonDto dto)
+    {
+        this.repository = repository;
+        person = new PersonViewModel(dto);
+    }
 
     [ObservableDtoViewModel(typeof(PersonDto))]
     public partial class PersonViewModel : ViewModelBase
@@ -2009,16 +2022,16 @@ public partial class PersonEditViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (!ValidateModel())
+        if (person.HasErrors)
         {
             return;
         }
 
         // Get the DTO and save it
-        await repository.UpdateAsync(PersonViewModel.InnerModel);
+        await repository.UpdateAsync(person.InnerModel);
 
         MessageBox.Show("Person saved successfully!");
-        IsDirty = false;
+        person.IsDirty = false;
     }
 }
 ```

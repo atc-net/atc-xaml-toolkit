@@ -8,7 +8,7 @@ Traditionally, creating a routed event involves writing repetitive boilerplate c
 
 > **Note:** Routed events are a WPF-specific concept. Avalonia and WinUI have different event systems and do not support routed events in the same way. For WinUI and Avalonia, use standard .NET events instead.
 
-> **Note:** `[RoutedEvent]` works in any `partial` class of a WPF project, whatever it is called and whatever it derives from.
+> **Note:** `[RoutedEvent]` is picked up in any `partial` class of a WPF project, whatever it is called. In a non-static class the generated event calls `AddHandler` / `RemoveHandler`, so the class has to derive from `UIElement` (any control) or `ContentElement` for the generated code to compile. A class that is not `partial` gets no generated code and is reported as `AtcXamlToolkit0002`. The field must be `private`; a field that is not is skipped without a diagnostic.
 
 ---
 
@@ -47,6 +47,8 @@ The source generator automatically detects your target platform and:
 - **WinUI / Avalonia Projects:** Skips routed-event generation **and emits diagnostic `AtcXamlToolkit0010`** as a build-time warning, telling you to use a standard CLR event instead.
 
 `AtcXamlToolkit0010` is the safety net that turns the platform skip from a silent inertness into an explicit message — so you find out at compile time, not at runtime when the event you wrote never raises.
+
+The `[RoutedEvent]` attribute class only exists in the WPF package (`Atc.XamlToolkit.Wpf`). In a WinUI or Avalonia project the attribute itself therefore does not compile (CS0616 on WinUI, where `RoutedEvent` resolves to `Microsoft.UI.Xaml.RoutedEvent`; CS0246 on Avalonia), and `AtcXamlToolkit0010` is reported next to that error to say why. A source file with `[RoutedEvent]` cannot be shared unchanged between a WPF project and a WinUI or Avalonia project; put the field inside `#if` or in a WPF-only file.
 
 ```text
 warning AtcXamlToolkit0010: Field 'tap' is decorated with [RoutedEvent] but the project targets Avalonia. The source generator silently skips routed-event generation on non-WPF platforms because WinUI 3 and Avalonia have no equivalent of WPF's RoutedEvent / EventManager pattern. Replace the field with a standard CLR event (e.g. 'public event RoutedEventHandler ItemSelected;') or remove the attribute.
@@ -134,6 +136,7 @@ protected void RaiseDeviceError(DeviceErrorRoutedEventArgs e)
 }
 ```
 
+- The handler type of the event is written with its namespace: `public event System.Windows.RoutedPropertyChangedEventHandler<int> ValueChanged`, `public event System.EventHandler<DeviceErrorRoutedEventArgs> DeviceError`.
 - The method is `protected`, or `private` in a sealed class. `RaiseMethodAccessModifier` states another accessibility, for example `RaiseMethodAccessModifier = PropertyAccessModifier.Private` in a public control whose API should not grow a protected method.
 - For any other handler type, such as a custom delegate, no method is generated: the constructor of its event args cannot be known. The generator reports `AtcXamlToolkit0013`; raise the event yourself with `RaiseEvent(...)`.
 
@@ -150,16 +153,16 @@ public partial class DrivePicker : UserControl
 ```
 
 ```csharp
-public static readonly RoutedEvent DeviceErrorEvent = DevicePickerEvents.DeviceErrorEvent.AddOwner(typeof(DrivePicker));
+public static readonly RoutedEvent DeviceErrorEvent = global::DevicePickerEvents.DeviceErrorEvent.AddOwner(typeof(DrivePicker));
 
-public event EventHandler<DeviceErrorRoutedEventArgs> DeviceError
+public event System.EventHandler<DeviceErrorRoutedEventArgs> DeviceError
 {
     add => AddHandler(DeviceErrorEvent, value);
     remove => RemoveHandler(DeviceErrorEvent, value);
 }
 ```
 
-The shared event is `{Type}.{Name}Event`, so the field must have the name of the event being shared. State the `HandlerType` of the shared event; the routing strategy is that of the shared event and the positional argument is ignored.
+The shared event is `{Type}.{Name}Event`, so the field must have the name of the event being shared. The type is written with its full name, `global::` and namespace (`global::MyApp.DevicePickerEvents`). State the `HandlerType` of the shared event; the routing strategy is that of the shared event and the positional argument is ignored, without a diagnostic. `GenerateRaiseMethod` can be combined with `AddOwnerOf`.
 
 ### 🧷 Routed events in a static class (attached events)
 
@@ -204,7 +207,7 @@ This is the pattern XAML needs for `local:DataGridFilter.FilterChanged="..."`. `
 If you want a strongly‑typed event handler (instead of the generic RoutedEventHandler) add the HandlerType named argument:
 
 ```csharp
-public partial class NumericBox
+public partial class NumericBox : Control
 {
     // The event will have the delegate type NumericBoxChangedRoutedEventHandler
     [RoutedEvent(HandlerType = typeof(NumericBoxChangedRoutedEventHandler))]
@@ -220,7 +223,7 @@ public partial class NumericBox
     public static readonly RoutedEvent ValueIncrementedEvent = EventManager.RegisterRoutedEvent(
         name: nameof(ValueIncremented),
         routingStrategy: RoutingStrategy.Bubble,
-        handlerType: typeof(RoutedEventHandler),
+        handlerType: typeof(NumericBoxChangedRoutedEventHandler),
         ownerType: typeof(NumericBox));
 
     public event NumericBoxChangedRoutedEventHandler ValueIncremented

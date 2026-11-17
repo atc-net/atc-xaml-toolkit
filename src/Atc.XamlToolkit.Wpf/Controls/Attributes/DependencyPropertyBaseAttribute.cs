@@ -41,8 +41,10 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     /// instead of registering a new one. The generator emits
     /// <c>{Type}.{Name}Property.AddOwner(typeof(Owner))</c> and the CLR property. Metadata is
     /// only passed when a default value, a callback or another metadata option is set, and
-    /// is then a <c>FrameworkPropertyMetadata</c>. <see cref="ValidateValueCallback"/> does
-    /// not apply, because validation belongs to the registration of the shared property.
+    /// is then a <c>FrameworkPropertyMetadata</c> unless <see cref="MetadataType"/> names
+    /// another class. <see cref="ValidateValueCallback"/> does not apply, because validation
+    /// belongs to the registration of the shared property, and neither does
+    /// <see cref="IsReadOnly"/>; setting either is reported as <c>AtcXamlToolkit0013</c>.
     /// </summary>
     public Type? AddOwnerOf { get; set; }
 
@@ -52,8 +54,9 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     /// The class matters to a derived class that overrides the metadata, and to code that
     /// casts the result of <c>GetMetadata</c>. <c>PropertyMetadata</c> and
     /// <c>UIPropertyMetadata</c> cannot carry <c>Flags</c> or
-    /// <c>DefaultUpdateSourceTrigger</c>; when one of those is set the choice is ignored
-    /// and reported as <c>AtcXamlToolkit0013</c>.
+    /// <c>DefaultUpdateSourceTrigger</c>, and <c>PropertyMetadata</c> cannot carry
+    /// <c>IsAnimationProhibited</c>; when one of those is set the choice is ignored,
+    /// <c>FrameworkPropertyMetadata</c> is created, and <c>AtcXamlToolkit0013</c> is reported.
     /// </summary>
     public DependencyPropertyMetadataType MetadataType { get; set; }
 
@@ -77,9 +80,13 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
     public PropertyAccessModifier PropertyKeyAccessModifier { get; set; }
 
     /// <summary>
-    /// Gets or sets the accessibility of the generated CLR property's setter. The default is
-    /// <see cref="PropertyAccessModifier.Public"/>. This only restricts the C# setter: the
+    /// Gets or sets the accessibility of the generated CLR property's setter, or of the
+    /// <c>Set{Name}</c> method of an attached property. The default is
+    /// <see cref="PropertyAccessModifier.Public"/>, or <c>private</c> for a read-only
+    /// property (<see cref="IsReadOnly"/>). This only restricts the C# setter: the
     /// property is still an ordinary, writable property to XAML and to <c>SetValue</c>.
+    /// A value that is not more restrictive than <see cref="AccessModifier"/> is ignored
+    /// and reported as <c>AtcXamlToolkit0013</c>.
     /// </summary>
     public PropertyAccessModifier SetterAccessModifier { get; set; }
 
@@ -109,13 +116,25 @@ public abstract class DependencyPropertyBaseAttribute : Attribute
 
     public bool IsAnimationProhibited { get; set; }
 
+    /// <summary>
+    /// Gets or sets the category for design-time tools. The generator puts
+    /// <c>[Category("...")]</c> on the generated CLR property, or on the <c>Get{Name}</c>
+    /// and <c>Set{Name}</c> methods of an attached property.
+    /// </summary>
     public string? Category { get; set; }
 
+    /// <summary>
+    /// Gets or sets the description for design-time tools. The generator puts
+    /// <c>[Description("...")]</c> on the generated CLR property; for an attached property
+    /// <c>[Description("Get: ...")]</c> on <c>Get{Name}</c> and
+    /// <c>[Description("Set: ...")]</c> on <c>Set{Name}</c>.
+    /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to emit a default
-    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property.
+    /// <c>/// &lt;summary&gt;</c> XML comment on the generated CLR property
+    /// and an <c>Identifies the {Name} ... property.</c> summary on the property identifier field.
     /// When the property has no field-level XML doc, the generator emits
     /// <c>Gets or sets the {Name}.</c> for instance properties, or
     /// <c>Gets the {Name} attached property value.</c> /

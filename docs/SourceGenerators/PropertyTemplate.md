@@ -100,14 +100,15 @@ C# does not allow a type parameter in an attribute argument, so `HandlerType = t
 private static readonly RoutedEvent valueChanged;
 ```
 
-The generator closes it with the type arguments the template is used with. This applies when the handler has as many type parameters as the template.
+The generator closes it with the type arguments the template is used with. This applies when the handler has as many type parameters as the template. Otherwise the handler cannot be closed: the event is generated with `RoutedEventHandler` and the generator reports `AtcXamlToolkit0013` for `HandlerType`.
 
 ## ⚠️ Limits
 
 - **Same project only.** The generator reads the template's fields from source. A template in another assembly shows it no fields, because private members are not visible to a referencing project. Share a template between projects by linking the source file into each.
 - A type that is not marked `[DependencyPropertyTemplate]`, or that has no attributed fields, is reported as `AtcXamlToolkit0012` and nothing is generated for it.
 - The template's fields are unused as far as the compiler can see, like any field the generators read. If your project reports them (CS0169, CS0649, IDE0051), suppress those for the template class. The same goes for an analyzer that warns about a static field in a generic type (Sonar S2743), which a `[RoutedEvent]` field in a generic template is.
-- `[RelayCommand]`, `[DefaultStyleKey]` and `[TemplatePartField]` in a template are not applied; only property and routed-event fields are.
+- `[RelayCommand]`, `[DefaultStyleKey]` and `[TemplatePartField]` in a template are not applied; only property and routed-event fields are. A `[RelayCommand]` method in a template that is not `partial` is also reported as `AtcXamlToolkit0002`, as for any class.
+- Only **fields** of the template are applied. A class-level `[DependencyProperty<T>("Name")]`, `[StyledProperty<T>("Name")]` or `[AttachedProperty<T>("Name")]` on the template class is not.
 
 ## 🧱 Platform support
 
